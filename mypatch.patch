@@ -1,0 +1,550 @@
+diff --git a/app/uk/gov/hmrc/taxhistory/connectors/BaseConnector.scala b/app/uk/gov/hmrc/taxhistory/connectors/BaseConnector.scala
+new file mode 100644
+index 0000000..2e3b254
+--- /dev/null
++++ b/app/uk/gov/hmrc/taxhistory/connectors/BaseConnector.scala
+@@ -0,0 +1,137 @@
++/*
++ * Copyright 2017 HM Revenue & Customs
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package uk.gov.hmrc.tai.connectors
++
++import play.Logger
++import play.api.http.Status
++import play.api.libs.json.{Format, Writes}
++import uk.gov.hmrc.play.config.ServicesConfig
++import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
++import uk.gov.hmrc.play.http.{HeaderCarrier, _}
++import uk.gov.hmrc.tai.model.rti.RtiData
++
++import scala.concurrent.Future
++
++trait BaseConnector extends ServicesConfig {
++
++  def httpGet: HttpGet
++  def httpPost: HttpPost
++  def originatorId: String
++  val defaultVersion: Int = -1
++
++  implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
++    override def read(method: String, url: String, response: HttpResponse) = response
++  }
++
++  def getVersionFromHttpHeader(httpResponse: HttpResponse): Int = {
++    val npsVersion: Int = httpResponse.header("ETag").map(_.toInt).getOrElse(defaultVersion)
++    npsVersion
++  }
++
++  def extraNpsHeaders(hc: HeaderCarrier, version: Int, txId: String): HeaderCarrier = {
++    hc.withExtraHeaders("ETag" -> version.toString, "X-TXID" -> txId, "Gov-Uk-Originator-Id" -> originatorId)
++  }
++
++  def basicNpsHeaders(hc: HeaderCarrier): HeaderCarrier = {
++    hc.withExtraHeaders("Gov-Uk-Originator-Id" -> originatorId)
++  }
++
++  def getFromNps[A](url: String)(implicit hc: HeaderCarrier, formats: Format[A]): Future[(A, Int)] = {
++    implicit val hc = basicNpsHeaders(HeaderCarrier())
++    val futureResponse = httpGet.GET[HttpResponse](url)
++    futureResponse.flatMap {
++      httpResponse =>
++        httpResponse.status match {
++          case Status.OK => {
++              Future.successful((httpResponse.json.as[A], getVersionFromHttpHeader(httpResponse)))
++          }
++
++          case Status.NOT_FOUND => {
++            Logger.warn(s"NPSAPI - No DATA Found error returned from NPS with status $httpResponse.status and url $url")
++            Future.failed(new NotFoundException(httpResponse.body))
++          }
++
++          case Status.INTERNAL_SERVER_ERROR => {
++            Logger.warn(s"NPSAPI - Internal Server error returned from NPS with status $httpResponse.status and url $url")
++            Future.failed(new InternalServerException(httpResponse.body))
++          }
++
++          case Status.BAD_REQUEST => {
++            Logger.warn(s"NPSAPI - Bad request exception returned from NPS  with status $httpResponse.status and url $url")
++            Future.failed(new BadRequestException(httpResponse.body))
++          }
++
++          case _ => {
++            Logger.warn(s"NPSAPI - A Server error returned from NPS with status $httpResponse.status and url $url")
++            Future.failed(new HttpException(httpResponse.body, httpResponse.status))
++          }
++        }
++    }
++  }
++
++  def postToNps[A](url: String, postData: A)(implicit hc: HeaderCarrier, writes: Writes[A]): Future[HttpResponse] = {
++    val futureResponse = httpPost.POST(url, postData)
++    futureResponse.flatMap {
++      httpResponse =>
++        httpResponse.status match {
++          case (Status.OK | Status.NO_CONTENT | Status.ACCEPTED) => {
++            Future.successful(httpResponse)
++          }
++          case _ => {
++            Logger.warn(s"NPSAPI - A server error returned from NPS HODS in postToNps with status " +
++              httpResponse.status + " url " + url)
++            Future.failed(new HttpException(httpResponse.body, httpResponse.status))
++          }
++        }
++     }
++  }
++
++  def getFromRTIWithStatus(url: String, reqNino: String)(implicit hc: HeaderCarrier): Future[Option[RtiData]] = {
++    val futureResponse = httpGet.GET[HttpResponse](url)
++    futureResponse.flatMap {
++      res =>
++        res.status match {
++          case Status.OK => {
++
++            val rtiData = res.json.as[RtiData](RtiData.reader)
++            if (reqNino != rtiData.nino) {
++              Logger.warn(s"RTIAPI - Incorrect Payload returned from RTI HODS for $reqNino")
++              Future.successful((None))
++            } else {
++              Future.successful((Some(rtiData)))
++            }
++          }
++          case Status.BAD_REQUEST => {
++            Logger.warn(s"RTIAPI - Bad Request error returned from RTI HODS for $reqNino")
++            Future.successful((None))
++          }
++          case Status.NOT_FOUND => {
++            Logger.warn(s"RTIAPI - No DATA Found error returned from RTI HODS for $reqNino")
++            Future.successful((None))
++          }
++          case Status.INTERNAL_SERVER_ERROR => {
++            Logger.warn(s"RTIAPI - Internal Server error returned from RTI HODS $reqNino")
++            Future.successful((None))
++          }
++          case _ => {
++            Logger.warn(s"RTIAPI - An error returned from RTI HODS $reqNino")
++            Future.successful((None))
++          }
++        }
++    }
++  }
++}
+diff --git a/app/uk/gov/hmrc/taxhistory/connectors/des/RtiConnector.scala b/app/uk/gov/hmrc/taxhistory/connectors/des/RtiConnector.scala
+new file mode 100644
+index 0000000..e275603
+--- /dev/null
++++ b/app/uk/gov/hmrc/taxhistory/connectors/des/RtiConnector.scala
+@@ -0,0 +1,65 @@
++/*
++ * Copyright 2017 HM Revenue & Customs
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package uk.gov.hmrc.taxhistory.connectors.des
++import play.api.Play
++import uk.gov.hmrc.domain.Nino
++import uk.gov.hmrc.play.config.ServicesConfig
++import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost}
++import uk.gov.hmrc.tai.connectors.BaseConnector
++import uk.gov.hmrc.tai.model.rti._
++import uk.gov.hmrc.taxhistory.WSHttp
++
++import scala.concurrent.Future
++
++object RtiConnector extends RtiConnector {
++
++  override val httpGet: HttpGet = WSHttp
++  override val httpPost: HttpPost = WSHttp
++
++  lazy val serviceUrl: String = s"${baseUrl("rti-hod")}"
++  lazy val authorization: String = "Bearer " + getConfString(s"$services.rti-hod.authorizationToken","local")
++  lazy val environment: String = getConfString(s"$services.rti-hod.env","local")
++  lazy val originatorId = getConfString(s"$services.rti-hod.originatorId","local")
++}
++
++trait RtiConnector extends BaseConnector {
++
++  def serviceUrl: String
++  def authorization: String
++  def environment: String
++
++  def rtiBasicUrl(nino: Nino) = s"$serviceUrl/rti/individual/payments/nino/${withoutSuffix(nino)}"
++
++  def rtiPathUrl(nino: Nino, path: String) = s"${rtiBasicUrl(nino)}/$path"
++
++  def withoutSuffix(nino: Nino) = {
++    val BASIC_NINO_LENGTH = 8
++    nino.value.take(BASIC_NINO_LENGTH)
++  }
++
++  def createHeader: HeaderCarrier = HeaderCarrier(extraHeaders =
++    Seq("Environment" -> environment,
++      "Authorization" -> authorization,
++      "Gov-Uk-Originator-Id" -> originatorId))
++
++  def getRTI(nino: Nino, taxYear: Int)(implicit hc: HeaderCarrier): Future[Option[RtiData]] = {
++    val urlToRead = rtiPathUrl(nino, s"tax-year/${taxYear}") // two digit tax year e.g. 17 or 18 etc
++    implicit val hc: HeaderCarrier = createHeader
++    getFromRTIWithStatus(urlToRead, withoutSuffix(nino))
++  }
++
++}
+diff --git a/app/uk/gov/hmrc/taxhistory/controllers/MicroserviceHelloWorld.scala b/app/uk/gov/hmrc/taxhistory/controllers/MicroserviceHelloWorld.scala
+index 4958225..a34cf92 100644
+--- a/app/uk/gov/hmrc/taxhistory/controllers/MicroserviceHelloWorld.scala
++++ b/app/uk/gov/hmrc/taxhistory/controllers/MicroserviceHelloWorld.scala
+@@ -1,3 +1,19 @@
++/*
++ * Copyright 2017 HM Revenue & Customs
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
+ package uk.gov.hmrc.taxhistory.controllers
+ 
+ import uk.gov.hmrc.play.microservice.controller.BaseController
+diff --git a/app/uk/gov/hmrc/taxhistory/microserviceGlobal.scala b/app/uk/gov/hmrc/taxhistory/microserviceGlobal.scala
+index 248194e..756bcc3 100644
+--- a/app/uk/gov/hmrc/taxhistory/microserviceGlobal.scala
++++ b/app/uk/gov/hmrc/taxhistory/microserviceGlobal.scala
+@@ -1,3 +1,19 @@
++/*
++ * Copyright 2017 HM Revenue & Customs
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
+ package uk.gov.hmrc.taxhistory
+ 
+ import com.typesafe.config.Config
+diff --git a/app/uk/gov/hmrc/taxhistory/microserviceWiring.scala b/app/uk/gov/hmrc/taxhistory/microserviceWiring.scala
+index 37b2bf6..5bd6616 100644
+--- a/app/uk/gov/hmrc/taxhistory/microserviceWiring.scala
++++ b/app/uk/gov/hmrc/taxhistory/microserviceWiring.scala
+@@ -1,3 +1,19 @@
++/*
++ * Copyright 2017 HM Revenue & Customs
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
+ package uk.gov.hmrc.taxhistory
+ 
+ import uk.gov.hmrc.play.audit.http.config.LoadAuditingConfig
+diff --git a/app/uk/gov/hmrc/taxhistory/model/rti/RtiData.scala b/app/uk/gov/hmrc/taxhistory/model/rti/RtiData.scala
+new file mode 100644
+index 0000000..75c5407
+--- /dev/null
++++ b/app/uk/gov/hmrc/taxhistory/model/rti/RtiData.scala
+@@ -0,0 +1,94 @@
++/*
++ * Copyright 2017 HM Revenue & Customs
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package uk.gov.hmrc.tai.model.rti
++
++import play.api.libs.json._
++import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
++
++case class RtiData(nino:String,
++                   taxYear:String,
++                   employments:List[Employment])
++
++case class Employment(sequenceNo:Int,
++                      payeRef:String,
++                      currentPayId: Option[String]= None,
++                      payments:List[Payment])
++
++case class Payment(taxablePay:BigDecimal,
++                   taxablePayYTD:BigDecimal,
++                   taxDeductedOrRefunded:BigDecimal,
++                   totalTaxYTD:BigDecimal)
++
++object Payment {
++   val reader = new Reads[Payment]{
++     def reads(js: JsValue): JsResult[Payment] = {
++       implicit val stringMapFormat = JsonUtils.mapFormat[String,BigDecimal]("type", "amount")
++
++       val mandatoryMonetaryAmountMap = (js \ "mandatoryMonetaryAmount").as[Map[String, BigDecimal]]
++
++       JsSuccess(
++         Payment(taxablePay = mandatoryMonetaryAmountMap("TaxablePay"),
++           taxablePayYTD = mandatoryMonetaryAmountMap("TaxablePay"),
++           taxDeductedOrRefunded = mandatoryMonetaryAmountMap("TaxDeductedOrRefunded"),
++           totalTaxYTD = mandatoryMonetaryAmountMap("TotalTaxYTD")))
++     }
++   }
++  implicit val formats = Json.format[Payment]
++}
++
++object Employment {
++  val reader = new Reads[Employment] {
++    def reads(js: JsValue): JsResult[Employment] = {
++        for {
++          payeRef <- (js \ "empRefs" \ "payeRef").validate[String]
++          currentPayId <- (js \ "currentPayId").validate[String]
++          payments <- (js \ "payments" \ "inYear").validate[List[Payment]](Reads.list(Payment.reader))
++        } yield {
++
++            Employment(sequenceNo = 0,
++              payeRef = payeRef,
++              currentPayId = Some(currentPayId),
++              payments = payments
++            )
++
++        }
++    }
++  }
++  implicit val formats = Json.format[Employment]
++}
++
++object RtiData {
++  val reader = new Reads[RtiData] {
++    def reads(js: JsValue): JsResult[RtiData] = {
++      for {
++        nino <- (js \ "request" \ "nino").validate[String]
++        taxYear <- (js \ "request" \ "relatedTaxYear").validate[String]
++        employments <- (js \ "individual" \ "employments" \ "employment").validate[List[Employment]](Reads.list(Employment.reader))
++      } yield {
++
++          RtiData(
++            nino = nino,
++            taxYear = taxYear,
++            employments = employments
++          )
++
++      }
++    }
++  }
++  implicit val formats = Json.format[RtiData]
++}
++
+diff --git a/app/uk/gov/hmrc/taxhistory/model/utils/JsonUtils.scala b/app/uk/gov/hmrc/taxhistory/model/utils/JsonUtils.scala
+new file mode 100644
+index 0000000..03d86c5
+--- /dev/null
++++ b/app/uk/gov/hmrc/taxhistory/model/utils/JsonUtils.scala
+@@ -0,0 +1,42 @@
++/*
++ * Copyright 2017 HM Revenue & Customs
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package uk.gov.hmrc.taxhistory.model.utils
++
++import play.api.libs.json._
++
++object JsonUtils {
++  def mapFormat[K, V](keyLabel: String, valueLabel: String)
++                     (implicit kf: Format[K], vf: Format[V]) =
++    new Format[Map[K, V]] {
++      def writes(m: Map[K, V]): JsValue =
++        JsArray(
++          m.map { case (t, v) => Json.obj(
++            keyLabel -> kf.writes(t),
++            valueLabel -> vf.writes(v)
++          )
++          }.toSeq
++        )
++
++      def reads(jv: JsValue): JsResult[Map[K, V]] = jv match {
++        case JsArray(b) => JsSuccess(
++          b.map(x => (
++            (x \ keyLabel).as[K] -> (x \ valueLabel).as[V]
++            )).toMap)
++        case x => JsError(s"Expected JsArray(...), found $x")
++      }
++    }
++}
+diff --git a/conf/application.conf b/conf/application.conf
+index 7884b3e..ff3d975 100644
+--- a/conf/application.conf
++++ b/conf/application.conf
+@@ -1,3 +1,16 @@
++# Copyright 2017 HM Revenue & Customs
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
+ 
+ # This is the main configuration file for the application.
+ # ~~~~~
+diff --git a/test/resources/json/rti/response/dummyRti.json b/test/resources/json/rti/response/dummyRti.json
+new file mode 100644
+index 0000000..7966216
+--- /dev/null
++++ b/test/resources/json/rti/response/dummyRti.json
+@@ -0,0 +1 @@
++{"queryResult":0,"request":{"nino":"AA000000","relatedTaxYear":"15-16","requestId":"M1461338419483"},"individual":{"currentNino":"AA000000","relatedTaxYear":"15-16","employments":{"employment":[{"empRefs":{"officeNo":"531","payeRef":"J4816","aoRef":"531PP00002017"},"currentPayId":"6044041000000","payments":{"inYear":[{"occPenInd":true,"payId":"6044041000000","payFreq":"M1","monthNo":"11","periodsCovered":1,"hoursWorked":"Up to 15.99","mandatoryMonetaryAmount":[{"type":"TaxablePayYTD","amount":20000.00},{"type":"TotalTaxYTD","amount":1880.00},{"type":"TaxDeductedOrRefunded","amount":1.00},{"type":"TaxablePay","amount":1.00}],"optionalMonetaryAmount":[{"type":"BenefitsTaxedViaPayrollYTD","amount":1.00},{"type":"EmpeePenContribnsNotPaidYTD","amount":1.00},{"type":"EmpeePenContribnsPaidYTD","amount":1.00},{"type":"SAPYTD","amount":0.00},{"type":"SMPYTD","amount":0.00},{"type":"StudentLoansYTD","amount":0.00},{"type":"BenefitsTaxedViaPayroll","amount":1.00},{"type":"DednsFromNetPay","amount":1.00},{"type":"EmpeePenContribnsNotPaid","amount":1.00},{"type":"EmpeePenContribnsPaid","amount":1.00},{"type":"ItemsSubjectToClass1NIC","amount":1.00},{"type":"NonTaxOrNICPmt","amount":1.00},{"type":"PayAfterStatDedns","amount":1.00},{"type":"StudentLoanRecovered","amount":1.00},{"type":"OccPensionAmount","amount":1.00},{"type":"StatePensionAmount","amount":1.00}],"taxCode":{"value":"K1"},"starter":{"startDate":"2013-11-01","startDec":"A","studentLoan":true,"occPensionBereaved":true,"statePensionBereaved":true,"seconded":{"stay183DaysOrMore":true,"eeaCitizen":true,"epm6":true}},"niLettersAndValues":[{"niLetter":"R","scon":"S0000000A","niFigure":[{"type":"AtLELYTD","amount":5824.00},{"type":"EmpeeContribnsInPd","amount":1.00},{"type":"EmpeeContribnsYTD","amount":1.00},{"type":"GrossEarningsForNICsInPd","amount":1.00},{"type":"GrossEarningsForNICsYTD","amount":1.00},{"type":"LELtoPTYTD","amount":2236.00},{"type":"PTtoUAPYTD","amount":11940.00},{"type":"TotalEmpNICInPd","amount":1265.64},{"type":"TotalEmpNICYTD","amount":1265.64},{"type":"UAPtoUELYTD","amount":0.00}]}],"niLiability":{"directorsNIC":"AN","taxWkOfApptOfDirector":"1"},"pmtDate":"2016-03-31","rcvdDate":"2015-05-26","pmtConfidence":1,"taxYear":"15-16"},{"occPenInd":true,"payId":"6044041000000","payFreq":"M1","monthNo":"10","periodsCovered":1,"hoursWorked":"Up to 15.99","mandatoryMonetaryAmount":[{"type":"TaxablePayYTD","amount":20000.00},{"type":"TotalTaxYTD","amount":1880.00},{"type":"TaxDeductedOrRefunded","amount":1.00},{"type":"TaxablePay","amount":1.00}],"optionalMonetaryAmount":[{"type":"BenefitsTaxedViaPayrollYTD","amount":1.00},{"type":"EmpeePenContribnsNotPaidYTD","amount":1.00},{"type":"EmpeePenContribnsPaidYTD","amount":1.00},{"type":"SAPYTD","amount":0.00},{"type":"SMPYTD","amount":0.00},{"type":"StudentLoansYTD","amount":0.00},{"type":"BenefitsTaxedViaPayroll","amount":1.00},{"type":"DednsFromNetPay","amount":1.00},{"type":"EmpeePenContribnsNotPaid","amount":1.00},{"type":"EmpeePenContribnsPaid","amount":1.00},{"type":"ItemsSubjectToClass1NIC","amount":1.00},{"type":"NonTaxOrNICPmt","amount":1.00},{"type":"PayAfterStatDedns","amount":1.00},{"type":"StudentLoanRecovered","amount":1.00},{"type":"OccPensionAmount","amount":1.00},{"type":"StatePensionAmount","amount":1.00}],"taxCode":{"value":"K1"},"starter":{"startDate":"2013-11-01","startDec":"A","studentLoan":true,"occPensionBereaved":true,"statePensionBereaved":true,"seconded":{"stay183DaysOrMore":true,"eeaCitizen":true,"epm6":true}},"niLettersAndValues":[{"niLetter":"R","scon":"S0000000A","niFigure":[{"type":"AtLELYTD","amount":5824.00},{"type":"EmpeeContribnsInPd","amount":1.00},{"type":"EmpeeContribnsYTD","amount":1.00},{"type":"GrossEarningsForNICsInPd","amount":1.00},{"type":"GrossEarningsForNICsYTD","amount":1.00},{"type":"LELtoPTYTD","amount":2236.00},{"type":"PTtoUAPYTD","amount":11940.00},{"type":"TotalEmpNICInPd","amount":1265.64},{"type":"TotalEmpNICYTD","amount":1265.64},{"type":"UAPtoUELYTD","amount":0.00}]}],"niLiability":{"directorsNIC":"AN","taxWkOfApptOfDirector":"1"},"pmtDate":"2016-02-29","rcvdDate":"2015-05-26","pmtConfidence":1,"taxYear":"15-16"},{"occPenInd":true,"payId":"6044041000000","payFreq":"M1","monthNo":"1","periodsCovered":1,"hoursWorked":"Up to 15.99","mandatoryMonetaryAmount":[{"type":"TaxablePayYTD","amount":20000.00},{"type":"TotalTaxYTD","amount":1880.00},{"type":"TaxDeductedOrRefunded","amount":1.00},{"type":"TaxablePay","amount":1.00}],"optionalMonetaryAmount":[{"type":"BenefitsTaxedViaPayrollYTD","amount":1.00},{"type":"EmpeePenContribnsNotPaidYTD","amount":1.00},{"type":"EmpeePenContribnsPaidYTD","amount":1.00},{"type":"SAPYTD","amount":0.00},{"type":"SMPYTD","amount":0.00},{"type":"StudentLoansYTD","amount":0.00},{"type":"BenefitsTaxedViaPayroll","amount":1.00},{"type":"DednsFromNetPay","amount":1.00},{"type":"EmpeePenContribnsNotPaid","amount":1.00},{"type":"EmpeePenContribnsPaid","amount":1.00},{"type":"ItemsSubjectToClass1NIC","amount":1.00},{"type":"NonTaxOrNICPmt","amount":1.00},{"type":"PayAfterStatDedns","amount":1.00},{"type":"StudentLoanRecovered","amount":1.00},{"type":"OccPensionAmount","amount":1.00},{"type":"StatePensionAmount","amount":1.00}],"taxCode":{"value":"K1"},"onStrike":true,"unpaidAbsence":true,"starter":{"startDate":"2013-11-01","startDec":"A","studentLoan":true,"occPensionBereaved":true,"statePensionBereaved":true,"seconded":{"stay183DaysOrMore":true,"eeaCitizen":true,"epm6":true}},"niLettersAndValues":[{"niLetter":"R","scon":"S0000000A","niFigure":[{"type":"AtLELYTD","amount":5824.00},{"type":"EmpeeContribnsInPd","amount":1.00},{"type":"EmpeeContribnsYTD","amount":1.00},{"type":"GrossEarningsForNICsInPd","amount":1.00},{"type":"GrossEarningsForNICsYTD","amount":1.00},{"type":"LELtoPTYTD","amount":2236.00},{"type":"PTtoUAPYTD","amount":11940.00},{"type":"TotalEmpNICInPd","amount":1265.64},{"type":"TotalEmpNICYTD","amount":1265.64},{"type":"UAPtoUELYTD","amount":0.00}]}],"niLiability":{"directorsNIC":"AN","taxWkOfApptOfDirector":"1"},"pmtDate":"2016-01-29","rcvdDate":"2015-05-26","pmtConfidence":1,"taxYear":"15-16"},{"occPenInd":true,"payId":"6044041000000","payFreq":"M1","monthNo":"1","periodsCovered":1,"hoursWorked":"Up to 15.99","mandatoryMonetaryAmount":[{"type":"TaxablePayYTD","amount":20000.00},{"type":"TotalTaxYTD","amount":1880.00},{"type":"TaxDeductedOrRefunded","amount":1.00},{"type":"TaxablePay","amount":1.00}],"optionalMonetaryAmount":[{"type":"BenefitsTaxedViaPayrollYTD","amount":1.00},{"type":"EmpeePenContribnsNotPaidYTD","amount":1.00},{"type":"EmpeePenContribnsPaidYTD","amount":1.00},{"type":"SAPYTD","amount":0.00},{"type":"SMPYTD","amount":0.00},{"type":"StudentLoansYTD","amount":0.00},{"type":"BenefitsTaxedViaPayroll","amount":1.00},{"type":"DednsFromNetPay","amount":1.00},{"type":"EmpeePenContribnsNotPaid","amount":1.00},{"type":"EmpeePenContribnsPaid","amount":1.00},{"type":"ItemsSubjectToClass1NIC","amount":1.00},{"type":"NonTaxOrNICPmt","amount":1.00},{"type":"PayAfterStatDedns","amount":1.00},{"type":"StudentLoanRecovered","amount":1.00},{"type":"OccPensionAmount","amount":1.00},{"type":"StatePensionAmount","amount":1.00}],"taxCode":{"value":"K1"},"starter":{"startDate":"2013-11-01","startDec":"A","studentLoan":true,"occPensionBereaved":true,"statePensionBereaved":true,"seconded":{"stay183DaysOrMore":true,"eeaCitizen":true,"epm6":true}},"niLettersAndValues":[{"niLetter":"R","scon":"S0000000A","niFigure":[{"type":"AtLELYTD","amount":5824.00},{"type":"EmpeeContribnsInPd","amount":1.00},{"type":"EmpeeContribnsYTD","amount":1.00},{"type":"GrossEarningsForNICsInPd","amount":1.00},{"type":"GrossEarningsForNICsYTD","amount":1.00},{"type":"LELtoPTYTD","amount":2236.00},{"type":"PTtoUAPYTD","amount":11940.00},{"type":"TotalEmpNICInPd","amount":1265.64},{"type":"TotalEmpNICYTD","amount":1265.64},{"type":"UAPtoUELYTD","amount":0.00}]}],"niLiability":{"directorsNIC":"AN","taxWkOfApptOfDirector":"1"},"pmtDate":"2015-12-31","rcvdDate":"2015-05-26","pmtConfidence":1,"taxYear":"15-16"},{"occPenInd":true,"payId":"6044041000000","payFreq":"M1","monthNo":"1","periodsCovered":1,"hoursWorked":"Up to 15.99","mandatoryMonetaryAmount":[{"type":"TaxablePayYTD","amount":20000.00},{"type":"TotalTaxYTD","amount":1880.00},{"type":"TaxDeductedOrRefunded","amount":1.00},{"type":"TaxablePay","amount":1.00}],"optionalMonetaryAmount":[{"type":"BenefitsTaxedViaPayrollYTD","amount":1.00},{"type":"EmpeePenContribnsNotPaidYTD","amount":1.00},{"type":"EmpeePenContribnsPaidYTD","amount":1.00},{"type":"SAPYTD","amount":0.00},{"type":"SMPYTD","amount":0.00},{"type":"StudentLoansYTD","amount":0.00},{"type":"BenefitsTaxedViaPayroll","amount":1.00},{"type":"DednsFromNetPay","amount":1.00},{"type":"EmpeePenContribnsNotPaid","amount":1.00},{"type":"EmpeePenContribnsPaid","amount":1.00},{"type":"ItemsSubjectToClass1NIC","amount":1.00},{"type":"NonTaxOrNICPmt","amount":1.00},{"type":"PayAfterStatDedns","amount":1.00},{"type":"StudentLoanRecovered","amount":1.00},{"type":"OccPensionAmount","amount":12300.00},{"type":"StatePensionAmount","amount":1.00}],"taxCode":{"value":"K1"},"starter":{"startDate":"2013-11-01","startDec":"A","studentLoan":true,"occPensionBereaved":true,"statePensionBereaved":true,"seconded":{"stay183DaysOrMore":true,"eeaCitizen":true,"epm6":true}},"niLettersAndValues":[{"niLetter":"R","scon":"S0000000A","niFigure":[{"type":"AtLELYTD","amount":5824.00},{"type":"EmpeeContribnsInPd","amount":1.00},{"type":"EmpeeContribnsYTD","amount":1.00},{"type":"GrossEarningsForNICsInPd","amount":1.00},{"type":"GrossEarningsForNICsYTD","amount":1.00},{"type":"LELtoPTYTD","amount":2236.00},{"type":"PTtoUAPYTD","amount":11940.00},{"type":"TotalEmpNICInPd","amount":1265.64},{"type":"TotalEmpNICYTD","amount":1265.64},{"type":"UAPtoUELYTD","amount":0.00}]}],"niLiability":{"directorsNIC":"AN","taxWkOfApptOfDirector":"1"},"pmtDate":"2015-11-30","rcvdDate":"2015-05-26","pmtConfidence":1,"taxYear":"15-16"}]},"sequenceNumber":49},{"empRefs":{"officeNo":"267","payeRef":"G697","aoRef":"267PP00002017"},"currentPayId":"111111","payments":{"inYear":[{"occPenInd":true,"payId":"111111","payFreq":"M1","weekNo":"1","periodsCovered":1,"hoursWorked":"Up to 15.99","mandatoryMonetaryAmount":[{"type":"TaxablePayYTD","amount":20000.00},{"type":"TotalTaxYTD","amount":1880.00},{"type":"TaxDeductedOrRefunded","amount":1.00},{"type":"TaxablePay","amount":1.00}],"optionalMonetaryAmount":[{"type":"BenefitsTaxedViaPayrollYTD","amount":1.00},{"type":"EmpeePenContribnsNotPaidYTD","amount":1.00},{"type":"EmpeePenContribnsPaidYTD","amount":1.00},{"type":"SAPYTD","amount":0.00},{"type":"SMPYTD","amount":0.00},{"type":"StudentLoansYTD","amount":0.00},{"type":"BenefitsTaxedViaPayroll","amount":1.00},{"type":"DednsFromNetPay","amount":1.00},{"type":"EmpeePenContribnsNotPaid","amount":1.00},{"type":"EmpeePenContribnsPaid","amount":1.00},{"type":"ItemsSubjectToClass1NIC","amount":1.00},{"type":"NonTaxOrNICPmt","amount":1.00},{"type":"PayAfterStatDedns","amount":1.00},{"type":"StudentLoanRecovered","amount":1.00},{"type":"OccPensionAmount","amount":1.00},{"type":"StatePensionAmount","amount":1.00}],"taxCode":{"value":"K1"},"starter":{"startDate":"2014-01-01","startDec":"A","studentLoan":true,"occPensionBereaved":true,"statePensionBereaved":true,"seconded":{"stay183DaysOrMore":true,"eeaCitizen":true,"epm6":true}},"niLettersAndValues":[{"niLetter":"R","scon":"S0000000A","niFigure":[{"type":"AtLELYTD","amount":5824.00},{"type":"EmpeeContribnsInPd","amount":1.00},{"type":"EmpeeContribnsYTD","amount":1.00},{"type":"GrossEarningsForNICsInPd","amount":1.00},{"type":"GrossEarningsForNICsYTD","amount":1.00},{"type":"LELtoPTYTD","amount":2236.00},{"type":"PTtoUAPYTD","amount":11940.00},{"type":"TotalEmpNICInPd","amount":1265.64},{"type":"TotalEmpNICYTD","amount":1265.64},{"type":"UAPtoUELYTD","amount":0.00}]}],"niLiability":{"directorsNIC":"AN","taxWkOfApptOfDirector":"1"},"pmtDate":"2015-04-30","rcvdDate":"2015-05-26","pmtConfidence":1,"taxYear":"15-16"},{"occPenInd":true,"payId":"111111","payFreq":"M1","monthNo":"2","periodsCovered":1,"hoursWorked":"Up to 15.99","mandatoryMonetaryAmount":[{"type":"TaxablePayYTD","amount":20000.00},{"type":"TotalTaxYTD","amount":1880.00},{"type":"TaxDeductedOrRefunded","amount":1.00},{"type":"TaxablePay","amount":1.00}],"optionalMonetaryAmount":[{"type":"BenefitsTaxedViaPayrollYTD","amount":1.00},{"type":"EmpeePenContribnsNotPaidYTD","amount":1.00},{"type":"EmpeePenContribnsPaidYTD","amount":1.00},{"type":"SAPYTD","amount":0.00},{"type":"SMPYTD","amount":0.00},{"type":"StudentLoansYTD","amount":0.00},{"type":"BenefitsTaxedViaPayroll","amount":1.00},{"type":"DednsFromNetPay","amount":1.00},{"type":"EmpeePenContribnsNotPaid","amount":1.00},{"type":"EmpeePenContribnsPaid","amount":1.00},{"type":"ItemsSubjectToClass1NIC","amount":1.00},{"type":"NonTaxOrNICPmt","amount":1.00},{"type":"PayAfterStatDedns","amount":1.00},{"type":"StudentLoanRecovered","amount":1.00},{"type":"OccPensionAmount","amount":1.00},{"type":"StatePensionAmount","amount":1.00}],"taxCode":{"value":"K1"},"starter":{"startDate":"2014-01-01","startDec":"A","studentLoan":true,"occPensionBereaved":true,"statePensionBereaved":true,"seconded":{"stay183DaysOrMore":true,"eeaCitizen":true,"epm6":true}},"niLettersAndValues":[{"niLetter":"R","scon":"S0000000A","niFigure":[{"type":"AtLELYTD","amount":5824.00},{"type":"EmpeeContribnsInPd","amount":1.00},{"type":"EmpeeContribnsYTD","amount":1.00},{"type":"GrossEarningsForNICsInPd","amount":1.00},{"type":"GrossEarningsForNICsYTD","amount":1.00},{"type":"LELtoPTYTD","amount":2236.00},{"type":"PTtoUAPYTD","amount":11940.00},{"type":"TotalEmpNICInPd","amount":1265.64},{"type":"TotalEmpNICYTD","amount":1265.64},{"type":"UAPtoUELYTD","amount":0.00}]}],"niLiability":{"directorsNIC":"AN","taxWkOfApptOfDirector":"1"},"pmtDate":"2015-05-29","rcvdDate":"2015-05-29","pmtConfidence":1,"taxYear":"15-16"},{"occPenInd":true,"payId":"111111","payFreq":"M1","monthNo":"3","periodsCovered":1,"hoursWorked":"Up to 15.99","mandatoryMonetaryAmount":[{"type":"TaxablePayYTD","amount":20000.00},{"type":"TotalTaxYTD","amount":1880.00},{"type":"TaxDeductedOrRefunded","amount":1.00},{"type":"TaxablePay","amount":1.00}],"optionalMonetaryAmount":[{"type":"BenefitsTaxedViaPayrollYTD","amount":1.00},{"type":"EmpeePenContribnsNotPaidYTD","amount":1.00},{"type":"EmpeePenContribnsPaidYTD","amount":1.00},{"type":"SAPYTD","amount":0.00},{"type":"SMPYTD","amount":0.00},{"type":"StudentLoansYTD","amount":0.00},{"type":"BenefitsTaxedViaPayroll","amount":1.00},{"type":"DednsFromNetPay","amount":1.00},{"type":"EmpeePenContribnsNotPaid","amount":1.00},{"type":"EmpeePenContribnsPaid","amount":1.00},{"type":"ItemsSubjectToClass1NIC","amount":1.00},{"type":"NonTaxOrNICPmt","amount":1.00},{"type":"PayAfterStatDedns","amount":1.00},{"type":"StudentLoanRecovered","amount":1.00},{"type":"OccPensionAmount","amount":1.00},{"type":"StatePensionAmount","amount":1.00}],"taxCode":{"value":"K1"},"starter":{"startDate":"2014-01-01","startDec":"A","studentLoan":true,"occPensionBereaved":true,"statePensionBereaved":true,"seconded":{"stay183DaysOrMore":true,"eeaCitizen":true,"epm6":true}},"niLettersAndValues":[{"niLetter":"R","scon":"S0000000A","niFigure":[{"type":"AtLELYTD","amount":5824.00},{"type":"EmpeeContribnsInPd","amount":1.00},{"type":"EmpeeContribnsYTD","amount":1.00},{"type":"GrossEarningsForNICsInPd","amount":1.00},{"type":"GrossEarningsForNICsYTD","amount":1.00},{"type":"LELtoPTYTD","amount":2236.00},{"type":"PTtoUAPYTD","amount":11940.00},{"type":"TotalEmpNICInPd","amount":1265.64},{"type":"TotalEmpNICYTD","amount":1265.64},{"type":"UAPtoUELYTD","amount":0.00}]}],"niLiability":{"directorsNIC":"AN","taxWkOfApptOfDirector":"1"},"pmtDate":"2015-06-30","rcvdDate":"2015-05-26","pmtConfidence":1,"taxYear":"15-16"},{"payId":"111111","payFreq":"M3","monthNo":"11","periodsCovered":1,"hoursWorked":"Up to 15.99","mandatoryMonetaryAmount":[{"type":"TaxablePayYTD","amount":19000.00},{"type":"TotalTaxYTD","amount":5250.00},{"type":"TaxDeductedOrRefunded","amount":1750.00},{"type":"TaxablePay","amount":4000.00}],"optionalMonetaryAmount":[{"type":"NonTaxOrNICPmt","amount":0.00},{"type":"PayAfterStatDedns","amount":0.00}],"taxCode":{"value":"123L"},"niLettersAndValues":[{"niLetter":"A","niFigure":[{"type":"AtLELYTD","amount":0.00},{"type":"EmpeeContribnsInPd","amount":480.00},{"type":"EmpeeContribnsYTD","amount":2280.00},{"type":"GrossEarningsForNICsInPd","amount":4000.00},{"type":"GrossEarningsForNICsYTD","amount":19000.00},{"type":"LELtoPTYTD","amount":0.00},{"type":"PTtoUAPYTD","amount":0.00},{"type":"TotalEmpNICInPd","amount":0.00},{"type":"TotalEmpNICYTD","amount":0.00},{"type":"UAPtoUELYTD","amount":0.00}]}],"pmtDate":"2016-02-28","rcvdDate":"2015-04-06","pmtConfidence":1,"taxYear":"15-16"},{"payId":"111111","payFreq":"M3","monthNo":"4","periodsCovered":1,"hoursWorked":"Up to 15.99","mandatoryMonetaryAmount":[{"type":"TaxablePayYTD","amount":11000.00},{"type":"TotalTaxYTD","amount":3250.00},{"type":"TaxDeductedOrRefunded","amount":1750.00},{"type":"TaxablePay","amount":6000.00}],"optionalMonetaryAmount":[{"type":"NonTaxOrNICPmt","amount":0.00},{"type":"PayAfterStatDedns","amount":0.00}],"taxCode":{"value":"123L"},"niLettersAndValues":[{"niLetter":"A","niFigure":[{"type":"AtLELYTD","amount":0.00},{"type":"EmpeeContribnsInPd","amount":720.00},{"type":"EmpeeContribnsYTD","amount":1320.00},{"type":"GrossEarningsForNICsInPd","amount":6000.00},{"type":"GrossEarningsForNICsYTD","amount":11000.00},{"type":"LELtoPTYTD","amount":0.00},{"type":"PTtoUAPYTD","amount":0.00},{"type":"TotalEmpNICInPd","amount":0.00},{"type":"TotalEmpNICYTD","amount":0.00},{"type":"UAPtoUELYTD","amount":0.00}]}],"pmtDate":"2015-07-31","rcvdDate":"2015-04-06","pmtConfidence":1,"taxYear":"15-16"},{"payId":"111111","payFreq":"M3","monthNo":"1","periodsCovered":1,"hoursWorked":"Up to 15.99","mandatoryMonetaryAmount":[{"type":"TaxablePayYTD","amount":5000.00},{"type":"TotalTaxYTD","amount":1500.00},{"type":"TaxDeductedOrRefunded","amount":1500.00},{"type":"TaxablePay","amount":5000.00}],"optionalMonetaryAmount":[{"type":"NonTaxOrNICPmt","amount":0.00},{"type":"PayAfterStatDedns","amount":0.00}],"taxCode":{"value":"123L"},"niLettersAndValues":[{"niLetter":"A","niFigure":[{"type":"AtLELYTD","amount":0.00},{"type":"EmpeeContribnsInPd","amount":600.00},{"type":"EmpeeContribnsYTD","amount":600.00},{"type":"GrossEarningsForNICsInPd","amount":5000.00},{"type":"GrossEarningsForNICsYTD","amount":5000.00},{"type":"LELtoPTYTD","amount":0.00},{"type":"PTtoUAPYTD","amount":0.00},{"type":"TotalEmpNICInPd","amount":0.00},{"type":"TotalEmpNICYTD","amount":0.00},{"type":"UAPtoUELYTD","amount":0.00}]}],"pmtDate":"2015-04-30","rcvdDate":"2015-04-06","pmtConfidence":1,"taxYear":"15-16"},{"payId":"111111","payFreq":"M3","monthNo":"7","periodsCovered":1,"hoursWorked":"Up to 15.99","mandatoryMonetaryAmount":[{"type":"TaxablePayYTD","amount":15000.00},{"type":"TotalTaxYTD","amount":4250.00},{"type":"TaxDeductedOrRefunded","amount":1000.00},{"type":"TaxablePay","amount":4000.00}],"optionalMonetaryAmount":[{"type":"NonTaxOrNICPmt","amount":0.00},{"type":"PayAfterStatDedns","amount":0.00}],"taxCode":{"value":"123L"},"niLettersAndValues":[{"niLetter":"A","niFigure":[{"type":"AtLELYTD","amount":0.00},{"type":"EmpeeContribnsInPd","amount":480.00},{"type":"EmpeeContribnsYTD","amount":1800.00},{"type":"GrossEarningsForNICsInPd","amount":4000.00},{"type":"GrossEarningsForNICsYTD","amount":15000.00},{"type":"LELtoPTYTD","amount":0.00},{"type":"PTtoUAPYTD","amount":0.00},{"type":"TotalEmpNICInPd","amount":0.00},{"type":"TotalEmpNICYTD","amount":0.00},{"type":"UAPtoUELYTD","amount":0.00}]}],"pmtDate":"2015-10-31","rcvdDate":"2015-04-06","pmtConfidence":1,"taxYear":"15-16"}]},"sequenceNumber":39}]}}}
+\ No newline at end of file
+diff --git a/test/uk/gov/hmrc/taxhistory/MicroserviceHelloWorldControllerSpec.scala b/test/uk/gov/hmrc/taxhistory/MicroserviceHelloWorldControllerSpec.scala
+deleted file mode 100644
+index ee35392..0000000
+--- a/test/uk/gov/hmrc/taxhistory/MicroserviceHelloWorldControllerSpec.scala
++++ /dev/null
+@@ -1,25 +0,0 @@
+-package uk.gov.hmrc.taxhistory.controllers
+-
+-import play.api.http.Status
+-import play.api.test.FakeRequest
+-import play.api.http.Status
+-import play.api.test.FakeRequest
+-import uk.gov.hmrc.play.test.UnitSpec
+-import uk.gov.hmrc.play.test.WithFakeApplication
+-import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
+-
+-
+-class MicroserviceHelloWorldControllerSpec extends UnitSpec with WithFakeApplication{
+-
+-  val fakeRequest = FakeRequest("GET", "/")
+-
+-
+-  "GET /" should {
+-    "return 200" in {
+-      val result = MicroserviceHelloWorld.hello()(fakeRequest)
+-      status(result) shouldBe Status.OK
+-    }
+-  }
+-
+-
+-}
+diff --git a/test/uk/gov/hmrc/taxhistory/model/rti/RtiDataSpec.scala b/test/uk/gov/hmrc/taxhistory/model/rti/RtiDataSpec.scala
+new file mode 100644
+index 0000000..e73d1b0
+--- /dev/null
++++ b/test/uk/gov/hmrc/taxhistory/model/rti/RtiDataSpec.scala
+@@ -0,0 +1,50 @@
++/*
++ * Copyright 2017 HM Revenue & Customs
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package uk.gov.hmrc.taxhistory.model.rti
++
++import play.api.libs.json.{JsValue, Json}
++import uk.gov.hmrc.play.test.UnitSpec
++import uk.gov.hmrc.tai.model.rti.RtiData
++
++import scala.io.Source
++
++/**
++  * Created by kris on 13/06/17.
++  */
++class RtiDataSpec extends TestUtil with UnitSpec {
++
++  lazy val rtiSuccessfulResponseURLDummy = loadFile("/json/rti/response/dummyRti.json")
++
++
++  "RtiData" should {
++
++    "transform Rti Response Json correctly to RtiData Model " in {
++      val rtiDetails = rtiSuccessfulResponseURLDummy.as[RtiData](RtiData.reader)
++      rtiDetails shouldBe a[RtiData]
++    }
++  }
++}
++
++
++object TestUtil extends TestUtil
++
++trait TestUtil {
++  def loadFile(path:String): JsValue = {
++    val jsonString = Source.fromURL(getClass.getResource(path)).mkString
++    Json.parse(jsonString)
++  }
++}
