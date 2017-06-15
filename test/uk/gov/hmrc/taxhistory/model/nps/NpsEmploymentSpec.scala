@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxhistory.model.nps
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.taxhistory.model.rti.TestUtil
+import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 /**
   * Created by Shailesh on 13/06/17.
@@ -29,7 +29,7 @@ class NpsEmploymentSpec extends TestUtil with UnitSpec {
 
 
   val employmentResponse = """ {
-                             |    "nino": "AA0000000",
+                             |    "nino": "AA000000",
                              |    "sequenceNumber": 6,
                              |    "worksNumber": "00191048716",
                              |    "taxDistrictNumber": "846",
@@ -44,7 +44,28 @@ class NpsEmploymentSpec extends TestUtil with UnitSpec {
     "transform Nps Employment Response Json correctly to Employment Model " in {
       val employment = Json.parse(employmentResponse).as[NpsEmployment]
       employment shouldBe a[NpsEmployment]
-      println(employment)
-    }
+      employment.nino  shouldBe "AA000000"
+      employment.sequenceNumber  shouldBe 6
+      employment.worksNumber  shouldBe Some("00191048716")
+      employment.taxDistrictNumber  shouldBe "846"
+      employment.payeNumber  shouldBe "T2PP"
+      employment.employerName  shouldBe "Aldi"
+
   }
+
+
+    "Multiple NpsEmployments Json" should {
+      "transform List of NpsEmployment Model " in {
+        val npsEmployments = employmentsResponse.as[List[NpsEmployment]]
+        npsEmployments shouldBe a [List[NpsEmployment]]
+        println(npsEmployments)
+      }
+    }
+
+
+
+  }
+
+
+
 }
