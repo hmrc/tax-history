@@ -33,7 +33,23 @@ class RtiDataSpec extends TestUtil with UnitSpec {
     "transform Rti Response Json correctly to RtiData Model " in {
       val rtiDetails = rtiSuccessfulResponseURLDummy.as[RtiData](RtiData.reader)
       rtiDetails shouldBe a[RtiData]
-      println(rtiDetails)
+      rtiDetails.nino shouldBe ""
+
+    }
+    "transform Rti Response Json correctly containing Employments" in {
+      val rtiDetails = rtiSuccessfulResponseURLDummy.as[RtiData](RtiData.reader)
+      rtiDetails shouldBe a[RtiData]
+
+    }
+    "transform Rti Response Json correctly which containing Payments" in {
+      val rtiDetails = rtiSuccessfulResponseURLDummy.as[RtiData](RtiData.reader)
+      rtiDetails shouldBe a[RtiData]
+
+    }
+    "transform Rti Response Json correctly which containing EndOfYearUpdates" in {
+      val rtiDetails = rtiSuccessfulResponseURLDummy.as[RtiData](RtiData.reader)
+      rtiDetails shouldBe a[RtiData]
+
     }
   }
 }
