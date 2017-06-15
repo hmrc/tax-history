@@ -17,10 +17,9 @@
 package uk.gov.hmrc.tai.model.rti
 
 import org.joda.time.LocalDate
-import org.joda.time.format.DateTimeFormat
-import play.api.data.validation.ValidationError
 import play.api.libs.json._
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
+import com.github.nscala_time.time.Imports._
 
 case class RtiData(nino:String,
                    employments:List[RtiEmployment])
@@ -32,10 +31,12 @@ case class RtiEmployment(sequenceNo:Int,
                          payments:List[RtiPayment],
                          endOfYearUpdates:List[RtiEndOfYearUpdate])
 
-case class RtiPayment(taxablePay:BigDecimal,
+case class RtiPayment(
+                      paidOnDate:LocalDate,
                       taxablePayYTD:BigDecimal,
-                      taxDeductedOrRefunded:BigDecimal,
-                      totalTaxYTD:BigDecimal)
+                      totalTaxYTD:BigDecimal) extends Ordered[RtiPayment] {
+  def compare(that: RtiPayment) = this.paidOnDate compare that.paidOnDate
+}
 
 case class RtiEndOfYearUpdate(taxablePayDelta:BigDecimal,
                               totalTaxDelta:BigDecimal,
@@ -49,12 +50,13 @@ object RtiPayment {
        val mandatoryMonetaryAmountMap = (js \ "mandatoryMonetaryAmount").as[Map[String, BigDecimal]]
 
        JsSuccess(
-         RtiPayment(taxablePay = mandatoryMonetaryAmountMap("TaxablePay"),
-           taxablePayYTD = mandatoryMonetaryAmountMap("TaxablePay"),
-           taxDeductedOrRefunded = mandatoryMonetaryAmountMap("TaxDeductedOrRefunded"),
+         RtiPayment(
+           paidOnDate = (js \ "pmtDate").as[LocalDate](JsonUtils.localDateFormat),
+           taxablePayYTD = mandatoryMonetaryAmountMap("TaxablePayYTD"),
            totalTaxYTD = mandatoryMonetaryAmountMap("TotalTaxYTD")))
      }
    }
+
   implicit val formats = Json.format[RtiPayment]
 }
 
@@ -63,7 +65,7 @@ object RtiEndOfYearUpdate {
     def reads(js: JsValue): JsResult[RtiEndOfYearUpdate] = {
       implicit val stringMapFormat = JsonUtils.mapFormat[String,BigDecimal]("type", "amount")
       val mandatoryMonetaryAmountMap = (js \ "optionalAdjustmentAmount").as[Map[String, BigDecimal]]
-      val receivedDate = (js \ "rcvdDate").as[LocalDate]
+      val receivedDate = (js \ "rcvdDate").as[LocalDate](JsonUtils.localDateFormat)
       JsSuccess(
         RtiEndOfYearUpdate(taxablePayDelta = mandatoryMonetaryAmountMap("TaxablePayDelta"),
           totalTaxDelta = mandatoryMonetaryAmountMap("TotalTaxDelta"),
@@ -72,22 +74,7 @@ object RtiEndOfYearUpdate {
     }
 
 
-    implicit val formatLocalDate: Format[LocalDate] = Format(
-      new Reads[LocalDate]{
-        val dateRegex = """^(\d\d\d\d)-(\d\d)-(\d\d)$""".r
-        override def reads(json: JsValue): JsResult[LocalDate] = json match {
-          case JsString(dateRegex(y, m, d)) =>
-            JsSuccess(new LocalDate(y.toInt, m.toInt, d.toInt))
-          case invalid => JsError(ValidationError(
-            s"Invalid date format [yyyy-MM-dd]: $invalid"))
-        }
-      },
-      new Writes[LocalDate]{
-        val dateFormat = DateTimeFormat.forPattern("yyyy-MM-dd")
-        override def writes(date: LocalDate): JsValue =
-          JsString(dateFormat.print(date))
-      }
-    )
+
   }
   implicit val formats = Json.format[RtiEndOfYearUpdate]
 }
