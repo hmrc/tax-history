@@ -14,26 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxhistory.model.rti
+package uk.gov.hmrc.taxhistory.model.nps
 
-import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.tai.model.rti.RtiData
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import play.api.libs.json.Json
 
 
 /**
-  * Created by kris on 13/06/17.
+  * Created by shailesh on 15/06/17.
   */
-class RtiDataSpec extends TestUtil with UnitSpec {
 
-  lazy val rtiSuccessfulResponseURLDummy = loadFile("/json/rti/response/dummyRti.json")
 
-  "RtiData" should {
-    "transform Rti Response Json correctly to RtiData Model " in {
-      val rtiDetails = rtiSuccessfulResponseURLDummy.as[RtiData](RtiData.reader)
-      rtiDetails shouldBe a[RtiData]
-      println(rtiDetails)
-    }
-  }
+case class NpsEmployment(nino:String,
+                      sequenceNumber:Int,
+                      taxDistrictNumber:String,
+                      payeNumber:String,
+                      employerName:String,
+                      worksNumber: Option[String]= None
+                    )
+
+object NpsEmployment {
+  implicit val formats = Json.format[NpsEmployment]
 }
-
