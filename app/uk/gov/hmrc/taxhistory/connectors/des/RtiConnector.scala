@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxhistory.connectors.des
 import play.api.Play
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost}
+import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 import uk.gov.hmrc.tai.connectors.BaseConnector
 import uk.gov.hmrc.tai.model.rti._
 import uk.gov.hmrc.taxhistory.WSHttp
@@ -56,10 +56,10 @@ trait RtiConnector extends BaseConnector {
       "Authorization" -> authorization,
       "Gov-Uk-Originator-Id" -> originatorId))
 
-  def getRTI(nino: Nino, twoDigitTaxYear: Int)(implicit hc: HeaderCarrier): Future[Option[RtiData]] = {
+  def getRTI(nino: Nino, twoDigitTaxYear: Int)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val urlToRead = rtiPathUrl(nino, s"tax-year/${twoDigitTaxYear}")
     implicit val hc: HeaderCarrier = createHeader
-    getFromRTIWithStatus(urlToRead, withoutSuffix(nino))
+    getFromRTI(urlToRead)
   }
 
 }

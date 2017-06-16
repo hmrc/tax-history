@@ -100,40 +100,33 @@ trait BaseConnector extends ServicesConfig {
      }
   }
 
-  def getFromRTIWithStatus(url: String, reqNino: String)(implicit hc: HeaderCarrier): Future[Option[RtiData]] = {
+  def getFromRTI(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val futureResponse = httpGet.GET[HttpResponse](url)
     futureResponse.flatMap {
       res =>
         res.status match {
           case Status.OK => {
-
-            val rtiData = res.json.as[RtiData](RtiData.reader)
-            if (reqNino != rtiData.nino) {
-              Logger.warn(s"RTIAPI - Incorrect Payload returned from RTI HODS for $reqNino")
-              Future.successful((None))
-            } else {
-              Future.successful((Some(rtiData)))
-            }
+            Future.successful(res)
           }
           case Status.BAD_REQUEST => {
-            val errorMessage = s"RTIAPI - Bad Request error returned from RTI HODS for $reqNino"
+            val errorMessage = s"RTIAPI - Bad Request error returned from RTI HODS"
             Logger.warn(errorMessage)
-            Future.failed(new BadRequestException(errorMessage))
+            Future.successful(res)
           }
           case Status.NOT_FOUND => {
-            val errorMessage =s"RTIAPI - No DATA Found error returned from RTI HODS for $reqNino"
+            val errorMessage =s"RTIAPI - No DATA Found error returned from RTI HODS"
             Logger.warn(errorMessage)
-            Future.failed(new NotFoundException(errorMessage))
+            Future.successful(res)
           }
           case Status.INTERNAL_SERVER_ERROR => {
-            val errorMessage =s"RTIAPI - Internal Server error returned from RTI HODS $reqNino"
+            val errorMessage =s"RTIAPI - Internal Server error returned from RTI HODS"
             Logger.warn(errorMessage)
-            Future.failed(new InternalServerException(errorMessage))
+            Future.successful(res)
           }
           case status => {
-            val errorMessage =s"RTIAPI - An error returned from RTI HODS for $reqNino with status $status"
+            val errorMessage =s"RTIAPI - An error returned from RTI HODS with status $status"
             Logger.warn(errorMessage)
-            Future.failed(new ServiceUnavailableException(errorMessage))
+            Future.successful(res)
           }
         }
     }
