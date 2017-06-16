@@ -58,7 +58,6 @@ class NpsEmploymentSpec extends TestUtil with UnitSpec {
       "transform List of NpsEmployment Model " in {
         val npsEmployments = employmentsResponse.as[List[NpsEmployment]]
         npsEmployments shouldBe a [List[NpsEmployment]]
-        println(npsEmployments)
       }
     }
 
