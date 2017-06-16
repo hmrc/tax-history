@@ -16,73 +16,105 @@
 
 package uk.gov.hmrc.tai.model.rti
 
+import org.joda.time.LocalDate
 import play.api.libs.json._
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
+import com.github.nscala_time.time.Imports._
 
 case class RtiData(nino:String,
-                   taxYear:String,
-                   employments:List[Employment])
+                   employments:List[RtiEmployment])
 
-case class Employment(sequenceNo:Int,
-                      payeRef:String,
-                      currentPayId: Option[String]= None,
-                      payments:List[Payment])
+case class RtiEmployment(sequenceNo:Int,
+                         officeNumber:String,
+                         payeRef:String,
+                         currentPayId: Option[String]= None,
+                         payments:List[RtiPayment],
+                         endOfYearUpdates:List[RtiEndOfYearUpdate])
 
-case class Payment(taxablePay:BigDecimal,
-                   taxablePayYTD:BigDecimal,
-                   taxDeductedOrRefunded:BigDecimal,
-                   totalTaxYTD:BigDecimal)
+case class RtiPayment(
+                      paidOnDate:LocalDate,
+                      taxablePayYTD:BigDecimal,
+                      totalTaxYTD:BigDecimal) extends Ordered[RtiPayment] {
+  def compare(that: RtiPayment) = this.paidOnDate compare that.paidOnDate
+}
 
-object Payment {
-   val reader = new Reads[Payment]{
-     def reads(js: JsValue): JsResult[Payment] = {
+case class RtiEndOfYearUpdate(taxablePayDelta:BigDecimal,
+                              totalTaxDelta:BigDecimal,
+                              receivedDate:LocalDate)
+
+
+object RtiPayment {
+   val reader = new Reads[RtiPayment]{
+     def reads(js: JsValue): JsResult[RtiPayment] = {
        implicit val stringMapFormat = JsonUtils.mapFormat[String,BigDecimal]("type", "amount")
-
        val mandatoryMonetaryAmountMap = (js \ "mandatoryMonetaryAmount").as[Map[String, BigDecimal]]
 
        JsSuccess(
-         Payment(taxablePay = mandatoryMonetaryAmountMap("TaxablePay"),
-           taxablePayYTD = mandatoryMonetaryAmountMap("TaxablePay"),
-           taxDeductedOrRefunded = mandatoryMonetaryAmountMap("TaxDeductedOrRefunded"),
+         RtiPayment(
+           paidOnDate = (js \ "pmtDate").as[LocalDate](JsonUtils.localDateFormat),
+           taxablePayYTD = mandatoryMonetaryAmountMap("TaxablePayYTD"),
            totalTaxYTD = mandatoryMonetaryAmountMap("TotalTaxYTD")))
      }
    }
-  implicit val formats = Json.format[Payment]
+
+  implicit val formats = Json.format[RtiPayment]
 }
 
-object Employment {
-  val reader = new Reads[Employment] {
-    def reads(js: JsValue): JsResult[Employment] = {
+object RtiEndOfYearUpdate {
+  val reader = new Reads[RtiEndOfYearUpdate]{
+    def reads(js: JsValue): JsResult[RtiEndOfYearUpdate] = {
+      implicit val stringMapFormat = JsonUtils.mapFormat[String,BigDecimal]("type", "amount")
+      val mandatoryMonetaryAmountMap = (js \ "optionalAdjustmentAmount").as[Map[String, BigDecimal]]
+      val receivedDate = (js \ "rcvdDate").as[LocalDate](JsonUtils.localDateFormat)
+      JsSuccess(
+        RtiEndOfYearUpdate(taxablePayDelta = mandatoryMonetaryAmountMap("TaxablePayDelta"),
+          totalTaxDelta = mandatoryMonetaryAmountMap("TotalTaxDelta"),
+          receivedDate = receivedDate
+         ))
+    }
+
+
+
+  }
+  implicit val formats = Json.format[RtiEndOfYearUpdate]
+}
+
+object RtiEmployment {
+  val reader = new Reads[RtiEmployment] {
+    def reads(js: JsValue): JsResult[RtiEmployment] = {
         for {
+          sequenceNo <- (js \ "sequenceNumber" ).validate[Int]
+          officeNumber <- (js \ "empRefs" \ "officeNo").validate[String]
           payeRef <- (js \ "empRefs" \ "payeRef").validate[String]
           currentPayId <- (js \ "currentPayId").validate[String]
-          payments <- (js \ "payments" \ "inYear").validate[List[Payment]](Reads.list(Payment.reader))
+          payments <- (js \ "payments" \ "inYear").validate[List[RtiPayment]](Reads.list(RtiPayment.reader))
+          endOfYearUpdates <- JsSuccess((js \ "payments" \ "eyu").asOpt[List[RtiEndOfYearUpdate]](Reads.list(RtiEndOfYearUpdate.reader)))
         } yield {
-
-            Employment(sequenceNo = 0,
+            RtiEmployment(
+              sequenceNo = sequenceNo,
               payeRef = payeRef,
+              officeNumber = officeNumber,
               currentPayId = Some(currentPayId),
-              payments = payments
+              payments = payments,
+              endOfYearUpdates = endOfYearUpdates.getOrElse(Nil)
             )
-
         }
     }
   }
-  implicit val formats = Json.format[Employment]
+  implicit val formats = Json.format[RtiEmployment]
 }
 
 object RtiData {
   val reader = new Reads[RtiData] {
     def reads(js: JsValue): JsResult[RtiData] = {
+
       for {
         nino <- (js \ "request" \ "nino").validate[String]
-        taxYear <- (js \ "request" \ "relatedTaxYear").validate[String]
-        employments <- (js \ "individual" \ "employments" \ "employment").validate[List[Employment]](Reads.list(Employment.reader))
+        employments <- (js \ "individual" \ "employments" \ "employment").validate[List[RtiEmployment]](Reads.list(RtiEmployment.reader))
       } yield {
 
           RtiData(
             nino = nino,
-            taxYear = taxYear,
             employments = employments
           )
 

@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.taxhistory.model.utils
 
+import org.joda.time.LocalDate
+import org.joda.time.format.DateTimeFormat
+import play.api.data.validation.ValidationError
 import play.api.libs.json._
 
 object JsonUtils {
@@ -39,4 +42,21 @@ object JsonUtils {
         case x => JsError(s"Expected JsArray(...), found $x")
       }
     }
+
+  lazy val localDateFormat: Format[LocalDate] = Format(
+    new Reads[LocalDate]{
+      val dateRegex = """^(\d\d\d\d)-(\d\d)-(\d\d)$""".r
+      override def reads(json: JsValue): JsResult[LocalDate] = json match {
+        case JsString(dateRegex(y, m, d)) =>
+          JsSuccess(new LocalDate(y.toInt, m.toInt, d.toInt))
+        case invalid => JsError(ValidationError(
+          s"Invalid date format [yyyy-MM-dd]: $invalid"))
+      }
+    },
+    new Writes[LocalDate]{
+      val dateFormat = DateTimeFormat.forPattern("yyyy-MM-dd")
+      override def writes(date: LocalDate): JsValue =
+        JsString(dateFormat.print(date))
+    }
+  )
 }
