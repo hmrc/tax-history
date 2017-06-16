@@ -50,7 +50,7 @@ class RtiDataSpec extends TestUtil with UnitSpec {
       employment49.get.officeNumber shouldBe "531"
       employment49.get.payments.size shouldBe 5
       employment49.get.endOfYearUpdates.size shouldBe 1
-      
+
       val employment39 = rtiDetails.employments.find(emp => emp.sequenceNo == 39 )
       employment39.isDefined shouldBe true
       employment39.get.currentPayId shouldBe Some("111111")
@@ -66,15 +66,22 @@ class RtiDataSpec extends TestUtil with UnitSpec {
       payments20160313.head.taxablePayYTD shouldBe BigDecimal.valueOf(20000.00)
       payments20160313.head.totalTaxYTD shouldBe BigDecimal.valueOf(1880.00)
     }
+    "sort payment list by paid on date with latest payment in last position" in {
+      val paymentsList = rtiDetails.employments.head.payments.sorted
+      paymentsList.size shouldBe 5
+      paymentsList.last.paidOnDate shouldBe new LocalDate(2016,3,31)
+      paymentsList.last.taxablePayYTD shouldBe BigDecimal.valueOf(20000.00)
+      paymentsList.last.totalTaxYTD shouldBe BigDecimal.valueOf(1880.00)
+    }
+
     "transform Rti Response Json correctly which containing EndOfYearUpdates" in {
       val endOfYearUpdates = rtiDetails.employments.map(emp => emp.endOfYearUpdates.find(eyu => eyu.receivedDate == new LocalDate(2016,6,1))).flatten
       endOfYearUpdates.size shouldBe 1
       endOfYearUpdates.head.receivedDate shouldBe new LocalDate(2016,6,1)
       endOfYearUpdates.head.taxablePayDelta shouldBe BigDecimal.valueOf(-600.99)
-      endOfYearUpdates.head.totalTaxDelta shouldBe BigDecimal.valueOf(-10.00)
-
-
+      endOfYearUpdates.head.totalTaxDelta shouldBe BigDecimal.valueOf(-10.99)
     }
+
   }
 }
 

@@ -116,20 +116,24 @@ trait BaseConnector extends ServicesConfig {
             }
           }
           case Status.BAD_REQUEST => {
-            Logger.warn(s"RTIAPI - Bad Request error returned from RTI HODS for $reqNino")
-            Future.successful((None))
+            val errorMessage = s"RTIAPI - Bad Request error returned from RTI HODS for $reqNino"
+            Logger.warn(errorMessage)
+            Future.failed(new BadRequestException(errorMessage))
           }
           case Status.NOT_FOUND => {
-            Logger.warn(s"RTIAPI - No DATA Found error returned from RTI HODS for $reqNino")
-            Future.successful((None))
+            val errorMessage =s"RTIAPI - No DATA Found error returned from RTI HODS for $reqNino"
+            Logger.warn(errorMessage)
+            Future.failed(new NotFoundException(errorMessage))
           }
           case Status.INTERNAL_SERVER_ERROR => {
-            Logger.warn(s"RTIAPI - Internal Server error returned from RTI HODS $reqNino")
-            Future.successful((None))
+            val errorMessage =s"RTIAPI - Internal Server error returned from RTI HODS $reqNino"
+            Logger.warn(errorMessage)
+            Future.failed(new InternalServerException(errorMessage))
           }
-          case _ => {
-            Logger.warn(s"RTIAPI - An error returned from RTI HODS $reqNino")
-            Future.successful((None))
+          case status => {
+            val errorMessage =s"RTIAPI - An error returned from RTI HODS for $reqNino with status $status"
+            Logger.warn(errorMessage)
+            Future.failed(new ServiceUnavailableException(errorMessage))
           }
         }
     }
