@@ -17,11 +17,10 @@
 package uk.gov.hmrc.taxhistory.model.rti
 
 import org.joda.time.LocalDate
-import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-import scala.io.Source
 
 /**
   * Created by kris on 13/06/17.
@@ -85,11 +84,3 @@ class RtiDataSpec extends TestUtil with UnitSpec {
   }
 }
 
-object TestUtil extends TestUtil
-
-trait TestUtil {
-  def loadFile(path:String): JsValue = {
-    val jsonString = Source.fromURL(getClass.getResource(path)).mkString
-    Json.parse(jsonString)
-  }
-}

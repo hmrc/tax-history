@@ -1,3 +1,19 @@
+/*
+ * Copyright 2017 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package uk.gov.hmrc.taxhistory.connectors
 
 import com.codahale.metrics.Timer
@@ -12,12 +28,16 @@ import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
-
 import org.mockito.Mockito.when
 import org.mockito.Matchers.any
+import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+
+import play.api.test.Helpers._
 
 
-class RtiConnectorSpec extends PlaySpec with MockitoSugar {
+class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
+
+  lazy val rtiSuccessfulResponseURLDummy = loadFile("/json/rti/response/dummyRti.json")
 
   "RtiConnector" should {
     "have the rti basic url " when {
@@ -48,31 +68,14 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar {
         val sut = createSUT
         implicit val hc = HeaderCarrier()
 
-        val fakePayment = RtiPayment(
-                            paidOnDate = new LocalDate(2016,12,1),
-                            taxablePayYTD = BigDecimal.valueOf(12000.00),
-                            totalTaxYTD = BigDecimal.valueOf(100.00)
-                          )
-        val fakeEmployment = RtiEmployment(
-                                currentPayId = Some("PAYID"),
-                                officeNumber = "OFFICENO",
-                                payeRef = "PAYEREF",
-                                sequenceNo = 1,
-                                payments = List(fakePayment),
-                                endOfYearUpdates = Nil
-                              )
-        val fakeRtiData = RtiData(
-                            nino = "AA000000A",
-                            employments = List(fakeEmployment)
-                            )
-        val fakeResponse: HttpResponse = HttpResponse(200, Some(Json.toJson(fakeRtiData)))
+        val fakeResponse: HttpResponse = HttpResponse(200, Some(rtiSuccessfulResponseURLDummy))
 
-        when(sut.httpGet.GET[HttpResponse](any[String])(any(), any())).thenReturn(Future.successful(fakeResponse))
+        when(sut.httpGet.GET[HttpResponse](any())(any(), any())).thenReturn(Future.successful(fakeResponse))
 
-        val resp = sut.getRTI(Nino("AA111111A"), 17)
-        val rtiData = Await.result(resp, 5 seconds)
+        val result = sut.getRTI(Nino("AA000000A"), 16)
+        val rtiData = await(result)
 
-        rtiData mustBe Some(fakeRtiData)
+        rtiData mustBe Some(rtiSuccessfulResponseURLDummy.as[RtiData](RtiData.reader))
 
       }
     }

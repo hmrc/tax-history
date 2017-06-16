@@ -1,0 +1,214 @@
+[
+  {
+    "nino": "PJ523813",
+    "sequenceNumber": 6,
+    "payeSchemeType": 0,
+    "employerNumber": 4968,
+    "payeSequenceNumber": 1,
+    "employmentType": 2,
+    "employmentStatus": 1,
+    "jobTitle": null,
+    "worksNumber": "00191048716",
+    "startingTaxCode": null,
+    "weekOneMonthOne": 0,
+    "receivingJobseekersAllowance": false,
+    "receivingOccupationalPension": false,
+    "director": false,
+    "manualCorrespondence": false,
+    "p161Issued": false,
+    "creationMedia": 0,
+    "creationSource": 18,
+    "startDateSource": null,
+    "startDate": "10/11/2015",
+    "cessationMedia": 0,
+    "cessationSource": null,
+    "endDateSource": null,
+    "endDate": null,
+    "taxDistrictNumber": "846",
+    "payeNumber": "T2PP",
+    "employerName": "Aldi",
+    "otherIncomeSourceIndicator": false,
+    "payrolledTaxYear": true,
+    "payrolledTaxYear1": true,
+    "payrolledBenefitsTaxYear": {
+      "taxYear": 2016,
+      "payrolledBenefit": [
+        {
+          "payrolledBenefitSequenceNumber": 1,
+          "iabdType": 30,
+          "active": 1,
+          "payrolledBenefitStartDate": "06/04/2015",
+          "payrolledBenefitEndDate": null,
+          "benefitInKindStatus": 10
+        }
+      ]
+    },
+    "payrolledBenefitsTaxYear1": {
+      "taxYear": 2017,
+      "payrolledBenefit": [
+        {
+          "payrolledBenefitSequenceNumber": 1,
+          "iabdType": 30,
+          "active": 1,
+          "payrolledBenefitStartDate": "06/04/2015",
+          "payrolledBenefitEndDate": null,
+          "benefitInKindStatus": 10
+        }
+      ]
+    },
+    "cessationPayThisEmployment": null
+  },
+  {
+    "nino": "PJ523813",
+    "sequenceNumber": 5,
+    "payeSchemeType": 0,
+    "employerNumber": 4968,
+    "payeSequenceNumber": 1,
+    "employmentType": 2,
+    "employmentStatus": 1,
+    "jobTitle": null,
+    "worksNumber": "0",
+    "startingTaxCode": null,
+    "weekOneMonthOne": 0,
+    "receivingJobseekersAllowance": false,
+    "receivingOccupationalPension": false,
+    "director": false,
+    "manualCorrespondence": false,
+    "p161Issued": false,
+    "creationMedia": 0,
+    "creationSource": 18,
+    "startDateSource": null,
+    "startDate": "21/01/2016",
+    "cessationMedia": 0,
+    "cessationSource": null,
+    "endDateSource": null,
+    "endDate": null,
+    "taxDistrictNumber": "951",
+    "payeNumber": "VI11",
+    "employerName": "Aldi",
+    "otherIncomeSourceIndicator": false,
+    "payrolledTaxYear": true,
+    "payrolledTaxYear1": true,
+    "payrolledBenefitsTaxYear": {
+      "taxYear": 2016,
+      "payrolledBenefit": [
+        {
+          "payrolledBenefitSequenceNumber": 1,
+          "iabdType": 30,
+          "active": 1,
+          "payrolledBenefitStartDate": "06/04/2015",
+          "payrolledBenefitEndDate": null,
+          "benefitInKindStatus": 10
+        }
+      ]
+    },
+    "payrolledBenefitsTaxYear1": {
+      "taxYear": 2017,
+      "payrolledBenefit": [
+        {
+          "payrolledBenefitSequenceNumber": 1,
+          "iabdType": 30,
+          "active": 1,
+          "payrolledBenefitStartDate": "06/04/2015",
+          "payrolledBenefitEndDate": null,
+          "benefitInKindStatus": 10
+        }
+      ]
+    },
+    "cessationPayThisEmployment": null
+  },
+  {
+    "nino": "PJ523813",
+    "sequenceNumber": 4,
+    "payeSchemeType": 0,
+    "employerNumber": 4968,
+    "payeSequenceNumber": 1,
+    "employmentType": 2,
+    "employmentStatus": 1,
+    "jobTitle": null,
+    "worksNumber": "1",
+    "startingTaxCode": null,
+    "weekOneMonthOne": 0,
+    "receivingJobseekersAllowance": false,
+    "receivingOccupationalPension": true,
+    "director": false,
+    "manualCorrespondence": false,
+    "p161Issued": false,
+    "creationMedia": 0,
+    "creationSource": 18,
+    "startDateSource": null,
+    "startDate": "01/01/2014",
+    "cessationMedia": 0,
+    "cessationSource": null,
+    "endDateSource": null,
+    "endDate": null,
+    "taxDistrictNumber": "419",
+    "payeNumber": "S47019",
+    "employerName": "M&S",
+    "otherIncomeSourceIndicator": false,
+    "payrolledTaxYear": true,
+    "payrolledTaxYear1": true,
+    "payrolledBenefitsTaxYear": {
+      "taxYear": 2016,
+      "payrolledBenefit": [
+        {
+          "payrolledBenefitSequenceNumber": 1,
+          "iabdType": 30,
+          "active": 1,
+          "payrolledBenefitStartDate": "06/04/2015",
+          "payrolledBenefitEndDate": null,
+          "benefitInKindStatus": 10
+        }
+      ]
+    },
+    "payrolledBenefitsTaxYear1": {
+      "taxYear": 2017,
+      "payrolledBenefit": [
+        {
+          "payrolledBenefitSequenceNumber": 1,
+          "iabdType": 30,
+          "active": 1,
+          "payrolledBenefitStartDate": "06/04/2015",
+          "payrolledBenefitEndDate": null,
+          "benefitInKindStatus": 10
+        }
+      ]
+    },
+    "cessationPayThisEmployment": null
+  },
+  {
+    "nino": "PJ523813",
+    "sequenceNumber": 3,
+    "payeSchemeType": 0,
+    "employerNumber": 2448961,
+    "payeSequenceNumber": 4,
+    "employmentType": 1,
+    "employmentStatus": 1,
+    "jobTitle": null,
+    "worksNumber": "1320",
+    "startingTaxCode": "609L",
+    "weekOneMonthOne": 2,
+    "receivingJobseekersAllowance": false,
+    "receivingOccupationalPension": false,
+    "director": false,
+    "manualCorrespondence": false,
+    "p161Issued": false,
+    "creationMedia": 3,
+    "creationSource": 2,
+    "startDateSource": null,
+    "startDate": "04/01/2010",
+    "cessationMedia": 0,
+    "cessationSource": null,
+    "endDateSource": null,
+    "endDate": null,
+    "taxDistrictNumber": "582",
+    "payeNumber": "HE645",
+    "employerName": "PAYESCHEMEOPERATORNAME57510",
+    "otherIncomeSourceIndicator": false,
+    "payrolledTaxYear": false,
+    "payrolledTaxYear1": false,
+    "payrolledBenefitsTaxYear": null,
+    "payrolledBenefitsTaxYear1": null,
+    "cessationPayThisEmployment": null
+  }
+]
