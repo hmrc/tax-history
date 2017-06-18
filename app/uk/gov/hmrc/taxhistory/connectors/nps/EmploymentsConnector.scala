@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxhistory.connectors.des
+package uk.gov.hmrc.taxhistory.connectors.nps
+
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 import uk.gov.hmrc.tai.connectors.BaseConnector
@@ -22,26 +23,20 @@ import uk.gov.hmrc.taxhistory.WSHttp
 
 import scala.concurrent.Future
 
-object RtiConnector extends RtiConnector {
+/**
+  * Created by shailesh on 18/06/17.
+  */
+ trait EmploymentsConnector extends BaseConnector {
 
-  override val httpGet: HttpGet = WSHttp
-  override val httpPost: HttpPost = WSHttp
 
-  lazy val serviceUrl: String = s"${baseUrl("rti-hod")}"
-  lazy val authorization: String = "Bearer " + getConfString(s"$services.rti-hod.authorizationToken","local")
-  lazy val environment: String = getConfString(s"$services.rti-hod.env","local")
-  lazy val originatorId = getConfString(s"$services.rti-hod.originatorId","local")
-}
-
-trait RtiConnector extends BaseConnector {
 
   def serviceUrl: String
   def authorization: String
   def environment: String
 
-  def rtiBasicUrl(nino: Nino) = s"$serviceUrl/rti/individual/payments/nino/${withoutSuffix(nino)}"
+  def npsBaseUrl(nino: Nino) = s"$serviceUrl/person/$nino"
+  def npsPathUrl(nino: Nino, path: String) = s"${npsBaseUrl(nino)}/$path"
 
-  def rtiPathUrl(nino: Nino, path: String) = s"${rtiBasicUrl(nino)}/$path"
 
   def withoutSuffix(nino: Nino) = {
     val BASIC_NINO_LENGTH = 8
@@ -53,10 +48,24 @@ trait RtiConnector extends BaseConnector {
       "Authorization" -> authorization,
       "Gov-Uk-Originator-Id" -> originatorId))
 
-  def getRTI(nino: Nino, twoDigitTaxYear: Int)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    val urlToRead = rtiPathUrl(nino, s"tax-year/${twoDigitTaxYear}")
-    implicit val hc: HeaderCarrier = createHeader
-    getFromRTI(urlToRead)
+
+  def getEmployments(nino: Nino, year: Int)
+                    (implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    val urlToRead = npsPathUrl(nino, s"employment/$year")
+    httpGet.GET[HttpResponse](urlToRead)
   }
 
+
+}
+
+
+object EmploymentsConnector extends EmploymentsConnector {
+
+  override val httpGet: HttpGet = WSHttp
+  override val httpPost: HttpPost = WSHttp
+
+  lazy val serviceUrl: String = s"${baseUrl("nps-hod")}"
+  lazy val authorization: String = "Bearer " + getConfString(s"$services.rti-hod.authorizationToken","local")
+  lazy val environment: String = getConfString(s"$services.rti-hod.env","local")
+  lazy val originatorId = getConfString(s"$services.rti-hod.originatorId","local")
 }

@@ -22,7 +22,6 @@ import play.api.libs.json.{Format, Writes}
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.play.http.{HeaderCarrier, _}
-import uk.gov.hmrc.tai.model.rti.RtiData
 
 import scala.concurrent.Future
 

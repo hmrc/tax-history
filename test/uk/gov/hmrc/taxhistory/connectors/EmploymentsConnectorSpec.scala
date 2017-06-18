@@ -25,63 +25,63 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
-import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
+import uk.gov.hmrc.taxhistory.connectors.nps.EmploymentsConnector
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 import scala.concurrent.Future
 
 
-class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
+class EmploymentsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
-  lazy val rtiSuccessfulResponseURLDummy = loadFile("/json/rti/response/dummyRti.json")
+  lazy val employmentsSuccessfulResponse = loadFile("/json/nps/response/employments.json")
 
-  "RtiConnector" should {
-    "have the rti basic url " when {
+  "EmploymentsConnector" should {
+    "have the nps basic url " when {
       "given a valid nino" in {
-        rtiConnector.rtiBasicUrl(Nino("AA111111A")) mustBe "/test/rti/individual/payments/nino/AA111111"
+        employmentsConnector.npsBaseUrl(Nino("AA111111A")) mustBe "/test/person/AA111111A"
       }
     }
 
-    "have the Rti Path Url" when {
+    "have the nps Path Url" when {
       "given a valid nino and path" in {
-        rtiConnector.rtiPathUrl(Nino("AA111111A"), "path") mustBe "/test/rti/individual/payments/nino/AA111111/path"
+        employmentsConnector.npsPathUrl(Nino("AA111111A"), "path") mustBe "/test/person/AA111111A/path"
       }
     }
 
     "have withoutSuffix nino" when {
       "given a valid nino" in {
-        rtiConnector.withoutSuffix(Nino("AA111111A")) mustBe "AA111111"
+        employmentsConnector.withoutSuffix(Nino("AA111111A")) mustBe "AA111111"
       }
     }
 
     "create the correct headers" in {
-      val headers = rtiConnector.createHeader
+      val headers = employmentsConnector.createHeader
       headers.extraHeaders mustBe List(("Environment", "env"), ("Authorization", "auth"), ("Gov-Uk-Originator-Id", "orgId"))
     }
 
-    "get RTI data " when {
+    "get EmploymentData data " when {
       "given a valid Nino and TaxYear" in {
         implicit val hc = HeaderCarrier()
-        val testRtiConnector = rtiConnector
-        val fakeResponse: HttpResponse = HttpResponse(OK, Some(rtiSuccessfulResponseURLDummy))
+        val testemploymentsConnector = employmentsConnector
+        val fakeResponse: HttpResponse = HttpResponse(OK, Some(employmentsSuccessfulResponse))
 
-        when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any())).thenReturn(Future.successful(fakeResponse))
+        when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any())).thenReturn(Future.successful(fakeResponse))
 
-        val result = testRtiConnector.getRTI(Nino("AA000000A"), 16)
+        val result = testemploymentsConnector.getEmployments(Nino("AA000000A"), 2016)
         val rtiDataResponse = await(result)
 
         rtiDataResponse.status mustBe OK
-        rtiDataResponse.json mustBe rtiSuccessfulResponseURLDummy
+        rtiDataResponse.json mustBe employmentsSuccessfulResponse
       }
     }
     "return and handle a bad request response " in {
       val expectedResponse = Json.parse( """{"reason": "Some thing went wrong"}""")
       implicit val hc = HeaderCarrier()
-      val testRtiConnector = rtiConnector
-      when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any()))
+      val testemploymentsConnector = employmentsConnector
+      when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(expectedResponse))))
 
-      val result = testRtiConnector.getRTI(Nino("AA000000A"), 16)
+      val result = testemploymentsConnector.getEmployments(Nino("AA000000A"), 2016)
       val response = await(result)
       response.status must be(BAD_REQUEST)
       response.json must be(expectedResponse)
@@ -89,11 +89,11 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     "return and handle a not found response " in {
       val expectedResponse = Json.parse( """{"reason": "Resource not found"}""")
       implicit val hc = HeaderCarrier()
-      val testRtiConnector = rtiConnector
-      when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any()))
+      val testemploymentsConnector = employmentsConnector
+      when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(expectedResponse))))
 
-      val result = testRtiConnector.getRTI(Nino("AA000000A"), 16)
+      val result = testemploymentsConnector.getEmployments(Nino("AA000000A"), 2016)
       val response = await(result)
       response.status mustBe NOT_FOUND
       response.json mustBe expectedResponse
@@ -101,11 +101,11 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     "return and handle an internal server error response " in {
       val expectedResponse = Json.parse( """{"reason": "Internal Server Error"}""")
       implicit val hc = HeaderCarrier()
-      val testRtiConnector = rtiConnector
-      when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any()))
+      val testemploymentsConnector = employmentsConnector
+      when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(expectedResponse))))
 
-      val result = testRtiConnector.getRTI(Nino("AA000000A"), 16)
+      val result = testemploymentsConnector.getEmployments(Nino("AA000000A"), 2016)
       val response = await(result)
       response.status mustBe INTERNAL_SERVER_ERROR
       response.json mustBe expectedResponse
@@ -113,19 +113,20 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     "return and handle an service unavailable error response " in {
       val expectedResponse = Json.parse( """{"reason": "Service Unavailable Error"}""")
       implicit val hc = HeaderCarrier()
-      val testRtiConnector = rtiConnector
-      when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any()))
+      val testemploymentsConnector = employmentsConnector
+      when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(SERVICE_UNAVAILABLE, Some(expectedResponse))))
 
-      val result = testRtiConnector.getRTI(Nino("AA000000A"), 16)
+      val result = testemploymentsConnector.getEmployments(Nino("AA000000A"), 2016)
       val response = await(result)
       response.status mustBe SERVICE_UNAVAILABLE
       response.json mustBe expectedResponse
     }
   }
 
-  private class TestRtiConnector extends RtiConnector {
+  private class TestEmploymentsConnector extends EmploymentsConnector {
     override val serviceUrl: String = "/test"
+    
 
     override val environment: String = "env"
 
@@ -139,7 +140,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
     val mockTimerContext = mock[Timer.Context]
   }
-  private def rtiConnector = new TestRtiConnector
+  private def employmentsConnector = new TestEmploymentsConnector
 
 }
 

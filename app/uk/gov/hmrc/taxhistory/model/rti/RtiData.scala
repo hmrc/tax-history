@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.tai.model.rti
 
+import com.github.nscala_time.time.Imports._
 import org.joda.time.LocalDate
 import play.api.libs.json._
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
-import com.github.nscala_time.time.Imports._
 
 case class RtiData(nino:String,
                    employments:List[RtiEmployment])
