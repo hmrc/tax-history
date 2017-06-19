@@ -21,10 +21,6 @@ import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-
-/**
-  * Created by kris on 13/06/17.
-  */
 class RtiDataSpec extends TestUtil with UnitSpec {
 
   lazy val rtiSuccessfulResponseURLDummy = loadFile("/json/rti/response/dummyRti.json")
