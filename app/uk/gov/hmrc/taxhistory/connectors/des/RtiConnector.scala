@@ -17,13 +17,14 @@
 package uk.gov.hmrc.taxhistory.connectors.des
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
-import uk.gov.hmrc.tai.connectors.BaseConnector
+import uk.gov.hmrc.taxhistory.connectors.BaseConnector
 import uk.gov.hmrc.taxhistory.WSHttp
 
 import scala.concurrent.Future
 
 object RtiConnector extends RtiConnector {
 
+  // $COVERAGE-OFF$
   override val httpGet: HttpGet = WSHttp
   override val httpPost: HttpPost = WSHttp
 
@@ -31,6 +32,7 @@ object RtiConnector extends RtiConnector {
   lazy val authorization: String = "Bearer " + getConfString(s"$services.rti-hod.authorizationToken","local")
   lazy val environment: String = getConfString(s"$services.rti-hod.env","local")
   lazy val originatorId = getConfString(s"$services.rti-hod.originatorId","local")
+  // $COVERAGE-ON$
 }
 
 trait RtiConnector extends BaseConnector {

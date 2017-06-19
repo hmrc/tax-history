@@ -18,26 +18,17 @@ package uk.gov.hmrc.taxhistory.connectors.nps
 
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
-import uk.gov.hmrc.tai.connectors.BaseConnector
+import uk.gov.hmrc.taxhistory.connectors.BaseConnector
 import uk.gov.hmrc.taxhistory.WSHttp
 
 import scala.concurrent.Future
 
-/**
-  * Created by shailesh on 18/06/17.
-  */
+
  trait EmploymentsConnector extends BaseConnector {
 
-
-
   def serviceUrl: String
-
-
   def npsBaseUrl(nino: Nino) = s"$serviceUrl/person/$nino"
   def npsPathUrl(nino: Nino, path: String) = s"${npsBaseUrl(nino)}/$path"
-
-
-
 
   def getEmployments(nino: Nino, year: Int)
                     (implicit hc: HeaderCarrier): Future[HttpResponse] = {
@@ -45,17 +36,16 @@ import scala.concurrent.Future
     httpGet.GET[HttpResponse](urlToRead)
   }
 
-
 }
-
 
 object EmploymentsConnector extends EmploymentsConnector {
 
+  // $COVERAGE-OFF$
   override val httpGet: HttpGet = WSHttp
   override val httpPost: HttpPost = WSHttp
 
   lazy val serviceUrl: String = s"${baseUrl("nps-hod")}"
   lazy val originatorId = getConfString(s"$services.nps-hod.originatorId","local")
-
+  // $COVERAGE-ON$
 
 }
