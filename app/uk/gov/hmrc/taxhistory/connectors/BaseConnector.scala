@@ -19,6 +19,7 @@ package uk.gov.hmrc.tai.connectors
 import play.Logger
 import play.api.http.Status
 import play.api.libs.json.{Format, Writes}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.play.http.{HeaderCarrier, _}
@@ -47,6 +48,11 @@ trait BaseConnector extends ServicesConfig {
 
   def basicNpsHeaders(hc: HeaderCarrier): HeaderCarrier = {
     hc.withExtraHeaders("Gov-Uk-Originator-Id" -> originatorId)
+  }
+
+  def withoutSuffix(nino: Nino) = {
+    val BASIC_NINO_LENGTH = 8
+    nino.value.take(BASIC_NINO_LENGTH)
   }
 
   def getFromNps[A](url: String)(implicit hc: HeaderCarrier, formats: Format[A]): Future[(A, Int)] = {
@@ -82,22 +88,6 @@ trait BaseConnector extends ServicesConfig {
     }
   }
 
-  def postToNps[A](url: String, postData: A)(implicit hc: HeaderCarrier, writes: Writes[A]): Future[HttpResponse] = {
-    val futureResponse = httpPost.POST(url, postData)
-    futureResponse.flatMap {
-      httpResponse =>
-        httpResponse.status match {
-          case (Status.OK | Status.NO_CONTENT | Status.ACCEPTED) => {
-            Future.successful(httpResponse)
-          }
-          case _ => {
-            Logger.warn(s"NPSAPI - A server error returned from NPS HODS in postToNps with status " +
-              httpResponse.status + " url " + url)
-            Future.failed(new HttpException(httpResponse.body, httpResponse.status))
-          }
-        }
-     }
-  }
 
   def getFromRTI(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val futureResponse = httpGet.GET[HttpResponse](url)

@@ -31,22 +31,12 @@ import scala.concurrent.Future
 
 
   def serviceUrl: String
-  def authorization: String
-  def environment: String
+
 
   def npsBaseUrl(nino: Nino) = s"$serviceUrl/person/$nino"
   def npsPathUrl(nino: Nino, path: String) = s"${npsBaseUrl(nino)}/$path"
 
 
-  def withoutSuffix(nino: Nino) = {
-    val BASIC_NINO_LENGTH = 8
-    nino.value.take(BASIC_NINO_LENGTH)
-  }
-
-  def createHeader: HeaderCarrier = HeaderCarrier(extraHeaders =
-    Seq("Environment" -> environment,
-      "Authorization" -> authorization,
-      "Gov-Uk-Originator-Id" -> originatorId))
 
 
   def getEmployments(nino: Nino, year: Int)
@@ -65,7 +55,7 @@ object EmploymentsConnector extends EmploymentsConnector {
   override val httpPost: HttpPost = WSHttp
 
   lazy val serviceUrl: String = s"${baseUrl("nps-hod")}"
-  lazy val authorization: String = "Bearer " + getConfString(s"$services.rti-hod.authorizationToken","local")
-  lazy val environment: String = getConfString(s"$services.rti-hod.env","local")
-  lazy val originatorId = getConfString(s"$services.rti-hod.originatorId","local")
+  lazy val originatorId = getConfString(s"$services.nps-hod.originatorId","local")
+
+
 }

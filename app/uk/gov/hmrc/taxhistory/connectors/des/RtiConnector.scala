@@ -43,10 +43,6 @@ trait RtiConnector extends BaseConnector {
 
   def rtiPathUrl(nino: Nino, path: String) = s"${rtiBasicUrl(nino)}/$path"
 
-  def withoutSuffix(nino: Nino) = {
-    val BASIC_NINO_LENGTH = 8
-    nino.value.take(BASIC_NINO_LENGTH)
-  }
 
   def createHeader: HeaderCarrier = HeaderCarrier(extraHeaders =
     Seq("Environment" -> environment,

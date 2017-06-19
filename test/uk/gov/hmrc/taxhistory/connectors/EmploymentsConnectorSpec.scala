@@ -55,8 +55,8 @@ class EmploymentsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil 
     }
 
     "create the correct headers" in {
-      val headers = employmentsConnector.createHeader
-      headers.extraHeaders mustBe List(("Environment", "env"), ("Authorization", "auth"), ("Gov-Uk-Originator-Id", "orgId"))
+      val headers = employmentsConnector.basicNpsHeaders(HeaderCarrier())
+      headers.extraHeaders mustBe List(("Gov-Uk-Originator-Id", "orgId"))
     }
 
     "get EmploymentData data " when {
@@ -128,9 +128,7 @@ class EmploymentsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil 
     override val serviceUrl: String = "/test"
     
 
-    override val environment: String = "env"
 
-    override val authorization: String = "auth"
 
     override val originatorId: String = "orgId"
 
