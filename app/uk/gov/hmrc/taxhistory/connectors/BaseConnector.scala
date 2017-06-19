@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tai.connectors
+package uk.gov.hmrc.taxhistory.connectors
 
 import play.Logger
 import play.api.http.Status
-import play.api.libs.json.{Format, Writes}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.play.http.{HeaderCarrier, _}
-
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import scala.concurrent.Future
 
 trait BaseConnector extends ServicesConfig {
@@ -37,15 +35,6 @@ trait BaseConnector extends ServicesConfig {
     override def read(method: String, url: String, response: HttpResponse) = response
   }
 
-  def getVersionFromHttpHeader(httpResponse: HttpResponse): Int = {
-    val npsVersion: Int = httpResponse.header("ETag").map(_.toInt).getOrElse(defaultVersion)
-    npsVersion
-  }
-
-  def extraNpsHeaders(hc: HeaderCarrier, version: Int, txId: String): HeaderCarrier = {
-    hc.withExtraHeaders("ETag" -> version.toString, "X-TXID" -> txId, "Gov-Uk-Originator-Id" -> originatorId)
-  }
-
   def basicNpsHeaders(hc: HeaderCarrier): HeaderCarrier = {
     hc.withExtraHeaders("Gov-Uk-Originator-Id" -> originatorId)
   }
@@ -54,40 +43,6 @@ trait BaseConnector extends ServicesConfig {
     val BASIC_NINO_LENGTH = 8
     nino.value.take(BASIC_NINO_LENGTH)
   }
-
-  def getFromNps[A](url: String)(implicit hc: HeaderCarrier, formats: Format[A]): Future[(A, Int)] = {
-    implicit val hc = basicNpsHeaders(HeaderCarrier())
-    val futureResponse = httpGet.GET[HttpResponse](url)
-    futureResponse.flatMap {
-      httpResponse =>
-        httpResponse.status match {
-          case Status.OK => {
-              Future.successful((httpResponse.json.as[A], getVersionFromHttpHeader(httpResponse)))
-          }
-
-          case Status.NOT_FOUND => {
-            Logger.warn(s"NPSAPI - No DATA Found error returned from NPS with status $httpResponse.status and url $url")
-            Future.failed(new NotFoundException(httpResponse.body))
-          }
-
-          case Status.INTERNAL_SERVER_ERROR => {
-            Logger.warn(s"NPSAPI - Internal Server error returned from NPS with status $httpResponse.status and url $url")
-            Future.failed(new InternalServerException(httpResponse.body))
-          }
-
-          case Status.BAD_REQUEST => {
-            Logger.warn(s"NPSAPI - Bad request exception returned from NPS  with status $httpResponse.status and url $url")
-            Future.failed(new BadRequestException(httpResponse.body))
-          }
-
-          case _ => {
-            Logger.warn(s"NPSAPI - A Server error returned from NPS with status $httpResponse.status and url $url")
-            Future.failed(new HttpException(httpResponse.body, httpResponse.status))
-          }
-        }
-    }
-  }
-
 
   def getFromRTI(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val futureResponse = httpGet.GET[HttpResponse](url)
@@ -120,4 +75,5 @@ trait BaseConnector extends ServicesConfig {
         }
     }
   }
-}
+
+ }
