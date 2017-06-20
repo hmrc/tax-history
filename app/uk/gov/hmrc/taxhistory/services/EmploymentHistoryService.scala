@@ -17,14 +17,18 @@
 package uk.gov.hmrc.taxhistory.services
 
 import play.api.http.Status
-import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.play.http.HttpResponse
+
+
+import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.EmploymentsConnector
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.model.taxhistory.Employment
 import uk.gov.hmrc.time.TaxYear
+import play.api.http.Status._
+import uk.gov.hmrc.domain.Nino
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
 
@@ -36,9 +40,20 @@ trait EmploymentHistoryService {
 
   def getEmploymentHistory(nino:String, taxYear:TaxYear): List[Employment] = ???
 
-  def getNpsEmployments(nino:String, taxYear:TaxYear): List[NpsEmployment] = ???
+  def getNpsEmployments(nino:String, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,List[NpsEmployment]]] = {
+    employmentsConnector.getEmployments(Nino(nino),taxYear.currentYear).map{
+      response => {
+        response.status match {
+          case OK => {
+            Right(response.json.as[List[NpsEmployment]])
+          }
+          case _ =>  Left(response)
+        }
+      }
+    }
+  }
 
-  def getRtiEmployments(nino:String, taxYear:TaxYear): Future[Either[List[RtiData],HttpResponse]] = {
+  def getRtiEmployments(nino:String, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[List[RtiData],HttpResponse]] = {
     val responseFuture = rtiConnector.getRTI(Nino(nino),taxYear)
      responseFuture.map(response => response.status match {
        case Status.OK => Left(response.json.as[List[RtiData]])
