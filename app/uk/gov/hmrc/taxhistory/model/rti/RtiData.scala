@@ -44,7 +44,7 @@ case class RtiEndOfYearUpdate(taxablePayDelta:BigDecimal,
 
 
 object RtiPayment {
-   val reader = new Reads[RtiPayment]{
+  implicit val reader = new Reads[RtiPayment]{
      def reads(js: JsValue): JsResult[RtiPayment] = {
        implicit val stringMapFormat = JsonUtils.mapFormat[String,BigDecimal]("type", "amount")
        val mandatoryMonetaryAmountMap = (js \ "mandatoryMonetaryAmount").as[Map[String, BigDecimal]]
@@ -57,11 +57,11 @@ object RtiPayment {
      }
    }
 
-  implicit val formats = Json.format[RtiPayment]
+  implicit val writer = Json.writes[RtiPayment]
 }
 
 object RtiEndOfYearUpdate {
-  val reader = new Reads[RtiEndOfYearUpdate]{
+  implicit val reader = new Reads[RtiEndOfYearUpdate]{
     def reads(js: JsValue): JsResult[RtiEndOfYearUpdate] = {
       implicit val stringMapFormat = JsonUtils.mapFormat[String,BigDecimal]("type", "amount")
       val mandatoryMonetaryAmountMap = (js \ "optionalAdjustmentAmount").as[Map[String, BigDecimal]]
@@ -69,26 +69,23 @@ object RtiEndOfYearUpdate {
       JsSuccess(
         RtiEndOfYearUpdate(taxablePayDelta = mandatoryMonetaryAmountMap("TaxablePayDelta"),
           totalTaxDelta = mandatoryMonetaryAmountMap("TotalTaxDelta"),
-          receivedDate = receivedDate
-         ))
+          receivedDate = receivedDate)
+      )
     }
-
-
-
   }
-  implicit val formats = Json.format[RtiEndOfYearUpdate]
+  implicit val writer = Json.writes[RtiEndOfYearUpdate]
 }
 
 object RtiEmployment {
-  val reader = new Reads[RtiEmployment] {
+  implicit val reader = new Reads[RtiEmployment] {
     def reads(js: JsValue): JsResult[RtiEmployment] = {
         for {
           sequenceNo <- (js \ "sequenceNumber" ).validate[Int]
           officeNumber <- (js \ "empRefs" \ "officeNo").validate[String]
           payeRef <- (js \ "empRefs" \ "payeRef").validate[String]
           currentPayId <- (js \ "currentPayId").validate[String]
-          payments <- (js \ "payments" \ "inYear").validate[List[RtiPayment]](Reads.list(RtiPayment.reader))
-          endOfYearUpdates <- JsSuccess((js \ "payments" \ "eyu").asOpt[List[RtiEndOfYearUpdate]](Reads.list(RtiEndOfYearUpdate.reader)))
+          payments <- (js \ "payments" \ "inYear").validate[List[RtiPayment]]
+          endOfYearUpdates <- JsSuccess((js \ "payments" \ "eyu").asOpt[List[RtiEndOfYearUpdate]])
         } yield {
             RtiEmployment(
               sequenceNo = sequenceNo,
@@ -101,26 +98,20 @@ object RtiEmployment {
         }
     }
   }
-  implicit val formats = Json.format[RtiEmployment]
+  implicit val writer = Json.writes[RtiEmployment]
 }
 
 object RtiData {
-  val reader = new Reads[RtiData] {
+  implicit val reader = new Reads[RtiData] {
     def reads(js: JsValue): JsResult[RtiData] = {
-
       for {
         nino <- (js \ "request" \ "nino").validate[String]
-        employments <- (js \ "individual" \ "employments" \ "employment").validate[List[RtiEmployment]](Reads.list(RtiEmployment.reader))
+        employments <- (js \ "individual" \ "employments" \ "employment").validate[List[RtiEmployment]]
       } yield {
-
-          RtiData(
-            nino = nino,
-            employments = employments
-          )
-
+          RtiData( nino = nino, employments = employments )
       }
     }
   }
-  implicit val formats = Json.format[RtiData]
+  implicit val writer = Json.writes[RtiData]
 }
 

@@ -19,6 +19,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 import uk.gov.hmrc.taxhistory.connectors.BaseConnector
 import uk.gov.hmrc.taxhistory.WSHttp
+import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
@@ -51,8 +52,9 @@ trait RtiConnector extends BaseConnector {
       "Authorization" -> authorization,
       "Gov-Uk-Originator-Id" -> originatorId))
 
-  def getRTI(nino: Nino, twoDigitTaxYear: Int)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    val urlToRead = rtiPathUrl(nino, s"tax-year/${twoDigitTaxYear}")
+  def getRTIEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    val twoDigitYear = s"${taxYear.starts.year.get % 100}"
+    val urlToRead = rtiPathUrl(nino, s"tax-year/${twoDigitYear}")
     implicit val hc: HeaderCarrier = createHeader
     getFromRTI(urlToRead)
   }
