@@ -16,12 +16,17 @@
 
 package uk.gov.hmrc.taxhistory.services
 
+import play.api.http.Status
+import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.play.http.HttpResponse
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.EmploymentsConnector
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.model.taxhistory.Employment
 import uk.gov.hmrc.time.TaxYear
+
+import scala.concurrent.Future
 
 object EmploymentHistoryService extends EmploymentHistoryService
 
@@ -33,6 +38,11 @@ trait EmploymentHistoryService {
 
   def getNpsEmployments(nino:String, taxYear:TaxYear): List[NpsEmployment] = ???
 
-  def getRtiEmployments(nino:String, taxYear:TaxYear): List[RtiData] = ???
-
+  def getRtiEmployments(nino:String, taxYear:TaxYear): Future[Either[List[RtiData],HttpResponse]] = {
+    val responseFuture = rtiConnector.getRTI(Nino(nino),taxYear)
+     responseFuture.map(response => response.status match {
+       case Status.OK => Left(response.json.as[List[RtiData]])
+       case _ =>  Right(response)
+     })
+  }
 }
