@@ -17,19 +17,16 @@
 package uk.gov.hmrc.taxhistory.services
 
 import play.api.http.Status
-
-
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.EmploymentsConnector
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
-import uk.gov.hmrc.taxhistory.model.taxhistory.Employment
 import uk.gov.hmrc.time.TaxYear
 import play.api.http.Status._
 import uk.gov.hmrc.domain.Nino
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 object EmploymentHistoryService extends EmploymentHistoryService
@@ -38,7 +35,7 @@ trait EmploymentHistoryService {
   def employmentsConnector : EmploymentsConnector = EmploymentsConnector
   def rtiConnector : RtiConnector = RtiConnector
 
-  def getEmploymentHistory(nino:String, taxYear:Int): Future[HttpResponse] = ???
+  def getEmploymentHistory(nino:String, taxYear:Int)(implicit hc: HeaderCarrier): Future[HttpResponse] = ???
 
   def getNpsEmployments(nino:Nino, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,List[NpsEmployment]]] = {
     employmentsConnector.getEmployments(nino,taxYear.currentYear).map{

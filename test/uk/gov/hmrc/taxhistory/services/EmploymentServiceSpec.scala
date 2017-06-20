@@ -42,6 +42,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
   private val mockRtiDataConnector= mock[RtiConnector]
 
   implicit val hc = HeaderCarrier()
+  val testNino = randomNino()
   object TestEmploymentService extends EmploymentHistoryService {
     override def employmentsConnector: EmploymentsConnector = mockEmploymentConnector
     override def rtiConnector: RtiConnector = mockRtiDataConnector
@@ -64,7 +65,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(mockEmploymentConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
 
-      val eitherResponse = await(TestEmploymentService.getNpsEmployments(Nino("AA000000A"), TaxYear(2016)))
+      val eitherResponse = await(TestEmploymentService.getNpsEmployments(testNino, TaxYear(2016)))
       assert(eitherResponse.isRight)
       eitherResponse.right.get mustBe a[List[NpsEmployment]]
 
@@ -74,7 +75,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(mockEmploymentConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(npsEmploymentResponse))))
 
-      val eitherResponse = await(TestEmploymentService.getNpsEmployments(Nino("AA000000A"), TaxYear(2016)))
+      val eitherResponse = await(TestEmploymentService.getNpsEmployments(testNino, TaxYear(2016)))
       assert(eitherResponse.isLeft)
       eitherResponse.left.get mustBe a[HttpResponse]
     }
@@ -83,7 +84,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
 
-      val eitherResponse = await(TestEmploymentService.getRtiEmployments(Nino("AA000000A"), TaxYear(2016)))
+      val eitherResponse = await(TestEmploymentService.getRtiEmployments(testNino, TaxYear(2016)))
       assert(eitherResponse.isRight)
       eitherResponse.right.get mustBe a[RtiData]
     }
@@ -92,7 +93,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(rtiEmploymentResponse))))
 
-      val eitherResponse = await(TestEmploymentService.getRtiEmployments(Nino("AA000000A"), TaxYear(2016)))
+      val eitherResponse = await(TestEmploymentService.getRtiEmployments(testNino, TaxYear(2016)))
       assert(eitherResponse.isLeft)
       eitherResponse.left.get mustBe a[HttpResponse]
     }
