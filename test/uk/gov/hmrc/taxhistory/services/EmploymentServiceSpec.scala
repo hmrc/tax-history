@@ -69,8 +69,13 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
     }
 
-    "handle error status response from get Nps Employments" in {
+    "handle any non success status response from get Nps Employments" in {
+      when(mockEmploymentConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(npsEmploymentResponse))))
 
+      val eitherResponse = await(TestEmploymentService.getNpsEmployments("AA000000A", TaxYear(2016)))
+      assert(eitherResponse.isLeft)
+      eitherResponse.left.get mustBe a[HttpResponse]
     }
 
     "successfully get Rti Employments Data" in {
@@ -82,8 +87,13 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       eitherResponse.right.get mustBe a[RtiData]
     }
 
-    "handle error status response from get Rti Employments" in {
+    "handle any non success status response from get Rti Employments" in {
+      when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(rtiEmploymentResponse))))
 
+      val eitherResponse = await(TestEmploymentService.getRtiEmployments("AA000000A", TaxYear(2016)))
+      assert(eitherResponse.isLeft)
+      eitherResponse.left.get mustBe a[HttpResponse]
     }
   }
 
