@@ -52,7 +52,7 @@ trait RtiConnector extends BaseConnector {
       "Authorization" -> authorization,
       "Gov-Uk-Originator-Id" -> originatorId))
 
-  def getRTI(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+  def getRTIEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val twoDigitYear = s"${taxYear.starts.year.get % 100}"
     val urlToRead = rtiPathUrl(nino, s"tax-year/${twoDigitYear}")
     implicit val hc: HeaderCarrier = createHeader

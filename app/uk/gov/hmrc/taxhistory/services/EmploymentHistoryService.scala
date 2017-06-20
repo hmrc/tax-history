@@ -53,11 +53,11 @@ trait EmploymentHistoryService {
     }
   }
 
-  def getRtiEmployments(nino:String, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[List[RtiData],HttpResponse]] = {
-    val responseFuture = rtiConnector.getRTI(Nino(nino),taxYear)
+  def getRtiEmployments(nino:String, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse,RtiData]] = {
+    val responseFuture = rtiConnector.getRTIEmployments(Nino(nino),taxYear)
      responseFuture.map(response => response.status match {
-       case Status.OK => Left(response.json.as[List[RtiData]])
-       case _ =>  Right(response)
+       case Status.OK => Right(response.json.as[RtiData])
+       case _ =>  Left(response)
      })
   }
 }

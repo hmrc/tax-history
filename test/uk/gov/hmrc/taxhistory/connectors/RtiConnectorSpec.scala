@@ -69,7 +69,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any())).thenReturn(Future.successful(fakeResponse))
 
-        val result = testRtiConnector.getRTI(Nino("AA000000A"), TaxYear(2016))
+        val result = testRtiConnector.getRTIEmployments(Nino("AA000000A"), TaxYear(2016))
         val rtiDataResponse = await(result)
 
         rtiDataResponse.status mustBe OK
@@ -83,7 +83,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(expectedResponse))))
 
-      val result = testRtiConnector.getRTI(Nino("AA000000A"), TaxYear(2016))
+      val result = testRtiConnector.getRTIEmployments(Nino("AA000000A"), TaxYear(2016))
       val response = await(result)
       response.status must be(BAD_REQUEST)
       response.json must be(expectedResponse)
@@ -95,7 +95,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(expectedResponse))))
 
-      val result = testRtiConnector.getRTI(Nino("AA000000A"), TaxYear(2016))
+      val result = testRtiConnector.getRTIEmployments(Nino("AA000000A"), TaxYear(2016))
       val response = await(result)
       response.status mustBe NOT_FOUND
       response.json mustBe expectedResponse
@@ -107,7 +107,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(expectedResponse))))
 
-      val result = testRtiConnector.getRTI(Nino("AA000000A"), TaxYear(2016))
+      val result = testRtiConnector.getRTIEmployments(Nino("AA000000A"), TaxYear(2016))
       val response = await(result)
       response.status mustBe INTERNAL_SERVER_ERROR
       response.json mustBe expectedResponse
@@ -119,7 +119,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(SERVICE_UNAVAILABLE, Some(expectedResponse))))
 
-      val result = testRtiConnector.getRTI(Nino("AA000000A"), TaxYear(2016))
+      val result = testRtiConnector.getRTIEmployments(Nino("AA000000A"), TaxYear(2016))
       val response = await(result)
       response.status mustBe SERVICE_UNAVAILABLE
       response.json mustBe expectedResponse

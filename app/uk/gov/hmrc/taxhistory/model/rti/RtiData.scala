@@ -105,7 +105,7 @@ object RtiEmployment {
 }
 
 object RtiData {
-  val reader = new Reads[RtiData] {
+  implicit val reader = new Reads[RtiData] {
     def reads(js: JsValue): JsResult[RtiData] = {
 
       for {
@@ -121,6 +121,7 @@ object RtiData {
       }
     }
   }
-  implicit val formats = Json.format[RtiData]
+
+  implicit val writer = Json.writes[RtiData]
 }
 

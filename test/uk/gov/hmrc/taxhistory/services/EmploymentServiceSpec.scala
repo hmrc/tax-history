@@ -23,8 +23,11 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.EmploymentsConnector
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
+import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
@@ -33,15 +36,17 @@ import scala.concurrent.Future
   * Created by shailesh on 20/06/17.
   */
 
-class EmploymentServiceSpec extends PlaySpec with MockitoSugar{
+class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
   private val mockEmploymentConnector= mock[EmploymentsConnector]
+  private val mockRtiDataConnector= mock[RtiConnector]
 
   implicit val hc = HeaderCarrier()
   object TestEmploymentService extends EmploymentHistoryService {
     override def employmentsConnector: EmploymentsConnector = mockEmploymentConnector
+    override def rtiConnector: RtiConnector = mockRtiDataConnector
   }
 
-  val employmentResponse =  Json.parse(""" [{
+  val npsEmploymentResponse =  Json.parse(""" [{
                              |    "nino": "AA000000",
                              |    "sequenceNumber": 6,
                              |    "worksNumber": "00191048716",
@@ -50,16 +55,27 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar{
                              |    "employerName": "Aldi"
                              |    }]
                            """.stripMargin)
+  lazy val rtiEmploymentResponse = loadFile("/json/rti/response/dummyRti.json")
 
 
-  "Get Employments Data" in {
+
+  "Get Nps Employments Data" in {
     when(mockEmploymentConnector.getEmployments(Matchers.any(),Matchers.any())(Matchers.any[HeaderCarrier]))
-      .thenReturn(Future.successful(HttpResponse(OK, Some(employmentResponse))))
+      .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
 
     val eitherResponse = await(TestEmploymentService.getNpsEmployments("AA000000A", TaxYear(2016)))
     assert(eitherResponse.isRight)
     eitherResponse.right.get mustBe a [List[NpsEmployment]]
 
+  }
+
+  "Get Rti Employments Data" in {
+    when(mockRtiDataConnector.getRTIEmployments(Matchers.any(),Matchers.any())(Matchers.any[HeaderCarrier]))
+      .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
+
+    val eitherResponse = await(TestEmploymentService.getRtiEmployments("AA000000A", TaxYear(2016)))
+    assert(eitherResponse.isRight)
+    eitherResponse.right.get mustBe a [RtiData]
   }
 
 }
