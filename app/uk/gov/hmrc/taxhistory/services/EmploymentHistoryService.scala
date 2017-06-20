@@ -38,10 +38,10 @@ trait EmploymentHistoryService {
   def employmentsConnector : EmploymentsConnector = EmploymentsConnector
   def rtiConnector : RtiConnector = RtiConnector
 
-  def getEmploymentHistory(nino:String, taxYear:TaxYear): List[Employment] = ???
+  def getEmploymentHistory(nino:String, taxYear:Int): Future[HttpResponse] = ???
 
-  def getNpsEmployments(nino:String, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,List[NpsEmployment]]] = {
-    employmentsConnector.getEmployments(Nino(nino),taxYear.currentYear).map{
+  def getNpsEmployments(nino:Nino, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,List[NpsEmployment]]] = {
+    employmentsConnector.getEmployments(nino,taxYear.currentYear).map{
       response => {
         response.status match {
           case OK => {
@@ -53,11 +53,16 @@ trait EmploymentHistoryService {
     }
   }
 
-  def getRtiEmployments(nino:String, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse,RtiData]] = {
-    val responseFuture = rtiConnector.getRTIEmployments(Nino(nino),taxYear)
-     responseFuture.map(response => response.status match {
-       case Status.OK => Right(response.json.as[RtiData])
-       case _ =>  Left(response)
-     })
+  def getRtiEmployments(nino:Nino, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse,RtiData]] = {
+    rtiConnector.getRTIEmployments(nino,taxYear).map{
+       response => {
+         response.status match {
+           case Status.OK => {
+             Right(response.json.as[RtiData])
+           }
+           case _ =>  Left(response)
+         }
+       }
+     }
   }
 }
