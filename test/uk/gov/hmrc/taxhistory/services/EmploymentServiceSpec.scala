@@ -58,24 +58,34 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
   lazy val rtiEmploymentResponse = loadFile("/json/rti/response/dummyRti.json")
 
 
+  "Employment Service" should {
+    "successfully get Nps Employments Data" in {
+      when(mockEmploymentConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
 
-  "Get Nps Employments Data" in {
-    when(mockEmploymentConnector.getEmployments(Matchers.any(),Matchers.any())(Matchers.any[HeaderCarrier]))
-      .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
+      val eitherResponse = await(TestEmploymentService.getNpsEmployments("AA000000A", TaxYear(2016)))
+      assert(eitherResponse.isRight)
+      eitherResponse.right.get mustBe a[List[NpsEmployment]]
 
-    val eitherResponse = await(TestEmploymentService.getNpsEmployments("AA000000A", TaxYear(2016)))
-    assert(eitherResponse.isRight)
-    eitherResponse.right.get mustBe a [List[NpsEmployment]]
+    }
 
+    "handle error status response from get Nps Employments" in {
+
+    }
+
+    "successfully get Rti Employments Data" in {
+      when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
+
+      val eitherResponse = await(TestEmploymentService.getRtiEmployments("AA000000A", TaxYear(2016)))
+      assert(eitherResponse.isRight)
+      eitherResponse.right.get mustBe a[RtiData]
+    }
+
+    "handle error status response from get Rti Employments" in {
+
+    }
   }
 
-  "Get Rti Employments Data" in {
-    when(mockRtiDataConnector.getRTIEmployments(Matchers.any(),Matchers.any())(Matchers.any[HeaderCarrier]))
-      .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
-
-    val eitherResponse = await(TestEmploymentService.getRtiEmployments("AA000000A", TaxYear(2016)))
-    assert(eitherResponse.isRight)
-    eitherResponse.right.get mustBe a [RtiData]
-  }
 
 }
