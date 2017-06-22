@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-
 import play.api.http.Status
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.RtiData
@@ -27,7 +26,9 @@ import uk.gov.hmrc.time.TaxYear
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.domain.Nino
+
 import uk.gov.hmrc.taxhistory.model.taxhistory.Employment
+
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -57,6 +58,7 @@ trait EmploymentHistoryService {
                 }
     x.flatMap(identity)
   }
+
 
   def handleNpsEmploymentList(nino:Nino,taxYear:TaxYear)
                              (npsEmploymentList:List[NpsEmployment],
