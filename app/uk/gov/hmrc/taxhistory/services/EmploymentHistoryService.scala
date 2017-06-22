@@ -81,7 +81,6 @@ trait EmploymentHistoryService {
       npsEmployment => {
         rtiData.employments.filter(
           rtiEmployment => {
-            rtiEmployment.sequenceNo == npsEmployment.sequenceNumber &&
             rtiEmployment.payeRef == npsEmployment.payeNumber &&
             rtiEmployment.officeNumber == npsEmployment.taxDistrictNumber
           }
