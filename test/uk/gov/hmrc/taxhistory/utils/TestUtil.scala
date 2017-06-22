@@ -17,8 +17,10 @@
 package uk.gov.hmrc.taxhistory.model.utils
 
 import play.api.libs.json.{JsValue, Json}
+import uk.gov.hmrc.domain.{Generator, Nino}
 
 import scala.io.Source
+import scala.util.Random
 
 /**
   * Created by shailesh on 15/06/17.
@@ -30,4 +32,8 @@ trait TestUtil {
     val jsonString = Source.fromURL(getClass.getResource(path)).mkString
     Json.parse(jsonString)
   }
+
+  val randomNino = () => Nino(new Generator(new Random()).nextNino.value.replaceFirst("MA", "AA"))
+
+
 }

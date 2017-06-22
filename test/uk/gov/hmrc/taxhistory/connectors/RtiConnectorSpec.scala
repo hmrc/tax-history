@@ -34,25 +34,26 @@ import scala.concurrent.Future
 
 class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
   implicit val hc = HeaderCarrier()
-
+  val testNino = randomNino()
+  val testNinoWithoutSuffix=testNino.value.take(8)
   lazy val rtiSuccessfulResponseURLDummy = loadFile("/json/rti/response/dummyRti.json")
 
   "RtiConnector" should {
     "have the rti basic url " when {
       "given a valid nino" in {
-        rtiConnector.rtiBasicUrl(Nino("AA111111A")) mustBe "/test/rti/individual/payments/nino/AA111111"
+        rtiConnector.rtiBasicUrl(testNino) mustBe s"/test/rti/individual/payments/nino/$testNinoWithoutSuffix"
       }
     }
 
     "have the Rti Path Url" when {
       "given a valid nino and path" in {
-        rtiConnector.rtiPathUrl(Nino("AA111111A"), "path") mustBe "/test/rti/individual/payments/nino/AA111111/path"
+        rtiConnector.rtiPathUrl(testNino, "path") mustBe s"/test/rti/individual/payments/nino/$testNinoWithoutSuffix/path"
       }
     }
 
     "have withoutSuffix nino" when {
       "given a valid nino" in {
-        rtiConnector.withoutSuffix(Nino("AA111111A")) mustBe "AA111111"
+        rtiConnector.withoutSuffix(testNino) mustBe s"$testNinoWithoutSuffix"
       }
     }
 
@@ -69,7 +70,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any())).thenReturn(Future.successful(fakeResponse))
 
-        val result = testRtiConnector.getRTIEmployments(Nino("AA000000A"), TaxYear(2016))
+        val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
         val rtiDataResponse = await(result)
 
         rtiDataResponse.status mustBe OK
@@ -83,7 +84,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(expectedResponse))))
 
-      val result = testRtiConnector.getRTIEmployments(Nino("AA000000A"), TaxYear(2016))
+      val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
       val response = await(result)
       response.status must be(BAD_REQUEST)
       response.json must be(expectedResponse)
@@ -95,7 +96,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(expectedResponse))))
 
-      val result = testRtiConnector.getRTIEmployments(Nino("AA000000A"), TaxYear(2016))
+      val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
       val response = await(result)
       response.status mustBe NOT_FOUND
       response.json mustBe expectedResponse
@@ -107,7 +108,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(expectedResponse))))
 
-      val result = testRtiConnector.getRTIEmployments(Nino("AA000000A"), TaxYear(2016))
+      val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
       val response = await(result)
       response.status mustBe INTERNAL_SERVER_ERROR
       response.json mustBe expectedResponse
@@ -119,7 +120,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(SERVICE_UNAVAILABLE, Some(expectedResponse))))
 
-      val result = testRtiConnector.getRTIEmployments(Nino("AA000000A"), TaxYear(2016))
+      val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
       val response = await(result)
       response.status mustBe SERVICE_UNAVAILABLE
       response.json mustBe expectedResponse

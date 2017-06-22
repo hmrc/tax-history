@@ -34,23 +34,24 @@ import scala.concurrent.Future
 class EmploymentsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   lazy val employmentsSuccessfulResponse = loadFile("/json/nps/response/employments.json")
-
+  val testNino = randomNino()
+  
   "EmploymentsConnector" should {
     "have the nps basic url " when {
       "given a valid nino" in {
-        employmentsConnector.npsBaseUrl(Nino("AA111111A")) mustBe "/test/person/AA111111A"
+        employmentsConnector.npsBaseUrl(testNino) mustBe s"/test/person/$testNino"
       }
     }
 
     "have the nps Path Url" when {
       "given a valid nino and path" in {
-        employmentsConnector.npsPathUrl(Nino("AA111111A"), "path") mustBe "/test/person/AA111111A/path"
+        employmentsConnector.npsPathUrl(testNino, "path") mustBe s"/test/person/$testNino/path"
       }
     }
 
     "have withoutSuffix nino" when {
       "given a valid nino" in {
-        employmentsConnector.withoutSuffix(Nino("AA111111A")) mustBe "AA111111"
+        employmentsConnector.withoutSuffix(testNino) mustBe s"${testNino.value.take(8)}"
       }
     }
 
@@ -67,7 +68,7 @@ class EmploymentsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil 
 
         when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any())).thenReturn(Future.successful(fakeResponse))
 
-        val result = testemploymentsConnector.getEmployments(Nino("AA000000A"), 2016)
+        val result = testemploymentsConnector.getEmployments(testNino, 2016)
         val rtiDataResponse = await(result)
 
         rtiDataResponse.status mustBe OK
@@ -81,7 +82,7 @@ class EmploymentsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil 
       when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(expectedResponse))))
 
-      val result = testemploymentsConnector.getEmployments(Nino("AA000000A"), 2016)
+      val result = testemploymentsConnector.getEmployments(testNino, 2016)
       val response = await(result)
       response.status must be(BAD_REQUEST)
       response.json must be(expectedResponse)
@@ -93,7 +94,7 @@ class EmploymentsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil 
       when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(expectedResponse))))
 
-      val result = testemploymentsConnector.getEmployments(Nino("AA000000A"), 2016)
+      val result = testemploymentsConnector.getEmployments(testNino, 2016)
       val response = await(result)
       response.status mustBe NOT_FOUND
       response.json mustBe expectedResponse
@@ -105,7 +106,7 @@ class EmploymentsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil 
       when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(expectedResponse))))
 
-      val result = testemploymentsConnector.getEmployments(Nino("AA000000A"), 2016)
+      val result = testemploymentsConnector.getEmployments(testNino, 2016)
       val response = await(result)
       response.status mustBe INTERNAL_SERVER_ERROR
       response.json mustBe expectedResponse
@@ -117,7 +118,7 @@ class EmploymentsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil 
       when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(SERVICE_UNAVAILABLE, Some(expectedResponse))))
 
-      val result = testemploymentsConnector.getEmployments(Nino("AA000000A"), 2016)
+      val result = testemploymentsConnector.getEmployments(testNino, 2016)
       val response = await(result)
       response.status mustBe SERVICE_UNAVAILABLE
       response.json mustBe expectedResponse
