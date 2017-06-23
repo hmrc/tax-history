@@ -83,7 +83,7 @@ object RtiEmployment {
           sequenceNo <- (js \ "sequenceNumber" ).validate[Int]
           officeNumber <- (js \ "empRefs" \ "officeNo").validate[String]
           payeRef <- (js \ "empRefs" \ "payeRef").validate[String]
-          currentPayId <- (js \ "currentPayId").validate[String]
+          currentPayId <- (js \ "currentPayId").validateOpt[String]
           payments <- (js \ "payments" \ "inYear").validate[List[RtiPayment]]
           endOfYearUpdates <- JsSuccess((js \ "payments" \ "eyu").asOpt[List[RtiEndOfYearUpdate]])
         } yield {
@@ -91,7 +91,7 @@ object RtiEmployment {
               sequenceNo = sequenceNo,
               payeRef = payeRef,
               officeNumber = officeNumber,
-              currentPayId = Some(currentPayId),
+              currentPayId = currentPayId,
               payments = payments,
               endOfYearUpdates = endOfYearUpdates.getOrElse(Nil)
             )
