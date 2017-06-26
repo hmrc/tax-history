@@ -87,8 +87,9 @@ trait EmploymentHistoryService {
 
        f match {
           case Nil => None
+          case matchingEmp :: Nil if matchingEmp.payments.isEmpty => None
           case matchingEmp :: Nil => {
-            val payment = matchingEmp.payments.sorted.last //TODO deal with no payments
+            val payment = matchingEmp.payments.sorted.last
             Some(Employment(
               employerName = npsEmployment.employerName,
               payeReference = npsEmployment.payeNumber,
