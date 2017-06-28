@@ -20,7 +20,7 @@ import org.mockito.Matchers
 import org.mockito.Mockito.when
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.Json
+import play.api.libs.json.{JsArray, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
@@ -28,6 +28,7 @@ import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.EmploymentsConnector
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
+import uk.gov.hmrc.taxhistory.model.taxhistory.Employment
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.time.TaxYear
 
@@ -59,9 +60,10 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                            """.stripMargin)
   lazy val rtiEmploymentResponse = loadFile("/json/rti/response/dummyRti.json")
   lazy val rtiDuplicateEmploymentsResponse = loadFile("/json/rti/response/dummyRtiDuplicateEmployments.json")
+  lazy val rtiPartialDuplicateEmploymentsResponse = loadFile("/json/rti/response/dummyRtiPartialDuplicateEmployments.json")
   lazy val rtiNonMatchingEmploymentsResponse = loadFile("/json/rti/response/dummyRtiNonMatchingEmployment.json")
   lazy val rtiNoPaymentsResponse = loadFile("/json/rti/response/dummyRtiNoPaymentsResponse.json")
-
+  lazy val npsEmptyEmployments = loadFile("/json/nps/response/emptyEmployments.json")
 
   "Employment Service" should {
     "successfully get Nps Employments Data" in {
@@ -101,6 +103,50 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       eitherResponse.left.get mustBe a[HttpResponse]
     }
 
+    "return any non success status response from get Nps Employments api" in {
+      when(mockEmploymentConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(npsEmploymentResponse))))
+      val response =  await(TestEmploymentService.getEmploymentHistory(testNino.toString(),2016))
+      response mustBe a[HttpResponse]
+      response.status mustBe BAD_REQUEST
+    }
+
+    "return not found status response from get Nps Employments api" in {
+      when(mockEmploymentConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(OK, Some(JsArray(Seq.empty)))))
+      val response =  await(TestEmploymentService.getEmploymentHistory(testNino.toString(),2016))
+      response mustBe a[HttpResponse]
+      response.status mustBe NOT_FOUND
+    }
+
+    "return any non success status response from get Rti Employments api" in {
+      when(mockEmploymentConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
+      when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(rtiEmploymentResponse))))
+      val response =  await(TestEmploymentService.getEmploymentHistory(testNino.toString(),2016))
+      response mustBe a[HttpResponse]
+      response.status mustBe BAD_REQUEST
+    }
+
+    "return success response from get Employments" in {
+      when(mockEmploymentConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
+      when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
+      val response =  await(TestEmploymentService.getEmploymentHistory(testNino.toString(),2016))
+      response mustBe a[HttpResponse]
+      response.status mustBe OK
+      val employments = response.json.as[List[Employment]]
+      employments.size mustBe 1
+      employments.head.employerName mustBe "Aldi"
+      employments.head.payeReference mustBe "J4816"
+      employments.head.taxablePayTotal mustBe BigDecimal.valueOf(20000.00)
+      employments.head.taxTotal mustBe BigDecimal.valueOf(1880.00)
+      employments.head.taxablePayEYU mustBe None
+      employments.head.taxEYU mustBe None
+    }
+
     "successfully merge rti and nps employment data into employment list" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
@@ -123,6 +169,14 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employmentList.size mustBe 0
     }
 
+    "successfully merge if there are multiple matching rti employments for a single nps employment but single match on currentPayId" in {
+      val rtiData = rtiPartialDuplicateEmploymentsResponse.as[RtiData]
+      val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
+
+      val employmentList =TestEmploymentService.createEmploymentList(rtiData = rtiData, npsEmployments = npsEmployments)
+      employmentList.size mustBe 1
+    }
+
     "return empty list if there are zero matching rti employments for a single nps employment" in {
       val rtiData = rtiNonMatchingEmploymentsResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
@@ -138,9 +192,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val employmentList =TestEmploymentService.createEmploymentList(rtiData = rtiData, npsEmployments = npsEmployments)
       employmentList.size mustBe 0
     }
-
-
-
   }
 
 
