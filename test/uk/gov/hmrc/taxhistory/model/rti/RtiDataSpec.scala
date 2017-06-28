@@ -44,14 +44,14 @@ class RtiDataSpec extends TestUtil with UnitSpec {
       employment49.get.currentPayId shouldBe Some("6044041000000")
       employment49.get.officeNumber shouldBe "531"
       employment49.get.payments.size shouldBe 5
-      employment49.get.endOfYearUpdates.size shouldBe 1
+      employment49.get.earlierYearUpdates.size shouldBe 1
 
       val employment39 = rtiDetails.employments.find(emp => emp.sequenceNo == 39 )
       employment39.isDefined shouldBe true
       employment39.get.currentPayId shouldBe Some("111111")
       employment39.get.officeNumber shouldBe "267"
       employment39.get.payments.size shouldBe 7
-      employment39.get.endOfYearUpdates.size shouldBe 0
+      employment39.get.earlierYearUpdates.size shouldBe 0
 
     }
     "transform Rti Response Json correctly which containing Payments" in {
@@ -70,11 +70,11 @@ class RtiDataSpec extends TestUtil with UnitSpec {
     }
 
     "transform Rti Response Json correctly which containing EndOfYearUpdates" in {
-      val endOfYearUpdates = rtiDetails.employments.map(emp => emp.endOfYearUpdates.find(eyu => eyu.receivedDate == new LocalDate(2016,6,1))).flatten
-      endOfYearUpdates.size shouldBe 1
-      endOfYearUpdates.head.receivedDate shouldBe new LocalDate(2016,6,1)
-      endOfYearUpdates.head.taxablePayDelta shouldBe BigDecimal.valueOf(-600.99)
-      endOfYearUpdates.head.totalTaxDelta shouldBe BigDecimal.valueOf(-10.99)
+      val earlierYearUpdates = rtiDetails.employments.map(emp => emp.earlierYearUpdates.find(eyu => eyu.receivedDate == new LocalDate(2016,6,1))).flatten
+      earlierYearUpdates.size shouldBe 1
+      earlierYearUpdates.head.receivedDate shouldBe new LocalDate(2016,6,1)
+      earlierYearUpdates.head.taxablePayDelta shouldBe BigDecimal.valueOf(-600.99)
+      earlierYearUpdates.head.totalTaxDelta shouldBe BigDecimal.valueOf(-10.99)
     }
 
   }
