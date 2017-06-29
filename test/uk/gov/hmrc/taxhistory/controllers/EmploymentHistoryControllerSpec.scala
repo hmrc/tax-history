@@ -51,21 +51,14 @@ class EmploymentHistoryControllerSpec extends PlaySpec with OneServerPerSuite wi
   override def beforeEach = {
     reset(mockEmploymentHistoryService)
     reset(mockPlayAuthConnector)
-
   }
 
   object TestEmploymentHistoryController extends EmploymentHistoryController{
     override def employmentHistoryService: EmploymentHistoryService = mockEmploymentHistoryService
-
     override def authConnector: AuthConnector = mockPlayAuthConnector
-
-
-
   }
 
   "getEmploymentHistory" must {
-
-
 
     "respond with OK for successful get" in {
       when(mockPlayAuthConnector.authorise(Matchers.any(),Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
@@ -116,15 +109,22 @@ class EmploymentHistoryControllerSpec extends PlaySpec with OneServerPerSuite wi
       val result = TestEmploymentHistoryController.getEmploymentHistory(nino, 2015).apply(FakeRequest())
       status(result) must be(INTERNAL_SERVER_ERROR)
     }
-  }
 
-  "EmploymentHistoryController" must {
-
-
-    "respond with Unauthorised Status for enrolments which is not  HMRC Agent" in {
+    "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
       when(mockPlayAuthConnector.authorise(Matchers.any(), Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
       (Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(UnAuthorisedAgentEnrolments))))
+
+      when(mockEmploymentHistoryService.getEmploymentHistory(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
+      val result = TestEmploymentHistoryController.getEmploymentHistory(nino, 2015).apply(FakeRequest())
+      status(result) must be(UNAUTHORIZED)
+    }
+
+    "respond with Unauthorised Status where affinity group is not retrieved" in {
+      when(mockPlayAuthConnector.authorise(Matchers.any(), Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
+      (Matchers.any()))
+        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](None, Enrolments(UnAuthorisedAgentEnrolments))))
 
       when(mockEmploymentHistoryService.getEmploymentHistory(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))

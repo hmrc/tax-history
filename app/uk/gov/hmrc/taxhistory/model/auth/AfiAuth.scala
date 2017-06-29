@@ -27,6 +27,6 @@ object AfiAuth {
 
   lazy val AgentEnrolmentForPAYE: Enrolment = Enrolment("HMRC-AS-AGENT")
     .withConfidenceLevel(L200)
-    .withDelegatedAuthRule("afi-paye")
+    .withDelegatedAuthRule("afi-auth")
   lazy val AuthProviderAgents: AuthProviders = AuthProviders(GovernmentGateway)
 }

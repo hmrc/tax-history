@@ -47,6 +47,7 @@ trait EmploymentHistoryController extends BaseController with AuthorisedFunction
 
   def getEmploymentHistory(nino: String, taxYear: Int) = Action.async {
     implicit request =>
+      println("*********"+hc)
       authorised(AgentEnrolmentForPAYE.withIdentifier("MTDITID", nino) and AuthProviderAgents).retrieve(affinityGroupAllEnrolls) {
 
         case Some(affinityG) ~ allEnrols ⇒
@@ -57,11 +58,13 @@ trait EmploymentHistoryController extends BaseController with AuthorisedFunction
             case (true, Some(arn)) => getTaxHistory(nino, taxYear)
             case _ =>Future.successful(Unauthorized("Not Authorised"))
           }
-        case _ => Future.successful(Unauthorized("Not Authorised"))
+        case _ => {
+          Logger.debug("failed to retrieve")
+          Future.successful(Unauthorized("Not Authorised"))
+        }
       }
 
   }
-
 
   private def getTaxHistory(nino: String, taxYear: Int)(implicit hc:HeaderCarrier) = {
     employmentHistoryService.getEmploymentHistory(nino, taxYear) map {
