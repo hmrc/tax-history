@@ -1,4 +1,4 @@
 # microservice specific routes
 
 
-GET        /individual/:nino/:taxYear    uk.gov.hmrc.taxhistory.controllers.EmploymentHistoryController.getEmploymentHistory(nino:String,taxYear:Int)
+GET        /:nino/:taxYear    uk.gov.hmrc.taxhistory.controllers.EmploymentHistoryController.getEmploymentHistory(nino:String,taxYear:Int)

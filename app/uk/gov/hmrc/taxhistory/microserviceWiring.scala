@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxhistory
 
+import uk.gov.hmrc.auth.core.PlayAuthConnector
 import uk.gov.hmrc.play.audit.http.config.LoadAuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.auth.microservice.connectors.AuthConnector
@@ -33,4 +34,9 @@ object MicroserviceAuditConnector extends AuditConnector with RunMode {
 
 object MicroserviceAuthConnector extends AuthConnector with ServicesConfig {
   override val authBaseUrl = baseUrl("auth")
+}
+
+object TaxHistoryAuthConnector extends PlayAuthConnector with ServicesConfig {
+  override val serviceUrl = baseUrl("auth")
+  override val http =WSHttp
 }
