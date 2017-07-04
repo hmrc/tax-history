@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.taxhistory.services
 
+import play.Logger
 import play.api.http.Status
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment, RtiPayment}
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.EmploymentsConnector
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
@@ -49,7 +50,7 @@ trait EmploymentHistoryService {
       yield {
         npsEmploymentsFuture match {
           case Left(httpResponse) =>Future.successful(httpResponse)
-          case Right(Nil) => Future.successful(HttpResponse(Status.NOT_FOUND, Some(Json.parse("Not Found"))))
+          case Right(Nil) => Future.successful(HttpResponse(Status.NOT_FOUND, Some(Json.parse("""{"Message":"Not Found"}"""))))
           case Right(npsEmploymentList) => {
             handleNpsEmploymentList(validatedNino, validatedTaxYear)(npsEmploymentList, createEmploymentList)
           }
@@ -78,30 +79,49 @@ trait EmploymentHistoryService {
   def createEmploymentList(rtiData:RtiData, npsEmployments: List[NpsEmployment]): List[Employment] = {
     npsEmployments.flatMap {
       npsEmployment => {
-       val f =  rtiData.employments.filter(
+        val f = rtiData.employments.filter {
           rtiEmployment => {
             rtiEmployment.payeRef == npsEmployment.payeNumber &&
               rtiEmployment.officeNumber == npsEmployment.taxDistrictNumber
           }
-        )
+        }
 
-       f match {
+        f match {
           case Nil => None
-          case matchingEmp :: Nil => {
-            val payment = matchingEmp.payments.sorted.last //TODO deal with no payments
-            Some(Employment(
-              employerName = npsEmployment.employerName,
-              payeReference = npsEmployment.payeNumber,
-              taxablePayTotal = payment.taxablePayYTD,
-              taxTotal = payment.totalTaxYTD
-            ))
+          case matchingEmp :: Nil => buildEmployment(matchingEmp.payments, npsEmployment)
+          case start :: end => {
+            Logger.warn("Multiple matching rti employments found.")
+            val subMatches = (start :: end).filter {
+              rtiEmployment => {
+                rtiEmployment.currentPayId.isDefined &&
+                  npsEmployment.worksNumber.isDefined &&
+                  rtiEmployment.currentPayId == npsEmployment.worksNumber
+              }
+            }
+            subMatches match {
+              case first :: Nil => buildEmployment(first.payments, npsEmployment)
+              case _ => None
+            }
           }
-          case start :: end => None //TODO mmmm???
-
-       }
+        }
       }
     }
   }
+  def buildEmployment(payments:List[RtiPayment], npsEmployment: NpsEmployment): Option[Employment] = {
+    payments.sorted match {
+      case Nil => None
+      case matchingPayments => {
+        val payment = matchingPayments.sorted.last
+        Some(Employment(
+          employerName = npsEmployment.employerName,
+          payeReference = npsEmployment.payeNumber,
+          taxablePayTotal = payment.taxablePayYTD,
+          taxTotal = payment.totalTaxYTD
+        ))
+      }
+    }
+  }
+
 
 
 

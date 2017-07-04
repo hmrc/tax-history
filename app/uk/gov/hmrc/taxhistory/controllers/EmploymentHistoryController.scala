@@ -16,33 +16,70 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
+import play.api.Logger
 import play.api.mvc.Action
+import uk.gov.hmrc.auth.core.{~, _}
+import uk.gov.hmrc.play.http.HeaderCarrier
 import uk.gov.hmrc.play.microservice.controller.BaseController
+import uk.gov.hmrc.taxhistory.{TaxHistoryAuthConnector}
+import uk.gov.hmrc.taxhistory.model.auth.AfiAuth._
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
+
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 
-/**
-  * Created by shailesh on 20/06/17.
-  */
-trait EmploymentHistoryController extends BaseController {
+trait EmploymentHistoryController extends BaseController with AuthorisedFunctions {
 
   def employmentHistoryService: EmploymentHistoryService = EmploymentHistoryService
 
-  def getEmploymentHistory(nino: String, taxYear: Int) = Action.async {
-    implicit request =>
-      employmentHistoryService.getEmploymentHistory(nino, taxYear) map {
-        response =>
-          response.status match {
-            case OK => Ok(response.body)
-            case NOT_FOUND => NotFound(response.body)
-            case BAD_REQUEST => BadRequest(response.body)
-            case SERVICE_UNAVAILABLE => ServiceUnavailable(response.body)
-            case _ => InternalServerError(response.body)
-          }
-      }
+  private def isAgent(group: AffinityGroup): Boolean = group.toString.contains("Agent")
+
+  private def extractArn(enrolls: Set[Enrolment]): Option[String] = {
+    Logger.info("enrolls=" + enrolls)
+
+    def extractArn(enrollmentIndenitifiers: Seq[EnrolmentIdentifier]) = enrollmentIndenitifiers.find(_.key == "AgentReferenceNumber").map(_.value)
+
+    val arn: Option[String] = enrolls.find(_.key equals "HMRC-AS-AGENT").flatMap(agentEnrollment ⇒ extractArn(agentEnrollment.identifiers))
+    Logger.info("arn=" + arn)
+    arn
   }
 
+  def getEmploymentHistory(nino: String, taxYear: Int) = Action.async {
+    implicit request =>
+      println("*********"+hc)
+      authorised(AgentEnrolmentForPAYE.withIdentifier("MTDITID", nino) and AuthProviderAgents).retrieve(affinityGroupAllEnrolls) {
+
+        case Some(affinityG) ~ allEnrols ⇒
+
+          Logger.info("allEnrols " + allEnrols)
+          Logger.info("affinityGroup " + affinityG)
+          (isAgent(affinityG), extractArn(allEnrols.enrolments)) match {
+            case (true, Some(arn)) => getTaxHistory(nino, taxYear)
+            case _ =>Future.successful(Unauthorized("Not Authorised"))
+          }
+        case _ => {
+          Logger.debug("failed to retrieve")
+          Future.successful(Unauthorized("Not Authorised"))
+        }
+      }
+
+  }
+
+  private def getTaxHistory(nino: String, taxYear: Int)(implicit hc:HeaderCarrier) = {
+    employmentHistoryService.getEmploymentHistory(nino, taxYear) map {
+      response =>
+        response.status match {
+          case OK => Ok(response.body)
+          case NOT_FOUND => NotFound(response.body)
+          case BAD_REQUEST => BadRequest(response.body)
+          case SERVICE_UNAVAILABLE => ServiceUnavailable(response.body)
+          case _ => InternalServerError(response.body)
+        }
+    }
+  }
 }
 
-object EmploymentHistoryController extends EmploymentHistoryController
+object EmploymentHistoryController extends EmploymentHistoryController {
+  override def authConnector: AuthConnector = TaxHistoryAuthConnector
+}
