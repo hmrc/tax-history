@@ -115,8 +115,8 @@ trait EmploymentHistoryService {
         Some(Employment(
           employerName = npsEmployment.employerName,
           payeReference = npsEmployment.payeNumber,
-          taxablePayTotal = payment.taxablePayYTD,
-          taxTotal = payment.totalTaxYTD
+          taxablePayTotal = Some(payment.taxablePayYTD),
+          taxTotal = Some(payment.totalTaxYTD)
         ))
       }
     }

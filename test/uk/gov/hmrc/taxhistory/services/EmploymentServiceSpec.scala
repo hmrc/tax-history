@@ -141,8 +141,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employments.size mustBe 1
       employments.head.employerName mustBe "Aldi"
       employments.head.payeReference mustBe "J4816"
-      employments.head.taxablePayTotal mustBe BigDecimal.valueOf(20000.00)
-      employments.head.taxTotal mustBe BigDecimal.valueOf(1880.00)
+      employments.head.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
+      employments.head.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       employments.head.taxablePayEYU mustBe None
       employments.head.taxEYU mustBe None
     }
@@ -155,8 +155,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employmentList.size mustBe 1
       employmentList.head.employerName mustBe "Aldi"
       employmentList.head.payeReference mustBe "J4816"
-      employmentList.head.taxablePayTotal mustBe BigDecimal.valueOf(20000.00)
-      employmentList.head.taxTotal mustBe BigDecimal.valueOf(1880.00)
+      employmentList.head.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
+      employmentList.head.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       employmentList.head.taxablePayEYU mustBe None
       employmentList.head.taxEYU mustBe None
     }
