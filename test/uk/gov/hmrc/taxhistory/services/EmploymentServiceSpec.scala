@@ -119,14 +119,14 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       response.status mustBe NOT_FOUND
     }
 
-    "return any non success status response from get Rti Employments api" in {
+    "return success status despite failing response from get Rti Employments api when there are nps employments" in {
       when(mockEmploymentConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
       when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(rtiEmploymentResponse))))
       val response =  await(TestEmploymentService.getEmploymentHistory(testNino.toString(),2016))
       response mustBe a[HttpResponse]
-      response.status mustBe BAD_REQUEST
+      response.status mustBe OK
     }
 
     "return success response from get Employments" in {
@@ -151,7 +151,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val rtiData = rtiEmploymentResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
 
-      val employmentList =TestEmploymentService.createEmploymentList(rtiData = rtiData, npsEmployments = npsEmployments)
+      val employmentList =TestEmploymentService.createEmploymentList(rtiData = Some(rtiData), npsEmployments = npsEmployments)
       employmentList.size mustBe 1
       employmentList.head.employerName mustBe "Aldi"
       employmentList.head.payeReference mustBe "J4816"
@@ -165,32 +165,49 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val rtiData = rtiDuplicateEmploymentsResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
 
-      val employmentList =TestEmploymentService.createEmploymentList(rtiData = rtiData, npsEmployments = npsEmployments)
-      employmentList.size mustBe 0
+      val employmentList =TestEmploymentService.createEmploymentList(rtiData = Some(rtiData), npsEmployments = npsEmployments)
+      employmentList.size mustBe 1
+      employmentList.head.employerName mustBe "Aldi"
+      employmentList.head.payeReference mustBe "J4816"
+      employmentList.head.taxablePayTotal mustBe None
+      employmentList.head.taxTotal mustBe None
+      employmentList.head.taxablePayEYU mustBe None
+      employmentList.head.taxEYU mustBe None
     }
 
     "successfully merge if there are multiple matching rti employments for a single nps employment but single match on currentPayId" in {
       val rtiData = rtiPartialDuplicateEmploymentsResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
 
-      val employmentList =TestEmploymentService.createEmploymentList(rtiData = rtiData, npsEmployments = npsEmployments)
+      val employmentList =TestEmploymentService.createEmploymentList(rtiData = Some(rtiData), npsEmployments = npsEmployments)
       employmentList.size mustBe 1
     }
 
-    "return empty list if there are zero matching rti employments for a single nps employment" in {
+    "return partially constructed list if there are zero matching rti employments for a single nps employment" in {
       val rtiData = rtiNonMatchingEmploymentsResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
 
-      val employmentList =TestEmploymentService.createEmploymentList(rtiData = rtiData, npsEmployments = npsEmployments)
-      employmentList.size mustBe 0
+      val employmentList =TestEmploymentService.createEmploymentList(rtiData = Some(rtiData), npsEmployments = npsEmployments)
+      employmentList.size mustBe 1
+      employmentList.head.employerName mustBe "Aldi"
+      employmentList.head.payeReference mustBe "J4816"
+      employmentList.head.taxablePayTotal mustBe None
+      employmentList.head.taxTotal mustBe None
+      employmentList.head.taxablePayEYU mustBe None
+      employmentList.head.taxEYU mustBe None
     }
 
-    "return empty list if there are zero matching rti payments within the matching employment" in {
-      val rtiData = rtiNoPaymentsResponse.as[RtiData]
+    "return partially constructed list if there are zero matching rti payments within the matching employment" in {
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
 
-      val employmentList =TestEmploymentService.createEmploymentList(rtiData = rtiData, npsEmployments = npsEmployments)
-      employmentList.size mustBe 0
+      val employmentList =TestEmploymentService.createEmploymentList(rtiData = None, npsEmployments = npsEmployments)
+      employmentList.size mustBe 1
+      employmentList.head.employerName mustBe "Aldi"
+      employmentList.head.payeReference mustBe "J4816"
+      employmentList.head.taxablePayTotal mustBe None
+      employmentList.head.taxTotal mustBe None
+      employmentList.head.taxablePayEYU mustBe None
+      employmentList.head.taxEYU mustBe None
     }
   }
 
