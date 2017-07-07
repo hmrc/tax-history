@@ -32,6 +32,9 @@ import scala.concurrent.Future
 
   def getEmployments(nino: Nino, year: Int)
                     (implicit hc: HeaderCarrier): Future[HttpResponse] = {
+
+    implicit val hc = basicNpsHeaders(HeaderCarrier())
+
     val urlToRead = npsPathUrl(nino, s"employment/$year")
     httpGet.GET[HttpResponse](urlToRead)
   }

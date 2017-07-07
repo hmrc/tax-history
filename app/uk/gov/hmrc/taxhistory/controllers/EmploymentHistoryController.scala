@@ -47,7 +47,6 @@ trait EmploymentHistoryController extends BaseController with AuthorisedFunction
 
   def getEmploymentHistory(nino: String, taxYear: Int) = Action.async {
     implicit request =>
-      println("*********"+hc)
       authorised(AgentEnrolmentForPAYE.withIdentifier("MTDITID", nino) and AuthProviderAgents).retrieve(affinityGroupAllEnrolls) {
 
         case Some(affinityG) ~ allEnrols ⇒
