@@ -30,9 +30,9 @@ object RtiConnector extends RtiConnector {
   override val httpPost: HttpPost = WSHttp
 
   lazy val serviceUrl: String = s"${baseUrl("rti-hod")}"
-  lazy val authorization: String = "Bearer " + getConfString(s"$services.rti-hod.authorizationToken","local")
-  lazy val environment: String = getConfString(s"$services.rti-hod.env","local")
-  lazy val originatorId = getConfString(s"$services.rti-hod.originatorId","local")
+  lazy val authorization: String = "Bearer " + getConfString("rti-hod.authorizationToken","local")
+  lazy val environment: String = getConfString("rti-hod.env","local")
+  lazy val originatorId = getConfString("rti-hod.originatorId","local")
   // $COVERAGE-ON$
 }
 
