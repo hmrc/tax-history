@@ -62,61 +62,69 @@ trait EmploymentHistoryService {
 
   def handleNpsEmploymentList(nino:Nino,taxYear:TaxYear)
                              (npsEmploymentList:List[NpsEmployment],
-                              mergeEmployments: (RtiData,List[NpsEmployment]) => List[Employment])
+                              mergeEmployments: (Option[RtiData],List[NpsEmployment]) => List[Employment])
                              (implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     for(rtiDataFuture <- getRtiEmployments(nino, taxYear))
       yield {
         rtiDataFuture match {
-          case Left(httpResponse) =>httpResponse
+          case Left(httpResponse) => HttpResponse(Status.OK,
+            Some(Json.toJson(mergeEmployments(None,npsEmploymentList))))
           case Right(rtiData) => {
             HttpResponse(Status.OK,
-              Some(Json.toJson(mergeEmployments(rtiData,npsEmploymentList))))
+              Some(Json.toJson(mergeEmployments(Some(rtiData),npsEmploymentList))))
           }
         }
       }
   }
 
-  def createEmploymentList(rtiData:RtiData, npsEmployments: List[NpsEmployment]): List[Employment] = {
+  def createEmploymentList(rtiData:Option[RtiData], npsEmployments: List[NpsEmployment]): List[Employment] = {
     npsEmployments.flatMap {
       npsEmployment => {
-        val f = rtiData.employments.filter {
-          rtiEmployment => {
-            rtiEmployment.payeRef == npsEmployment.payeNumber &&
-              rtiEmployment.officeNumber == npsEmployment.taxDistrictNumber
-          }
-        }
-
-        f match {
-          case Nil => None
-          case matchingEmp :: Nil => buildEmployment(matchingEmp.payments, npsEmployment)
-          case start :: end => {
-            Logger.warn("Multiple matching rti employments found.")
-            val subMatches = (start :: end).filter {
+        val f = rtiData.map(
+          data =>
+            data.employments.filter {
               rtiEmployment => {
-                rtiEmployment.currentPayId.isDefined &&
-                  npsEmployment.worksNumber.isDefined &&
-                  rtiEmployment.currentPayId == npsEmployment.worksNumber
+                rtiEmployment.payeRef == npsEmployment.payeNumber &&
+                  rtiEmployment.officeNumber == npsEmployment.taxDistrictNumber
               }
             }
-            subMatches match {
-              case first :: Nil => buildEmployment(first.payments, npsEmployment)
-              case _ => None
+          )
+
+            f match {
+              case None => buildEmployment(Nil, npsEmployment)
+              case Some(Nil) => buildEmployment(Nil, npsEmployment)
+              case Some(matchingEmp :: Nil) => buildEmployment(matchingEmp.payments, npsEmployment)
+              case Some(start :: end) => {
+                Logger.warn("Multiple matching rti employments found.")
+                val subMatches = (start :: end).filter {
+                  rtiEmployment => {
+                    rtiEmployment.currentPayId.isDefined &&
+                      npsEmployment.worksNumber.isDefined &&
+                      rtiEmployment.currentPayId == npsEmployment.worksNumber
+                  }
+                }
+                subMatches match {
+                  case first :: Nil => buildEmployment(first.payments, npsEmployment)
+                  case _ => buildEmployment(Nil, npsEmployment)
+                }
+              }
             }
-          }
         }
       }
-    }
+
   }
   def buildEmployment(payments:List[RtiPayment], npsEmployment: NpsEmployment): Option[Employment] = {
     payments.sorted match {
-      case Nil => None
+      case Nil =>  Some(Employment(
+        employerName = npsEmployment.employerName,
+        payeReference = npsEmployment.payeNumber))
       case matchingPayments => {
         val payment = matchingPayments.sorted.last
         Some(Employment(
           employerName = npsEmployment.employerName,
           payeReference = npsEmployment.payeNumber,
-          taxablePayTotal = payment.taxablePayYTD,
-          taxTotal = payment.totalTaxYTD
+          taxablePayTotal = Some(payment.taxablePayYTD),
+          taxTotal = Some(payment.totalTaxYTD)
         ))
       }
     }

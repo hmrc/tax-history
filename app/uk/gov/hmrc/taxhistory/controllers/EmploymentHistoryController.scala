@@ -61,6 +61,13 @@ trait EmploymentHistoryController extends BaseController with AuthorisedFunction
           Logger.debug("failed to retrieve")
           Future.successful(Unauthorized("Not Authorised"))
         }
+      }.recoverWith {
+        case i: InsufficientEnrolments =>
+          Logger.error("Error thrown :" + i.getMessage)
+          Future.successful(Unauthorized("Not Authorised"))
+        case e =>
+          Logger.error("Error thrown :" + e.getMessage)
+          Future.successful(InternalServerError(e.getMessage))
       }
 
   }
