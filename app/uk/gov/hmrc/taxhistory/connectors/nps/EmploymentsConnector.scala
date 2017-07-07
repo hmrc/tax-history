@@ -48,7 +48,7 @@ object EmploymentsConnector extends EmploymentsConnector {
   override val httpPost: HttpPost = WSHttp
   lazy val path: String = config("nps-hod").getString("path").fold("")(p => p)
   lazy val serviceUrl: String = s"${baseUrl("nps-hod")}$path"
-  lazy val originatorId = getConfString(s"$services.nps-hod.originatorId","local")
+  lazy val originatorId = getConfString("nps-hod.originatorId","HMRC_GDS")
   // $COVERAGE-ON$
 
 }
