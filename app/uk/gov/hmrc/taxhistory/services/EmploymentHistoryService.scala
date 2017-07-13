@@ -117,12 +117,12 @@ trait EmploymentHistoryService {
     payments.sorted match {
       case Nil =>  Some(Employment(
         employerName = npsEmployment.employerName,
-        payeReference = npsEmployment.payeNumber))
+        payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber))
       case matchingPayments => {
         val payment = matchingPayments.sorted.last
         Some(Employment(
           employerName = npsEmployment.employerName,
-          payeReference = npsEmployment.payeNumber,
+          payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber,
           taxablePayTotal = Some(payment.taxablePayYTD),
           taxTotal = Some(payment.totalTaxYTD)
         ))

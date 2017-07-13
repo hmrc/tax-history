@@ -140,7 +140,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val employments = response.json.as[List[Employment]]
       employments.size mustBe 1
       employments.head.employerName mustBe "Aldi"
-      employments.head.payeReference mustBe "J4816"
+      employments.head.payeReference mustBe "531/J4816"
       employments.head.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       employments.head.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       employments.head.taxablePayEYU mustBe None
@@ -154,7 +154,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val employmentList =TestEmploymentService.createEmploymentList(rtiData = Some(rtiData), npsEmployments = npsEmployments)
       employmentList.size mustBe 1
       employmentList.head.employerName mustBe "Aldi"
-      employmentList.head.payeReference mustBe "J4816"
+      employmentList.head.payeReference mustBe "531/J4816"
       employmentList.head.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       employmentList.head.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       employmentList.head.taxablePayEYU mustBe None
@@ -168,7 +168,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val employmentList =TestEmploymentService.createEmploymentList(rtiData = Some(rtiData), npsEmployments = npsEmployments)
       employmentList.size mustBe 1
       employmentList.head.employerName mustBe "Aldi"
-      employmentList.head.payeReference mustBe "J4816"
+      employmentList.head.payeReference mustBe "531/J4816"
       employmentList.head.taxablePayTotal mustBe None
       employmentList.head.taxTotal mustBe None
       employmentList.head.taxablePayEYU mustBe None
@@ -190,7 +190,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val employmentList =TestEmploymentService.createEmploymentList(rtiData = Some(rtiData), npsEmployments = npsEmployments)
       employmentList.size mustBe 1
       employmentList.head.employerName mustBe "Aldi"
-      employmentList.head.payeReference mustBe "J4816"
+      employmentList.head.payeReference mustBe "531/J4816"
       employmentList.head.taxablePayTotal mustBe None
       employmentList.head.taxTotal mustBe None
       employmentList.head.taxablePayEYU mustBe None
@@ -203,7 +203,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val employmentList =TestEmploymentService.createEmploymentList(rtiData = None, npsEmployments = npsEmployments)
       employmentList.size mustBe 1
       employmentList.head.employerName mustBe "Aldi"
-      employmentList.head.payeReference mustBe "J4816"
+      employmentList.head.payeReference mustBe "531/J4816"
       employmentList.head.taxablePayTotal mustBe None
       employmentList.head.taxTotal mustBe None
       employmentList.head.taxablePayEYU mustBe None
