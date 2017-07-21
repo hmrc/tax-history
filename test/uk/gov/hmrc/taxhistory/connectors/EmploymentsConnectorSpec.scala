@@ -26,6 +26,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 import uk.gov.hmrc.taxhistory.connectors.nps.EmploymentsConnector
+import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 import scala.concurrent.Future
@@ -66,6 +67,8 @@ class EmploymentsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil 
         val testemploymentsConnector = employmentsConnector
         val fakeResponse: HttpResponse = HttpResponse(OK, Some(employmentsSuccessfulResponse))
 
+        when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
         when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any())).thenReturn(Future.successful(fakeResponse))
 
         val result = testemploymentsConnector.getEmployments(testNino, 2016)
@@ -79,6 +82,8 @@ class EmploymentsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil 
       val expectedResponse = Json.parse( """{"reason": "Some thing went wrong"}""")
       implicit val hc = HeaderCarrier()
       val testemploymentsConnector = employmentsConnector
+      when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
       when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(expectedResponse))))
 
@@ -91,6 +96,8 @@ class EmploymentsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil 
       val expectedResponse = Json.parse( """{"reason": "Resource not found"}""")
       implicit val hc = HeaderCarrier()
       val testemploymentsConnector = employmentsConnector
+      when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
       when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(expectedResponse))))
 
@@ -103,6 +110,8 @@ class EmploymentsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil 
       val expectedResponse = Json.parse( """{"reason": "Internal Server Error"}""")
       implicit val hc = HeaderCarrier()
       val testemploymentsConnector = employmentsConnector
+      when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
       when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(expectedResponse))))
 
@@ -115,6 +124,8 @@ class EmploymentsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil 
       val expectedResponse = Json.parse( """{"reason": "Service Unavailable Error"}""")
       implicit val hc = HeaderCarrier()
       val testemploymentsConnector = employmentsConnector
+      when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
       when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(SERVICE_UNAVAILABLE, Some(expectedResponse))))
 
@@ -127,9 +138,8 @@ class EmploymentsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil 
 
   private class TestEmploymentsConnector extends EmploymentsConnector {
     override val serviceUrl: String = "/test"
-    
 
-
+    override val metrics = mock[TaxHistoryMetrics]
 
     override val originatorId: String = "orgId"
 
