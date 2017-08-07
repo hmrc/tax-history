@@ -84,6 +84,7 @@ trait EmploymentHistoryService {
           data =>
             data.employments.filter {
               rtiEmployment => {
+                Logger.warn(s"Comparing rti-nps payRef [${rtiEmployment.payeRef}]:[${npsEmployment.payeNumber}]-[${rtiEmployment.officeNumber}]:[${npsEmployment.taxDistrictNumber}]")
                 rtiEmployment.payeRef == npsEmployment.payeNumber &&
                   rtiEmployment.officeNumber == npsEmployment.taxDistrictNumber
               }
