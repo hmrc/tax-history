@@ -19,14 +19,17 @@ package uk.gov.hmrc.taxhistory.connectors
 import play.Logger
 import play.api.http.Status
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.play.config.ServicesConfig
+import uk.gov.hmrc.play.audit.model.Audit
+import uk.gov.hmrc.play.config.{AppName, ServicesConfig}
 import uk.gov.hmrc.play.http.{HeaderCarrier, _}
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
+import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 
 import scala.concurrent.Future
 
-trait BaseConnector extends ServicesConfig {
+trait BaseConnector extends ServicesConfig with Auditable{
 
   def httpGet: HttpGet
   def httpPost: HttpPost
@@ -47,6 +50,10 @@ trait BaseConnector extends ServicesConfig {
     val BASIC_NINO_LENGTH = 8
     nino.value.take(BASIC_NINO_LENGTH)
   }
+
+  override def appName: String = AppName.appName
+
+  override def audit: Audit = new Audit(AppName.appName, MicroserviceAuditConnector)
 
   def getFromRTI(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val timerContext = metrics.startTimer(MetricsEnum.RTI_GET_EMPLOYMENTS)
