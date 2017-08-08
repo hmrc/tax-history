@@ -31,6 +31,7 @@ import uk.gov.hmrc.taxhistory.model.taxhistory.Employment
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Try
 
 object EmploymentHistoryService extends EmploymentHistoryService
 
@@ -77,6 +78,15 @@ trait EmploymentHistoryService {
       }
   }
 
+  def taxDistrictNumbersMatch(rtiOfficeNumber:String, npsTaxDistrictNumber:String): Boolean = {
+    if(rtiOfficeNumber == npsTaxDistrictNumber) true else {
+      ( Try(rtiOfficeNumber.toInt).toOption, Try(npsTaxDistrictNumber.toInt).toOption) match {
+        case (Some(officeNumber), Some(taxDistrictNumber)) if(officeNumber==taxDistrictNumber) => true
+        case _ => false
+      }
+    }
+  }
+
   def createEmploymentList(rtiData:Option[RtiData], npsEmployments: List[NpsEmployment]): List[Employment] = {
     npsEmployments.flatMap {
       npsEmployment => {
@@ -84,8 +94,7 @@ trait EmploymentHistoryService {
           data =>
             data.employments.filter {
               rtiEmployment => {
-                Logger.warn(s"Comparing rti-nps payRef [${rtiEmployment.payeRef}]:[${npsEmployment.payeNumber}]-[${rtiEmployment.officeNumber}]:[${npsEmployment.taxDistrictNumber}]")
-                rtiEmployment.payeRef == npsEmployment.payeNumber &&
+                taxDistrictNumbersMatch(rtiEmployment.payeRef, npsEmployment.payeNumber) &&
                   rtiEmployment.officeNumber == npsEmployment.taxDistrictNumber
               }
             }
