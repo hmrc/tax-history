@@ -209,6 +209,23 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employmentList.head.taxablePayEYU mustBe None
       employmentList.head.taxEYU mustBe None
     }
+
+    "correctly compare matching numerical taxDistrictNumbers" in {
+      TestEmploymentService.taxDistrictNumbersMatch("12","12") mustBe true
+    }
+    "correctly compare matching alphabetical taxDistrictNumbers" in {
+      TestEmploymentService.taxDistrictNumbersMatch("ABC","ABC") mustBe true
+    }
+
+    "correctly compare taxDistrictNumbers as integers if one has a leading zero" in {
+      TestEmploymentService.taxDistrictNumbersMatch("073","73") mustBe true
+    }
+    "not match different taxDistrictNumbers" in {
+      TestEmploymentService.taxDistrictNumbersMatch("330","33") mustBe false
+    }
+    "not match taxDistrictNumbers if one is blank" in {
+      TestEmploymentService.taxDistrictNumbersMatch("","55") mustBe false
+    }
   }
 
 
