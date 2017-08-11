@@ -31,7 +31,7 @@ import uk.gov.hmrc.taxhistory.model.taxhistory.Employment
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object EmploymentHistoryService extends EmploymentHistoryService
 
@@ -39,7 +39,12 @@ trait EmploymentHistoryService {
   def employmentsConnector : EmploymentsConnector = EmploymentsConnector
   def rtiConnector : RtiConnector = RtiConnector
 
-
+  def formatString(a: String):String = {
+    Try(a.toInt) match {
+      case Success(x) => x.toString
+      case Failure(y) => a
+    }
+  }
 
   def getEmploymentHistory(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     val validatedNino = Nino(nino)
@@ -94,8 +99,8 @@ trait EmploymentHistoryService {
           data =>
             data.employments.filter {
               rtiEmployment => {
-                taxDistrictNumbersMatch(rtiEmployment.payeRef, npsEmployment.payeNumber) &&
-                  rtiEmployment.officeNumber == npsEmployment.taxDistrictNumber
+                formatString(rtiEmployment.officeNumber) == formatString(npsEmployment.taxDistrictNumber) &&
+                  rtiEmployment.payeRef == npsEmployment.payeNumber
               }
             }
           )
