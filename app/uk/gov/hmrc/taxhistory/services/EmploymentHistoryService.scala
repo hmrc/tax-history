@@ -83,14 +83,7 @@ trait EmploymentHistoryService {
       }
   }
 
-  def taxDistrictNumbersMatch(rtiOfficeNumber:String, npsTaxDistrictNumber:String): Boolean = {
-    if(rtiOfficeNumber == npsTaxDistrictNumber) true else {
-      ( Try(rtiOfficeNumber.toInt).toOption, Try(npsTaxDistrictNumber.toInt).toOption) match {
-        case (Some(officeNumber), Some(taxDistrictNumber)) if(officeNumber==taxDistrictNumber) => true
-        case _ => false
-      }
-    }
-  }
+
 
   def createEmploymentList(rtiData:Option[RtiData], npsEmployments: List[NpsEmployment]): List[Employment] = {
     npsEmployments.flatMap {
