@@ -21,7 +21,7 @@ import play.api.http.Status
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment, RtiPayment}
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
-import uk.gov.hmrc.taxhistory.connectors.nps.EmploymentsConnector
+import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.time.TaxYear
 import play.api.http.Status._
@@ -31,13 +31,20 @@ import uk.gov.hmrc.taxhistory.model.taxhistory.Employment
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object EmploymentHistoryService extends EmploymentHistoryService
 
 trait EmploymentHistoryService {
-  def employmentsConnector : EmploymentsConnector = EmploymentsConnector
+  def employmentsConnector : NpsConnector = NpsConnector
   def rtiConnector : RtiConnector = RtiConnector
+
+   def formatString(a: String):String = {
+      Try(a.toInt) match {
+        case Success(x) => x.toString
+        case Failure(y) => a
+      }
+    }
 
 
 
@@ -78,14 +85,6 @@ trait EmploymentHistoryService {
       }
   }
 
-  def taxDistrictNumbersMatch(rtiOfficeNumber:String, npsTaxDistrictNumber:String): Boolean = {
-    if(rtiOfficeNumber == npsTaxDistrictNumber) true else {
-      ( Try(rtiOfficeNumber.toInt).toOption, Try(npsTaxDistrictNumber.toInt).toOption) match {
-        case (Some(officeNumber), Some(taxDistrictNumber)) if(officeNumber==taxDistrictNumber) => true
-        case _ => false
-      }
-    }
-  }
 
   def createEmploymentList(rtiData:Option[RtiData], npsEmployments: List[NpsEmployment]): List[Employment] = {
     npsEmployments.flatMap {
@@ -94,8 +93,8 @@ trait EmploymentHistoryService {
           data =>
             data.employments.filter {
               rtiEmployment => {
-                taxDistrictNumbersMatch(rtiEmployment.payeRef, npsEmployment.payeNumber) &&
-                  rtiEmployment.officeNumber == npsEmployment.taxDistrictNumber
+                (formatString(rtiEmployment.officeNumber) == formatString(npsEmployment.taxDistrictNumber)) &&
+                rtiEmployment.payeRef == npsEmployment.payeNumber
               }
             }
           )

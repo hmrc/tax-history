@@ -35,3 +35,11 @@ case class NpsEmployment(nino:String,
 object NpsEmployment {
   implicit val formats = Json.format[NpsEmployment]
 }
+
+
+case class Iabd (nino: String, employmentSequenceNumber: Option[Int] = None, `type`: Int, grossAmount : Option[BigDecimal] = None,
+                 typeDescription : Option[String] = None, source:Option[Int]=None)
+
+object Iabd {
+  implicit val formats = Json.format[Iabd]
+}

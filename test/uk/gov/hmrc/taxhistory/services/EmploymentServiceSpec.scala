@@ -26,7 +26,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
-import uk.gov.hmrc.taxhistory.connectors.nps.EmploymentsConnector
+import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.model.taxhistory.Employment
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -39,13 +39,13 @@ import scala.concurrent.Future
   */
 
 class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
-  private val mockEmploymentConnector= mock[EmploymentsConnector]
+  private val mockEmploymentConnector= mock[NpsConnector]
   private val mockRtiDataConnector= mock[RtiConnector]
 
   implicit val hc = HeaderCarrier()
   val testNino = randomNino()
   object TestEmploymentService extends EmploymentHistoryService {
-    override def employmentsConnector: EmploymentsConnector = mockEmploymentConnector
+    override def employmentsConnector: NpsConnector = mockEmploymentConnector
     override def rtiConnector: RtiConnector = mockRtiDataConnector
   }
 
@@ -58,6 +58,17 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                              |    "employerName": "Aldi"
                              |    }]
                            """.stripMargin)
+
+  val npsEmploymentResponseWithTaxDistrictNumber =  Json.parse(""" [{
+                                            |    "nino": "AA000000",
+                                            |    "sequenceNumber": 6,
+                                            |    "worksNumber": "6044041000000",
+                                            |    "taxDistrictNumber": "0531",
+                                            |    "payeNumber": "J4816",
+                                            |    "employerName": "Aldi"
+                                            |    }]
+                                          """.stripMargin)
+
   lazy val rtiEmploymentResponse = loadFile("/json/rti/response/dummyRti.json")
   lazy val rtiDuplicateEmploymentsResponse = loadFile("/json/rti/response/dummyRtiDuplicateEmployments.json")
   lazy val rtiPartialDuplicateEmploymentsResponse = loadFile("/json/rti/response/dummyRtiPartialDuplicateEmployments.json")
@@ -161,6 +172,21 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employmentList.head.taxEYU mustBe None
     }
 
+    "successfully merge rti and nps employment data into employment list when taxDistrictNumber is String format starting with Zero" in {
+      val rtiData = rtiEmploymentResponse.as[RtiData]
+      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
+
+      val employmentList =TestEmploymentService.createEmploymentList(rtiData = Some(rtiData), npsEmployments = npsEmployments)
+      employmentList.size mustBe 1
+      employmentList.head.employerName mustBe "Aldi"
+      employmentList.head.payeReference mustBe "0531/J4816"
+      employmentList.head.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
+      employmentList.head.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
+      employmentList.head.taxablePayEYU mustBe None
+      employmentList.head.taxEYU mustBe None
+    }
+
+
     "return empty list if there are multiple matching rti employments for a single nps employment" in {
       val rtiData = rtiDuplicateEmploymentsResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
@@ -211,20 +237,20 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     }
 
     "correctly compare matching numerical taxDistrictNumbers" in {
-      TestEmploymentService.taxDistrictNumbersMatch("12","12") mustBe true
+      TestEmploymentService.formatString("12") mustBe "12"
     }
     "correctly compare matching alphabetical taxDistrictNumbers" in {
-      TestEmploymentService.taxDistrictNumbersMatch("ABC","ABC") mustBe true
+      TestEmploymentService.formatString("ABC") mustBe "ABC"
     }
 
     "correctly compare taxDistrictNumbers as integers if one has a leading zero" in {
-      TestEmploymentService.taxDistrictNumbersMatch("073","73") mustBe true
+      TestEmploymentService.formatString("073") mustBe "73"
     }
     "not match different taxDistrictNumbers" in {
-      TestEmploymentService.taxDistrictNumbersMatch("330","33") mustBe false
+      TestEmploymentService.formatString("330") mustBe "330"
     }
     "not match taxDistrictNumbers if one is blank" in {
-      TestEmploymentService.taxDistrictNumbersMatch("","55") mustBe false
+      TestEmploymentService.formatString("")  mustBe ""
     }
   }
 

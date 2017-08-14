@@ -20,9 +20,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-/**
-  * Created by Shailesh on 13/06/17.
-  */
+
 class NpsEmploymentSpec extends TestUtil with UnitSpec {
 
   lazy val employmentsResponse = loadFile("/json/nps/response/employments.json")

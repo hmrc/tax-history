@@ -1,0 +1,39 @@
+[
+  {
+    "captureDate": null,
+    "employmentSequenceNumber": 8,
+    "grossAmount": 36795,
+    "netAmount": null,
+    "nino": "QQ000001",
+    "receiptDate": null,
+    "sequenceNumber": 201500002,
+    "source": 26,
+    "taxYear": 2015,
+    "type": 27,
+    "typeDescription": "New Estimated Pay"
+  },
+  {
+    "captureDate": null,
+    "grossAmount": 1000,
+    "netAmount": null,
+    "nino": "QQ000002",
+    "receiptDate": null,
+    "sequenceNumber": 201500003,
+    "source": 26,
+    "taxYear": 2015,
+    "type": 60,
+    "typeDescription": "Vehicle Expenses"
+  },
+  {
+    "captureDate": null,
+    "grossAmount": 10600,
+    "netAmount": null,
+    "nino": "QQ000003",
+    "receiptDate": null,
+    "sequenceNumber": 201500004,
+    "source": null,
+    "taxYear": 2015,
+    "type": 118,
+    "typeDescription": "Personal Allowance (PA)"
+  }
+]
