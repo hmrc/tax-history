@@ -22,7 +22,7 @@ import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment, RtiPayment}
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
+import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
 import uk.gov.hmrc.time.TaxYear
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -36,7 +36,7 @@ import scala.util.{Failure, Success, Try}
 object EmploymentHistoryService extends EmploymentHistoryService
 
 trait EmploymentHistoryService {
-  def employmentsConnector : NpsConnector = NpsConnector
+  def npsConnector : NpsConnector = NpsConnector
   def rtiConnector : RtiConnector = RtiConnector
 
    def formatString(a: String):String = {
@@ -143,7 +143,7 @@ trait EmploymentHistoryService {
 
 
   def getNpsEmployments(nino:Nino, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,List[NpsEmployment]]] = {
-    employmentsConnector.getEmployments(nino,taxYear.currentYear).map{
+    npsConnector.getEmployments(nino,taxYear.currentYear).map{
       response => {
         response.status match {
           case OK => {
@@ -166,5 +166,19 @@ trait EmploymentHistoryService {
          }
        }
      }
+  }
+
+
+  def getNpsIabds(nino:Nino, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,List[Iabd]]] = {
+    npsConnector.getIabds(nino,taxYear.currentYear).map{
+      response => {
+        response.status match {
+          case OK => {
+            Right(response.json.as[List[Iabd]])
+          }
+          case _ =>  Left(response)
+        }
+      }
+    }
   }
 }

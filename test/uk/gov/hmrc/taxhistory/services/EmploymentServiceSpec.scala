@@ -45,7 +45,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
   implicit val hc = HeaderCarrier()
   val testNino = randomNino()
   object TestEmploymentService extends EmploymentHistoryService {
-    override def employmentsConnector: NpsConnector = mockEmploymentConnector
+    override def npsConnector: NpsConnector = mockEmploymentConnector
     override def rtiConnector: RtiConnector = mockRtiDataConnector
   }
 

@@ -18,15 +18,6 @@ package uk.gov.hmrc.taxhistory.model
 
 import play.api.libs.json.{Format, JsString, JsSuccess, JsValue}
 
-sealed trait IabdType
-
-sealed trait Income extends IabdType
-
-sealed trait Benefits extends IabdType
-
-sealed trait Allowance extends IabdType
-
-case object EmployerProvidedServices extends Income
 
 
 

@@ -31,7 +31,7 @@ class IabdSpec extends TestUtil with UnitSpec {
                              |        "nino": "QQ00000AB",
                              |        "sequenceNumber": 201700001,
                              |        "taxYear": 2017,
-                             |        "type": 7,
+                             |        "type": 8,
                              |        "source": 15,
                              |        "grossAmount": 200,
                              |        "receiptDate": null,
@@ -49,7 +49,8 @@ class IabdSpec extends TestUtil with UnitSpec {
       val iabd = Json.parse(iabdJsonResponse).as[Iabd]
       iabd shouldBe a[Iabd]
       iabd.nino  shouldBe "QQ00000AB"
-      iabd.`type`  shouldBe 7
+      iabd.`type` shouldBe a[CompanyBenefits]
+      iabd.`type`  shouldBe EmployerProvidedServices
       iabd.grossAmount shouldBe Some(200)
       iabd.typeDescription  shouldBe Some("Total gift aid Payments")
 
