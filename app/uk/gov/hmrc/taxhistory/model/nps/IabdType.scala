@@ -58,6 +58,12 @@ case object TravelAndSubsistence extends CompanyBenefits{val id=53}
 case object VoucherAndCreditCards extends CompanyBenefits{val id=54}
 case object NonCashBenefit extends CompanyBenefits{val id=117}
 
+case object FlatRateJobExpenses extends Allowances{val id=56}
+case object ProfessionalSubscriptions extends Allowances{val id=57}
+case object EarlierYearsAdjustment extends Allowances{val id=101}
+
+
+
 object IabdType {
 
   def apply(value: Int): IabdType = value match {
@@ -89,7 +95,10 @@ object IabdType {
     case IncomeTaxPaidNotDeductedFromDirectorsRemuneration.id => IncomeTaxPaidNotDeductedFromDirectorsRemuneration
     case TravelAndSubsistence.id => TravelAndSubsistence
     case VoucherAndCreditCards.id => VoucherAndCreditCards
-    case NonCashBenefit.id => NonCashBenefit
+    case FlatRateJobExpenses.id => FlatRateJobExpenses
+    case ProfessionalSubscriptions.id => ProfessionalSubscriptions
+    case EarlierYearsAdjustment.id => EarlierYearsAdjustment
+
     case _ => UnKnown
   }
 
@@ -123,6 +132,9 @@ object IabdType {
     case TravelAndSubsistence => TravelAndSubsistence.id
     case VoucherAndCreditCards => VoucherAndCreditCards.id
     case NonCashBenefit => NonCashBenefit.id
+    case FlatRateJobExpenses => FlatRateJobExpenses.id
+    case ProfessionalSubscriptions => ProfessionalSubscriptions.id
+    case EarlierYearsAdjustment => EarlierYearsAdjustment.id
     case UnKnown => -1000 //TODO is their better way
   }
 

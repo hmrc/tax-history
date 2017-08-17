@@ -89,15 +89,15 @@ trait EmploymentHistoryService {
   def createEmploymentList(rtiData:Option[RtiData], npsEmployments: List[NpsEmployment]): List[Employment] = {
     npsEmployments.flatMap {
       npsEmployment => {
-        val f = rtiData.map(
-          data =>
-            data.employments.filter {
-              rtiEmployment => {
-                (formatString(rtiEmployment.officeNumber) == formatString(npsEmployment.taxDistrictNumber)) &&
-                rtiEmployment.payeRef == npsEmployment.payeNumber
+          val f = rtiData.map(
+            data =>
+              data.employments.filter {
+                rtiEmployment => {
+                  (formatString(rtiEmployment.officeNumber) == formatString(npsEmployment.taxDistrictNumber)) &&
+                  rtiEmployment.payeRef == npsEmployment.payeNumber
+                }
               }
-            }
-          )
+            )
 
             f match {
               case None => buildEmployment(Nil, npsEmployment)
@@ -118,7 +118,7 @@ trait EmploymentHistoryService {
                 }
               }
             }
-        }
+          }
       }
 
   }
