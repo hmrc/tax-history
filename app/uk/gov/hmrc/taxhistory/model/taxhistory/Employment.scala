@@ -24,7 +24,9 @@ case class Employment(payeReference:String,
                       taxTotal:Option[BigDecimal] = None,
                       taxablePayEYU:Option[BigDecimal] = None,
                       taxEYU:Option[BigDecimal] = None,
-                      companyBenefits: List[CompanyBenefit]=Nil)
+                      companyBenefits: List[CompanyBenefit]=Nil){
+
+}
 
 
 

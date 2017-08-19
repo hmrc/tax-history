@@ -22,12 +22,12 @@ import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment, RtiPayment}
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
+import uk.gov.hmrc.taxhistory.model.nps.{Allowances, CompanyBenefits, Iabd, NpsEmployment}
 import uk.gov.hmrc.time.TaxYear
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.taxhistory.model.taxhistory.Employment
+import uk.gov.hmrc.taxhistory.model.taxhistory.{CompanyBenefit, Employment}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -86,42 +86,73 @@ trait EmploymentHistoryService {
   }
 
 
+  def fetchFilteredList[A,B](input:List[A],listToFilter:List[B])(f:(A,B) => Boolean):List[B] = {
+    input.flatMap(i => listToFilter.filter(f(i,_)))
+  }
+
+
+  def fetchFilteredList[A](listToFilter:List[A])(f:(A) => Boolean):List[A] = {
+    listToFilter.filter(f(_))
+  }
+
+  def getMatchedRtiEmployments(rtiData:Option[RtiData], npsEmployments: List[NpsEmployment]): List[RtiEmployment] = {
+
+    rtiData.map{
+      data =>
+        fetchFilteredList(npsEmployments,data.employments){
+          (npsEmployment,rtiEmployment) =>
+            (formatString(rtiEmployment.officeNumber) == formatString(npsEmployment.taxDistrictNumber)) &&
+              rtiEmployment.payeRef == npsEmployment.payeNumber
+        }
+    } match {
+      case Some(x) => x
+      case _ => Nil
+    }
+  }
+
+
+
   def createEmploymentList(rtiData:Option[RtiData], npsEmployments: List[NpsEmployment]): List[Employment] = {
+
+
+
+
     npsEmployments.flatMap {
       npsEmployment => {
-          val f = rtiData.map(
-            data =>
-              data.employments.filter {
-                rtiEmployment => {
-                  (formatString(rtiEmployment.officeNumber) == formatString(npsEmployment.taxDistrictNumber)) &&
+        val f = rtiData.map(
+          data =>
+            data.employments.filter {
+              rtiEmployment => {
+                (formatString(rtiEmployment.officeNumber) == formatString(npsEmployment.taxDistrictNumber)) &&
                   rtiEmployment.payeRef == npsEmployment.payeNumber
-                }
-              }
-            )
-
-            f match {
-              case None => buildEmployment(Nil, npsEmployment)
-              case Some(Nil) => buildEmployment(Nil, npsEmployment)
-              case Some(matchingEmp :: Nil) => buildEmployment(matchingEmp.payments, npsEmployment)
-              case Some(start :: end) => {
-                Logger.warn("Multiple matching rti employments found.")
-                val subMatches = (start :: end).filter {
-                  rtiEmployment => {
-                    rtiEmployment.currentPayId.isDefined &&
-                      npsEmployment.worksNumber.isDefined &&
-                      rtiEmployment.currentPayId == npsEmployment.worksNumber
-                  }
-                }
-                subMatches match {
-                  case first :: Nil => buildEmployment(first.payments, npsEmployment)
-                  case _ => buildEmployment(Nil, npsEmployment)
-                }
               }
             }
+        )
+
+        f match {
+          case None => buildEmployment(Nil, npsEmployment)
+          case Some(Nil) => buildEmployment(Nil, npsEmployment)
+          case Some(matchingEmp :: Nil) => buildEmployment(matchingEmp.payments, npsEmployment)
+          case Some(start :: end) => {
+            Logger.warn("Multiple matching rti employments found.")
+            val subMatches = (start :: end).filter {
+              rtiEmployment => {
+                rtiEmployment.currentPayId.isDefined &&
+                  npsEmployment.worksNumber.isDefined &&
+                  rtiEmployment.currentPayId == npsEmployment.worksNumber
+              }
+            }
+            subMatches match {
+              case first :: Nil => buildEmployment(first.payments, npsEmployment)
+              case _ => buildEmployment(Nil, npsEmployment)
+            }
           }
+        }
       }
+    }
 
   }
+
   def buildEmployment(payments:List[RtiPayment], npsEmployment: NpsEmployment): Option[Employment] = {
     payments.sorted match {
       case Nil =>  Some(Employment(
@@ -157,15 +188,15 @@ trait EmploymentHistoryService {
 
   def getRtiEmployments(nino:Nino, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse,RtiData]] = {
     rtiConnector.getRTIEmployments(nino,taxYear).map{
-       response => {
-         response.status match {
-           case Status.OK => {
-             Right(response.json.as[RtiData])
-           }
-           case _ =>  Left(response)
-         }
-       }
-     }
+      response => {
+        response.status match {
+          case Status.OK => {
+            Right(response.json.as[RtiData])
+          }
+          case _ =>  Left(response)
+        }
+      }
+    }
   }
 
 
@@ -181,4 +212,31 @@ trait EmploymentHistoryService {
       }
     }
   }
+
+
+  def getFilteredIabds(iabds:List[Iabd]):List[Iabd]={
+    fetchFilteredList(iabds){
+      i => i.`type`.isInstanceOf[CompanyBenefits] || i.`type`.isInstanceOf[Allowances]
+    }
+  }
+
+  def getMatchedCompanyBenefits(iabds:List[Iabd],npsEmployments:List[NpsEmployment]):List[Iabd] = {
+
+    fetchFilteredList(npsEmployments,getFilteredIabds(iabds)){
+      (npsEmployment,iabd) => {
+          iabd.employmentSequenceNumber.contains(npsEmployment.sequenceNumber)
+      }
+    }
+  }
+
+  def getAllowances(iabds:List[Iabd]):List[Iabd] = {
+
+    fetchFilteredList(iabds){
+      iabd => {
+        iabd.`type`.isInstanceOf[Allowances]
+      }
+    }
+  }
+
+
 }

@@ -1,7 +1,7 @@
 [
   {
-    "nino": "PJ523813",
-    "sequenceNumber": 6,
+    "nino": "QQ000003",
+    "sequenceNumber": 1,
     "payeSchemeType": 0,
     "employerNumber": 4968,
     "payeSequenceNumber": 1,
@@ -59,8 +59,8 @@
     "cessationPayThisEmployment": null
   },
   {
-    "nino": "PJ523813",
-    "sequenceNumber": 5,
+    "nino": "QQ000003",
+    "sequenceNumber": 2,
     "payeSchemeType": 0,
     "employerNumber": 4968,
     "payeSequenceNumber": 1,
@@ -118,7 +118,7 @@
     "cessationPayThisEmployment": null
   },
   {
-    "nino": "PJ523813",
+    "nino": "QQ000003",
     "sequenceNumber": 4,
     "payeSchemeType": 0,
     "employerNumber": 4968,
@@ -177,7 +177,7 @@
     "cessationPayThisEmployment": null
   },
   {
-    "nino": "PJ523813",
+    "nino": "QQ000003",
     "sequenceNumber": 3,
     "payeSchemeType": 0,
     "employerNumber": 2448961,

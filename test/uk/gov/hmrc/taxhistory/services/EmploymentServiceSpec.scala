@@ -27,7 +27,7 @@ import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
+import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.taxhistory.Employment
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.time.TaxYear
@@ -75,6 +75,9 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
   lazy val rtiNonMatchingEmploymentsResponse = loadFile("/json/rti/response/dummyRtiNonMatchingEmployment.json")
   lazy val rtiNoPaymentsResponse = loadFile("/json/rti/response/dummyRtiNoPaymentsResponse.json")
   lazy val npsEmptyEmployments = loadFile("/json/nps/response/emptyEmployments.json")
+  lazy val iabdssJsonResponse = loadFile("/json/nps/response/iabds.json")
+  lazy val employmentsJsonResponse = loadFile("/json/nps/response/employments.json")
+
 
   "Employment Service" should {
     "successfully get Nps Employments Data" in {
@@ -252,6 +255,44 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     "not match taxDistrictNumbers if one is blank" in {
       TestEmploymentService.formatString("")  mustBe ""
     }
+
+   "Return a filtered Iabds from  List of Nps Iabds" in {
+      val iabds = iabdssJsonResponse.as[List[Iabd]]
+      iabds mustBe a [List[Iabd]]
+      val iabdsFiltered = TestEmploymentService.getFilteredIabds(iabds)
+      iabdsFiltered.size mustBe 5
+      iabdsFiltered.toString() contains  ("FlatRateJobExpenses")
+      iabdsFiltered.toString() contains  ("VanBenefit")
+      iabdsFiltered.toString() contains  ("CarFuelBenefit")
+
+    }
+
+
+    "Return a matched iabds  from  List of employments" in {
+      val iabds = iabdssJsonResponse.as[List[Iabd]]
+      val employments = employmentsJsonResponse.as[List[NpsEmployment]]
+
+      iabds mustBe a [List[Iabd]]
+      val matchedIabds = TestEmploymentService.getMatchedCompanyBenefits(iabds,employments)
+      matchedIabds.size mustBe 4
+      matchedIabds.toString() contains  ("FlatRateJobExpenses")
+      matchedIabds.toString() contains  ("VanBenefit")
+      matchedIabds.toString() contains  ("CarFuelBenefit")
+
+    }
+
+    "Return only Allowances from  List of Nps Iabds" in {
+      val iabds = iabdssJsonResponse.as[List[Iabd]]
+      iabds mustBe a [List[Iabd]]
+      val iabdsFiltered = TestEmploymentService.getAllowances(iabds)
+      iabdsFiltered.size mustBe 1
+      iabdsFiltered.toString() contains  ("FlatRateJobExpenses")
+
+
+    }
+
+
+
   }
 
 
