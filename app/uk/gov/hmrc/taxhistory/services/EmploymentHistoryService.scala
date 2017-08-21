@@ -61,7 +61,6 @@ trait EmploymentHistoryService {
           case Right(Nil) => Future.successful(HttpResponse(Status.NOT_FOUND, Some(Json.parse("""{"Message":"Not Found"}"""))))
           case Right(npsEmploymentList) => {
                 getPayAsYouEarnDetails(validatedNino,validatedTaxYear)(npsEmploymentList)
-           // handleNpsEmploymentList(validatedNino, validatedTaxYear)(npsEmploymentList, createEmploymentList)
           }
         }
       }
@@ -117,23 +116,6 @@ trait EmploymentHistoryService {
     }
   }
 
-  def handleNpsEmploymentList(nino:Nino,taxYear:TaxYear)
-                             (npsEmploymentList:List[NpsEmployment],
-                              mergeEmployments: (Option[RtiData],List[NpsEmployment]) => List[Employment])
-                             (implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    for(rtiDataFuture <- getRtiEmployments(nino, taxYear))
-      yield {
-        rtiDataFuture match {
-          case Left(httpResponse) => HttpResponse(Status.OK,
-            Some(Json.toJson(mergeEmployments(None,npsEmploymentList))))
-          case Right(rtiData) => {
-            HttpResponse(Status.OK,
-              Some(Json.toJson(mergeEmployments(Some(rtiData),npsEmploymentList))))
-          }
-        }
-      }
-  }
-
 
   def fetchFilteredList[A](listToFilter:List[A])(f:(A) => Boolean):List[A] = {
     listToFilter.filter(f(_))
@@ -163,63 +145,6 @@ trait EmploymentHistoryService {
           }
         case _ => Nil
       }
-  }
-
-
-
-  def createEmploymentList(rtiData:Option[RtiData], npsEmployments: List[NpsEmployment]): List[Employment] = {
-
-    npsEmployments.flatMap {
-      npsEmployment => {
-        val f = rtiData.map(
-          data =>
-            data.employments.filter {
-              rtiEmployment => {
-                (formatString(rtiEmployment.officeNumber) == formatString(npsEmployment.taxDistrictNumber)) &&
-                  rtiEmployment.payeRef == npsEmployment.payeNumber
-              }
-            }
-        )
-
-        f match {
-          case None => buildEmployment(Nil, npsEmployment)
-          case Some(Nil) => buildEmployment(Nil, npsEmployment)
-          case Some(matchingEmp :: Nil) => buildEmployment(matchingEmp.payments, npsEmployment)
-          case Some(start :: end) => {
-            Logger.warn("Multiple matching rti employments found.")
-            val subMatches = (start :: end).filter {
-              rtiEmployment => {
-                rtiEmployment.currentPayId.isDefined &&
-                  npsEmployment.worksNumber.isDefined &&
-                  rtiEmployment.currentPayId == npsEmployment.worksNumber
-              }
-            }
-            subMatches match {
-              case first :: Nil => buildEmployment(first.payments, npsEmployment)
-              case _ => buildEmployment(Nil, npsEmployment)
-            }
-          }
-        }
-      }
-    }
-
-  }
-
-  def buildEmployment(payments:List[RtiPayment], npsEmployment: NpsEmployment): Option[Employment] = {
-    payments.sorted match {
-      case Nil =>  Some(Employment(
-        employerName = npsEmployment.employerName,
-        payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber))
-      case matchingPayments => {
-        val payment = matchingPayments.sorted.last
-        Some(Employment(
-          employerName = npsEmployment.employerName,
-          payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber,
-          taxablePayTotal = Some(payment.taxablePayYTD),
-          taxTotal = Some(payment.totalTaxYTD)
-        ))
-      }
-    }
   }
 
 
