@@ -27,7 +27,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
- trait EmploymentsConnector extends BaseConnector {
+ trait NpsConnector extends BaseConnector {
 
   def serviceUrl: String
   def npsBaseUrl(nino: Nino) = s"$serviceUrl/person/$nino"
@@ -49,15 +49,39 @@ import scala.concurrent.Future
           response
         case status =>
           metrics.incrementFailedCounter(MetricsEnum.NPS_GET_EMPLOYMENTS)
-          Logger.warn(s"[EmploymentsConnector][getEmployments] - status: $status Error ${response.body}")
+          Logger.warn(s"[NpsConnector][getEmployments] - status: $status Error ${response.body}")
           response
       }
     }
   }
 
-}
 
-object EmploymentsConnector extends EmploymentsConnector {
+   def getIabds(nino: Nino, year: Int)
+                     (implicit hc: HeaderCarrier): Future[HttpResponse] = {
+
+     implicit val hc = basicNpsHeaders(HeaderCarrier())
+     val urlToRead = npsPathUrl(nino, s"iabds/$year")
+
+     val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_IABDS)
+
+     httpGet.GET[HttpResponse](urlToRead).map { response =>
+       timerContext.stop()
+       response.status match {
+         case OK =>
+           metrics.incrementSuccessCounter(MetricsEnum.NPS_GET_IABDS)
+           response
+         case status =>
+           metrics.incrementFailedCounter(MetricsEnum.NPS_GET_IABDS)
+           Logger.warn(s"[NpsConnector][getIabds] - status: $status Error ${response.body}")
+           response
+       }
+     }
+   }
+
+
+ }
+
+object NpsConnector extends NpsConnector {
 
   // $COVERAGE-OFF$
   override val httpGet: HttpGet = WSHttp

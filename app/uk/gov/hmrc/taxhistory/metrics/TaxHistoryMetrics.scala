@@ -36,17 +36,20 @@ object TaxHistoryMetrics extends TaxHistoryMetrics with MicroserviceMetrics {
   val registry = metrics.defaultRegistry
   val timers = Map(
     MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.timer("nps-get-employments-response-timer"),
-    MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.timer("rti-get-employments-response-timer")
+    MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.timer("rti-get-employments-response-timer"),
+    MetricsEnum.NPS_GET_IABDS -> registry.timer("rti-get-iabds-response-timer")
 
   )
   val successCounters = Map(
     MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.counter("nps-get-employments-success-counter"),
-    MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.counter("rti-get-employments-success-counter")
+    MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.counter("rti-get-employments-success-counter"),
+      MetricsEnum.NPS_GET_IABDS -> registry.counter("rti-get-iabds-success-counter")
 
   )
   val failedCounters = Map(
     MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.counter("nps-get-employments-failed-counter"),
-    MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.counter("rti-get-employments-failed-counter")
+    MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.counter("rti-get-employments-failed-counter"),
+      MetricsEnum.NPS_GET_IABDS -> registry.counter("rti-get-iabds-failed-counter")
 
   )
 

@@ -22,5 +22,6 @@ object MetricsEnum extends Enumeration {
   type MetricsEnum = Value
   val NPS_GET_EMPLOYMENTS = Value
   val RTI_GET_EMPLOYMENTS = Value
+  val NPS_GET_IABDS = Value
 
 }
