@@ -28,7 +28,7 @@ import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
-import uk.gov.hmrc.taxhistory.model.taxhistory.Employment
+import uk.gov.hmrc.taxhistory.model.taxhistory.{Employment, PayAsYouEarnDetails}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.time.TaxYear
 
@@ -39,19 +39,21 @@ import scala.concurrent.Future
   */
 
 class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
-  private val mockEmploymentConnector= mock[NpsConnector]
+  private val mockNpsConnector= mock[NpsConnector]
   private val mockRtiDataConnector= mock[RtiConnector]
 
   implicit val hc = HeaderCarrier()
   val testNino = randomNino()
   object TestEmploymentService extends EmploymentHistoryService {
-    override def npsConnector: NpsConnector = mockEmploymentConnector
+    override def npsConnector: NpsConnector = mockNpsConnector
     override def rtiConnector: RtiConnector = mockRtiDataConnector
   }
 
+  val failureResponseJson = Json.parse("""{"reason":"Bad Request"}""")
+
   val npsEmploymentResponse =  Json.parse(""" [{
                              |    "nino": "AA000000",
-                             |    "sequenceNumber": 6,
+                             |    "sequenceNumber": 1,
                              |    "worksNumber": "6044041000000",
                              |    "taxDistrictNumber": "531",
                              |    "payeNumber": "J4816",
@@ -81,7 +83,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
   "Employment Service" should {
     "successfully get Nps Employments Data" in {
-      when(mockEmploymentConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
 
       val eitherResponse = await(TestEmploymentService.getNpsEmployments(testNino, TaxYear(2016)))
@@ -91,7 +93,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     }
 
     "handle any non success status response from get Nps Employments" in {
-      when(mockEmploymentConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(npsEmploymentResponse))))
 
       val eitherResponse = await(TestEmploymentService.getNpsEmployments(testNino, TaxYear(2016)))
@@ -118,7 +120,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     }
 
     "return any non success status response from get Nps Employments api" in {
-      when(mockEmploymentConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(npsEmploymentResponse))))
       val response =  await(TestEmploymentService.getEmploymentHistory(testNino.toString(),2016))
       response mustBe a[HttpResponse]
@@ -126,7 +128,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     }
 
     "return not found status response from get Nps Employments api" in {
-      when(mockEmploymentConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(JsArray(Seq.empty)))))
       val response =  await(TestEmploymentService.getEmploymentHistory(testNino.toString(),2016))
       response mustBe a[HttpResponse]
@@ -134,24 +136,29 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     }
 
     "return success status despite failing response from get Rti Employments api when there are nps employments" in {
-      when(mockEmploymentConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
       when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(rtiEmploymentResponse))))
+      when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(iabdssJsonResponse))))
       val response =  await(TestEmploymentService.getEmploymentHistory(testNino.toString(),2016))
       response mustBe a[HttpResponse]
       response.status mustBe OK
     }
 
     "return success response from get Employments" in {
-      when(mockEmploymentConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
+      when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(OK, Some(iabdssJsonResponse))))
       when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
       val response =  await(TestEmploymentService.getEmploymentHistory(testNino.toString(),2016))
       response mustBe a[HttpResponse]
       response.status mustBe OK
-      val employments = response.json.as[List[Employment]]
+      val payAsYouEarnDetails = response.json.as[PayAsYouEarnDetails]
+      val employments = payAsYouEarnDetails.employments
       employments.size mustBe 1
       employments.head.employerName mustBe "Aldi"
       employments.head.payeReference mustBe "531/J4816"
@@ -255,42 +262,153 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     "not match taxDistrictNumbers if one is blank" in {
       TestEmploymentService.formatString("")  mustBe ""
     }
+    "return any non success status response from get Nps Iabds api" in {
+      when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(failureResponseJson))))
+      val response =  await(TestEmploymentService.getNpsIabds(testNino,TaxYear(2016)))
+      response mustBe a[Either[HttpResponse,List[Iabd]]]
+      response.left.get.status mustBe BAD_REQUEST
+
+    }
+
+    "return not found status response from get Nps Iabds api" in {
+      when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(JsArray(Seq.empty)))))
+      val response =  await(TestEmploymentService.getNpsIabds(testNino,TaxYear(2016)))
+      response mustBe a[Either[HttpResponse,List[Iabd]]]
+      response.left.get.status mustBe NOT_FOUND
+
+    }
+
+
 
    "Return a filtered Iabds from  List of Nps Iabds" in {
       val iabds = iabdssJsonResponse.as[List[Iabd]]
       iabds mustBe a [List[Iabd]]
-      val iabdsFiltered = TestEmploymentService.getFilteredIabds(iabds)
-      iabdsFiltered.size mustBe 5
-      iabdsFiltered.toString() contains  ("FlatRateJobExpenses")
-      iabdsFiltered.toString() contains  ("VanBenefit")
-      iabdsFiltered.toString() contains  ("CarFuelBenefit")
+      val iabdsFiltered = TestEmploymentService.getRawCompanyBenefits(iabds)
+      iabdsFiltered.size mustBe 4
+      iabdsFiltered.toString() contains  ("FlatRateJobExpenses") mustBe false
+      iabdsFiltered.toString() contains  ("VanBenefit")  mustBe true
+      iabdsFiltered.toString() contains  ("CarFuelBenefit")  mustBe true
 
     }
 
 
     "Return a matched iabds  from  List of employments" in {
       val iabds = iabdssJsonResponse.as[List[Iabd]]
-      val employments = employmentsJsonResponse.as[List[NpsEmployment]]
+      val employments = npsEmploymentResponse.as[List[NpsEmployment]]
 
       iabds mustBe a [List[Iabd]]
-      val matchedIabds = TestEmploymentService.getMatchedCompanyBenefits(iabds,employments)
-      matchedIabds.size mustBe 4
-      matchedIabds.toString() contains  ("FlatRateJobExpenses")
-      matchedIabds.toString() contains  ("VanBenefit")
-      matchedIabds.toString() contains  ("CarFuelBenefit")
+      val matchedIabds = TestEmploymentService.getMatchedCompanyBenefits(iabds,employments.head)
+      matchedIabds.size mustBe 2
+      println( matchedIabds.toString())
+      matchedIabds.toString() contains  ("VanBenefit") mustBe true
+      matchedIabds.toString() contains  ("CarFuelBenefit") mustBe true
 
     }
 
     "Return only Allowances from  List of Nps Iabds" in {
       val iabds = iabdssJsonResponse.as[List[Iabd]]
       iabds mustBe a [List[Iabd]]
-      val iabdsFiltered = TestEmploymentService.getAllowances(iabds)
+      val iabdsFiltered = TestEmploymentService.getRawAllowances(iabds)
       iabdsFiltered.size mustBe 1
-      iabdsFiltered.toString() contains  ("FlatRateJobExpenses")
-
+      iabdsFiltered.toString() contains  ("FlatRateJobExpenses") mustBe true
 
     }
 
+    "Build employment from rti ,nps employment and Iabd data" in {
+      val rtiData = rtiEmploymentResponse.as[RtiData]
+      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
+      val iabds = iabdssJsonResponse.as[List[Iabd]]
+
+      val employment=TestEmploymentService.buildEmployment(Some(rtiData.employments),Some(iabds), npsEmployments.head)
+      employment.employerName mustBe "Aldi"
+      employment.payeReference mustBe "0531/J4816"
+      employment.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
+      employment.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
+      employment.taxablePayEYU mustBe None
+      employment.taxEYU mustBe None
+      employment.companyBenefits.size mustBe  8
+    }
+
+    "Build employment when there is no  data for rti and Iabd" in {
+      val rtiData = rtiEmploymentResponse.as[RtiData]
+      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
+      val iabds = iabdssJsonResponse.as[List[Iabd]]
+
+      val employment=TestEmploymentService.buildEmployment(None,None, npsEmployments.head)
+      employment.employerName mustBe "Aldi"
+      employment.payeReference mustBe "0531/J4816"
+      employment.taxablePayTotal mustBe None
+      employment.taxTotal mustBe None
+      employment.taxablePayEYU mustBe None
+      employment.taxEYU mustBe None
+      employment.companyBenefits.size mustBe  0
+    }
+    "Build employment when there is data for rti is Nil " in {
+      val rtiData = rtiEmploymentResponse.as[RtiData]
+      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
+      val iabds = iabdssJsonResponse.as[List[Iabd]]
+
+      val employment=TestEmploymentService.buildEmployment(None,Some(iabds), npsEmployments.head)
+      employment.employerName mustBe "Aldi"
+      employment.payeReference mustBe "0531/J4816"
+      employment.taxablePayTotal mustBe None
+      employment.taxTotal mustBe None
+      employment.taxablePayEYU mustBe None
+      employment.taxEYU mustBe None
+      employment.companyBenefits.size mustBe  8
+    }
+
+    "Build employment when data for rti is None or Null" in {
+      val rtiData = rtiEmploymentResponse.as[RtiData]
+      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
+      val iabds = iabdssJsonResponse.as[List[Iabd]]
+
+      val employment=TestEmploymentService.buildEmployment(None,Some(iabds), npsEmployments.head)
+      employment.employerName mustBe "Aldi"
+      employment.payeReference mustBe "0531/J4816"
+      employment.taxablePayTotal mustBe None
+      employment.taxTotal mustBe None
+      employment.taxablePayEYU mustBe None
+      employment.taxEYU mustBe None
+      employment.companyBenefits.size mustBe  8
+    }
+    "Build employment when there is data for Iabd is None or Null" in {
+      val rtiData = rtiEmploymentResponse.as[RtiData]
+      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
+      val iabds = iabdssJsonResponse.as[List[Iabd]]
+
+      val employment=TestEmploymentService.buildEmployment(Some(rtiData.employments),None, npsEmployments.head)
+      employment.employerName mustBe "Aldi"
+      employment.payeReference mustBe "0531/J4816"
+      employment.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
+      employment.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
+      employment.taxablePayEYU mustBe None
+      employment.taxEYU mustBe None
+      employment.companyBenefits.size mustBe  0
+    }
+    "Build employment when there is no  data for Iabd" in {
+      val rtiData = rtiEmploymentResponse.as[RtiData]
+      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
+      val iabds = iabdssJsonResponse.as[List[Iabd]]
+
+      val employment=TestEmploymentService.buildEmployment(Some(rtiData.employments),Some(Nil), npsEmployments.head)
+      employment.employerName mustBe "Aldi"
+      employment.payeReference mustBe "0531/J4816"
+      employment.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
+      employment.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
+      employment.taxablePayEYU mustBe None
+      employment.taxEYU mustBe None
+      employment.companyBenefits.size mustBe  0
+    }
+
+    "get rti payments from employment data" in {
+      val rtiData = rtiEmploymentResponse.as[RtiData]
+      val paymentInfo =TestEmploymentService.getRtiPayment(rtiData.employments)
+      paymentInfo._1 mustBe Some(BigDecimal.valueOf(20000.00))
+      paymentInfo._2 mustBe Some(BigDecimal.valueOf(1880.00))
+    }
 
 
   }
