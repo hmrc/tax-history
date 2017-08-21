@@ -34,9 +34,6 @@ import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
-/**
-  * Created by shailesh on 20/06/17.
-  */
 
 class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
   private val mockNpsConnector= mock[NpsConnector]
