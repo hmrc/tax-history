@@ -152,10 +152,7 @@ trait EmploymentHistoryService {
 
     (rtiEmploymentsOption,iabdsOption) match {
 
-      case (None,None) => Employment(
-        employerName = npsEmployment.employerName,
-        payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber)
-      case (Some(Nil),Some(Nil))  => Employment(
+      case (None|Some(Nil),None|Some(Nil)) => Employment(
         employerName = npsEmployment.employerName,
         payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber)
       case (Some(Nil) | None,Some(y))=> {

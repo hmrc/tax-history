@@ -189,6 +189,23 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     }
 
 
+    "successfully merge if there are multiple matching rti employments for a single nps employment but single match on currentPayId" in {
+      val rtiData = rtiPartialDuplicateEmploymentsResponse.as[RtiData]
+      val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
+
+      val rtiEmployments = TestEmploymentService.getMatchedRtiEmployments(rtiData,npsEmployments.head)
+      rtiEmployments.size mustBe 1
+
+    }
+
+    "return Nil constructed list if there are zero matching rti employments for a single nps employment" in {
+      val rtiData = rtiNonMatchingEmploymentsResponse.as[RtiData]
+      val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
+
+      val rtiEmployments =TestEmploymentService.getMatchedRtiEmployments(rtiData , npsEmployments.head)
+      rtiEmployments.size mustBe 0
+    }
+
     "correctly compare matching numerical taxDistrictNumbers" in {
       TestEmploymentService.formatString("12") mustBe "12"
     }
