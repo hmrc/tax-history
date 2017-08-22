@@ -377,6 +377,16 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       companyBenefits.size mustBe  2
     }
 
+    "Total Benefit In Kind  from Iabds list should return true if There is only BIK which is type 28" in {
+      val iabds = iabdsTotalBenfitInKindJsonResponse.as[List[Iabd]]
+      val bik=TestEmploymentService.isTotalBenefitInKind(iabds)
+       bik  mustBe  true
+    }
+    "Total Benefit In Kind  from Iabds list should return false if There is any BIK which is not type 28" in {
+      val iabds = iabdsBenfitInKindJsonResponse.as[List[Iabd]]
+      val bik=TestEmploymentService.isTotalBenefitInKind(iabds)
+      bik  mustBe  false
+    }
 
     "get rti payments from employment data" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
