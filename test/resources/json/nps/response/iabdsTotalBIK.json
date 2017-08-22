@@ -1,0 +1,33 @@
+[
+  {
+    "captureDate": null,
+    "employmentSequenceNumber": 8,
+    "grossAmount": 36795,
+    "netAmount": null,
+    "nino": "QQ000001",
+    "receiptDate": null,
+    "sequenceNumber": 201500002,
+    "source": 26,
+    "taxYear": 2015,
+    "type": 27,
+    "typeDescription": "New Estimated Pay"
+  },
+  {
+    "nino": "QQ000003",
+    "sequenceNumber": 201700048,
+    "taxYear": 2017,
+    "type": 28,
+    "source": 26,
+    "grossAmount": 1000,
+    "receiptDate": null,
+    "captureDate": null,
+    "typeDescription": "Benefits In Kind",
+    "netAmount": null,
+    "employmentSequenceNumber": 2,
+    "costAmount": null,
+    "amountMadeGood": null,
+    "cashEquivalent": null,
+    "expensesIncurred": null,
+    "amountOfRelief": null
+  }
+]

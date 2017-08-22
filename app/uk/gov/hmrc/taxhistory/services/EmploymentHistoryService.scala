@@ -22,11 +22,12 @@ import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment, RtiPayment}
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.nps.{Allowances, CompanyBenefits, Iabd, NpsEmployment}
+import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.time.TaxYear
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.taxhistory.model.taxhistory
 import uk.gov.hmrc.taxhistory.model.taxhistory.{Allowance, CompanyBenefit, Employment, PayAsYouEarnDetails}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -122,7 +123,6 @@ trait EmploymentHistoryService {
   }
 
   def getMatchedRtiEmployments(rtiData:RtiData, npsEmployment: NpsEmployment): List[RtiEmployment] = {
-
       fetchFilteredList(rtiData.employments){
         (rtiEmployment) =>
           (formatString(rtiEmployment.officeNumber) == formatString(npsEmployment.taxDistrictNumber)) &&
@@ -257,17 +257,49 @@ trait EmploymentHistoryService {
   }
 
   def getCompanyBenefits(iabds:List[Iabd]):List[CompanyBenefit] = {
-    iabds.map {
-      iabd => CompanyBenefit(typeDescription =
-        iabd.typeDescription.fold{
-          Logger.warn("Iabds Description is blank")
-          ""}(x=>x),
-        amount = iabd.grossAmount.fold{
-          Logger.warn("Iabds grossAmount is blank")
-          BigDecimal(0)
-        }(x=>x))
+    if (isTotalBenefitInKind(iabds)) {
+
+      convertToCompanyBenefits(iabds)
+
+    }else{
+      val x = fetchFilteredList(iabds) {
+        iabd => {
+          !iabd.`type`.isInstanceOf[TotalBenefitInKind.type]
+        }
+      }
+
+      convertToCompanyBenefits(x)
     }
   }
+
+  def convertToCompanyBenefits(iabds:List[Iabd]):List[CompanyBenefit]= {
+    iabds.map {
+      iabd =>
+        CompanyBenefit(typeDescription =
+          iabd.typeDescription.fold {
+            Logger.warn("Iabds Description is blank")
+            ""
+          }(x => x),
+          amount = iabd.grossAmount.fold {
+            Logger.warn("Iabds grossAmount is blank")
+            BigDecimal(0)
+          }(x => x))
+    }
+  }
+
+  def isTotalBenefitInKind(iabds:List[Iabd]):Boolean = {
+      fetchFilteredList(iabds) {
+        iabd => {
+          iabd.`type`.isInstanceOf[TotalBenefitInKind.type]
+        }
+      }.nonEmpty &&
+      fetchFilteredList(iabds) {
+          iabd => {
+            iabd.`type`.isInstanceOf[uk.gov.hmrc.taxhistory.model.nps.BenefitInKind]
+          }
+      }.size == 1
+  }
+
 
   def getRawAllowances(iabds:List[Iabd]):List[Iabd] = {
 
