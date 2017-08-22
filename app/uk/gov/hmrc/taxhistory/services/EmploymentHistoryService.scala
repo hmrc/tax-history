@@ -262,13 +262,12 @@ trait EmploymentHistoryService {
       convertToCompanyBenefits(iabds)
 
     }else{
-      val x = fetchFilteredList(iabds) {
-        iabd => {
-          !iabd.`type`.isInstanceOf[TotalBenefitInKind.type]
+      convertToCompanyBenefits(fetchFilteredList(iabds) {
+          iabd => {
+            !iabd.`type`.isInstanceOf[TotalBenefitInKind.type]
+          }
         }
-      }
-
-      convertToCompanyBenefits(x)
+      )
     }
   }
 
