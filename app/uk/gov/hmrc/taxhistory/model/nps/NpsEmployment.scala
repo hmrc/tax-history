@@ -29,7 +29,9 @@ case class NpsEmployment(nino:String,
                       taxDistrictNumber:String,
                       payeNumber:String,
                       employerName:String,
-                      worksNumber: Option[String]= None
+                      worksNumber: Option[String]= None,
+                      startDate: String,
+                      endDate: Option[String] = None
                     )
 
 object NpsEmployment {
