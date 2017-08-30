@@ -28,7 +28,7 @@ import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.taxhistory.model.taxhistory
-import uk.gov.hmrc.taxhistory.model.taxhistory.{Allowance, CompanyBenefit, Employment, PayAsYouEarnDetails}
+import uk.gov.hmrc.taxhistory.model.taxhistory._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -148,34 +148,43 @@ trait EmploymentHistoryService {
   }
 
 
-  def buildEmployment(rtiEmploymentsOption:Option[List[RtiEmployment]],iabdsOption: Option[List[Iabd]], npsEmployment: NpsEmployment): Employment = {
+  def convertRtiEYUToEYU(rtiEmployments: List[RtiEmployment]): scala.List[_root_.uk.gov.hmrc.taxhistory.model.taxhistory.EarlierYearUpdate] = {
+    rtiEmployments.head.earlierYearUpdates.map(eyu => EarlierYearUpdate(eyu.taxablePayDelta,
+      eyu.totalTaxDelta,
+      eyu.receivedDate))
+  }
 
-    (rtiEmploymentsOption,iabdsOption) match {
+  def buildEmployment(rtiEmploymentsOption: Option[List[RtiEmployment]], iabdsOption: Option[List[Iabd]], npsEmployment: NpsEmployment): Employment = {
 
-      case (None|Some(Nil),None|Some(Nil)) => Employment(
+    (rtiEmploymentsOption, iabdsOption) match {
+
+      case (None | Some(Nil), None | Some(Nil)) => Employment(
         employerName = npsEmployment.employerName,
         payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber)
-      case (Some(Nil) | None,Some(y))=> {
+      case (Some(Nil) | None, Some(y)) => {
         Employment(
           employerName = npsEmployment.employerName,
           payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber,
           companyBenefits = getCompanyBenefits(y))
       }
-      case (Some(x),Some(Nil) | None)=>  {
-        val rtiPaymentInfo =getRtiPayment(x)
-        Employment(
-        employerName = npsEmployment.employerName,
-        payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber,
-        taxablePayTotal = rtiPaymentInfo._1,
-        taxTotal = rtiPaymentInfo._2)
-      }
-      case (Some(x),Some(y)) =>  {
-        val rtiPaymentInfo =getRtiPayment(x)
+      case (Some(x), Some(Nil) | None) => {
+        val rtiPaymentInfo = getRtiPayment(x)
         Employment(
           employerName = npsEmployment.employerName,
           payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber,
           taxablePayTotal = rtiPaymentInfo._1,
           taxTotal = rtiPaymentInfo._2,
+          earlierYearUpdates = convertRtiEYUToEYU(x)
+        )
+      }
+      case (Some(x), Some(y)) => {
+        val rtiPaymentInfo = getRtiPayment(x)
+        Employment(
+          employerName = npsEmployment.employerName,
+          payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber,
+          taxablePayTotal = rtiPaymentInfo._1,
+          taxTotal = rtiPaymentInfo._2,
+          earlierYearUpdates = convertRtiEYUToEYU(x),
           companyBenefits = getCompanyBenefits(y))
       }
       case _ => Employment(

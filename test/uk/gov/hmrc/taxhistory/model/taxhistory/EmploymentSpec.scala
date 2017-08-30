@@ -26,21 +26,24 @@ class EmploymentSpec extends TestUtil with UnitSpec {
 
   lazy val employmentDetailsJson = loadFile("/json/taxhistory/employments.json")
 
+  lazy val EYUList = List(EarlierYearUpdate(taxablePayEYU = BigDecimal.valueOf(-12.12),taxEYU = BigDecimal.valueOf(-1.14), LocalDate.parse("2017-08-30")),
+    EarlierYearUpdate(taxablePayEYU = BigDecimal.valueOf(-21.00), taxEYU = BigDecimal.valueOf(-4.56), LocalDate.parse("2017-08-30")))
+
   lazy val employments = List(
     Employment(
       payeReference = "paye-1",
       employerName = "employer-1",
       taxablePayTotal = Some(BigDecimal.valueOf(123.12)),
-      taxablePayEYU = Some(BigDecimal.valueOf(-12.12)),
       taxTotal = Some(BigDecimal.valueOf(14.14)),
-      taxEYU = Some(BigDecimal.valueOf(-1.14))),
+      EYUList
+      ),
     Employment(
       payeReference = "paye-2",
       employerName = "employer-2",
       taxablePayTotal = Some(BigDecimal.valueOf(543.21)),
-      taxablePayEYU = Some(BigDecimal.valueOf(-21.00)),
       taxTotal = Some(BigDecimal.valueOf(78.90)),
-      taxEYU = Some(BigDecimal.valueOf(-4.56)))
+      EYUList
+      )
     )
 
   "Employment List" should {

@@ -3,15 +3,33 @@
   "employerName" : "employer-1",
   "taxablePayTotal" : 123.12,
   "taxTotal" : 14.14,
-  "taxablePayEYU" : -12.12,
-  "taxEYU" : -1.14,
+  "earlierYearUpdates" : [
+    {
+      "taxablePayEYU":-12.12,
+      "taxEYU":-1.14,
+      "receivedDate":"2017-08-30"
+    },{
+      "taxablePayEYU":-21,
+      "taxEYU":-4.56,
+      "receivedDate":"2017-08-30"
+    }
+  ],
   "companyBenefits":[]
 }, {
   "payeReference" : "paye-2",
   "employerName" : "employer-2",
   "taxablePayTotal" : 543.21,
   "taxTotal" : 78.9,
-  "taxablePayEYU" : -21,
-  "taxEYU" : -4.56,
+  "earlierYearUpdates" : [
+    {
+      "taxablePayEYU":-12.12,
+      "taxEYU":-1.14,
+      "receivedDate":"2017-08-30"
+    },{
+      "taxablePayEYU":-21,
+      "taxEYU":-4.56,
+      "receivedDate":"2017-08-30"
+    }
+  ],
   "companyBenefits":[]
 } ]
