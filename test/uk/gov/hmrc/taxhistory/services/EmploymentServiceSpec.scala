@@ -54,7 +54,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                              |    "worksNumber": "6044041000000",
                              |    "taxDistrictNumber": "531",
                              |    "payeNumber": "J4816",
-                             |    "employerName": "Aldi"
+                             |    "employerName": "Aldi",
+                             |    "startDate": "21/01/2015"
                              |    }]
                            """.stripMargin)
 
@@ -64,7 +65,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                             |    "worksNumber": "6044041000000",
                                             |    "taxDistrictNumber": "0531",
                                             |    "payeNumber": "J4816",
-                                            |    "employerName": "Aldi"
+                                            |    "employerName": "Aldi",
+                                            |    "startDate": "21/01/2015"
                                             |    }]
                                           """.stripMargin)
 
