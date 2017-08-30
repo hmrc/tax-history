@@ -51,7 +51,7 @@ object RtiPayment {
 
        JsSuccess(
          RtiPayment(
-           paidOnDate = (js \ "pmtDate").as[LocalDate](JsonUtils.localDateFormat),
+           paidOnDate = (js \ "pmtDate").as[LocalDate](JsonUtils.rtiDateFormat),
            taxablePayYTD = mandatoryMonetaryAmountMap("TaxablePayYTD"),
            totalTaxYTD = mandatoryMonetaryAmountMap("TotalTaxYTD")))
      }
@@ -65,7 +65,7 @@ object RtiEarlierYearUpdate {
     def reads(js: JsValue): JsResult[RtiEarlierYearUpdate] = {
       implicit val stringMapFormat = JsonUtils.mapFormat[String,BigDecimal]("type", "amount")
       val mandatoryMonetaryAmountMap = (js \ "optionalAdjustmentAmount").as[Map[String, BigDecimal]]
-      val receivedDate = (js \ "rcvdDate").as[LocalDate](JsonUtils.localDateFormat)
+      val receivedDate = (js \ "rcvdDate").as[LocalDate](JsonUtils.rtiDateFormat)
       JsSuccess(
         RtiEarlierYearUpdate(taxablePayDelta = mandatoryMonetaryAmountMap("TaxablePayDelta"),
           totalTaxDelta = mandatoryMonetaryAmountMap("TotalTaxDelta"),

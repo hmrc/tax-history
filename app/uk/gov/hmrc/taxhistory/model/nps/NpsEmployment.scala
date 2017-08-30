@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
-import play.api.libs.json.Json
-
+import org.joda.time.LocalDate
+import play.api.libs.json._
+import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
 
 /**
   * Created by shailesh on 15/06/17.
@@ -30,14 +31,35 @@ case class NpsEmployment(nino:String,
                       payeNumber:String,
                       employerName:String,
                       worksNumber: Option[String]= None,
-                      startDate: String,
-                      endDate: Option[String] = None
+                      startDate: LocalDate,
+                      endDate: Option[LocalDate] = None
                     )
 
 object NpsEmployment {
-  implicit val formats = Json.format[NpsEmployment]
+  implicit val reader = new Reads[NpsEmployment] {
+    def reads(js: JsValue): JsResult[NpsEmployment] = {
+      val startDate = (js \ "startDate").as[LocalDate](JsonUtils.npsDateFormat)
+      val endDate = (js \ "endDate").asOpt[LocalDate](JsonUtils.npsDateFormat)
+      for {
+        nino <- (js \ "nino").validate[String]
+        sequenceNumber <- (js \ "sequenceNumber" ).validate[Int]
+        taxDistrictNumber <- (js \ "taxDistrictNumber").validate[String]
+        payeNumber <- (js \ "payeNumber").validate[String]
+        employerName <- (js \ "employerName").validate[String]
+        worksNumber <- (js \ "worksNumber").validateOpt[String]
+      } yield {
+        NpsEmployment(
+        nino = nino,
+        sequenceNumber = sequenceNumber,
+        taxDistrictNumber = taxDistrictNumber,
+        payeNumber = payeNumber,
+        employerName = employerName,
+        worksNumber = worksNumber,
+        startDate = startDate,
+        endDate = endDate
+        )
+      }
+    }
+  }
+  implicit val writer = Json.writes[NpsEmployment]
 }
-
-
-
-
