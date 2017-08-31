@@ -1,8 +1,8 @@
 [ {
   "payeReference" : "paye-1",
   "employerName" : "employer-1",
-  "startDate" : "21/01/2016",
-  "endDate" : "01/01/2017",
+  "startDate" : "2016-01-21",
+  "endDate" : "2017-01-01",
   "taxablePayTotal" : 123.12,
   "taxTotal" : 14.14,
   "taxablePayEYU" : -12.12,
@@ -11,7 +11,7 @@
 }, {
   "payeReference" : "paye-2",
   "employerName" : "employer-2",
-  "startDate" : "02/01/2016",
+  "startDate" : "2016-01-02",
   "taxablePayTotal" : 543.21,
   "taxTotal" : 78.9,
   "taxablePayEYU" : -21,

@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
+import org.joda.time.LocalDate
 import play.api.libs.json.Json
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -36,6 +37,9 @@ class NpsEmploymentSpec extends TestUtil with UnitSpec {
                              |    }
                              """.stripMargin
 
+  val startDate = new LocalDate("2015-01-21")
+  val endDate = new LocalDate("2016-01-08")
+
   "NpsEmployment" should {
     "transform Nps Employment Response Json correctly to Employment Model " in {
       val employment = Json.parse(employmentResponse).as[NpsEmployment]
@@ -46,8 +50,8 @@ class NpsEmploymentSpec extends TestUtil with UnitSpec {
       employment.taxDistrictNumber  shouldBe "846"
       employment.payeNumber  shouldBe "T2PP"
       employment.employerName  shouldBe "Aldi"
-      employment.startDate shouldBe "21/01/2015"
-      employment.endDate shouldBe Some("08/01/2016")
+      employment.startDate shouldBe startDate
+      employment.endDate shouldBe Some(endDate)
     }
 
     "Multiple NpsEmployments Json" should {

@@ -30,8 +30,8 @@ class EmploymentSpec extends TestUtil with UnitSpec {
     Employment(
       payeReference = "paye-1",
       employerName = "employer-1",
-      startDate = "21/01/2016",
-      endDate = Some("01/01/2017"),
+      startDate = new LocalDate("2016-01-21"),
+      endDate = Some(new LocalDate("2017-01-01")),
       taxablePayTotal = Some(BigDecimal.valueOf(123.12)),
       taxablePayEYU = Some(BigDecimal.valueOf(-12.12)),
       taxTotal = Some(BigDecimal.valueOf(14.14)),
@@ -39,7 +39,7 @@ class EmploymentSpec extends TestUtil with UnitSpec {
     Employment(
       payeReference = "paye-2",
       employerName = "employer-2",
-      startDate = "02/01/2016",
+      startDate = new LocalDate("2016-01-02"),
       endDate = None,
       taxablePayTotal = Some(BigDecimal.valueOf(543.21)),
       taxablePayEYU = Some(BigDecimal.valueOf(-21.00)),
