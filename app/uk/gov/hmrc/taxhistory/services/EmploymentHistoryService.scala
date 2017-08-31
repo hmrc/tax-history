@@ -27,7 +27,6 @@ import uk.gov.hmrc.time.TaxYear
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.taxhistory.model.taxhistory
 import uk.gov.hmrc.taxhistory.model.taxhistory._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -46,7 +45,6 @@ trait EmploymentHistoryService {
         case Failure(y) => a
       }
     }
-
 
 
   def getEmploymentHistory(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
@@ -151,7 +149,7 @@ trait EmploymentHistoryService {
   def convertRtiEYUToEYU(rtiEmployments: List[RtiEmployment]): scala.List[_root_.uk.gov.hmrc.taxhistory.model.taxhistory.EarlierYearUpdate] = {
     rtiEmployments.head.earlierYearUpdates.map(eyu => EarlierYearUpdate(eyu.taxablePayDelta,
       eyu.totalTaxDelta,
-      eyu.receivedDate))
+      eyu.receivedDate)).filter(x =>x.taxablePayEYU != 0 && x.taxEYU != 0)
   }
 
   def buildEmployment(rtiEmploymentsOption: Option[List[RtiEmployment]], iabdsOption: Option[List[Iabd]], npsEmployment: NpsEmployment): Employment = {

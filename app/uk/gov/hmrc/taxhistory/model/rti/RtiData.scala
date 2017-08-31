@@ -66,6 +66,7 @@ object RtiEarlierYearUpdate {
       implicit val stringMapFormat = JsonUtils.mapFormat[String,BigDecimal]("type", "amount")
       val mandatoryMonetaryAmountMap = (js \ "optionalAdjustmentAmount").as[Map[String, BigDecimal]]
       val receivedDate = (js \ "rcvdDate").as[LocalDate](JsonUtils.localDateFormat)
+
       JsSuccess(
         RtiEarlierYearUpdate(taxablePayDelta = mandatoryMonetaryAmountMap("TaxablePayDelta"),
           totalTaxDelta = mandatoryMonetaryAmountMap("TotalTaxDelta"),

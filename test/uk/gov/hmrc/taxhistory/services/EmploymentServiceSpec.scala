@@ -239,8 +239,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
     }
 
-
-
    "Return a filtered Iabds from  List of Nps Iabds" in {
       val iabds = iabdsJsonResponse.as[List[Iabd]]
       iabds mustBe a [List[Iabd]]

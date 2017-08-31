@@ -894,6 +894,63 @@
                 ],
                 "type": "E",
                 "rcvdDate": "2016-06-01"
+              },
+              {
+                "payId": "T011",
+                "optionalAdjustmentAmount": [
+                  {
+                    "type": "TaxablePayDelta",
+                    "amount": 0.00
+                  },
+                  {
+                    "type": "TotalTaxDelta",
+                    "amount": 0.00
+                  }
+                ],
+                "taxCode": {
+                  "value": "1000L"
+                },
+                "starter": {
+                  "startDate": "2015-08-01",
+                  "startDec": "C"
+                },
+                "niLettersAndValues": [
+                  {
+                    "niLetter": "J",
+                    "niFigure": [
+                      {
+                        "type": "AtLELDelta",
+                        "amount": 0
+                      },
+                      {
+                        "type": "EmpeeContribnsDelta",
+                        "amount": -5.99
+                      },
+                      {
+                        "type": "GrossEarningsForNICs",
+                        "amount": -600.99
+                      },
+                      {
+                        "type": "LELtoPTDelta",
+                        "amount": 0
+                      },
+                      {
+                        "type": "PTtoUAPDelta",
+                        "amount": 0
+                      },
+                      {
+                        "type": "TotalEmpNICDelta",
+                        "amount": 0
+                      },
+                      {
+                        "type": "UAPtoUELDelta",
+                        "amount": 0
+                      }
+                    ]
+                  }
+                ],
+                "type": "E",
+                "rcvdDate": "2016-06-01"
               }
             ]
           },

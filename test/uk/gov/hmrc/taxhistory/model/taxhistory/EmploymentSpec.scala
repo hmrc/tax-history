@@ -19,7 +19,6 @@ package uk.gov.hmrc.taxhistory.model.taxhistory
 import org.joda.time.LocalDate
 import play.api.libs.json.Json
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 class EmploymentSpec extends TestUtil with UnitSpec {
