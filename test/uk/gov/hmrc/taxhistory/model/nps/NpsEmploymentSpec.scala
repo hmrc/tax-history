@@ -16,15 +16,14 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
+import org.joda.time.LocalDate
 import play.api.libs.json.Json
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-
 class NpsEmploymentSpec extends TestUtil with UnitSpec {
 
   lazy val employmentsResponse = loadFile("/json/nps/response/employments.json")
-
 
   val employmentResponse = """ {
                              |    "nino": "AA000000",
@@ -32,11 +31,14 @@ class NpsEmploymentSpec extends TestUtil with UnitSpec {
                              |    "worksNumber": "00191048716",
                              |    "taxDistrictNumber": "846",
                              |    "payeNumber": "T2PP",
-                             |    "employerName": "Aldi"
+                             |    "employerName": "Aldi",
+                             |    "startDate": "21/01/2015",
+                             |    "endDate": "08/01/2016"
                              |    }
                              """.stripMargin
 
-
+  val startDate = new LocalDate("2015-01-21")
+  val endDate = new LocalDate("2016-01-08")
 
   "NpsEmployment" should {
     "transform Nps Employment Response Json correctly to Employment Model " in {
@@ -48,9 +50,9 @@ class NpsEmploymentSpec extends TestUtil with UnitSpec {
       employment.taxDistrictNumber  shouldBe "846"
       employment.payeNumber  shouldBe "T2PP"
       employment.employerName  shouldBe "Aldi"
-
-  }
-
+      employment.startDate shouldBe startDate
+      employment.endDate shouldBe Some(endDate)
+    }
 
     "Multiple NpsEmployments Json" should {
       "transform List of NpsEmployment Model " in {
@@ -58,11 +60,5 @@ class NpsEmploymentSpec extends TestUtil with UnitSpec {
         npsEmployments shouldBe a [List[NpsEmployment]]
       }
     }
-
-
-
   }
-
-
-
 }

@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
+import org.joda.time.LocalDate
 import play.api.libs.json.Json
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.taxhistory.{Allowance, CompanyBenefit, Employment, PayAsYouEarnDetails}
@@ -28,7 +29,9 @@ class PayAsYouEarnDetailsSpec extends TestUtil with UnitSpec {
   val companyBenefit = CompanyBenefit("Medical Insurance",22.0)
   val allowance = Allowance("FRE",22.0)
 
-  val employment = Employment("employername","dddd",Some(22.00),Some(222.33),Some(22.00),None)
+  val startDate = new LocalDate("2016-02-21")
+
+  val employment = Employment("employername","dddd", startDate, None, Some(22.00),Some(222.33),Some(22.00),None)
 
   val payAsYouEarnDetails = PayAsYouEarnDetails(List(employment))
 
