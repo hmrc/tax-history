@@ -55,7 +55,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                              |    "worksNumber": "6044041000000",
                              |    "taxDistrictNumber": "531",
                              |    "payeNumber": "J4816",
-                             |    "employerName": "Aldi"
+                             |    "employerName": "Aldi",
+                             |    "startDate": "21/01/2015"
                              |    }]
                            """.stripMargin)
 
@@ -65,7 +66,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                             |    "worksNumber": "6044041000000",
                                             |    "taxDistrictNumber": "0531",
                                             |    "payeNumber": "J4816",
-                                            |    "employerName": "Aldi"
+                                            |    "employerName": "Aldi",
+                                            |    "startDate": "21/01/2015"
                                             |    }]
                                           """.stripMargin)
 
@@ -80,6 +82,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
   lazy val iabdsBenfitInKindJsonResponse = loadFile("/json/nps/response/iabdsBIK.json")
 
   lazy val employmentsJsonResponse = loadFile("/json/nps/response/employments.json")
+
+  val startDate = new LocalDate("2015-01-21")
 
 
   "Employment Service" should {
@@ -166,6 +170,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employments.head.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       employments.head.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       employments.head.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
+      employments.head.startDate mustBe startDate
+      employments.head.endDate mustBe None
     }
 
     "successfully merge rti and nps employment data into employment list" in {
@@ -185,6 +191,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employments.head.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       employments.head.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       employments.head.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
+      employments.head.startDate mustBe startDate
+      employments.head.endDate mustBe None
     }
 
 
@@ -284,6 +292,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       employment.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       employment.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
+      employment.startDate mustBe startDate
+      employment.endDate mustBe None
       employment.companyBenefits.size mustBe  8
     }
 
@@ -299,6 +309,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.taxTotal mustBe None
       employment.earlierYearUpdates mustBe List()
       employment.companyBenefits.size mustBe  0
+      employment.startDate mustBe startDate
+      employment.endDate mustBe None
     }
     "Build employment when there is data for rti is Nil " in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
@@ -312,6 +324,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.taxTotal mustBe None
       employment.earlierYearUpdates mustBe List()
       employment.companyBenefits.size mustBe  8
+      employment.startDate mustBe startDate
+      employment.endDate mustBe None
     }
 
     "Build employment when data for rti is None or Null" in {
@@ -326,6 +340,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.taxTotal mustBe None
       employment.earlierYearUpdates mustBe List()
       employment.companyBenefits.size mustBe  8
+      employment.startDate mustBe startDate
+      employment.endDate mustBe None
     }
     "Build employment when there is data for Iabd is None or Null" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
@@ -339,6 +355,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       employment.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
       employment.companyBenefits.size mustBe  0
+      employment.startDate mustBe startDate
+      employment.endDate mustBe None
     }
     "Build employment when there is no  data for Iabd" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
@@ -352,6 +370,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       employment.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
       employment.companyBenefits.size mustBe  0
+      employment.startDate mustBe startDate
+      employment.endDate mustBe None
     }
 
     "Get CompanyBenfits from Iabd data and ignore Benefit In Kind (type 28)" in {

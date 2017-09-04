@@ -28,8 +28,9 @@ class PayAsYouEarnDetailsSpec extends TestUtil with UnitSpec {
 
   val companyBenefit = CompanyBenefit("Medical Insurance",22.0)
   val allowance = Allowance("FRE",22.0)
+  val startDate = new LocalDate("2016-02-21")
 
-  val employment = Employment("employername","dddd",Some(22.00),Some(222.33),List(EarlierYearUpdate(BigDecimal(20.0), 10.0, LocalDate.now)))
+  val employment = Employment("employername","dddd", startDate, None, Some(22.00),Some(222.33),List(EarlierYearUpdate(BigDecimal(20.0), 10.0, LocalDate.now)))
 
   val payAsYouEarnDetails = PayAsYouEarnDetails(List(employment))
 

@@ -158,12 +158,16 @@ trait EmploymentHistoryService {
 
       case (None | Some(Nil), None | Some(Nil)) => Employment(
         employerName = npsEmployment.employerName,
-        payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber)
+        payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber,
+        startDate = npsEmployment.startDate,
+        endDate = npsEmployment.endDate)
       case (Some(Nil) | None, Some(y)) => {
         Employment(
           employerName = npsEmployment.employerName,
           payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber,
-          companyBenefits = getCompanyBenefits(y))
+          companyBenefits = getCompanyBenefits(y),
+          startDate = npsEmployment.startDate,
+          endDate = npsEmployment.endDate)
       }
       case (Some(x), Some(Nil) | None) => {
         val rtiPaymentInfo = getRtiPayment(x)
@@ -172,7 +176,9 @@ trait EmploymentHistoryService {
           payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber,
           taxablePayTotal = rtiPaymentInfo._1,
           taxTotal = rtiPaymentInfo._2,
-          earlierYearUpdates = convertRtiEYUToEYU(x)
+          earlierYearUpdates = convertRtiEYUToEYU(x),
+          startDate = npsEmployment.startDate,
+          endDate = npsEmployment.endDate
         )
       }
       case (Some(x), Some(y)) => {
@@ -183,11 +189,15 @@ trait EmploymentHistoryService {
           taxablePayTotal = rtiPaymentInfo._1,
           taxTotal = rtiPaymentInfo._2,
           earlierYearUpdates = convertRtiEYUToEYU(x),
-          companyBenefits = getCompanyBenefits(y))
+          companyBenefits = getCompanyBenefits(y),
+          startDate = npsEmployment.startDate,
+          endDate = npsEmployment.endDate)
       }
       case _ => Employment(
         employerName = npsEmployment.employerName,
-        payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber)
+        payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber,
+        startDate = npsEmployment.startDate,
+        endDate = npsEmployment.endDate)
     }
 
   }
