@@ -31,6 +31,7 @@ case class NpsEmployment(nino:String,
                       payeNumber:String,
                       employerName:String,
                       worksNumber: Option[String]= None,
+                      receivingJobSeekersAllowance: Boolean = false,
                       startDate: LocalDate,
                       endDate: Option[LocalDate] = None
                     )
@@ -47,6 +48,7 @@ object NpsEmployment {
         payeNumber <- (js \ "payeNumber").validate[String]
         employerName <- (js \ "employerName").validate[String]
         worksNumber <- (js \ "worksNumber").validateOpt[String]
+        receivingJobSeekersAllowance <- (js \ "receivingJobseekersAllowance").validate[Boolean]
       } yield {
         NpsEmployment(
         nino = nino,
@@ -55,6 +57,7 @@ object NpsEmployment {
         payeNumber = payeNumber,
         employerName = employerName,
         worksNumber = worksNumber,
+        receivingJobSeekersAllowance = receivingJobSeekersAllowance,
         startDate = startDate,
         endDate = endDate
         )

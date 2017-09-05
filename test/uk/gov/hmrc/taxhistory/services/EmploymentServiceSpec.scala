@@ -60,6 +60,18 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                              |    }]
                            """.stripMargin)
 
+  private val npsEmploymentResponseWithJobSeekerAllowance =  Json.parse(""" [{
+                                            |    "nino": "AA000000",
+                                            |    "sequenceNumber": 1,
+                                            |    "worksNumber": "6044041000000",
+                                            |    "taxDistrictNumber": "531",
+                                            |    "payeNumber": "J4816",
+                                            |    "employerName": "Aldi",
+                                            |    "receivingJobseekersAllowance" : true,
+                                            |    "startDate": "21/01/2015"
+                                            |    }]
+                                          """.stripMargin)
+
   val npsEmploymentResponseWithTaxDistrictNumber =  Json.parse(""" [{
                                             |    "nino": "AA000000",
                                             |    "sequenceNumber": 6,
@@ -193,6 +205,23 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employments.head.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
       employments.head.startDate mustBe startDate
       employments.head.endDate mustBe None
+    }
+
+    "successfully exclude nps employment data" when {
+      "nps receivingJobseekersAllowance is true" in {
+        when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+          .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponseWithJobSeekerAllowance))))
+        when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+          .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
+        when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+          .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
+        val response =  await(TestEmploymentService.getEmploymentHistory(testNino.toString(),2016))
+        response mustBe a[HttpResponse]
+        response.status mustBe OK
+        val payAsYouEarnDetails = response.json.as[PayAsYouEarnDetails]
+        val employments = payAsYouEarnDetails.employments
+        employments.size mustBe 1
+      }
     }
 
 
