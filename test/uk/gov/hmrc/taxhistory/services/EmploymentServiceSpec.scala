@@ -56,11 +56,12 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                              |    "taxDistrictNumber": "531",
                              |    "payeNumber": "J4816",
                              |    "employerName": "Aldi",
+                             |    "receivingJobseekersAllowance" : false,
                              |    "startDate": "21/01/2015"
                              |    }]
                            """.stripMargin)
 
-  private val npsEmploymentResponseWithJobSeekerAllowance =  Json.parse(""" [{
+  private val npsEmploymentWithJobSeekerAllowance =  Json.parse(""" [{
                                             |    "nino": "AA000000",
                                             |    "sequenceNumber": 1,
                                             |    "worksNumber": "6044041000000",
@@ -69,9 +70,30 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                             |    "employerName": "Aldi",
                                             |    "receivingJobseekersAllowance" : true,
                                             |    "startDate": "21/01/2015"
+                                            |    },
+                                            |    {
+                                            |    "nino": "AA000000",
+                                            |    "sequenceNumber": 1,
+                                            |    "worksNumber": "6044041000000",
+                                            |    "taxDistrictNumber": "531",
+                                            |    "payeNumber": "J4816",
+                                            |    "employerName": "Aldi",
+                                            |    "receivingJobseekersAllowance" : false,
+                                            |    "startDate": "21/01/2015"
                                             |    }]
                                           """.stripMargin)
 
+  private val npsEmploymentWithJustJobSeekerAllowance =  Json.parse(""" [{
+                                                                          |    "nino": "AA000000",
+                                                                          |    "sequenceNumber": 1,
+                                                                          |    "worksNumber": "6044041000000",
+                                                                          |    "taxDistrictNumber": "531",
+                                                                          |    "payeNumber": "J4816",
+                                                                          |    "employerName": "Aldi",
+                                                                          |    "receivingJobseekersAllowance" : true,
+                                                                          |    "startDate": "21/01/2015"
+                                                                          |    }]
+                                                                        """.stripMargin)
   val npsEmploymentResponseWithTaxDistrictNumber =  Json.parse(""" [{
                                             |    "nino": "AA000000",
                                             |    "sequenceNumber": 6,
@@ -79,6 +101,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                             |    "taxDistrictNumber": "0531",
                                             |    "payeNumber": "J4816",
                                             |    "employerName": "Aldi",
+                                            |    "receivingJobseekersAllowance" : false,
                                             |    "startDate": "21/01/2015"
                                             |    }]
                                           """.stripMargin)
@@ -208,14 +231,14 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     }
 
     "successfully exclude nps employment data" when {
-      "nps receivingJobseekersAllowance is true" in {
+      "nps receivingJobseekersAllowance is true form list of employments" in {
         when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-          .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponseWithJobSeekerAllowance))))
+          .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithJobSeekerAllowance))))
         when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
         when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
-        val response =  await(TestEmploymentService.getEmploymentHistory(testNino.toString(),2016))
+        val response = await(TestEmploymentService.getEmploymentHistory(testNino.toString(), 2016))
         response mustBe a[HttpResponse]
         response.status mustBe OK
         val payAsYouEarnDetails = response.json.as[PayAsYouEarnDetails]
@@ -224,6 +247,19 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       }
     }
 
+    "throw not found error" when {
+      "nps employments contain single element with receivingJobseekersAllowance attribute is true" in {
+        when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+          .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithJustJobSeekerAllowance))))
+        when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+          .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
+        when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+          .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
+        val response = await(TestEmploymentService.getEmploymentHistory(testNino.toString(), 2016))
+        response mustBe a[HttpResponse]
+        response.status mustBe NOT_FOUND
+      }
+    }
 
     "successfully merge if there are multiple matching rti employments for a single nps employment but single match on currentPayId" in {
       val rtiData = rtiPartialDuplicateEmploymentsResponse.as[RtiData]
