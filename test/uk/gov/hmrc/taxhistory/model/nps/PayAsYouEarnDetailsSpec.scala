@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxhistory.model.nps
 import org.joda.time.LocalDate
 import play.api.libs.json.Json
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.taxhistory.model.taxhistory.{Allowance, CompanyBenefit, Employment, PayAsYouEarnDetails}
+import uk.gov.hmrc.taxhistory.model.taxhistory._
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 
@@ -28,10 +28,9 @@ class PayAsYouEarnDetailsSpec extends TestUtil with UnitSpec {
 
   val companyBenefit = CompanyBenefit("Medical Insurance",22.0)
   val allowance = Allowance("FRE",22.0)
-
   val startDate = new LocalDate("2016-02-21")
 
-  val employment = Employment("employername","dddd", startDate, None, Some(22.00),Some(222.33),Some(22.00),None)
+  val employment = Employment("employername","dddd", startDate, None, Some(22.00),Some(222.33),List(EarlierYearUpdate(BigDecimal(20.0), 10.0, LocalDate.now)))
 
   val payAsYouEarnDetails = PayAsYouEarnDetails(List(employment))
 
@@ -41,7 +40,6 @@ class PayAsYouEarnDetailsSpec extends TestUtil with UnitSpec {
       payAsYouEarnDetailsJson.toString() should include("employername")
       (((payAsYouEarnDetailsJson \ "employments") (0) \ "companyBenefits") (0)).toString should include("[]")
       payAsYouEarnDetailsJson.toString() should include("allowances")
-      println( payAsYouEarnDetailsJson.toString())
       ((payAsYouEarnDetailsJson \ "allowances")(0)).toString should include("[]")
 
 

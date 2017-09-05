@@ -19,12 +19,14 @@ package uk.gov.hmrc.taxhistory.model.taxhistory
 import org.joda.time.LocalDate
 import play.api.libs.json.Json
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 class EmploymentSpec extends TestUtil with UnitSpec {
 
   lazy val employmentDetailsJson = loadFile("/json/taxhistory/employments.json")
+
+  lazy val EYUList = List(EarlierYearUpdate(taxablePayEYU = BigDecimal.valueOf(-12.12),taxEYU = BigDecimal.valueOf(-1.14), LocalDate.parse("2017-08-30")),
+    EarlierYearUpdate(taxablePayEYU = BigDecimal.valueOf(-21.00), taxEYU = BigDecimal.valueOf(-4.56), LocalDate.parse("2017-08-30")))
 
   lazy val employments = List(
     Employment(
@@ -33,18 +35,18 @@ class EmploymentSpec extends TestUtil with UnitSpec {
       startDate = new LocalDate("2016-01-21"),
       endDate = Some(new LocalDate("2017-01-01")),
       taxablePayTotal = Some(BigDecimal.valueOf(123.12)),
-      taxablePayEYU = Some(BigDecimal.valueOf(-12.12)),
       taxTotal = Some(BigDecimal.valueOf(14.14)),
-      taxEYU = Some(BigDecimal.valueOf(-1.14))),
+      EYUList
+      ),
     Employment(
       payeReference = "paye-2",
       employerName = "employer-2",
       startDate = new LocalDate("2016-01-02"),
       endDate = None,
       taxablePayTotal = Some(BigDecimal.valueOf(543.21)),
-      taxablePayEYU = Some(BigDecimal.valueOf(-21.00)),
       taxTotal = Some(BigDecimal.valueOf(78.90)),
-      taxEYU = Some(BigDecimal.valueOf(-4.56)))
+      EYUList
+      )
     )
 
   "Employment List" should {

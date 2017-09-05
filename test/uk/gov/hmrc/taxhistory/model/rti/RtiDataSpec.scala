@@ -44,7 +44,10 @@ class RtiDataSpec extends TestUtil with UnitSpec {
       employment49.get.currentPayId shouldBe Some("6044041000000")
       employment49.get.officeNumber shouldBe "531"
       employment49.get.payments.size shouldBe 5
-      employment49.get.earlierYearUpdates.size shouldBe 1
+      employment49.get.earlierYearUpdates.size shouldBe 2
+      employment49.get.earlierYearUpdates.head.taxablePayDelta shouldBe -600.99
+      employment49.get.earlierYearUpdates.head.totalTaxDelta shouldBe -10.99
+      employment49.get.earlierYearUpdates.head.receivedDate shouldBe LocalDate.parse("2016-06-01")
 
       val employment39 = rtiDetails.employments.find(emp => emp.sequenceNo == 39 )
       employment39.isDefined shouldBe true

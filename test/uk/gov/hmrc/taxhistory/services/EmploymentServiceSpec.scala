@@ -29,7 +29,7 @@ import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
-import uk.gov.hmrc.taxhistory.model.taxhistory.{Employment, PayAsYouEarnDetails}
+import uk.gov.hmrc.taxhistory.model.taxhistory.{EarlierYearUpdate, Employment, PayAsYouEarnDetails}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.time.TaxYear
 
@@ -169,8 +169,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employments.head.payeReference mustBe "531/J4816"
       employments.head.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       employments.head.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
-      employments.head.taxablePayEYU mustBe None
-      employments.head.taxEYU mustBe None
+      employments.head.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
       employments.head.startDate mustBe startDate
       employments.head.endDate mustBe None
     }
@@ -191,8 +190,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employments.head.payeReference mustBe "531/J4816"
       employments.head.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       employments.head.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
-      employments.head.taxablePayEYU mustBe None
-      employments.head.taxEYU mustBe None
+      employments.head.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
       employments.head.startDate mustBe startDate
       employments.head.endDate mustBe None
     }
@@ -249,8 +247,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
     }
 
-
-
    "Return a filtered Iabds from  List of Nps Iabds" in {
       val iabds = iabdsJsonResponse.as[List[Iabd]]
       iabds mustBe a [List[Iabd]]
@@ -295,11 +291,10 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.payeReference mustBe "0531/J4816"
       employment.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       employment.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
-      employment.taxablePayEYU mustBe None
-      employment.taxEYU mustBe None
-      employment.companyBenefits.size mustBe  8
+      employment.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
       employment.startDate mustBe startDate
       employment.endDate mustBe None
+      employment.companyBenefits.size mustBe  8
     }
 
     "Build employment when there is no  data for rti and Iabd" in {
@@ -312,8 +307,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.payeReference mustBe "0531/J4816"
       employment.taxablePayTotal mustBe None
       employment.taxTotal mustBe None
-      employment.taxablePayEYU mustBe None
-      employment.taxEYU mustBe None
+      employment.earlierYearUpdates mustBe List()
       employment.companyBenefits.size mustBe  0
       employment.startDate mustBe startDate
       employment.endDate mustBe None
@@ -328,8 +322,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.payeReference mustBe "0531/J4816"
       employment.taxablePayTotal mustBe None
       employment.taxTotal mustBe None
-      employment.taxablePayEYU mustBe None
-      employment.taxEYU mustBe None
+      employment.earlierYearUpdates mustBe List()
       employment.companyBenefits.size mustBe  8
       employment.startDate mustBe startDate
       employment.endDate mustBe None
@@ -345,8 +338,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.payeReference mustBe "0531/J4816"
       employment.taxablePayTotal mustBe None
       employment.taxTotal mustBe None
-      employment.taxablePayEYU mustBe None
-      employment.taxEYU mustBe None
+      employment.earlierYearUpdates mustBe List()
       employment.companyBenefits.size mustBe  8
       employment.startDate mustBe startDate
       employment.endDate mustBe None
@@ -361,8 +353,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.payeReference mustBe "0531/J4816"
       employment.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       employment.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
-      employment.taxablePayEYU mustBe None
-      employment.taxEYU mustBe None
+      employment.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
       employment.companyBenefits.size mustBe  0
       employment.startDate mustBe startDate
       employment.endDate mustBe None
@@ -377,8 +368,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.payeReference mustBe "0531/J4816"
       employment.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       employment.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
-      employment.taxablePayEYU mustBe None
-      employment.taxEYU mustBe None
+      employment.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
       employment.companyBenefits.size mustBe  0
       employment.startDate mustBe startDate
       employment.endDate mustBe None
