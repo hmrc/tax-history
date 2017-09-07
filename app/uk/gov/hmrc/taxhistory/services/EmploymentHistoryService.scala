@@ -146,7 +146,7 @@ trait EmploymentHistoryService {
   }
 
 
-  def convertRtiEYUToEYU(rtiEmployments: List[RtiEmployment]): scala.List[_root_.uk.gov.hmrc.taxhistory.model.taxhistory.EarlierYearUpdate] = {
+  def convertRtiEYUToEYU(rtiEmployments: List[RtiEmployment]): List[EarlierYearUpdate] = {
     rtiEmployments.head.earlierYearUpdates.map(eyu => EarlierYearUpdate(eyu.taxablePayDelta,
       eyu.totalTaxDelta,
       eyu.receivedDate)).filter(x =>x.taxablePayEYU != 0 && x.taxEYU != 0)
@@ -158,13 +158,13 @@ trait EmploymentHistoryService {
 
       case (None | Some(Nil), None | Some(Nil)) => Employment(
         employerName = npsEmployment.employerName,
-        payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber,
+        payeReference = getPayeRef(npsEmployment),
         startDate = npsEmployment.startDate,
         endDate = npsEmployment.endDate)
       case (Some(Nil) | None, Some(y)) => {
         Employment(
           employerName = npsEmployment.employerName,
-          payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber,
+          payeReference = getPayeRef(npsEmployment),
           companyBenefits = getCompanyBenefits(y),
           startDate = npsEmployment.startDate,
           endDate = npsEmployment.endDate)
@@ -173,7 +173,7 @@ trait EmploymentHistoryService {
         val rtiPaymentInfo = getRtiPayment(x)
         Employment(
           employerName = npsEmployment.employerName,
-          payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber,
+          payeReference = getPayeRef(npsEmployment),
           taxablePayTotal = rtiPaymentInfo._1,
           taxTotal = rtiPaymentInfo._2,
           earlierYearUpdates = convertRtiEYUToEYU(x),
@@ -185,7 +185,7 @@ trait EmploymentHistoryService {
         val rtiPaymentInfo = getRtiPayment(x)
         Employment(
           employerName = npsEmployment.employerName,
-          payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber,
+          payeReference = getPayeRef(npsEmployment),
           taxablePayTotal = rtiPaymentInfo._1,
           taxTotal = rtiPaymentInfo._2,
           earlierYearUpdates = convertRtiEYUToEYU(x),
@@ -195,11 +195,15 @@ trait EmploymentHistoryService {
       }
       case _ => Employment(
         employerName = npsEmployment.employerName,
-        payeReference = npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber,
+        payeReference = getPayeRef(npsEmployment),
         startDate = npsEmployment.startDate,
         endDate = npsEmployment.endDate)
     }
 
+  }
+
+  private def getPayeRef(npsEmployment: NpsEmployment) = {
+    npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber
   }
 
   def getRtiPayment(rtiEmployments: List[RtiEmployment])={
