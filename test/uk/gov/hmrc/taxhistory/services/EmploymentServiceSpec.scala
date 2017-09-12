@@ -208,6 +208,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employments.head.startDate mustBe startDate
       employments.head.companyBenefits mustBe List(CompanyBenefit("Car Fuel Benefit",100,"CarFuelBenefit"), CompanyBenefit("Van Benefit",100,"VanBenefit"))
       employments.head.endDate mustBe None
+      println(Json.toJson(employments.head.companyBenefits))
     }
 
     "successfully merge rti and nps employment data into employment list" in {

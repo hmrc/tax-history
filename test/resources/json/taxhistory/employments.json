@@ -16,7 +16,18 @@
       "receivedDate":"2017-08-30"
     }
   ],
-  "companyBenefits":[]
+  "companyBenefits":[
+    {
+      "typeDescription":"Car Fuel Benefit",
+      "amount":100,
+      "iabdMessageKey":"CarFuelBenefit"
+    },
+    {
+      "typeDescription":"Van Benefit",
+      "amount":100,
+      "iabdMessageKey":"VanBenefit"
+    }
+  ]
 }, {
   "payeReference" : "paye-2",
   "employerName" : "employer-2",
