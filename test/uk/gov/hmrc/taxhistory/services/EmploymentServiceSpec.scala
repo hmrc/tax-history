@@ -208,7 +208,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employments.head.startDate mustBe startDate
       employments.head.companyBenefits mustBe List(CompanyBenefit("Car Fuel Benefit",100,"CarFuelBenefit"), CompanyBenefit("Van Benefit",100,"VanBenefit"))
       employments.head.endDate mustBe None
-      println(Json.toJson(employments.head.companyBenefits))
     }
 
     "successfully merge rti and nps employment data into employment list" in {
@@ -334,7 +333,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       iabds mustBe a [List[Iabd]]
       val matchedIabds = TestEmploymentService.getMatchedCompanyBenefits(iabds,employments.head)
       matchedIabds.size mustBe 2
-      println( matchedIabds.toString())
       matchedIabds.toString() contains  ("VanBenefit") mustBe true
       matchedIabds.toString() contains  ("CarFuelBenefit") mustBe true
 
