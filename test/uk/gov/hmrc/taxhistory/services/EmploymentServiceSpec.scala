@@ -29,7 +29,7 @@ import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
-import uk.gov.hmrc.taxhistory.model.taxhistory.{EarlierYearUpdate, Employment, PayAsYouEarnDetails}
+import uk.gov.hmrc.taxhistory.model.taxhistory._
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.time.TaxYear
 
@@ -206,6 +206,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employments.head.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       employments.head.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
       employments.head.startDate mustBe startDate
+      employments.head.companyBenefits mustBe List(CompanyBenefit("Car Fuel Benefit",100,"CarFuelBenefit"), CompanyBenefit("Van Benefit",100,"VanBenefit"))
       employments.head.endDate mustBe None
     }
 
@@ -244,6 +245,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         val payAsYouEarnDetails = response.json.as[PayAsYouEarnDetails]
         val employments = payAsYouEarnDetails.employments
         employments.size mustBe 1
+        payAsYouEarnDetails.allowances mustBe List(Allowance("Flat Rate Job Expenses",200, "FlatRateJobExpenses"))
       }
     }
 
@@ -331,7 +333,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       iabds mustBe a [List[Iabd]]
       val matchedIabds = TestEmploymentService.getMatchedCompanyBenefits(iabds,employments.head)
       matchedIabds.size mustBe 2
-      println( matchedIabds.toString())
       matchedIabds.toString() contains  ("VanBenefit") mustBe true
       matchedIabds.toString() contains  ("CarFuelBenefit") mustBe true
 

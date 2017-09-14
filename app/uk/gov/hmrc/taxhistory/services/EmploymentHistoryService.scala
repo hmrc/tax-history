@@ -304,7 +304,8 @@ trait EmploymentHistoryService {
           amount = iabd.grossAmount.fold {
             Logger.warn("Iabds grossAmount is blank")
             BigDecimal(0)
-          }(x => x))
+          }(x => x),
+          iabdMessageKey = iabd.`type`.toString)
     }
   }
 
@@ -340,7 +341,8 @@ trait EmploymentHistoryService {
         amount = iabd.grossAmount.fold{
           Logger.warn("Iabds grossAmount is blank")
           BigDecimal(0)
-        }(x=>x))
+        }(x=>x),
+        iabdMessageKey = iabd.`type`.toString)
     }
   }
 
