@@ -119,7 +119,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                                                           |    "payeNumber": "J4816",
                                                                           |    "employerName": "Aldi",
                                                                           |    "receivingJobseekersAllowance" : true,
-                                                                          |     "otherIncomeSourceIndicator": false,
+                                                                          |    "otherIncomeSourceIndicator": false,
                                                                           |    "startDate": "21/01/2015"
                                                                           |    }]
                                                                         """.stripMargin)
