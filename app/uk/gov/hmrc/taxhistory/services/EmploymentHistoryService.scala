@@ -222,7 +222,7 @@ trait EmploymentHistoryService {
       response => {
         response.status match {
           case OK => {
-            val employments = response.json.as[List[NpsEmployment]].filter(!_.receivingJobSeekersAllowance)
+            val employments = response.json.as[List[NpsEmployment]].filterNot(x => x.receivingJobSeekersAllowance || x.otherIncomeSourceIndicator)
             Right(employments)
           }
           case _ =>  Left(response)
