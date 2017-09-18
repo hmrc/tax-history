@@ -24,8 +24,9 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsArray, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
@@ -39,12 +40,15 @@ import scala.concurrent.Future
 class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
   private val mockNpsConnector= mock[NpsConnector]
   private val mockRtiDataConnector= mock[RtiConnector]
+  private val mockAudit= mock[Audit]
 
   implicit val hc = HeaderCarrier()
   val testNino = randomNino()
   object TestEmploymentService extends EmploymentHistoryService {
     override def npsConnector: NpsConnector = mockNpsConnector
     override def rtiConnector: RtiConnector = mockRtiDataConnector
+
+    override def audit: Audit = mockAudit
   }
 
   val failureResponseJson = Json.parse("""{"reason":"Bad Request"}""")
@@ -265,7 +269,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val rtiData = rtiPartialDuplicateEmploymentsResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
 
-      val rtiEmployments = TestEmploymentService.getMatchedRtiEmployments(rtiData,npsEmployments.head)
+      val rtiEmployments = TestEmploymentService.getMatchedRtiEmployments(rtiData, npsEmployments.head)
       rtiEmployments.size mustBe 1
 
     }
@@ -274,7 +278,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val rtiData = rtiNonMatchingEmploymentsResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
 
-      val rtiEmployments =TestEmploymentService.getMatchedRtiEmployments(rtiData , npsEmployments.head)
+      val rtiEmployments =TestEmploymentService.getMatchedRtiEmployments(rtiData, npsEmployments.head)
       rtiEmployments.size mustBe 0
     }
 
@@ -471,6 +475,39 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       paymentInfo._2 mustBe Some(BigDecimal.valueOf(1880.00))
     }
 
+
+    "get onlyRtiEmployments  from List of Rti employments and List Nps Employments" in {
+      val rtiEmployment1 = RtiEmployment(1,"offNo1","ref1",None,Nil,Nil)
+      val rtiEmployment2 = RtiEmployment(5,"offNo5","ref5",None,Nil,Nil)
+      val rtiEmployment3 = RtiEmployment(3,"offNo3","ref3",None,Nil,Nil)
+      val rtiEmployment4 = RtiEmployment(4,"offNo4","ref4",None,Nil,Nil)
+
+      val rtiEmployments = List(rtiEmployment1,rtiEmployment2,rtiEmployment3,rtiEmployment4)
+
+      val npsEmployment1 = NpsEmployment(randomNino.toString(),1,"offNo1","ref1","empname1",None,false,LocalDate.now(),None)
+      val npsEmployment2 = NpsEmployment(randomNino.toString(),2,"offNo2","ref2","empname2",None,false,LocalDate.now(),None)
+      val npsEmployment3 = NpsEmployment(randomNino.toString(),3,"offNo3","ref3","empname3",None,false,LocalDate.now(),None)
+      val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
+
+      val onlyRtiEmployments = TestEmploymentService.onlyInRTI(rtiEmployments,npsEmployments)
+      onlyRtiEmployments.size mustBe 2
+    }
+
+    "get onlyRtiEmployments must be size 0 when all the Rti employments are matched to the Nps Employments" in {
+      val rtiEmployment1 = RtiEmployment(1,"offNo1","ref1",None,Nil,Nil)
+      val rtiEmployment2 = RtiEmployment(2,"offNo2","ref2",None,Nil,Nil)
+      val rtiEmployment3 = RtiEmployment(3,"offNo3","ref3",None,Nil,Nil)
+
+      val rtiEmployments = List(rtiEmployment1,rtiEmployment2,rtiEmployment3)
+
+      val npsEmployment1 = NpsEmployment(randomNino.toString(),1,"offNo1","ref1","empname1",None,false,LocalDate.now(),None)
+      val npsEmployment2 = NpsEmployment(randomNino.toString(),2,"offNo2","ref2","empname2",None,false,LocalDate.now(),None)
+      val npsEmployment3 = NpsEmployment(randomNino.toString(),3,"offNo3","ref3","empname3",None,false,LocalDate.now(),None)
+      val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
+
+      val onlyRtiEmployments = TestEmploymentService.onlyInRTI(rtiEmployments,npsEmployments)
+      onlyRtiEmployments.size mustBe 0
+    }
 
   }
 

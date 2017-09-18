@@ -22,20 +22,25 @@ import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment, RtiPayment}
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.nps._
+import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
 import uk.gov.hmrc.time.TaxYear
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.play.audit.model.Audit
+import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
+import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.taxhistory._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-object EmploymentHistoryService extends EmploymentHistoryService
+object EmploymentHistoryService extends EmploymentHistoryService {
+  override def audit = new Audit(appName,MicroserviceAuditConnector)
+}
 
-trait EmploymentHistoryService {
+trait EmploymentHistoryService extends Auditable{
   def npsConnector : NpsConnector = NpsConnector
   def rtiConnector : RtiConnector = RtiConnector
 
@@ -90,7 +95,7 @@ trait EmploymentHistoryService {
             iabds => getMatchedCompanyBenefits(iabds,npsEmployment)
         }
         val rtiEmployments = rtiOption.map {
-            rtiData => getMatchedRtiEmployments(rtiData,npsEmployment)
+            rtiData => getMatchedRtiEmployments(rtiData, npsEmployment)
         }
 
         buildEmployment(rtiEmploymentsOption=rtiEmployments,iabdsOption=companyBenefits, npsEmployment: NpsEmployment)
@@ -120,11 +125,22 @@ trait EmploymentHistoryService {
     listToFilter.filter(f(_))
   }
 
-  def getMatchedRtiEmployments(rtiData:RtiData, npsEmployment: NpsEmployment): List[RtiEmployment] = {
+
+  def onlyInRTI(rtiEmployments:List[RtiEmployment] , npsEmployments: List[NpsEmployment]):List[RtiEmployment]={
+
+    rtiEmployments.filter(rti => !npsEmployments.exists(nps => isMatch(nps,rti)))
+
+  }
+
+  def isMatch(npsEmployment :NpsEmployment, rtiEmployment :RtiEmployment):Boolean={
+    (formatString(rtiEmployment.officeNumber) == formatString(npsEmployment.taxDistrictNumber)) &&
+      (rtiEmployment.payeRef == npsEmployment.payeNumber)
+  }
+
+  def getMatchedRtiEmployments(rtiData: RtiData, npsEmployment: NpsEmployment): List[RtiEmployment] = {
       fetchFilteredList(rtiData.employments){
         (rtiEmployment) =>
-          (formatString(rtiEmployment.officeNumber) == formatString(npsEmployment.taxDistrictNumber)) &&
-            rtiEmployment.payeRef == npsEmployment.payeNumber
+          isMatch(npsEmployment, rtiEmployment)
       } match {
         case (matchingEmp :: Nil) =>List(matchingEmp)
         case start :: end => {
@@ -138,7 +154,7 @@ trait EmploymentHistoryService {
             }
             subMatches match {
               case first :: Nil => List(first)
-              case _ => Nil
+              case _ => Nil //Two conditions Nil and more for auditing
             }
           }
         case _ => Nil
