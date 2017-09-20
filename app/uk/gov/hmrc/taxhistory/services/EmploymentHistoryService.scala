@@ -89,13 +89,18 @@ trait EmploymentHistoryService extends Auditable{
 
     val iabdsOption = fetchResult(iabdResponse)
     val rtiOption = fetchResult(rtiResponse)
+
     val employments = npsEmployments.map {
       npsEmployment => {
         val companyBenefits = iabdsOption.map {
             iabds => getMatchedCompanyBenefits(iabds,npsEmployment)
         }
         val rtiEmployments = rtiOption.map {
-            rtiData => getMatchedRtiEmployments(rtiData, npsEmployment)
+            rtiData => {
+              auditEvent(rtiData,onlyInRTI(rtiData.employments,npsEmployments))("only-in-rti")
+              getMatchedRtiEmployments(rtiData, npsEmployment)
+
+            }
         }
 
         buildEmployment(rtiEmploymentsOption=rtiEmployments,iabdsOption=companyBenefits, npsEmployment: NpsEmployment)
@@ -137,10 +142,11 @@ trait EmploymentHistoryService extends Auditable{
       (rtiEmployment.payeRef == npsEmployment.payeNumber)
   }
 
-  def getMatchedRtiEmployments(rtiData: RtiData, npsEmployment: NpsEmployment): List[RtiEmployment] = {
+  def getMatchedRtiEmployments(rtiData: RtiData, npsEmployments: NpsEmployment)(implicit headerCarrier: HeaderCarrier): List[RtiEmployment] = {
+
       fetchFilteredList(rtiData.employments){
         (rtiEmployment) =>
-          isMatch(npsEmployment, rtiEmployment)
+          isMatch(npsEmployments, rtiEmployment)
       } match {
         case (matchingEmp :: Nil) =>List(matchingEmp)
         case start :: end => {
@@ -148,19 +154,38 @@ trait EmploymentHistoryService extends Auditable{
             val subMatches = (start :: end).filter {
               rtiEmployment => {
                 rtiEmployment.currentPayId.isDefined &&
-                  npsEmployment.worksNumber.isDefined &&
-                  rtiEmployment.currentPayId == npsEmployment.worksNumber
+                  npsEmployments.worksNumber.isDefined &&
+                  rtiEmployment.currentPayId == npsEmployments.worksNumber
               }
             }
             subMatches match {
               case first :: Nil => List(first)
-              case _ => Nil //Two conditions Nil and more for auditing
+              case x  => {
+                auditEvent(rtiData, x)("miss-match")
+                Nil
+              }
             }
           }
-        case _ => Nil
+        case _ => Nil //Auditing will happen in the function onlyInRTI for this case
       }
   }
 
+
+  private def auditEvent(rtiData: RtiData, x: List[RtiEmployment])(eventType:String)(implicit headerCarrier: HeaderCarrier) = {
+    Future {
+      for {
+        r <- x
+      } yield {
+        val x = Map(
+          "nino" -> rtiData.nino,
+          "payeRef" -> r.payeRef,
+          "officeNumber" -> r.officeNumber,
+          "cuurentPayId" -> r.currentPayId.fold("")(a => a))
+
+        sendDataEvent("Paye for Agents", detail = x, eventType = eventType)
+      }
+    }
+  }
 
   def convertRtiEYUToEYU(rtiEmployments: List[RtiEmployment]): List[EarlierYearUpdate] = {
     rtiEmployments.head.earlierYearUpdates.map(eyu => EarlierYearUpdate(eyu.taxablePayDelta,
