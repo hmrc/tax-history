@@ -30,7 +30,7 @@ import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
-import uk.gov.hmrc.taxhistory.model.taxhistory.{EarlierYearUpdate, Employment, PayAsYouEarnDetails}
+import uk.gov.hmrc.taxhistory.model.taxhistory._
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.time.TaxYear
 
@@ -61,6 +61,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                              |    "payeNumber": "J4816",
                              |    "employerName": "Aldi",
                              |    "receivingJobseekersAllowance" : false,
+                             |    "otherIncomeSourceIndicator" : false,
                              |    "startDate": "21/01/2015"
                              |    }]
                            """.stripMargin)
@@ -73,6 +74,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                             |    "payeNumber": "J4816",
                                             |    "employerName": "Aldi",
                                             |    "receivingJobseekersAllowance" : true,
+                                            |    "otherIncomeSourceIndicator" : false,
                                             |    "startDate": "21/01/2015"
                                             |    },
                                             |    {
@@ -83,9 +85,35 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                             |    "payeNumber": "J4816",
                                             |    "employerName": "Aldi",
                                             |    "receivingJobseekersAllowance" : false,
+                                            |    "otherIncomeSourceIndicator" : false,
                                             |    "startDate": "21/01/2015"
                                             |    }]
                                           """.stripMargin)
+
+
+  private val npsEmploymentWithOtherIncomeSourceIndicator =  Json.parse(""" [{
+                                                                  |    "nino": "AA000000",
+                                                                  |    "sequenceNumber": 1,
+                                                                  |    "worksNumber": "6044041000000",
+                                                                  |    "taxDistrictNumber": "531",
+                                                                  |    "payeNumber": "J4816",
+                                                                  |    "employerName": "Aldi",
+                                                                  |    "receivingJobseekersAllowance" : true,
+                                                                  |    "otherIncomeSourceIndicator": false,
+                                                                  |    "startDate": "21/01/2015"
+                                                                  |    },
+                                                                  |    {
+                                                                  |    "nino": "AA000000",
+                                                                  |    "sequenceNumber": 1,
+                                                                  |    "worksNumber": "6044041000000",
+                                                                  |    "taxDistrictNumber": "531",
+                                                                  |    "payeNumber": "J4816",
+                                                                  |    "employerName": "Aldi",
+                                                                  |    "receivingJobseekersAllowance" : false,
+                                                                  |    "otherIncomeSourceIndicator": true,
+                                                                  |    "startDate": "21/01/2015"
+                                                                  |    }]
+                                                                """.stripMargin)
 
   private val npsEmploymentWithJustJobSeekerAllowance =  Json.parse(""" [{
                                                                           |    "nino": "AA000000",
@@ -95,9 +123,24 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                                                           |    "payeNumber": "J4816",
                                                                           |    "employerName": "Aldi",
                                                                           |    "receivingJobseekersAllowance" : true,
+                                                                          |    "otherIncomeSourceIndicator": false,
                                                                           |    "startDate": "21/01/2015"
                                                                           |    }]
                                                                         """.stripMargin)
+
+  private val npsEmploymentWithJustOtherIncomeSourceIndicator =  Json.parse(""" [{
+                                                                      |    "nino": "AA000000",
+                                                                      |    "sequenceNumber": 1,
+                                                                      |    "worksNumber": "6044041000000",
+                                                                      |    "taxDistrictNumber": "531",
+                                                                      |    "payeNumber": "J4816",
+                                                                      |    "employerName": "Aldi",
+                                                                      |    "receivingJobseekersAllowance" : false,
+                                                                      |     "otherIncomeSourceIndicator": true,
+                                                                      |    "startDate": "21/01/2015"
+                                                                      |    }]
+                                                                    """.stripMargin)
+
   val npsEmploymentResponseWithTaxDistrictNumber =  Json.parse(""" [{
                                             |    "nino": "AA000000",
                                             |    "sequenceNumber": 6,
@@ -106,6 +149,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                             |    "payeNumber": "J4816",
                                             |    "employerName": "Aldi",
                                             |    "receivingJobseekersAllowance" : false,
+                                            |    "otherIncomeSourceIndicator": false,
                                             |    "startDate": "21/01/2015"
                                             |    }]
                                           """.stripMargin)
@@ -210,6 +254,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employments.head.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       employments.head.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
       employments.head.startDate mustBe startDate
+      employments.head.companyBenefits mustBe List(CompanyBenefit("Car Fuel Benefit",100,"CarFuelBenefit"), CompanyBenefit("Van Benefit",100,"VanBenefit"))
       employments.head.endDate mustBe None
     }
 
@@ -248,6 +293,19 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         val payAsYouEarnDetails = response.json.as[PayAsYouEarnDetails]
         val employments = payAsYouEarnDetails.employments
         employments.size mustBe 1
+        payAsYouEarnDetails.allowances mustBe List(Allowance("Flat Rate Job Expenses",200, "FlatRateJobExpenses"))
+      }
+
+      "nps receivingJobseekersAllowance and otherIncomeSourceIndicator is true form list of employments" in {
+        when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+          .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithOtherIncomeSourceIndicator))))
+        when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+          .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
+        when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+          .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
+        val response = await(TestEmploymentService.getEmploymentHistory(testNino.toString(), 2016))
+        response mustBe a[HttpResponse]
+        response.status mustBe NOT_FOUND
       }
     }
 
@@ -255,6 +313,18 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       "nps employments contain single element with receivingJobseekersAllowance attribute is true" in {
         when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithJustJobSeekerAllowance))))
+        when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+          .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
+        when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+          .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
+        val response = await(TestEmploymentService.getEmploymentHistory(testNino.toString(), 2016))
+        response mustBe a[HttpResponse]
+        response.status mustBe NOT_FOUND
+      }
+
+      "nps employments contain single element with npsEmploymentWithJustOtherIncomeSourceIndicator attribute is true" in {
+        when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+          .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithJustOtherIncomeSourceIndicator))))
         when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
         when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
@@ -335,7 +405,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       iabds mustBe a [List[Iabd]]
       val matchedIabds = TestEmploymentService.getMatchedCompanyBenefits(iabds,employments.head)
       matchedIabds.size mustBe 2
-      println( matchedIabds.toString())
       matchedIabds.toString() contains  ("VanBenefit") mustBe true
       matchedIabds.toString() contains  ("CarFuelBenefit") mustBe true
 

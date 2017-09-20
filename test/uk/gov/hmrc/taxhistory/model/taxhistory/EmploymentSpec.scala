@@ -27,6 +27,7 @@ class EmploymentSpec extends TestUtil with UnitSpec {
 
   lazy val EYUList = List(EarlierYearUpdate(taxablePayEYU = BigDecimal.valueOf(-12.12),taxEYU = BigDecimal.valueOf(-1.14), LocalDate.parse("2017-08-30")),
     EarlierYearUpdate(taxablePayEYU = BigDecimal.valueOf(-21.00), taxEYU = BigDecimal.valueOf(-4.56), LocalDate.parse("2017-08-30")))
+  val companyBenefits = List(CompanyBenefit("Car Fuel Benefit",100,"CarFuelBenefit"), CompanyBenefit("Van Benefit",100,"VanBenefit"))
 
   lazy val employments = List(
     Employment(
@@ -36,7 +37,8 @@ class EmploymentSpec extends TestUtil with UnitSpec {
       endDate = Some(new LocalDate("2017-01-01")),
       taxablePayTotal = Some(BigDecimal.valueOf(123.12)),
       taxTotal = Some(BigDecimal.valueOf(14.14)),
-      EYUList
+      earlierYearUpdates = EYUList,
+      companyBenefits = companyBenefits
       ),
     Employment(
       payeReference = "paye-2",

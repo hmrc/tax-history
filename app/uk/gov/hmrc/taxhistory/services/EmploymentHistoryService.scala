@@ -263,7 +263,7 @@ trait EmploymentHistoryService extends Auditable{
       response => {
         response.status match {
           case OK => {
-            val employments = response.json.as[List[NpsEmployment]].filter(!_.receivingJobSeekersAllowance)
+            val employments = response.json.as[List[NpsEmployment]].filterNot(x => x.receivingJobSeekersAllowance || x.otherIncomeSourceIndicator)
             Right(employments)
           }
           case _ =>  Left(response)
@@ -345,7 +345,8 @@ trait EmploymentHistoryService extends Auditable{
           amount = iabd.grossAmount.fold {
             Logger.warn("Iabds grossAmount is blank")
             BigDecimal(0)
-          }(x => x))
+          }(x => x),
+          iabdMessageKey = iabd.`type`.toString)
     }
   }
 
@@ -381,7 +382,8 @@ trait EmploymentHistoryService extends Auditable{
         amount = iabd.grossAmount.fold{
           Logger.warn("Iabds grossAmount is blank")
           BigDecimal(0)
-        }(x=>x))
+        }(x=>x),
+        iabdMessageKey = iabd.`type`.toString)
     }
   }
 
