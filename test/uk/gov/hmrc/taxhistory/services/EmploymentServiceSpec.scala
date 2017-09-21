@@ -553,9 +553,9 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
       val rtiEmployments = List(rtiEmployment1,rtiEmployment2,rtiEmployment3,rtiEmployment4)
 
-      val npsEmployment1 = NpsEmployment(randomNino.toString(),1,"offNo1","ref1","empname1",None,false,LocalDate.now(),None)
-      val npsEmployment2 = NpsEmployment(randomNino.toString(),2,"offNo2","ref2","empname2",None,false,LocalDate.now(),None)
-      val npsEmployment3 = NpsEmployment(randomNino.toString(),3,"offNo3","ref3","empname3",None,false,LocalDate.now(),None)
+      val npsEmployment1 = NpsEmployment(randomNino.toString(),1,"offNo1","ref1","empname1",None,false,false,LocalDate.now(),None)
+      val npsEmployment2 = NpsEmployment(randomNino.toString(),2,"offNo2","ref2","empname2",None,false,false,LocalDate.now(),None)
+      val npsEmployment3 = NpsEmployment(randomNino.toString(),3,"offNo3","ref3","empname3",None,false,false,LocalDate.now(),None)
       val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
 
       val onlyRtiEmployments = TestEmploymentService.onlyInRTI(rtiEmployments,npsEmployments)
@@ -569,9 +569,9 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
       val rtiEmployments = List(rtiEmployment1,rtiEmployment2,rtiEmployment3)
 
-      val npsEmployment1 = NpsEmployment(randomNino.toString(),1,"offNo1","ref1","empname1",None,false,LocalDate.now(),None)
-      val npsEmployment2 = NpsEmployment(randomNino.toString(),2,"offNo2","ref2","empname2",None,false,LocalDate.now(),None)
-      val npsEmployment3 = NpsEmployment(randomNino.toString(),3,"offNo3","ref3","empname3",None,false,LocalDate.now(),None)
+      val npsEmployment1 = NpsEmployment(randomNino.toString(),1,"offNo1","ref1","empname1",None,false,false,LocalDate.now(),None)
+      val npsEmployment2 = NpsEmployment(randomNino.toString(),2,"offNo2","ref2","empname2",None,false,false,LocalDate.now(),None)
+      val npsEmployment3 = NpsEmployment(randomNino.toString(),3,"offNo3","ref3","empname3",None,false,false,LocalDate.now(),None)
       val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
 
       val onlyRtiEmployments = TestEmploymentService.onlyInRTI(rtiEmployments,npsEmployments)
