@@ -180,8 +180,7 @@ trait EmploymentHistoryService extends Auditable{
           "nino" -> rtiData.nino,
           "payeRef" -> r.payeRef,
           "officeNumber" -> r.officeNumber,
-          "cuurentPayId" -> r.currentPayId.fold("")(a => a))
-
+          "currentPayId" -> r.currentPayId.fold("")(a => a))
         sendDataEvent("Paye for Agents", detail = x, eventType = eventType)
       }
     }
