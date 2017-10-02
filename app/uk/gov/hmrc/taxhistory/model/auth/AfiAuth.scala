@@ -18,15 +18,15 @@ package uk.gov.hmrc.taxhistory.model.auth
 
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.ConfidenceLevel.L200
-import uk.gov.hmrc.auth.core.Retrievals._
 import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
+import uk.gov.hmrc.auth.core.retrieve.Retrievals._
 
 
 object AfiAuth {
   lazy val affinityGroupAllEnrolls: Retrieval[~[Option[AffinityGroup], Enrolments]] = affinityGroup and allEnrolments
 
   lazy val AgentEnrolmentForPAYE: Enrolment = Enrolment("HMRC-AS-AGENT")
-    .withConfidenceLevel(L200)
     .withDelegatedAuthRule("afi-auth")
   lazy val AuthProviderAgents: AuthProviders = AuthProviders(GovernmentGateway)
 }

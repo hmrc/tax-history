@@ -18,15 +18,16 @@ package uk.gov.hmrc.taxhistory.controllers
 
 import play.api.Logger
 import play.api.mvc.Action
-import uk.gov.hmrc.auth.core.{~, _}
-import uk.gov.hmrc.play.http.HeaderCarrier
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.play.microservice.controller.BaseController
-import uk.gov.hmrc.taxhistory.{TaxHistoryAuthConnector}
+import uk.gov.hmrc.taxhistory.TaxHistoryAuthConnector
 import uk.gov.hmrc.taxhistory.model.auth.AfiAuth._
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
+import uk.gov.hmrc.auth.core.retrieve.~
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import uk.gov.hmrc.http.HeaderCarrier
 
 
 trait EmploymentHistoryController extends BaseController with AuthorisedFunctions {
@@ -47,7 +48,7 @@ trait EmploymentHistoryController extends BaseController with AuthorisedFunction
 
   def getEmploymentHistory(nino: String, taxYear: Int) = Action.async {
     implicit request =>
-      authorised(AgentEnrolmentForPAYE.withIdentifier("MTDITID", nino) and AuthProviderAgents).retrieve(affinityGroupAllEnrolls) {
+      authorised(AgentEnrolmentForPAYE.withIdentifier("MTDITID", nino) and AuthProviderAgents and ConfidenceLevel.L200).retrieve(affinityGroupAllEnrolls) {
 
         case Some(affinityG) ~ allEnrols ⇒
 

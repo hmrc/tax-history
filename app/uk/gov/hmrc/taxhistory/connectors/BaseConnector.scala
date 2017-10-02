@@ -21,18 +21,19 @@ import play.api.http.Status
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.config.{AppName, ServicesConfig}
-import uk.gov.hmrc.play.http.{HeaderCarrier, _}
+import uk.gov.hmrc.play.http._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 
 import scala.concurrent.Future
+import uk.gov.hmrc.http._
 
 trait BaseConnector extends ServicesConfig with Auditable{
 
-  def httpGet: HttpGet
-  def httpPost: HttpPost
+  def httpGet: CoreGet
+  def httpPost: CorePost
   def originatorId: String
   def metrics: TaxHistoryMetrics = TaxHistoryMetrics
 
