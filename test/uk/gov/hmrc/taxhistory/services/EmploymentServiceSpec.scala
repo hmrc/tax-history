@@ -258,7 +258,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employments.head.endDate mustBe None
     }
 
-    "successfully merge rti and nps employment data into employment list" in {
+    "successfully merge rti and nps employment1 data into employment1 list" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
 
@@ -279,7 +279,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employments.head.endDate mustBe None
     }
 
-    "successfully exclude nps employment data" when {
+    "successfully exclude nps employment1 data" when {
       "nps receivingJobseekersAllowance is true form list of employments" in {
         when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithJobSeekerAllowance))))
@@ -335,7 +335,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       }
     }
 
-    "successfully merge if there are multiple matching rti employments for a single nps employment but single match on currentPayId" in {
+    "successfully merge if there are multiple matching rti employments for a single nps employment1 but single match on currentPayId" in {
       val rtiData = rtiPartialDuplicateEmploymentsResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
 
@@ -344,7 +344,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
     }
 
-    "return Nil constructed list if there are zero matching rti employments for a single nps employment" in {
+    "return Nil constructed list if there are zero matching rti employments for a single nps employment1" in {
       val rtiData = rtiNonMatchingEmploymentsResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
 
@@ -419,7 +419,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
     }
 
-    "Build employment from rti ,nps employment and Iabd data" in {
+    "Build employment1 from rti ,nps employment1 and Iabd data" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
       val iabds = iabdsJsonResponse.as[List[Iabd]]
@@ -435,7 +435,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.companyBenefits.size mustBe  8
     }
 
-    "Build employment when there is no  data for rti and Iabd" in {
+    "Build employment1 when there is no  data for rti and Iabd" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
       val iabds = iabdsJsonResponse.as[List[Iabd]]
@@ -450,7 +450,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.startDate mustBe startDate
       employment.endDate mustBe None
     }
-    "Build employment when there is data for rti is Nil " in {
+    "Build employment1 when there is data for rti is Nil " in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
       val iabds = iabdsJsonResponse.as[List[Iabd]]
@@ -466,7 +466,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.endDate mustBe None
     }
 
-    "Build employment when data for rti is None or Null" in {
+    "Build employment1 when data for rti is None or Null" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
       val iabds = iabdsJsonResponse.as[List[Iabd]]
@@ -481,7 +481,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.startDate mustBe startDate
       employment.endDate mustBe None
     }
-    "Build employment when there is data for Iabd is None or Null" in {
+    "Build employment1 when there is data for Iabd is None or Null" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
       val iabds = iabdsJsonResponse.as[List[Iabd]]
@@ -496,7 +496,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.startDate mustBe startDate
       employment.endDate mustBe None
     }
-    "Build employment when there is no  data for Iabd" in {
+    "Build employment1 when there is no  data for Iabd" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
       val iabds = iabdsJsonResponse.as[List[Iabd]]
@@ -537,7 +537,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       bik  mustBe  false
     }
 
-    "get rti payments from employment data" in {
+    "get rti payments from employment1 data" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
       val paymentInfo =TestEmploymentService.getRtiPayment(rtiData.employments)
       paymentInfo._1 mustBe Some(BigDecimal.valueOf(20000.00))
