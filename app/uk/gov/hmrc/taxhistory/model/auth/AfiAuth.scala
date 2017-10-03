@@ -27,6 +27,7 @@ object AfiAuth {
   lazy val affinityGroupAllEnrolls: Retrieval[~[Option[AffinityGroup], Enrolments]] = affinityGroup and allEnrolments
 
   lazy val AgentEnrolmentForPAYE: Enrolment = Enrolment("HMRC-AS-AGENT")
+    .withConfidenceLevel(L200)
     .withDelegatedAuthRule("afi-auth")
   lazy val AuthProviderAgents: AuthProviders = AuthProviders(GovernmentGateway)
 }
