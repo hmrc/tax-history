@@ -19,17 +19,18 @@ package uk.gov.hmrc.taxhistory.controllers
 import org.mockito.Matchers
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.{OneServerPerSuite, PlaySpec}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 
 import scala.concurrent.Future
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 class EmploymentHistoryControllerSpec extends PlaySpec with OneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
 
@@ -62,7 +63,7 @@ class EmploymentHistoryControllerSpec extends PlaySpec with OneServerPerSuite wi
 
     "respond with OK for successful get" in {
       when(mockPlayAuthConnector.authorise(Matchers.any(),Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
-      (Matchers.any()))
+      (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmploymentHistory(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
@@ -72,7 +73,7 @@ class EmploymentHistoryControllerSpec extends PlaySpec with OneServerPerSuite wi
 
     "respond with NOT_FOUND, for unsuccessful GET" in {
       when(mockPlayAuthConnector.authorise(Matchers.any(),Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
-      (Matchers.any()))
+      (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmploymentHistory(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(failureResponseJson))))
@@ -82,7 +83,7 @@ class EmploymentHistoryControllerSpec extends PlaySpec with OneServerPerSuite wi
 
     "respond with BAD_REQUEST, if HODS/Downstream sends BadRequest status" in {
       when(mockPlayAuthConnector.authorise(Matchers.any(),Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
-      (Matchers.any()))
+      (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmploymentHistory(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(errorResponseJson))))
@@ -92,17 +93,17 @@ class EmploymentHistoryControllerSpec extends PlaySpec with OneServerPerSuite wi
 
     "respond with SERVICE_UNAVAILABLE, if HODS/Downstream is unavailable" in {
       when(mockPlayAuthConnector.authorise(Matchers.any(),Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
-      (Matchers.any()))
+      (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmploymentHistory(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(SERVICE_UNAVAILABLE, Some(errorResponseJson))))
+        .thenReturn(Future. successful(HttpResponse(SERVICE_UNAVAILABLE, Some(errorResponseJson))))
       val result = TestEmploymentHistoryController.getEmploymentHistory(nino, 2015).apply(FakeRequest())
       status(result) must be(SERVICE_UNAVAILABLE)
     }
 
     "respond with InternalServerError, if HODS/Downstream  sends some server error response" in {
       when(mockPlayAuthConnector.authorise(Matchers.any(),Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
-      (Matchers.any()))
+      (Matchers.any(),Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmploymentHistory(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(errorResponseJson))))
@@ -112,7 +113,7 @@ class EmploymentHistoryControllerSpec extends PlaySpec with OneServerPerSuite wi
 
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
       when(mockPlayAuthConnector.authorise(Matchers.any(), Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
-      (Matchers.any()))
+      (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(UnAuthorisedAgentEnrolments))))
 
       when(mockEmploymentHistoryService.getEmploymentHistory(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
@@ -123,7 +124,7 @@ class EmploymentHistoryControllerSpec extends PlaySpec with OneServerPerSuite wi
 
     "respond with Unauthorised Status where affinity group is not retrieved" in {
       when(mockPlayAuthConnector.authorise(Matchers.any(), Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
-      (Matchers.any()))
+      (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](None, Enrolments(UnAuthorisedAgentEnrolments))))
 
       when(mockEmploymentHistoryService.getEmploymentHistory(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))

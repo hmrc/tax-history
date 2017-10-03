@@ -16,18 +16,18 @@
 
 package uk.gov.hmrc.taxhistory.connectors.des
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 import uk.gov.hmrc.taxhistory.connectors.BaseConnector
 import uk.gov.hmrc.taxhistory.WSHttp
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
+import uk.gov.hmrc.http._
 
 object RtiConnector extends RtiConnector {
 
   // $COVERAGE-OFF$
-  override val httpGet: HttpGet = WSHttp
-  override val httpPost: HttpPost = WSHttp
+  override val httpGet: CoreGet = WSHttp
+  override val httpPost: CorePost = WSHttp
 
   lazy val serviceUrl: String = s"${baseUrl("rti-hod")}"
   lazy val authorization: String = "Bearer " + getConfString("rti-hod.authorizationToken","local")

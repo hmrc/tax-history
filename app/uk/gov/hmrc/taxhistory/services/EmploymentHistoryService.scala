@@ -18,7 +18,6 @@ package uk.gov.hmrc.taxhistory.services
 
 import play.Logger
 import play.api.http.Status
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment, RtiPayment}
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
@@ -35,6 +34,7 @@ import uk.gov.hmrc.taxhistory.model.taxhistory._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 
 object EmploymentHistoryService extends EmploymentHistoryService {
   override def audit = new Audit(appName,MicroserviceAuditConnector)

@@ -19,12 +19,13 @@ package uk.gov.hmrc.taxhistory.connectors.nps
 import play.api.Logger
 import play.api.http.Status.OK
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 import uk.gov.hmrc.taxhistory.connectors.BaseConnector
 import uk.gov.hmrc.taxhistory.WSHttp
 import uk.gov.hmrc.taxhistory.metrics.MetricsEnum
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import uk.gov.hmrc.http._
 
 
  trait NpsConnector extends BaseConnector {
@@ -84,8 +85,8 @@ import scala.concurrent.Future
 object NpsConnector extends NpsConnector {
 
   // $COVERAGE-OFF$
-  override val httpGet: HttpGet = WSHttp
-  override val httpPost: HttpPost = WSHttp
+  override val httpGet: CoreGet = WSHttp
+  override val httpPost: CorePost = WSHttp
   lazy val path: String = config("nps-hod").getString("path").fold("")(p => p)
   lazy val serviceUrl: String = s"${baseUrl("nps-hod")}$path"
   lazy val originatorId = getConfString("nps-hod.originatorId","HMRC_GDS")

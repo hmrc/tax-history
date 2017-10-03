@@ -19,17 +19,17 @@ package uk.gov.hmrc.taxhistory.connectors
 import com.codahale.metrics.Timer
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 import scala.concurrent.Future
+import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 
 
 class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
@@ -71,7 +71,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any())).thenReturn(Future.successful(fakeResponse))
+        when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any())).thenReturn(Future.successful(fakeResponse))
 
         val result = testemploymentsConnector.getEmployments(testNino, 2016)
         val rtiDataResponse = await(result)
@@ -88,7 +88,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       val testemploymentsConnector = npsConnector
       when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-      when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any()))
+      when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(expectedResponse))))
 
       val result = testemploymentsConnector.getEmployments(testNino, 2016)
@@ -102,7 +102,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       val testemploymentsConnector = npsConnector
       when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-      when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any()))
+      when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
         .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(expectedResponse))))
 
       val result = testemploymentsConnector.getEmployments(testNino, 2016)
@@ -116,7 +116,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       val testemploymentsConnector = npsConnector
       when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-      when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any()))
+      when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
         .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(expectedResponse))))
 
       val result = testemploymentsConnector.getEmployments(testNino, 2016)
@@ -130,7 +130,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       val testemploymentsConnector = npsConnector
       when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-      when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any()))
+      when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
         .thenReturn(Future.successful(HttpResponse(SERVICE_UNAVAILABLE, Some(expectedResponse))))
 
       val result = testemploymentsConnector.getEmployments(testNino, 2016)
@@ -147,7 +147,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         when(testIabdsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testIabdsConnector.httpGet.GET[HttpResponse](any())(any(), any())).thenReturn(Future.successful(fakeResponse))
+        when(testIabdsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any())).thenReturn(Future.successful(fakeResponse))
 
         val result = testIabdsConnector.getIabds(testNino, 2016)
         val rtiDataResponse = await(result)

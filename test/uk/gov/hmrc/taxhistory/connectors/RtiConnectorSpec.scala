@@ -19,18 +19,17 @@ package uk.gov.hmrc.taxhistory.connectors
 import com.codahale.metrics.Timer
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
-import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
+import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 
 
 class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
@@ -70,7 +69,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         val fakeResponse: HttpResponse = HttpResponse(OK, Some(rtiSuccessfulResponseURLDummy))
         when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any())).thenReturn(Future.successful(fakeResponse))
+        when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any(), any())).thenReturn(Future.successful(fakeResponse))
 
         val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
         val rtiDataResponse = await(result)
@@ -85,7 +84,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       val testRtiConnector = rtiConnector
       when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-      when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any()))
+      when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(expectedResponse))))
 
       val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
@@ -100,7 +99,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       val testRtiConnector = rtiConnector
       when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-      when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any()))
+      when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
         .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(expectedResponse))))
 
       val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
@@ -114,7 +113,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       val testRtiConnector = rtiConnector
       when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-      when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any()))
+      when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
         .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(expectedResponse))))
 
       val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
@@ -128,7 +127,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       val testRtiConnector = rtiConnector
       when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-      when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any()))
+      when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
         .thenReturn(Future.successful(HttpResponse(SERVICE_UNAVAILABLE, Some(expectedResponse))))
 
       val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
