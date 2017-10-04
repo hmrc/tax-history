@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxhistory.services
 
 import java.time.LocalDate
+import java.util.UUID
 
 import play.Logger
 import play.api.http.Status
@@ -58,10 +59,19 @@ trait EmploymentHistoryService extends Auditable{
 
   def getEmployments(nino: String, taxYear: Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     //TODO remove this stub data and wire to cache instead
-    val employments = List(Employment(
-      startDate = LocalDate.parse("2016-11-20"),
-      payeReference = "abc/123",
-      employerName = "Duff Employment"))
+    val employments = List(
+      Employment(
+        employmentId = UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
+        startDate = LocalDate.parse("2016-01-21"),
+        endDate = Some(LocalDate.parse("2017-01-01")),
+        payeReference = "paye-1",
+        employerName = "employer-1"),
+      Employment(
+        employmentId = UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
+        startDate = LocalDate.parse("2016-02-22"),
+        payeReference = "paye-2",
+        employerName = "employer-2"))
+
     Future.successful(HttpResponse(Status.OK,Some(Json.toJson(employments))))
   }
 
