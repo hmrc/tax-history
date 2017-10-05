@@ -73,14 +73,13 @@ trait EmploymentHistoryService extends Auditable{
 
 
   def getPayAsYouEarnDetails(nino: Nino,taxYear: TaxYear)(npsEmployments: List[NpsEmployment])(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    for {
+   for {
       iabdsF <- getNpsIabds(nino,taxYear)
       rtiF <- getRtiEmployments(nino,taxYear)
 
     }yield {
       combineResult(iabdsF,rtiF)(npsEmployments)
     }
-
   }
 
   def combineResult(iabdResponse:Either[HttpResponse,List[Iabd]],
