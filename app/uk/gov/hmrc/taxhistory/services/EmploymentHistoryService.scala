@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import java.time.LocalDate
 import java.util.UUID
 
+import org.joda.time.LocalDate
 import play.Logger
 import play.api.http.Status
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment, RtiPayment}
@@ -62,13 +62,13 @@ trait EmploymentHistoryService extends Auditable{
     val employments = List(
       Employment(
         employmentId = UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
-        startDate = LocalDate.parse("2016-01-21"),
-        endDate = Some(LocalDate.parse("2017-01-01")),
+        startDate = new LocalDate("2016-01-21"),
+        endDate = Some(new LocalDate("2017-01-01")),
         payeReference = "paye-1",
         employerName = "employer-1"),
       Employment(
         employmentId = UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
-        startDate = LocalDate.parse("2016-02-22"),
+        startDate = new LocalDate("2016-02-22"),
         payeReference = "paye-2",
         employerName = "employer-2"))
 
