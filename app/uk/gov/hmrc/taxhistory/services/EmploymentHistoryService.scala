@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.taxhistory.services
 
+import java.util.UUID
+
+import org.joda.time.LocalDate
 import play.Logger
 import play.api.http.Status
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment, RtiPayment}
@@ -25,6 +28,7 @@ import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
 import uk.gov.hmrc.time.TaxYear
 import play.api.http.Status._
 import play.api.libs.json.Json
+import play.api.mvc.Result
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
@@ -34,7 +38,8 @@ import uk.gov.hmrc.taxhistory.model.taxhistory._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.taxhistory.model.api.Employment
 
 object EmploymentHistoryService extends EmploymentHistoryService {
   override def audit = new Audit(appName,MicroserviceAuditConnector)
@@ -51,6 +56,24 @@ trait EmploymentHistoryService extends Auditable{
       }
     }
 
+
+  def getEmployments(nino: String, taxYear: Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+    //TODO remove this stub data and wire to cache instead
+    val employments = List(
+      Employment(
+        employmentId = UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
+        startDate = new LocalDate("2016-01-21"),
+        endDate = Some(new LocalDate("2017-01-01")),
+        payeReference = "paye-1",
+        employerName = "employer-1"),
+      Employment(
+        employmentId = UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
+        startDate = new LocalDate("2016-02-22"),
+        payeReference = "paye-2",
+        employerName = "employer-2"))
+
+    Future.successful(HttpResponse(Status.OK,Some(Json.toJson(employments))))
+  }
 
   def getEmploymentHistory(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     val validatedNino = Nino(nino)
@@ -192,17 +215,17 @@ trait EmploymentHistoryService extends Auditable{
       eyu.receivedDate)).filter(x =>x.taxablePayEYU != 0 && x.taxEYU != 0)
   }
 
-  def buildEmployment(rtiEmploymentsOption: Option[List[RtiEmployment]], iabdsOption: Option[List[Iabd]], npsEmployment: NpsEmployment): Employment = {
+  def buildEmployment(rtiEmploymentsOption: Option[List[RtiEmployment]], iabdsOption: Option[List[Iabd]], npsEmployment: NpsEmployment): uk.gov.hmrc.taxhistory.model.taxhistory.Employment = {
 
     (rtiEmploymentsOption, iabdsOption) match {
 
-      case (None | Some(Nil), None | Some(Nil)) => Employment(
+      case (None | Some(Nil), None | Some(Nil)) => uk.gov.hmrc.taxhistory.model.taxhistory.Employment(
         employerName = npsEmployment.employerName,
         payeReference = getPayeRef(npsEmployment),
         startDate = npsEmployment.startDate,
         endDate = npsEmployment.endDate)
       case (Some(Nil) | None, Some(y)) => {
-        Employment(
+        uk.gov.hmrc.taxhistory.model.taxhistory.Employment(
           employerName = npsEmployment.employerName,
           payeReference = getPayeRef(npsEmployment),
           companyBenefits = getCompanyBenefits(y),
@@ -211,7 +234,7 @@ trait EmploymentHistoryService extends Auditable{
       }
       case (Some(x), Some(Nil) | None) => {
         val rtiPaymentInfo = getRtiPayment(x)
-        Employment(
+        uk.gov.hmrc.taxhistory.model.taxhistory.Employment(
           employerName = npsEmployment.employerName,
           payeReference = getPayeRef(npsEmployment),
           taxablePayTotal = rtiPaymentInfo._1,
@@ -223,7 +246,7 @@ trait EmploymentHistoryService extends Auditable{
       }
       case (Some(x), Some(y)) => {
         val rtiPaymentInfo = getRtiPayment(x)
-        Employment(
+        uk.gov.hmrc.taxhistory.model.taxhistory.Employment(
           employerName = npsEmployment.employerName,
           payeReference = getPayeRef(npsEmployment),
           taxablePayTotal = rtiPaymentInfo._1,
@@ -233,7 +256,7 @@ trait EmploymentHistoryService extends Auditable{
           startDate = npsEmployment.startDate,
           endDate = npsEmployment.endDate)
       }
-      case _ => Employment(
+      case _ => uk.gov.hmrc.taxhistory.model.taxhistory.Employment(
         employerName = npsEmployment.employerName,
         payeReference = getPayeRef(npsEmployment),
         startDate = npsEmployment.startDate,

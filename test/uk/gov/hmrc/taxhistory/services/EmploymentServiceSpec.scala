@@ -165,6 +165,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
   lazy val iabdsBenfitInKindJsonResponse = loadFile("/json/nps/response/iabdsBIK.json")
 
   lazy val employmentsJsonResponse = loadFile("/json/nps/response/employments.json")
+  lazy val employmentsApiJsonResponse = loadFile("/json/model/api/employments.json")
 
   val startDate = new LocalDate("2015-01-21")
 
@@ -578,6 +579,12 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       onlyRtiEmployments.size mustBe 0
     }
 
+    "return api employments model when get employments is called" in {
+      val response =  await(TestEmploymentService.getEmployments(testNino.toString(),2016))
+      response mustBe a[HttpResponse]
+      response.status mustBe OK
+      response.json mustBe employmentsApiJsonResponse
+    }
   }
 
 

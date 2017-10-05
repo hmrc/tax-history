@@ -17,25 +17,26 @@
 package uk.gov.hmrc.taxhistory.controllers
 
 import play.api.mvc.{Action, Result}
-import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.TaxHistoryAuthConnector
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-trait EmploymentHistoryController extends AuthController {
+trait EmploymentController extends AuthController {
 
   def employmentHistoryService: EmploymentHistoryService = EmploymentHistoryService
 
-  def getEmploymentHistory(nino: String, taxYear: Int) = Action.async {
+  def getEmployments(nino: String, taxYear: Int) = Action.async {
     implicit request => {
-      authorisedRelationship(nino, getTaxHistory(nino, taxYear))
+      authorisedRelationship(nino, retrieveEmployments(nino, taxYear))
     }
   }
 
-  private def getTaxHistory(nino: String,taxYear: Int)(implicit hc:HeaderCarrier) = {
-    employmentHistoryService.getEmploymentHistory(nino, taxYear) map {
+  private def retrieveEmployments(nino: String,taxYear: Int)(implicit hc:HeaderCarrier): Future[Result] = {
+    employmentHistoryService.getEmployments(nino, taxYear) map {
       response =>
         response.status match {
           case OK => Ok(response.body)
@@ -48,6 +49,6 @@ trait EmploymentHistoryController extends AuthController {
   }
 }
 
-object EmploymentHistoryController extends EmploymentHistoryController {
+object EmploymentController extends EmploymentController {
   override def authConnector: AuthConnector = TaxHistoryAuthConnector
 }
