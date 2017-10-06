@@ -43,6 +43,7 @@ object EmploymentHistoryService extends EmploymentHistoryService {
 trait EmploymentHistoryService extends Auditable{
   def npsConnector : NpsConnector = NpsConnector
   def rtiConnector : RtiConnector = RtiConnector
+  def cacheService : TaxHistoryCacheService = TaxHistoryCacheService
 
    def formatString(a: String):String = {
       Try(a.toInt) match {
