@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxhistory.services
 
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.mongo.{MongoSpecSupport, Saved}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -48,6 +48,8 @@ class TaxHistoryRepositoryServiceSpec extends UnitSpec
                              |    }]
                            """.stripMargin)
 
+
+
    val nino = randomNino()
 
     private val expireAfterInSeconds = 60
@@ -73,7 +75,6 @@ class TaxHistoryRepositoryServiceSpec extends UnitSpec
       (fromCache.get.data.get \ "2015").get shouldBe someJson
 
     }
-
 
 
   }

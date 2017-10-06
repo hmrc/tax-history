@@ -20,13 +20,14 @@ package uk.gov.hmrc.taxhistory.services
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Sequential}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.cache.model.Cache
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.config.ApplicationConfig
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.TaxHistoryCacheService.mongoSource
+import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -62,18 +63,51 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
 
    val nino = randomNino()
 
+
+  def toCache(nino:String):JsValue = {
+
+    println("Called ToCache" + nino)
+
+    Json.parse(""" [{
+                 |    "nino": "AA000000",
+                 |    "sequenceNumber": 1,
+                 |    "worksNumber": "6044041000000",
+                 |    "taxDistrictNumber": "531",
+                 |    "payeNumber": "J4816",
+                 |    "employerName": "Aldi",
+                 |    "receivingJobseekersAllowance" : false,
+                 |    "otherIncomeSourceIndicator" : false,
+                 |    "startDate": "21/01/2015"
+                 |    }]
+               """.stripMargin)
+
+
+  }
+
   "TaxHistoryCacheService" should {
 
       "successfully add the Data in cache" in {
-         val cacheData = await(TestTaxHistoryCacheService.createOrUpdate("AA000000","2015",someJson))
+         val cacheData = await(TestTaxHistoryCacheService.createOrUpdate(nino.nino,"2015",someJson))
           (cacheData.get \ "2015").get shouldBe someJson
       }
 
       "fetch from the  cache by ID " in {
-         val fromCache = await(TestTaxHistoryCacheService.findById("AA000000"))
+         val fromCache = await(TestTaxHistoryCacheService.findById(nino.nino))
          (fromCache.get \ "2015").get shouldBe someJson
       }
 
+    "When not in the mongo cache update the cache and fetch" in {
+      val nino = randomNino()
+      val year = TaxYear(2014)
+      val cacheMissUpdateAndGetFromCache = await(TestTaxHistoryCacheService.getFromCache(nino.nino,year)(toCache(nino.nino)))
+
+      (cacheMissUpdateAndGetFromCache.get \ "2014").get shouldBe someJson
+
+      val fromCache = await(TestTaxHistoryCacheService.getFromCache(nino.nino,year)(toCache(nino.nino)))
+
+      (fromCache.get \ "2014").get shouldBe someJson
+
+    }
 
   }
 
