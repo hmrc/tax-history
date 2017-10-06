@@ -41,12 +41,15 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
   private val mockNpsConnector= mock[NpsConnector]
   private val mockRtiDataConnector= mock[RtiConnector]
   private val mockAudit= mock[Audit]
+  private val mockCache = mock[TaxHistoryCacheService]
 
   implicit val hc = HeaderCarrier()
   val testNino = randomNino()
   object TestEmploymentService extends EmploymentHistoryService {
     override def npsConnector: NpsConnector = mockNpsConnector
     override def rtiConnector: RtiConnector = mockRtiDataConnector
+
+    override def cacheService: TaxHistoryCacheService = mockCache
 
     override def audit: Audit = mockAudit
   }
@@ -209,6 +212,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     }
 
     "return any non success status response from get Nps Employments api" in {
+      when(mockCache.findById(Matchers.any())).thenReturn(Future.successful(None))
       when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(npsEmploymentResponse))))
       val response =  await(TestEmploymentService.getEmployments(testNino.toString(),2016))
@@ -217,6 +221,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     }
 
     "return not found status response from get Nps Employments api" in {
+      when(mockCache.findById(Matchers.any())).thenReturn(Future.successful(None))
       when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(JsArray(Seq.empty)))))
       val response =  await(TestEmploymentService.getEmployments(testNino.toString(),2016))
@@ -225,6 +230,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     }
 
     "return success status despite failing response from get Rti Employments api when there are nps employments" in {
+      when(mockCache.findById(Matchers.any())).thenReturn(Future.successful(None))
       when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
       when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
@@ -237,6 +243,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     }
 
     "return success response from get Employments" in {
+      when(mockCache.findById(Matchers.any())).thenReturn(Future.successful(None))
       when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
       when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
@@ -280,6 +287,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
     "successfully exclude nps employment1 data" when {
       "nps receivingJobseekersAllowance is true form list of employments" in {
+        when(mockCache.findById(Matchers.any())).thenReturn(Future.successful(None))
         when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithJobSeekerAllowance))))
         when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
@@ -295,6 +303,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       }
 
       "nps receivingJobseekersAllowance and otherIncomeSourceIndicator is true form list of employments" in {
+        when(mockCache.findById(Matchers.any())).thenReturn(Future.successful(None))
         when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithOtherIncomeSourceIndicator))))
         when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))

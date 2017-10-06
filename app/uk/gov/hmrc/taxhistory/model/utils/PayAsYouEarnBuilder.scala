@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxhistory.model.utils
 
 import play.Logger
 import play.api.http.Status
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
@@ -34,7 +34,7 @@ trait PayAsYouEarnBuilder extends Auditable{
 
   def combineResult(iabdResponse:Either[HttpResponse,List[Iabd]],
                     rtiResponse:Either[HttpResponse,RtiData])
-                   (npsEmployments: List[NpsEmployment])(implicit headerCarrier: HeaderCarrier):List[Employment]={
+                   (npsEmployments: List[NpsEmployment])(implicit headerCarrier: HeaderCarrier):HttpResponse={
 
     val iabdsOption = fetchResult(iabdResponse)
     val rtiOption = fetchResult(rtiResponse)
@@ -61,7 +61,7 @@ trait PayAsYouEarnBuilder extends Auditable{
       case Some(x) => getAllowances(x)
     }
 
-    employments
+    httpOkWithEmploymentJsonPayload(employments)
     //PayAsYouEarnDetails(employments = employments,allowances = allowances)
   }
 

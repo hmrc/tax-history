@@ -16,12 +16,9 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import java.util.UUID
-
-import org.joda.time.LocalDate
 import play.api.http.Status
 import play.api.http.Status._
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit
@@ -44,11 +41,29 @@ object EmploymentHistoryService extends EmploymentHistoryService {
 trait EmploymentHistoryService extends PayAsYouEarnBuilder{
   def npsConnector : NpsConnector = NpsConnector
   def rtiConnector : RtiConnector = RtiConnector
+  def cacheService : TaxHistoryCacheService = TaxHistoryCacheService
 
   def getEmployments(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     val validatedNino = Nino(nino)
     val validatedTaxYear = TaxYear(taxYear)
 
+    val x = for {
+      cache <- cacheService.findById(validatedNino.formatted)//( for{newData <- retrieveEmploymentsDirectFromSource(validatedNino, validatedTaxYear)} yield {newData.json} )
+    } yield {
+      cache match {
+        case Some(x:JsValue) => Future.successful(HttpResponse(Status.OK,Some(x)))
+        case _ => {
+          retrieveEmploymentsDirectFromSource(validatedNino,validatedTaxYear).map(a => {
+            cacheService.createOrUpdate(validatedNino.formatted,validatedTaxYear.currentYear.toString,a.json)
+            a
+          })
+        }
+      }
+    }
+    x.flatMap(identity)
+  }
+
+  def retrieveEmploymentsDirectFromSource(validatedNino:Nino,validatedTaxYear:TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] ={
     val x = for {
       npsEmploymentsFuture <- getNpsEmployments(validatedNino, validatedTaxYear)
     }
@@ -57,19 +72,21 @@ trait EmploymentHistoryService extends PayAsYouEarnBuilder{
           case Left(httpResponse) =>Future.successful(httpResponse)
           case Right(Nil) => Future.successful(HttpResponse(Status.NOT_FOUND, Some(Json.parse("""{"Message":"Not Found"}"""))))
           case Right(npsEmploymentList) => {
-                mergeAndRetrieveEmployments(validatedNino,validatedTaxYear)(npsEmploymentList)
+            mergeAndRetrieveEmployments(validatedNino,validatedTaxYear)(npsEmploymentList)
           }
         }
       }
     x.flatMap(identity)
   }
 
+
   def mergeAndRetrieveEmployments(nino: Nino, taxYear: TaxYear)(npsEmployments: List[NpsEmployment])(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     for {
+
       iabdsF <- getNpsIabds(nino,taxYear)
       rtiF <- getRtiEmployments(nino,taxYear)
     }yield {
-      httpOkWithEmploymentJsonPayload(combineResult(iabdsF,rtiF)(npsEmployments))
+      combineResult(iabdsF,rtiF)(npsEmployments)
     }
   }
 
