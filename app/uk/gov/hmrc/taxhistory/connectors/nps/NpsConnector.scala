@@ -50,7 +50,7 @@ import uk.gov.hmrc.http._
           response
         case status =>
           metrics.incrementFailedCounter(MetricsEnum.NPS_GET_EMPLOYMENTS)
-          Logger.warn(s"[NpsConnector][getEmployments] - status: $status Error ${response.body}")
+          Logger.warn(s"[NpsConnector][getEmploymentsOLD] - status: $status Error ${response.body}")
           response
       }
     }

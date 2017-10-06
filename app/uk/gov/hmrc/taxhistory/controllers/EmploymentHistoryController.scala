@@ -35,7 +35,7 @@ trait EmploymentHistoryController extends AuthController {
   }
 
   private def getTaxHistory(nino: String,taxYear: Int)(implicit hc:HeaderCarrier) = {
-    employmentHistoryService.getEmploymentHistory(nino, taxYear) map {
+    employmentHistoryService.getEmployments(nino, taxYear) map {
       response =>
         response.status match {
           case OK => Ok(response.body)
