@@ -21,7 +21,6 @@ import play.modules.reactivemongo.MongoDbConnection
 import uk.gov.hmrc.cache.model.{Cache, Id}
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.taxhistory.config.ApplicationConfig
-import uk.gov.hmrc.taxhistory.services.TaxHistoryCacheService.cacheRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -34,9 +33,12 @@ trait TaxHistoryCacheService extends MongoDbConnection{
     cacheRepository.createOrUpdate(Id(id),key,toCache).map(x => x.updateType.savedValue.data)
   }
 
-   def findById(id: String): Future[Option[Cache]] = {
-    cacheRepository.findById(Id(id))
+   def findById(id: String): Future[Option[JsValue]] = {
+    cacheRepository.findById(Id(id)).map(_.get.data)
   }
+
+
+
 
 }
 
@@ -45,5 +47,6 @@ object TaxHistoryCacheService extends TaxHistoryCacheService {
     mongoSource,expireAfterSeconds = ApplicationConfig.expireAfterSeconds,Cache.mongoFormats)
 
   override def mongoSource = ApplicationConfig.mongoSource
+
 
 }

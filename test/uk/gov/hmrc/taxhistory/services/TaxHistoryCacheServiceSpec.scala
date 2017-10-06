@@ -71,7 +71,7 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
 
       "fetch from the  cache by ID " in {
          val fromCache = await(TestTaxHistoryCacheService.findById("AA000000"))
-         (fromCache.get.data.get \ "2015").get shouldBe someJson
+         (fromCache.get \ "2015").get shouldBe someJson
       }
 
 
