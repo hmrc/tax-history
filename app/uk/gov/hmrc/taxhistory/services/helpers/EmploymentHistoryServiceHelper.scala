@@ -52,7 +52,7 @@ trait EmploymentHistoryServiceHelper extends Auditable{
           }
         }
 
-        buildEmployment(rtiEmploymentsOption=rtiEmployments,iabdsOption=companyBenefits, npsEmployment: NpsEmployment)
+        buildEmployment(npsEmployment = npsEmployment)
       }
     }
 
@@ -62,7 +62,6 @@ trait EmploymentHistoryServiceHelper extends Auditable{
     }
 
     httpOkWithEmploymentJsonPayload(employments)
-    //PayAsYouEarnDetails(employments = employments,allowances = allowances)
   }
 
   def httpOkWithEmploymentJsonPayload(payload: List[Employment]): HttpResponse = {
@@ -127,6 +126,15 @@ trait EmploymentHistoryServiceHelper extends Auditable{
       eyu.receivedDate)).filter(x =>x.taxablePayEYU != 0 && x.taxEYU != 0)
   }
 
+  def buildEmployment(npsEmployment: NpsEmployment): Employment = {
+    Employment(
+      employerName = npsEmployment.employerName,
+      payeReference = getPayeRef(npsEmployment),
+      startDate = npsEmployment.startDate,
+      endDate = npsEmployment.endDate)
+  }
+
+  @Deprecated
   def buildEmployment(rtiEmploymentsOption: Option[List[RtiEmployment]], iabdsOption: Option[List[Iabd]], npsEmployment: NpsEmployment): Employment = {
 
     (rtiEmploymentsOption, iabdsOption) match {

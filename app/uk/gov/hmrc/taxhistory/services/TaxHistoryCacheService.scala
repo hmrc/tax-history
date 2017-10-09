@@ -33,7 +33,7 @@ trait TaxHistoryCacheService extends MongoDbConnection{
   def mongoSource:String
 
    def createOrUpdate(id: String, key: String, toCache: JsValue): Future[Option[JsValue]] = {
-    cacheRepository.createOrUpdate(Id(id),key,toCache).map(x => x.updateType.savedValue.data)
+    cacheRepository.createOrUpdate(Id(id),key,toCache).map(x => x.updateType.savedValue.data.map(_ \ key).map(_.get))
   }
 
    def findById(id: String, taxYear: Int): Future[Option[JsValue]] = {

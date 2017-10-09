@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.services
 
+import play.api.Logger
 import play.api.http.Status
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
@@ -47,9 +48,12 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
     val validatedTaxYear = TaxYear(taxYear)
 
     cacheService.getFromCache(validatedNino.nino,validatedTaxYear){
-      retrieveEmploymentsDirectFromSource(validatedNino,validatedTaxYear).map(h => h.json)
+      retrieveEmploymentsDirectFromSource(validatedNino,validatedTaxYear).map(h => {
+          Logger.warn("Refresh cached data")
+          h.json
+        })
     }.map(js => {
-
+      Logger.warn("Returning js result from getEmployments")
       HttpResponse(Status.OK,js)
     })
   }
@@ -70,10 +74,8 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
     x.flatMap(identity)
   }
 
-
   def mergeAndRetrieveEmployments(nino: Nino, taxYear: TaxYear)(npsEmployments: List[NpsEmployment])(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     for {
-
       iabdsF <- getNpsIabds(nino,taxYear)
       rtiF <- getRtiEmployments(nino,taxYear)
     }yield {
@@ -89,7 +91,10 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
             val employments = response.json.as[List[NpsEmployment]].filterNot(x => x.receivingJobSeekersAllowance || x.otherIncomeSourceIndicator)
             Right(employments)
           }
-          case _ =>  Left(response)
+          case _ => {
+            Logger.warn("Non 200 response code from nps employment api.")
+            Left(response)
+          }
         }
       }
     }
@@ -102,7 +107,10 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
           case Status.OK => {
             Right(response.json.as[RtiData])
           }
-          case _ =>  Left(response)
+          case _ =>  {
+            Logger.warn("Non 200 response code from rti employment api.")
+            Left(response)
+          }
         }
       }
     }
@@ -115,7 +123,10 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
           case OK => {
             Right(response.json.as[List[Iabd]])
           }
-          case _ =>  Left(response)
+          case _ =>  {
+            Logger.warn("Non 200 response code from nps iabd api.")
+            Left(response)
+          }
         }
       }
     }

@@ -88,7 +88,7 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
 
       "successfully add the Data in cache" in {
          val cacheData = await(TestTaxHistoryCacheService.createOrUpdate(nino.nino,"2015",someJson))
-          (cacheData.get \ "2015").get shouldBe someJson
+          cacheData.get shouldBe someJson
       }
 
       "fetch from the  cache by ID " in {
@@ -101,7 +101,7 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
       val year = TaxYear(2014)
       val cacheMissUpdateAndGetFromCache = await(TestTaxHistoryCacheService.getFromCache(nino.nino,year)(toCache(nino.nino)))
 
-      (cacheMissUpdateAndGetFromCache.get \ "2014").get shouldBe someJson
+      cacheMissUpdateAndGetFromCache.get shouldBe someJson
 
       val fromCache = await(TestTaxHistoryCacheService.getFromCache(nino.nino,year)(toCache(nino.nino)))
 
