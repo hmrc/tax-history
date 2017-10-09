@@ -21,7 +21,7 @@ import org.mockito.Matchers
 import org.mockito.Mockito.when
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.{JsArray, Json}
+import play.api.libs.json.{JsArray, JsValue, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.play.audit.model.Audit
@@ -34,7 +34,7 @@ import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 
 class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
@@ -212,45 +212,42 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     }
 
     "return any non success status response from get Nps Employments api" in {
-      when(mockCache.findById(Matchers.any())).thenReturn(Future.successful(None))
       when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(npsEmploymentResponse))))
-      val response =  await(TestEmploymentService.getEmployments(testNino.toString(),2016))
+      val response =  await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
       response mustBe a[HttpResponse]
       response.status mustBe BAD_REQUEST
     }
 
     "return not found status response from get Nps Employments api" in {
-      when(mockCache.findById(Matchers.any())).thenReturn(Future.successful(None))
+
       when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(JsArray(Seq.empty)))))
-      val response =  await(TestEmploymentService.getEmployments(testNino.toString(),2016))
+      val response =  await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
       response mustBe a[HttpResponse]
       response.status mustBe NOT_FOUND
     }
 
     "return success status despite failing response from get Rti Employments api when there are nps employments" in {
-      when(mockCache.findById(Matchers.any())).thenReturn(Future.successful(None))
       when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
       when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(rtiEmploymentResponse))))
       when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(iabdsJsonResponse))))
-      val response =  await(TestEmploymentService.getEmployments(testNino.toString(),2016))
+      val response =  await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
       response mustBe a[HttpResponse]
       response.status mustBe OK
     }
 
     "return success response from get Employments" in {
-      when(mockCache.findById(Matchers.any())).thenReturn(Future.successful(None))
       when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
       when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
       when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
-      val response =  await(TestEmploymentService.getEmployments(testNino.toString(),2016))
+      val response =  await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
       response mustBe a[HttpResponse]
       response.status mustBe OK
       val employments = response.json.as[List[uk.gov.hmrc.taxhistory.model.api.Employment]]
@@ -287,30 +284,27 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
     "successfully exclude nps employment1 data" when {
       "nps receivingJobseekersAllowance is true form list of employments" in {
-        when(mockCache.findById(Matchers.any())).thenReturn(Future.successful(None))
         when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithJobSeekerAllowance))))
         when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
         when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
-        val response = await(TestEmploymentService.getEmployments(testNino.toString(), 2016))
+        val response = await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
         response mustBe a[HttpResponse]
         response.status mustBe OK
         val employments = response.json.as[List[uk.gov.hmrc.taxhistory.model.api.Employment]]
         employments.size mustBe 1
-        //payAsYouEarnDetails.allowances mustBe List(Allowance("Flat Rate Job Expenses",200, "FlatRateJobExpenses"))
       }
 
       "nps receivingJobseekersAllowance and otherIncomeSourceIndicator is true form list of employments" in {
-        when(mockCache.findById(Matchers.any())).thenReturn(Future.successful(None))
         when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithOtherIncomeSourceIndicator))))
         when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
         when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
-        val response = await(TestEmploymentService.getEmployments(testNino.toString(), 2016))
+        val response = await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
         response mustBe a[HttpResponse]
         response.status mustBe NOT_FOUND
       }
@@ -324,7 +318,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
           .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
         when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
-        val response = await(TestEmploymentService.getEmployments(testNino.toString(), 2016))
+        val response = await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
         response mustBe a[HttpResponse]
         response.status mustBe NOT_FOUND
       }
@@ -336,7 +330,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
           .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
         when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
-        val response = await(TestEmploymentService.getEmployments(testNino.toString(), 2016))
+        val response = await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
         response mustBe a[HttpResponse]
         response.status mustBe NOT_FOUND
       }
@@ -584,6 +578,17 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val onlyRtiEmployments = TestEmploymentService.onlyInRTI(rtiEmployments,npsEmployments)
       onlyRtiEmployments.size mustBe 0
     }
+
+    "return cached employments if available" in {
+      when(mockCache.getFromCache(Matchers.any(),Matchers.any())(Matchers.any[() => Future[JsValue]].apply()))
+        .thenReturn(Future.successful(Some(employmentsApiJsonResponse)))
+      val response = await(TestEmploymentService.getEmployments(testNino.nino, 2016))
+      response mustBe a[HttpResponse]
+      response.status mustBe OK
+      val employments = response.json.as[List[uk.gov.hmrc.taxhistory.model.api.Employment]]
+      employments.size mustBe 2
+    }
+
   }
 
 

@@ -26,9 +26,8 @@ import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.api.Employment
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
-import uk.gov.hmrc.taxhistory.model.utils.PayAsYouEarnBuilder
+import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -38,7 +37,7 @@ object EmploymentHistoryService extends EmploymentHistoryService {
   override def audit = new Audit(appName,MicroserviceAuditConnector)
 }
 
-trait EmploymentHistoryService extends PayAsYouEarnBuilder{
+trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
   def npsConnector : NpsConnector = NpsConnector
   def rtiConnector : RtiConnector = RtiConnector
   def cacheService : TaxHistoryCacheService = TaxHistoryCacheService
@@ -47,20 +46,9 @@ trait EmploymentHistoryService extends PayAsYouEarnBuilder{
     val validatedNino = Nino(nino)
     val validatedTaxYear = TaxYear(taxYear)
 
-    val x = for {
-      cache <- cacheService.findById(validatedNino.formatted)//( for{newData <- retrieveEmploymentsDirectFromSource(validatedNino, validatedTaxYear)} yield {newData.json} )
-    } yield {
-      cache match {
-        case Some(x:JsValue) => Future.successful(HttpResponse(Status.OK,Some(x)))
-        case _ => {
-          retrieveEmploymentsDirectFromSource(validatedNino,validatedTaxYear).map(a => {
-            cacheService.createOrUpdate(validatedNino.formatted,validatedTaxYear.currentYear.toString,a.json)
-            a
-          })
-        }
-      }
-    }
-    x.flatMap(identity)
+    cacheService.getFromCache(validatedNino.nino,validatedTaxYear){
+      retrieveEmploymentsDirectFromSource(validatedNino,validatedTaxYear).map(h => h.json)
+    }.map(js => HttpResponse(Status.OK,js))
   }
 
   def retrieveEmploymentsDirectFromSource(validatedNino:Nino,validatedTaxYear:TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] ={

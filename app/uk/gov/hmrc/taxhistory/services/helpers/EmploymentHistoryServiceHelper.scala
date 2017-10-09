@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxhistory.model.utils
+package uk.gov.hmrc.taxhistory.services.helpers
 
 import play.Logger
 import play.api.http.Status
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.api.Employment
 import uk.gov.hmrc.taxhistory.model.nps._
-import uk.gov.hmrc.taxhistory.model.taxhistory.{Allowance, CompanyBenefit, EarlierYearUpdate, PayAsYouEarnDetails}
+import uk.gov.hmrc.taxhistory.model.taxhistory.{Allowance, CompanyBenefit, EarlierYearUpdate}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
-import scala.concurrent.ExecutionContext.Implicits.global
 
-trait PayAsYouEarnBuilder extends Auditable{
+trait EmploymentHistoryServiceHelper extends Auditable{
 
   def combineResult(iabdResponse:Either[HttpResponse,List[Iabd]],
                     rtiResponse:Either[HttpResponse,RtiData])

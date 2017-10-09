@@ -40,12 +40,12 @@ trait TaxHistoryCacheService extends MongoDbConnection{
     cacheRepository.findById(Id(id)).map(_.flatMap(_.data))
   }
 
-  def getFromCache(nino: String,year: TaxYear)(toCache : => JsValue): Future[Option[JsValue]] = {
+  def getFromCache(nino: String,year: TaxYear)(toCache : => Future[JsValue]): Future[Option[JsValue]] = {
 
     findById(nino).flatMap {
         _ match {
           case Some(x) => Future.successful(Some(x))
-          case _ => createOrUpdate(nino,year.currentYear.toString,toCache)
+          case _ => toCache.flatMap(js => createOrUpdate(nino,year.currentYear.toString,js))
         }
       }
   }
