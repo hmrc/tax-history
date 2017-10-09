@@ -48,7 +48,10 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
 
     cacheService.getFromCache(validatedNino.nino,validatedTaxYear){
       retrieveEmploymentsDirectFromSource(validatedNino,validatedTaxYear).map(h => h.json)
-    }.map(js => HttpResponse(Status.OK,js))
+    }.map(js => {
+
+      HttpResponse(Status.OK,js)
+    })
   }
 
   def retrieveEmploymentsDirectFromSource(validatedNino:Nino,validatedTaxYear:TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] ={

@@ -92,8 +92,8 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
       }
 
       "fetch from the  cache by ID " in {
-         val fromCache = await(TestTaxHistoryCacheService.findById(nino.nino))
-         (fromCache.get \ "2015").get shouldBe someJson
+         val fromCache = await(TestTaxHistoryCacheService.findById(nino.nino ,2015))
+         fromCache.get  shouldBe someJson
       }
 
     "When not in the mongo cache update the cache and fetch" in {
@@ -105,7 +105,7 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
 
       val fromCache = await(TestTaxHistoryCacheService.getFromCache(nino.nino,year)(toCache(nino.nino)))
 
-      (fromCache.get \ "2014").get shouldBe someJson
+      fromCache.get shouldBe someJson
 
     }
 
