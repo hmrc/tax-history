@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import play.api.mvc.{Action, Result}
+import play.api.mvc.Action
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.TaxHistoryAuthConnector

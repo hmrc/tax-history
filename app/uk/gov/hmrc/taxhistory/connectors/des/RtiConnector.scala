@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.taxhistory.connectors.des
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.taxhistory.connectors.BaseConnector
+import uk.gov.hmrc.http._
 import uk.gov.hmrc.taxhistory.WSHttp
+import uk.gov.hmrc.taxhistory.connectors.BaseConnector
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
-import uk.gov.hmrc.http._
 
 object RtiConnector extends RtiConnector {
 

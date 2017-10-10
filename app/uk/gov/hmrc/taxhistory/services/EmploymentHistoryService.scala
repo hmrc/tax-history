@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxhistory.services
 import play.api.Logger
 import play.api.http.Status
 import play.api.http.Status._
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit

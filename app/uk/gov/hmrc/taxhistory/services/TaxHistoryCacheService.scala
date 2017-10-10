@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import java.time.Year
-
 import play.api.libs.json.JsValue
 import play.modules.reactivemongo.MongoDbConnection
 import uk.gov.hmrc.cache.model.{Cache, Id}
