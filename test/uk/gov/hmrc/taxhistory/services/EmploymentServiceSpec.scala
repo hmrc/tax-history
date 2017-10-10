@@ -578,18 +578,5 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val onlyRtiEmployments = TestEmploymentService.onlyInRTI(rtiEmployments,npsEmployments)
       onlyRtiEmployments.size mustBe 0
     }
-
-    "return cached employments if available" in {
-      when(mockCache.getFromCache(Matchers.any(),Matchers.any())(Matchers.any[() => Future[JsValue]].apply()))
-        .thenReturn(Future.successful(Some(employmentsApiJsonResponse)))
-      val response = await(TestEmploymentService.getEmployments(testNino.nino, 2016))
-      response mustBe a[HttpResponse]
-      response.status mustBe OK
-      val employments = response.json.as[List[uk.gov.hmrc.taxhistory.model.api.Employment]]
-      employments.size mustBe 2
-    }
-
   }
-
-
 }
