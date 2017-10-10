@@ -74,7 +74,8 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
     x.flatMap(identity)
   }
 
-  def mergeAndRetrieveEmployments(nino: Nino, taxYear: TaxYear)(npsEmployments: List[NpsEmployment])(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+  def mergeAndRetrieveEmployments(nino: Nino, taxYear: TaxYear)(npsEmployments: List[NpsEmployment])
+                                 (implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     for {
       iabdsF <- getNpsIabds(nino,taxYear)
       rtiF <- getRtiEmployments(nino,taxYear)
