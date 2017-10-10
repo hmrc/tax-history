@@ -19,13 +19,13 @@ package uk.gov.hmrc.taxhistory.connectors.nps
 import play.api.Logger
 import play.api.http.Status.OK
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.taxhistory.connectors.BaseConnector
+import uk.gov.hmrc.http._
 import uk.gov.hmrc.taxhistory.WSHttp
+import uk.gov.hmrc.taxhistory.connectors.BaseConnector
 import uk.gov.hmrc.taxhistory.metrics.MetricsEnum
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import uk.gov.hmrc.http._
 
 
  trait NpsConnector extends BaseConnector {
@@ -50,7 +50,7 @@ import uk.gov.hmrc.http._
           response
         case status =>
           metrics.incrementFailedCounter(MetricsEnum.NPS_GET_EMPLOYMENTS)
-          Logger.warn(s"[NpsConnector][getEmployments] - status: $status Error ${response.body}")
+          Logger.warn(s"[NpsConnector][getEmploymentsOLD] - status: $status Error ${response.body}")
           response
       }
     }

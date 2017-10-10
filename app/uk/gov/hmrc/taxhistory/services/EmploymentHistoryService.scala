@@ -16,69 +16,49 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import java.util.UUID
-
-import org.joda.time.LocalDate
-import play.Logger
+import play.api.Logger
 import play.api.http.Status
-import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment, RtiPayment}
+import play.api.http.Status._
+import play.api.libs.json.Json
+import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.play.audit.model.Audit
+import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
+import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 import uk.gov.hmrc.time.TaxYear
-import play.api.http.Status._
-import play.api.libs.json.Json
-import play.api.mvc.Result
-import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.play.audit.model.Audit
-import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
-import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.model.taxhistory._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.taxhistory.model.api.Employment
 
 object EmploymentHistoryService extends EmploymentHistoryService {
   override def audit = new Audit(appName,MicroserviceAuditConnector)
 }
 
-trait EmploymentHistoryService extends Auditable{
+trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
   def npsConnector : NpsConnector = NpsConnector
   def rtiConnector : RtiConnector = RtiConnector
+  def cacheService : TaxHistoryCacheService = TaxHistoryCacheService
 
-   def formatString(a: String):String = {
-      Try(a.toInt) match {
-        case Success(x) => x.toString
-        case Failure(y) => a
-      }
-    }
-
-
-  def getEmployments(nino: String, taxYear: Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    //TODO remove this stub data and wire to cache instead
-    val employments = List(
-      Employment(
-        employmentId = UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
-        startDate = new LocalDate("2016-01-21"),
-        endDate = Some(new LocalDate("2017-01-01")),
-        payeReference = "paye-1",
-        employerName = "employer-1"),
-      Employment(
-        employmentId = UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
-        startDate = new LocalDate("2016-02-22"),
-        payeReference = "paye-2",
-        employerName = "employer-2"))
-
-    Future.successful(HttpResponse(Status.OK,Some(Json.toJson(employments))))
-  }
-
-  def getEmploymentHistory(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+  def getEmployments(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     val validatedNino = Nino(nino)
     val validatedTaxYear = TaxYear(taxYear)
 
+    cacheService.getFromCache(validatedNino.nino,validatedTaxYear){
+      retrieveEmploymentsDirectFromSource(validatedNino,validatedTaxYear).map(h => {
+          Logger.warn("Refresh cached data")
+          h.json
+        })
+    }.map(js => {
+      Logger.warn("Returning js result from getEmployments")
+      HttpResponse(Status.OK,js)
+    })
+  }
+
+  def retrieveEmploymentsDirectFromSource(validatedNino:Nino,validatedTaxYear:TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] ={
     val x = for {
       npsEmploymentsFuture <- getNpsEmployments(validatedNino, validatedTaxYear)
     }
@@ -87,198 +67,22 @@ trait EmploymentHistoryService extends Auditable{
           case Left(httpResponse) =>Future.successful(httpResponse)
           case Right(Nil) => Future.successful(HttpResponse(Status.NOT_FOUND, Some(Json.parse("""{"Message":"Not Found"}"""))))
           case Right(npsEmploymentList) => {
-                getPayAsYouEarnDetails(validatedNino,validatedTaxYear)(npsEmploymentList)
+            mergeAndRetrieveEmployments(validatedNino,validatedTaxYear)(npsEmploymentList)
           }
         }
       }
     x.flatMap(identity)
   }
 
-
-  def getPayAsYouEarnDetails(nino: Nino,taxYear: TaxYear)(npsEmployments: List[NpsEmployment])(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+  def mergeAndRetrieveEmployments(nino: Nino, taxYear: TaxYear)(npsEmployments: List[NpsEmployment])
+                                 (implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     for {
       iabdsF <- getNpsIabds(nino,taxYear)
       rtiF <- getRtiEmployments(nino,taxYear)
-
     }yield {
       combineResult(iabdsF,rtiF)(npsEmployments)
     }
-
   }
-
-  def combineResult(iabdResponse:Either[HttpResponse,List[Iabd]],
-                    rtiResponse:Either[HttpResponse,RtiData])
-                   (npsEmployments: List[NpsEmployment])(implicit headerCarrier: HeaderCarrier):HttpResponse={
-
-    val iabdsOption = fetchResult(iabdResponse)
-    val rtiOption = fetchResult(rtiResponse)
-
-    val employments = npsEmployments.map {
-      npsEmployment => {
-        val companyBenefits = iabdsOption.map {
-            iabds => getMatchedCompanyBenefits(iabds,npsEmployment)
-        }
-        val rtiEmployments = rtiOption.map {
-            rtiData => {
-              auditEvent(rtiData,onlyInRTI(rtiData.employments,npsEmployments))("only-in-rti")
-              getMatchedRtiEmployments(rtiData, npsEmployment)
-
-            }
-        }
-
-        buildEmployment(rtiEmploymentsOption=rtiEmployments,iabdsOption=companyBenefits, npsEmployment: NpsEmployment)
-      }
-    }
-
-    val allowances= iabdsOption match {
-      case None => Nil
-      case Some(x) => getAllowances(x)
-    }
-
-    val payAsYouEarnDetails = PayAsYouEarnDetails(employments = employments,allowances = allowances)
-
-    HttpResponse(Status.OK,Some(Json.toJson(payAsYouEarnDetails)))
-  }
-
-
-  def fetchResult[A,B](either:Either[A,B]):Option[B]={
-    either match {
-      case Left(x) => None
-      case Right(x) => Some(x)
-    }
-  }
-
-
-  def fetchFilteredList[A](listToFilter:List[A])(f:(A) => Boolean):List[A] = {
-    listToFilter.filter(f(_))
-  }
-
-
-  def onlyInRTI(rtiEmployments:List[RtiEmployment] , npsEmployments: List[NpsEmployment]):List[RtiEmployment]={
-
-    rtiEmployments.filter(rti => !npsEmployments.exists(nps => isMatch(nps,rti)))
-
-  }
-
-  def isMatch(npsEmployment :NpsEmployment, rtiEmployment :RtiEmployment):Boolean={
-    (formatString(rtiEmployment.officeNumber) == formatString(npsEmployment.taxDistrictNumber)) &&
-      (rtiEmployment.payeRef == npsEmployment.payeNumber)
-  }
-
-  def getMatchedRtiEmployments(rtiData: RtiData, npsEmployments: NpsEmployment)(implicit headerCarrier: HeaderCarrier): List[RtiEmployment] = {
-
-      fetchFilteredList(rtiData.employments){
-        (rtiEmployment) =>
-          isMatch(npsEmployments, rtiEmployment)
-      } match {
-        case (matchingEmp :: Nil) =>List(matchingEmp)
-        case start :: end => {
-            Logger.warn("Multiple matching rti employments found.")
-            val subMatches = (start :: end).filter {
-              rtiEmployment => {
-                rtiEmployment.currentPayId.isDefined &&
-                  npsEmployments.worksNumber.isDefined &&
-                  rtiEmployment.currentPayId == npsEmployments.worksNumber
-              }
-            }
-            subMatches match {
-              case first :: Nil => List(first)
-              case x  => {
-                auditEvent(rtiData, x)("miss-match")
-                Nil
-              }
-            }
-          }
-        case _ => Nil //Auditing will happen in the function onlyInRTI for this case
-      }
-  }
-
-
-  private def auditEvent(rtiData: RtiData, x: List[RtiEmployment])(eventType:String)(implicit headerCarrier: HeaderCarrier) = {
-    Future {
-      for {
-        r <- x
-      } yield {
-        val x = Map(
-          "nino" -> rtiData.nino,
-          "payeRef" -> r.payeRef,
-          "officeNumber" -> r.officeNumber,
-          "currentPayId" -> r.currentPayId.fold("")(a => a))
-        sendDataEvent("Paye for Agents", detail = x, eventType = eventType)
-      }
-    }
-  }
-
-  def convertRtiEYUToEYU(rtiEmployments: List[RtiEmployment]): List[EarlierYearUpdate] = {
-    rtiEmployments.head.earlierYearUpdates.map(eyu => EarlierYearUpdate(eyu.taxablePayDelta,
-      eyu.totalTaxDelta,
-      eyu.receivedDate)).filter(x =>x.taxablePayEYU != 0 && x.taxEYU != 0)
-  }
-
-  def buildEmployment(rtiEmploymentsOption: Option[List[RtiEmployment]], iabdsOption: Option[List[Iabd]], npsEmployment: NpsEmployment): uk.gov.hmrc.taxhistory.model.taxhistory.Employment = {
-
-    (rtiEmploymentsOption, iabdsOption) match {
-
-      case (None | Some(Nil), None | Some(Nil)) => uk.gov.hmrc.taxhistory.model.taxhistory.Employment(
-        employerName = npsEmployment.employerName,
-        payeReference = getPayeRef(npsEmployment),
-        startDate = npsEmployment.startDate,
-        endDate = npsEmployment.endDate)
-      case (Some(Nil) | None, Some(y)) => {
-        uk.gov.hmrc.taxhistory.model.taxhistory.Employment(
-          employerName = npsEmployment.employerName,
-          payeReference = getPayeRef(npsEmployment),
-          companyBenefits = getCompanyBenefits(y),
-          startDate = npsEmployment.startDate,
-          endDate = npsEmployment.endDate)
-      }
-      case (Some(x), Some(Nil) | None) => {
-        val rtiPaymentInfo = getRtiPayment(x)
-        uk.gov.hmrc.taxhistory.model.taxhistory.Employment(
-          employerName = npsEmployment.employerName,
-          payeReference = getPayeRef(npsEmployment),
-          taxablePayTotal = rtiPaymentInfo._1,
-          taxTotal = rtiPaymentInfo._2,
-          earlierYearUpdates = convertRtiEYUToEYU(x),
-          startDate = npsEmployment.startDate,
-          endDate = npsEmployment.endDate
-        )
-      }
-      case (Some(x), Some(y)) => {
-        val rtiPaymentInfo = getRtiPayment(x)
-        uk.gov.hmrc.taxhistory.model.taxhistory.Employment(
-          employerName = npsEmployment.employerName,
-          payeReference = getPayeRef(npsEmployment),
-          taxablePayTotal = rtiPaymentInfo._1,
-          taxTotal = rtiPaymentInfo._2,
-          earlierYearUpdates = convertRtiEYUToEYU(x),
-          companyBenefits = getCompanyBenefits(y),
-          startDate = npsEmployment.startDate,
-          endDate = npsEmployment.endDate)
-      }
-      case _ => uk.gov.hmrc.taxhistory.model.taxhistory.Employment(
-        employerName = npsEmployment.employerName,
-        payeReference = getPayeRef(npsEmployment),
-        startDate = npsEmployment.startDate,
-        endDate = npsEmployment.endDate)
-    }
-
-  }
-
-  private def getPayeRef(npsEmployment: NpsEmployment) = {
-    npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber
-  }
-
-  def getRtiPayment(rtiEmployments: List[RtiEmployment])={
-    rtiEmployments.head.payments match {
-      case Nil => (None,None)
-      case matchingPayments => {
-        val payment = matchingPayments.sorted.last
-        (Some(payment.taxablePayYTD), Some(payment.totalTaxYTD))
-      }
-    }
-  }
-
 
   def getNpsEmployments(nino:Nino, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,List[NpsEmployment]]] = {
     npsConnector.getEmployments(nino,taxYear.currentYear).map{
@@ -288,7 +92,10 @@ trait EmploymentHistoryService extends Auditable{
             val employments = response.json.as[List[NpsEmployment]].filterNot(x => x.receivingJobSeekersAllowance || x.otherIncomeSourceIndicator)
             Right(employments)
           }
-          case _ =>  Left(response)
+          case _ => {
+            Logger.warn("Non 200 response code from nps employment api.")
+            Left(response)
+          }
         }
       }
     }
@@ -301,12 +108,14 @@ trait EmploymentHistoryService extends Auditable{
           case Status.OK => {
             Right(response.json.as[RtiData])
           }
-          case _ =>  Left(response)
+          case _ =>  {
+            Logger.warn("Non 200 response code from rti employment api.")
+            Left(response)
+          }
         }
       }
     }
   }
-
 
   def getNpsIabds(nino:Nino, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,List[Iabd]]] = {
     npsConnector.getIabds(nino,taxYear.currentYear).map{
@@ -315,101 +124,12 @@ trait EmploymentHistoryService extends Auditable{
           case OK => {
             Right(response.json.as[List[Iabd]])
           }
-          case _ =>  Left(response)
-        }
-      }
-    }
-  }
-
-
-  def getMatchedCompanyBenefits(iabds:List[Iabd],npsEmployment: NpsEmployment):List[Iabd] = {
-    fetchFilteredList(getRawCompanyBenefits(iabds)){
-      (iabd) => {
-        iabd.employmentSequenceNumber.contains(npsEmployment.sequenceNumber)
-      }
-    }
-  }
-
-  def getRawCompanyBenefits(iabds:List[Iabd]):List[Iabd] = {
-
-    fetchFilteredList(iabds){
-      iabd => {
-        iabd.`type`.isInstanceOf[CompanyBenefits]
-      }
-    }
-
-
-  }
-
-  def getCompanyBenefits(iabds:List[Iabd]):List[CompanyBenefit] = {
-    if (isTotalBenefitInKind(iabds)) {
-
-      convertToCompanyBenefits(iabds)
-
-    }else{
-      convertToCompanyBenefits(fetchFilteredList(iabds) {
-          iabd => {
-            !iabd.`type`.isInstanceOf[TotalBenefitInKind.type]
+          case _ =>  {
+            Logger.warn("Non 200 response code from nps iabd api.")
+            Left(response)
           }
         }
-      )
-    }
-  }
-
-  def convertToCompanyBenefits(iabds:List[Iabd]):List[CompanyBenefit]= {
-    iabds.map {
-      iabd =>
-        CompanyBenefit(typeDescription =
-          iabd.typeDescription.fold {
-            Logger.warn("Iabds Description is blank")
-            ""
-          }(x => x),
-          amount = iabd.grossAmount.fold {
-            Logger.warn("Iabds grossAmount is blank")
-            BigDecimal(0)
-          }(x => x),
-          iabdMessageKey = iabd.`type`.toString)
-    }
-  }
-
-  def isTotalBenefitInKind(iabds:List[Iabd]):Boolean = {
-      fetchFilteredList(iabds) {
-        iabd => {
-          iabd.`type`.isInstanceOf[TotalBenefitInKind.type]
-        }
-      }.nonEmpty &&
-      fetchFilteredList(iabds) {
-          iabd => {
-            iabd.`type`.isInstanceOf[uk.gov.hmrc.taxhistory.model.nps.BenefitInKind]
-          }
-      }.size == 1
-  }
-
-
-  def getRawAllowances(iabds:List[Iabd]):List[Iabd] = {
-
-    fetchFilteredList(iabds){
-      iabd => {
-        iabd.`type`.isInstanceOf[Allowances]
       }
     }
   }
-
-  def getAllowances(iabds:List[Iabd]):List[Allowance] = {
-    getRawAllowances(iabds) map {
-      iabd => Allowance(typeDescription =
-        iabd.typeDescription.fold{
-          Logger.warn("Iabds Description is blank")
-          ""}(x=>x),
-        amount = iabd.grossAmount.fold{
-          Logger.warn("Iabds grossAmount is blank")
-          BigDecimal(0)
-        }(x=>x),
-        iabdMessageKey = iabd.`type`.toString)
-    }
-  }
-
-
-
-
 }

@@ -17,15 +17,14 @@
 package uk.gov.hmrc.taxhistory.controllers
 
 import play.api.Logger
-import uk.gov.hmrc.taxhistory.model.auth.AfiAuth._
-import play.api.mvc.{Action, Result}
+import play.api.mvc.Result
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.microservice.controller.BaseController
-import uk.gov.hmrc.taxhistory.model.auth.AfiAuth.{AgentEnrolmentForPAYE, affinityGroupAllEnrolls}
-import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.taxhistory.model.auth.AfiAuth.{AgentEnrolmentForPAYE, affinityGroupAllEnrolls, _}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 trait AuthController extends BaseController with AuthorisedFunctions {

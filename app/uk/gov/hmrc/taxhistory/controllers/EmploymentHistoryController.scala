@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import play.api.mvc.{Action, Result}
+import play.api.mvc.Action
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.TaxHistoryAuthConnector
@@ -35,7 +35,7 @@ trait EmploymentHistoryController extends AuthController {
   }
 
   private def getTaxHistory(nino: String,taxYear: Int)(implicit hc:HeaderCarrier) = {
-    employmentHistoryService.getEmploymentHistory(nino, taxYear) map {
+    employmentHistoryService.getEmployments(nino, taxYear) map {
       response =>
         response.status match {
           case OK => Ok(response.body)
