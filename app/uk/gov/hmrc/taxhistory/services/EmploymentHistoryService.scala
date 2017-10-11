@@ -65,7 +65,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
       yield {
         npsEmploymentsFuture match {
           case Left(httpResponse) =>Future.successful(httpResponse)
-          case Right(Nil) => Future.successful(HttpResponse(Status.NOT_FOUND, Some(Json.parse("""{"Message":"Not Found"}"""))))
+          case Right(Nil) => Future.successful(HttpResponse(Status.NOT_FOUND, Some(Json.parse("[]"))))
           case Right(npsEmploymentList) => {
             mergeAndRetrieveEmployments(validatedNino,validatedTaxYear)(npsEmploymentList)
           }
@@ -91,6 +91,10 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
           case OK => {
             val employments = response.json.as[List[NpsEmployment]].filterNot(x => x.receivingJobSeekersAllowance || x.otherIncomeSourceIndicator)
             Right(employments)
+          }
+          case NOT_FOUND => {
+            Logger.warn("NPS employments responded with not found")
+            Right(Nil)
           }
           case _ => {
             Logger.warn("Non 200 response code from nps employment api.")
