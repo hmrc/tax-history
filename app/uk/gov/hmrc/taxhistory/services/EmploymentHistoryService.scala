@@ -44,21 +44,26 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
   def cacheService : TaxHistoryCacheService = TaxHistoryCacheService
 
   def getEmployments(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    val validatedNino = Nino(nino)
-    val validatedTaxYear = TaxYear(taxYear)
-
-    cacheService.getFromCache(validatedNino.nino,validatedTaxYear){
-      retrieveEmploymentsDirectFromSource(validatedNino,validatedTaxYear).map(h => {
-          Logger.warn("Refresh cached data")
-          h.json
-        })
-    }.map(js => {
+    implicit val validatedNino = Nino(nino)
+    implicit val validatedTaxYear = TaxYear(taxYear)
+    getCache.map(js => {
       Logger.warn("Returning js result from getEmployments")
-      HttpResponse(Status.OK,js)
+      HttpResponse(Status.OK, js)
     })
+
+
   }
 
-  def retrieveEmploymentsDirectFromSource(validatedNino:Nino,validatedTaxYear:TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] ={
+  private def getCache(implicit validatedNino: Nino, validatedTaxYear: TaxYear , headerCarrier: HeaderCarrier) = {
+    cacheService.getFromCacheOrElse {
+      retrieveEmploymentsDirectFromSource(validatedNino, validatedTaxYear).map(h => {
+        Logger.warn("Refresh cached data")
+        h.json
+      })
+    }
+  }
+
+  def retrieveEmploymentsDirectFromSource(validatedNino:Nino, validatedTaxYear:TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] ={
     val x = for {
       npsEmploymentsFuture <- getNpsEmployments(validatedNino, validatedTaxYear)
     }

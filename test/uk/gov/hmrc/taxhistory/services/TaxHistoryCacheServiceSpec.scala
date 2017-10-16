@@ -97,13 +97,13 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
       }
 
     "When not in the mongo cache update the cache and fetch" in {
-      val nino = randomNino()
-      val year = TaxYear(2014)
-      val cacheMissUpdateAndGetFromCache = await(TestTaxHistoryCacheService.getFromCache(nino.nino,year)(toCache(nino.nino)))
+      implicit val nino = randomNino()
+      implicit val year = TaxYear(2014)
+      val cacheMissUpdateAndGetFromCache = await(TestTaxHistoryCacheService.getFromCacheOrElse(toCache(nino.nino)))
 
       cacheMissUpdateAndGetFromCache.get shouldBe someJson
 
-      val fromCache = await(TestTaxHistoryCacheService.getFromCache(nino.nino,year)(toCache(nino.nino)))
+      val fromCache = await(TestTaxHistoryCacheService.getFromCacheOrElse(toCache(nino.nino)))
 
       fromCache.get shouldBe someJson
 

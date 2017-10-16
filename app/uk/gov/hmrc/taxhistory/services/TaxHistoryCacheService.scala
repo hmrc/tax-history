@@ -20,6 +20,7 @@ import play.api.libs.json.JsValue
 import play.modules.reactivemongo.MongoDbConnection
 import uk.gov.hmrc.cache.model.{Cache, Id}
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.taxhistory.config.ApplicationConfig
 import uk.gov.hmrc.time.TaxYear
 
@@ -38,11 +39,10 @@ trait TaxHistoryCacheService extends MongoDbConnection{
     cacheRepository.findById(Id(id)).map(_.flatMap(_.data).map(_ \ taxYear.toString).map(_.get))
   }
 
-  def getFromCache(nino: String,year: TaxYear)(toCache : => Future[JsValue]): Future[Option[JsValue]] = {
-
-    findById(nino,year.currentYear).flatMap {
+  def getFromCacheOrElse(toCache : => Future[JsValue])(implicit nino: Nino, year: TaxYear): Future[Option[JsValue]] = {
+    findById(nino.nino,year.currentYear).flatMap {
       case Some(x) => Future.successful(Some(x))
-      case _ => toCache.flatMap(js => createOrUpdate(nino,year.currentYear.toString,js))
+      case _ => toCache.flatMap(js => createOrUpdate(nino.nino,year.currentYear.toString,js))
     }
   }
 
