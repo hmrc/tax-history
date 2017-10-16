@@ -51,7 +51,6 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
       HttpResponse(Status.OK, js)
     })
 
-
   }
 
   private def getCache(implicit validatedNino: Nino, validatedTaxYear: TaxYear , headerCarrier: HeaderCarrier) = {

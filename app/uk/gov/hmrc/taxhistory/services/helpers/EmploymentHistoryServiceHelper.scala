@@ -24,7 +24,8 @@ import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.api.Employment
 import uk.gov.hmrc.taxhistory.model.nps._
-import uk.gov.hmrc.taxhistory.model.taxhistory.{Allowance, CompanyBenefit, EarlierYearUpdate}
+import uk.gov.hmrc.taxhistory.model.api.Allowance
+import uk.gov.hmrc.taxhistory.model.taxhistory.{CompanyBenefit, EarlierYearUpdate}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -272,17 +273,29 @@ trait EmploymentHistoryServiceHelper extends Auditable{
     }
   }
 
+//  @Deprecated
+//  def getAllowances(iabds:List[Iabd]):List[Allowance] = {
+//    getRawAllowances(iabds) map {
+//      iabd => Allowance(typeDescription =
+//        iabd.typeDescription.fold{
+//          Logger.warn("Iabds Description is blank")
+//          ""}(x=>x),
+//        amount = iabd.grossAmount.fold{
+//          Logger.warn("Iabds grossAmount is blank")
+//          BigDecimal(0)
+//        }(x=>x),
+//        iabdMessageKey = iabd.`type`.toString)
+//    }
+//  }
+
   def getAllowances(iabds:List[Iabd]):List[Allowance] = {
     getRawAllowances(iabds) map {
-      iabd => Allowance(typeDescription =
-        iabd.typeDescription.fold{
-          Logger.warn("Iabds Description is blank")
-          ""}(x=>x),
+      iabd => Allowance(
         amount = iabd.grossAmount.fold{
           Logger.warn("Iabds grossAmount is blank")
           BigDecimal(0)
         }(x=>x),
-        iabdMessageKey = iabd.`type`.toString)
+        iabdType = iabd.`type`.toString)
     }
   }
 
