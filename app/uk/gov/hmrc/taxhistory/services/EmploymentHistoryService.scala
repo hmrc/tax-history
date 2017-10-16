@@ -60,7 +60,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
   }
 
   def getAllowances(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    val allowances = List(new Allowance(iabdType = "someMockType", amount=BigDecimal(11)))
+    val allowances = List(new Allowance(iabdType = "FlatRateJobExpenses", amount=BigDecimal(11)))
     //TODO remove mock stub allowances
     Future.successful(HttpResponse(Status.OK,Some(Json.toJson(allowances))))
   }
