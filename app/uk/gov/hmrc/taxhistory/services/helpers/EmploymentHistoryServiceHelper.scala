@@ -22,9 +22,8 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.model.api.Employment
+import uk.gov.hmrc.taxhistory.model.api.{Allowance, Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps._
-import uk.gov.hmrc.taxhistory.model.api.Allowance
 import uk.gov.hmrc.taxhistory.model.taxhistory.{CompanyBenefit, EarlierYearUpdate}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -62,10 +61,11 @@ trait EmploymentHistoryServiceHelper extends Auditable{
       case Some(x) => getAllowances(x)
     }
 
-    httpOkWithEmploymentJsonPayload(employments)
+    val payAsYouEarn = PayAsYouEarn(employments=employments,allowances=allowances)
+    httpOkPayAsYouEarnJsonPayload(payAsYouEarn)
   }
 
-  def httpOkWithEmploymentJsonPayload(payload: List[Employment]): HttpResponse = {
+  def httpOkPayAsYouEarnJsonPayload(payload: PayAsYouEarn): HttpResponse = {
     HttpResponse(Status.OK,Some(Json.toJson(payload)))
   }
 

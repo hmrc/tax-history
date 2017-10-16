@@ -38,7 +38,7 @@ object EmploymentHistoryService extends EmploymentHistoryService {
   override def audit = new Audit(appName,MicroserviceAuditConnector)
 }
 
-trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
+trait EmploymentHistoryService extends EmploymentHistoryServiceHelper  {
   def npsConnector : NpsConnector = NpsConnector
   def rtiConnector : RtiConnector = RtiConnector
   def cacheService : TaxHistoryCacheService = TaxHistoryCacheService
@@ -53,7 +53,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
 
   }
 
-  private def getCache(implicit validatedNino: Nino, validatedTaxYear: TaxYear , headerCarrier: HeaderCarrier) = {
+  def getCache(implicit validatedNino: Nino, validatedTaxYear: TaxYear , headerCarrier: HeaderCarrier) = {
     cacheService.getFromCacheOrElse {
       retrieveEmploymentsDirectFromSource(validatedNino, validatedTaxYear).map(h => {
         Logger.warn("Refresh cached data")
