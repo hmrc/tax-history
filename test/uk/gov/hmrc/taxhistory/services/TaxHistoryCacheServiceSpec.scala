@@ -17,16 +17,14 @@
 package uk.gov.hmrc.taxhistory.services
 
 
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Sequential}
 import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.cache.model.Cache
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.taxhistory.config.ApplicationConfig
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.services.TaxHistoryCacheService.mongoSource
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.ExecutionContext.Implicits.global

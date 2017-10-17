@@ -16,24 +16,16 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import org.joda.time.LocalDate
-import org.mockito.Matchers
-import org.mockito.Mockito.when
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.{JsArray, Json}
-import play.api.test.Helpers._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import play.api.libs.json.Json
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.model.Audit
-import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.model.api.Allowance
-import uk.gov.hmrc.taxhistory.model.nps.{Allowances, Iabd, NpsEmployment}
+import uk.gov.hmrc.taxhistory.model.nps.Iabd
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.time.TaxYear
-
-import scala.concurrent.Future
 
 
 class EmploymentServiceHelperSpec extends PlaySpec with MockitoSugar with TestUtil{

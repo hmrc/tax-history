@@ -42,7 +42,9 @@ trait EmploymentHistoryServiceHelper extends Auditable{
     val employments = npsEmployments.map {
       npsEmployment => {
         val companyBenefits = iabdsOption.map {
-          iabds => getMatchedCompanyBenefits(iabds,npsEmployment)
+          iabds => {
+            new IabdsHelper(iabds).getMatchedCompanyBenefits(npsEmployment)
+          }
         }
         val rtiEmployments = rtiOption.map {
           rtiData => {
@@ -234,7 +236,7 @@ trait EmploymentHistoryServiceHelper extends Auditable{
     }
   }
 
-  def convertToCompanyBenefits(iabds:List[Iabd]):List[CompanyBenefit]= {
+   private def convertToCompanyBenefits(iabds:List[Iabd]):List[CompanyBenefit]= {
     iabds.map {
       iabd =>
         CompanyBenefit(typeDescription =

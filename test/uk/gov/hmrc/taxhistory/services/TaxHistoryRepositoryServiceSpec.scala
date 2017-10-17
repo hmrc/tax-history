@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxhistory.services
 
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.mongo.{MongoSpecSupport, Saved}
 import uk.gov.hmrc.play.test.UnitSpec
