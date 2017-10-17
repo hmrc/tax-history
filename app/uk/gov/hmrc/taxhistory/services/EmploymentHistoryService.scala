@@ -73,7 +73,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
     val eyu = List(EarlierYearUpdate(
       taxablePayEYU = BigDecimal(1200),
       taxEYU = BigDecimal(400),
-      receivedDate = new LocalDate("2015-15-29")))
+      receivedDate = new LocalDate("2015-12-29")))
     val payAndTax = PayAndTax(
       taxablePayTotal = Some(BigDecimal(21000.21)),
       taxTotal = Some(BigDecimal(4000.04)),
@@ -84,7 +84,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
   }
   def getCompanyBenefits(nino:String, taxYear:Int, employmentId:String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     //TODO Remove hard coding for stub company benefits
-    val benefits = List(new CompanyBenefit(iabdType = "CompanyCar", amount=BigDecimal(666)))
+    val benefits = List(new CompanyBenefit(iabdType = "TaxableExpenseBenefit", amount=BigDecimal(666)))
     Future.successful(HttpResponse(Status.OK,Some(Json.toJson(benefits))))
 
   }
