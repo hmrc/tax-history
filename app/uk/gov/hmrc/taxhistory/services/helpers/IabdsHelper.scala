@@ -21,11 +21,9 @@ import uk.gov.hmrc.taxhistory.model.api.Allowance
 import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.model.taxhistory.CompanyBenefit
 
-class IabdsHelper(val iabds:List[Iabd]) {
+class IabdsHelper(val iabds:List[Iabd]) extends TaxHistoryHelper {
 
-  def fetchFilteredList[A](listToFilter:List[A])(f:(A) => Boolean):List[A] = {
-    listToFilter.filter(f(_))
-  }
+
 
   def getRawCompanyBenefits():List[Iabd] = {
     fetchFilteredList(this.iabds){

@@ -25,6 +25,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
+import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.model.api.Allowance
@@ -39,7 +40,7 @@ object EmploymentHistoryService extends EmploymentHistoryService {
   override def audit = new Audit(appName,MicroserviceAuditConnector)
 }
 
-trait EmploymentHistoryService extends EmploymentHistoryServiceHelper  {
+trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Auditable {
   def npsConnector : NpsConnector = NpsConnector
   def rtiConnector : RtiConnector = RtiConnector
   def cacheService : TaxHistoryCacheService = TaxHistoryCacheService

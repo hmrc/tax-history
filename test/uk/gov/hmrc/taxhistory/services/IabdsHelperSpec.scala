@@ -24,8 +24,9 @@ import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.model.api.Allowance
-import uk.gov.hmrc.taxhistory.model.nps.Iabd
+import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.services.helpers.IabdsHelper
 
 
 class IabdsHelperSpec extends PlaySpec with MockitoSugar with TestUtil{
@@ -66,24 +67,122 @@ val onlyIabdJson = """[{
 
 
 
-
+  val npsEmploymentResponse =  Json.parse(""" [{
+                                            |    "nino": "AA000000",
+                                            |    "sequenceNumber": 1,
+                                            |    "worksNumber": "6044041000000",
+                                            |    "taxDistrictNumber": "531",
+                                            |    "payeNumber": "J4816",
+                                            |    "employerName": "Aldi",
+                                            |    "receivingJobseekersAllowance" : false,
+                                            |    "otherIncomeSourceIndicator" : false,
+                                            |    "startDate": "21/01/2015"
+                                            |    }]
+                                          """.stripMargin)
 
 
   lazy val iabdsJsonResponse = loadFile("/json/nps/response/iabds.json")
   lazy val iabdList = iabdsJsonResponse.as[List[Iabd]]
   lazy val onlyIabdList = Json.parse(onlyIabdJson).as[List[Iabd]]
 
-  "Employment Service Helper" should {
-    "correctly convert an iabd to an allowance model" in {
+  lazy val iabdsTotalBenfitInKindJsonResponse = loadFile("/json/nps/response/iabdsTotalBIK.json")
+  lazy val iabdsBenfitInKindJsonResponse = loadFile("/json/nps/response/iabdsBIK.json")
 
-      val allowances =  TestEmploymentService.getAllowances(iabdList)
+
+  "Iabds Helper" should {
+    "correctly convert an iabd to an allowance model" in {
+      val iabdsHelper = new IabdsHelper(iabdList)
+      val allowances =  iabdsHelper.getAllowances()
       allowances mustBe a [List[Allowance]]
       allowances.size mustBe 1
     }
     "Return an empty list of allowances when only iabd is present" in {
-      val allowances =  TestEmploymentService.getAllowances(onlyIabdList)
+      val iabdsHelper = new IabdsHelper(onlyIabdList)
+
+      val allowances =  iabdsHelper.getAllowances()
       allowances mustBe a [List[Allowance]]
       allowances.size mustBe 0
     }
+
+    "Return a filtered Iabds from  List of Nps Iabds" in {
+
+      val iabds = iabdsJsonResponse.as[List[Iabd]]
+      val iabdsHelper = new IabdsHelper(iabds)
+
+      iabds mustBe a [List[Iabd]]
+      val iabdsFiltered = iabdsHelper.getRawCompanyBenefits()
+      iabdsFiltered.size mustBe 4
+      iabdsFiltered.toString() contains  ("FlatRateJobExpenses") mustBe false
+      iabdsFiltered.toString() contains  ("VanBenefit")  mustBe true
+      iabdsFiltered.toString() contains  ("CarFuelBenefit")  mustBe true
+
+    }
+
+
+
+
+
+    "Return a matched iabds  from  List of employments" in {
+      val iabds = iabdsJsonResponse.as[List[Iabd]]
+      val iabdsHelper = new IabdsHelper(iabds)
+
+      val employments = npsEmploymentResponse.as[List[NpsEmployment]]
+
+      iabds mustBe a [List[Iabd]]
+      val matchedIabds = iabdsHelper.getMatchedCompanyBenefits(employments.head)
+      matchedIabds.size mustBe 2
+      matchedIabds.toString() contains  ("VanBenefit") mustBe true
+      matchedIabds.toString() contains  ("CarFuelBenefit") mustBe true
+
+    }
+
+
+    "Get CompanyBenfits from Iabd data and ignore Benefit In Kind (type 28)" in {
+
+      val iabds = iabdsBenfitInKindJsonResponse.as[List[Iabd]]
+      val iabdsHelper = new IabdsHelper(iabds)
+
+      val companyBenefits=iabdsHelper.getCompanyBenefits()
+      companyBenefits.size mustBe  7
+    }
+
+    "Get CompanyBenfits from Iabd data Benefit In Kind of type 28(Total Benefit In Kind)" in {
+
+      val iabds = iabdsTotalBenfitInKindJsonResponse.as[List[Iabd]]
+      val iabdsHelper = new IabdsHelper(iabds)
+
+      val companyBenefits=iabdsHelper.getCompanyBenefits()
+      companyBenefits.size mustBe  2
+    }
+
+    "Total Benefit In Kind  from Iabds list should return true if There is only BIK which is type 28" in {
+      val iabds = iabdsTotalBenfitInKindJsonResponse.as[List[Iabd]]
+      val iabdsHelper = new IabdsHelper(iabds)
+
+      val bik=iabdsHelper.isTotalBenefitInKind()
+      bik  mustBe  true
+    }
+    "Total Benefit In Kind  from Iabds list should return false if There is any BIK which is not type 28" in {
+      val iabds = iabdsBenfitInKindJsonResponse.as[List[Iabd]]
+      val iabdsHelper = new IabdsHelper(iabds)
+
+      val bik=iabdsHelper.isTotalBenefitInKind()
+      bik  mustBe  false
+    }
+
+
+    "Return only Allowances from  List of Nps Iabds" in {
+      val iabds = iabdsJsonResponse.as[List[Iabd]]
+      iabds mustBe a [List[Iabd]]
+      val iabdsHelper = new IabdsHelper(iabds)
+
+      val iabdsFiltered = iabdsHelper.getRawAllowances()
+      iabdsFiltered.size mustBe 1
+      iabdsFiltered.toString() contains  ("FlatRateJobExpenses") mustBe true
+
+    }
+
+
+
   }
 }
