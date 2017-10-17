@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.services
 
+import org.joda.time.LocalDate
 import play.api.Logger
 import play.api.http.Status
 import play.api.http.Status._
@@ -27,7 +28,7 @@ import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.api.{Allowance, CompanyBenefit}
+import uk.gov.hmrc.taxhistory.model.api.{Allowance, CompanyBenefit, EarlierYearUpdate, PayAndTax}
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 import uk.gov.hmrc.time.TaxYear
@@ -60,15 +61,32 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
   }
 
   def getAllowances(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    val allowances = List(new Allowance(iabdType = "FlatRateJobExpenses", amount=BigDecimal(11)))
+    val allowances = List(
+                      new Allowance(
+                            iabdType = "FlatRateJobExpenses",
+                            amount=BigDecimal(11)))
     //TODO remove mock stub allowances
     Future.successful(HttpResponse(Status.OK,Some(Json.toJson(allowances))))
   }
 
+  def getPayAndTax(nino:String, taxYear:Int, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+    val eyu = List(EarlierYearUpdate(
+      taxablePayEYU = BigDecimal(1200),
+      taxEYU = BigDecimal(400),
+      receivedDate = new LocalDate("2015-15-29")))
+    val payAndTax = PayAndTax(
+      taxablePayTotal = Some(BigDecimal(21000.21)),
+      taxTotal = Some(BigDecimal(4000.04)),
+      earlierYearUpdates = eyu)
+    //TODO remove mock stub pay and tax
+    Future.successful(HttpResponse(Status.OK, Some(Json.toJson(payAndTax))))
+
+  }
   def getCompanyBenefits(nino:String, taxYear:Int, employmentId:String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     //TODO Remove hard coding for stub company benefits
     val benefits = List(new CompanyBenefit(iabdType = "CompanyCar", amount=BigDecimal(666)))
     Future.successful(HttpResponse(Status.OK,Some(Json.toJson(benefits))))
+
   }
 
   def retrieveEmploymentsDirectFromSource(validatedNino:Nino,validatedTaxYear:TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] ={
