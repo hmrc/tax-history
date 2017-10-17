@@ -65,7 +65,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
     Future.successful(HttpResponse(Status.OK,Some(Json.toJson(allowances))))
   }
 
-  def getBenefits(nino:String, taxYear:Int, employmentId:String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+  def getCompanyBenefits(nino:String, taxYear:Int, employmentId:String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     //TODO Remove hard coding for stub company benefits
     val benefits = List(new CompanyBenefit(iabdType = "CompanyCar", amount=BigDecimal(666)))
     Future.successful(HttpResponse(Status.OK,Some(Json.toJson(benefits))))

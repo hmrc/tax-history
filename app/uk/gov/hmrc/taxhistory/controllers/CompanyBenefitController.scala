@@ -29,14 +29,14 @@ trait CompanyBenefitController extends AuthController {
 
   def employmentHistoryService: EmploymentHistoryService = EmploymentHistoryService
 
-  def getBenefits(nino: String, taxYear: Int, employmentId:String) = Action.async {
+  def getCompanyBenefits(nino: String, taxYear: Int, employmentId:String) = Action.async {
     implicit request => {
-      authorisedRelationship(nino, retrieveBenefits(nino, taxYear, employmentId))
+      authorisedRelationship(nino, retrieveCompanyBenefits(nino, taxYear, employmentId))
     }
   }
 
-  private def retrieveBenefits(nino: String, taxYear: Int, employmentId:String)(implicit hc:HeaderCarrier): Future[Result] = {
-    employmentHistoryService.getBenefits(nino, taxYear, employmentId) map {
+  private def retrieveCompanyBenefits(nino: String, taxYear: Int, employmentId:String)(implicit hc:HeaderCarrier): Future[Result] = {
+    employmentHistoryService.getCompanyBenefits(nino, taxYear, employmentId) map {
       response =>
         response.status match {
           case OK => Ok(response.body)
