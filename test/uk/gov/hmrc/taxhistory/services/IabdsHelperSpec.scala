@@ -28,7 +28,7 @@ import uk.gov.hmrc.taxhistory.model.nps.Iabd
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 
-class EmploymentServiceHelperSpec extends PlaySpec with MockitoSugar with TestUtil{
+class IabdsHelperSpec extends PlaySpec with MockitoSugar with TestUtil{
   private val mockNpsConnector= mock[NpsConnector]
   private val mockRtiDataConnector= mock[RtiConnector]
   private val mockAudit= mock[Audit]
