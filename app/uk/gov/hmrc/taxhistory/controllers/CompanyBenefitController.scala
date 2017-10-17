@@ -36,7 +36,7 @@ trait CompanyBenefitController extends AuthController {
   }
 
   private def retrieveBenefits(nino: String, taxYear: Int, employmentId:String)(implicit hc:HeaderCarrier): Future[Result] = {
-    employmentHistoryService.getEmployments(nino, taxYear) map {
+    employmentHistoryService.getBenefits(nino, taxYear, employmentId) map {
       response =>
         response.status match {
           case OK => Ok(response.body)
