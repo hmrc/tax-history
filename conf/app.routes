@@ -1,4 +1,6 @@
 # microservice specific routes
 
-GET        /:nino/:taxYear/employments      uk.gov.hmrc.taxhistory.controllers.EmploymentController.getEmployments(nino:String,taxYear:Int)
-GET        /:nino/:taxYear/allowances      uk.gov.hmrc.taxhistory.controllers.AllowanceController.getAllowances(nino:String,taxYear:Int)
+GET        /:nino/:taxYear/employments                                  uk.gov.hmrc.taxhistory.controllers.EmploymentController.getEmployments(nino:String,taxYear:Int)
+GET        /:nino/:taxYear/allowances                                   uk.gov.hmrc.taxhistory.controllers.AllowanceController.getAllowances(nino:String,taxYear:Int)
+GET        /:nino/:taxYear/employments/:employmentId/company-benefits   uk.gov.hmrc.taxhistory.controllers.CompanyBenefitController.getCompanyBenefits(nino:String,taxYear:Int,employmentId:String)
+
