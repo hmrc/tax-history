@@ -27,6 +27,7 @@ import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
+import uk.gov.hmrc.taxhistory.model.api.Allowance
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 import uk.gov.hmrc.time.TaxYear
@@ -58,6 +59,11 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
     })
   }
 
+  def getAllowances(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+    val allowances = List(new Allowance(iabdType = "FlatRateJobExpenses", amount=BigDecimal(11)))
+    //TODO remove mock stub allowances
+    Future.successful(HttpResponse(Status.OK,Some(Json.toJson(allowances))))
+  }
   def retrieveEmploymentsDirectFromSource(validatedNino:Nino,validatedTaxYear:TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] ={
     val x = for {
       npsEmploymentsFuture <- getNpsEmployments(validatedNino, validatedTaxYear)
