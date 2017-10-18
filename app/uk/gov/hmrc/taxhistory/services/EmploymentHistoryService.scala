@@ -51,13 +51,15 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     implicit val validatedTaxYear = TaxYear(taxYear)
     getFromCache.map(js => {
       Logger.warn("Returning js result from getEmployments")
-
       val extractEmployments = js.map(json =>
-        json.\("employments").getOrElse(Json.obj())
+        json.\("employments").getOrElse(Json.arr())
       )
-      HttpResponse(Status.OK, extractEmployments)
-    })
 
+      extractEmployments match {
+        case Some(emp) if emp.equals(Json.arr()) => HttpResponse(Status.NOT_FOUND, extractEmployments)
+        case _ => HttpResponse(Status.OK, extractEmployments)
+      }
+    })
   }
 
   def getFromCache(implicit validatedNino: Nino, validatedTaxYear: TaxYear, headerCarrier: HeaderCarrier) = {
@@ -76,7 +78,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
       Logger.warn("Returning js result from getAllowances")
 
       val extractAllowances = js.map(json =>
-        json.\("allowances").getOrElse(Json.obj())
+        json.\("allowances").getOrElse(Json.arr())
       )
       HttpResponse(Status.OK, extractAllowances)
     })

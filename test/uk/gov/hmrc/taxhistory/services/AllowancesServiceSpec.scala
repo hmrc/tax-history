@@ -102,8 +102,20 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
       val result = await(TestEmploymentService.getAllowances("AA000000A", 2014))
       result.json must be(allowanceJson)
+    }
 
+    "return empty array when failed to fetch allowance from cache" in {
+      lazy val payeJson = Json.arr()
 
+      val allowanceJson = Json.parse(
+        """ [
+          ] """.stripMargin)
+      when(TestEmploymentService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+        .thenReturn(Future.successful(Some(payeJson)))
+
+      val result = await(TestEmploymentService.getAllowances("AA000000A", 2014))
+      result.status must be(OK)
+      result.json must be(allowanceJson)
     }
   }
 }
