@@ -29,5 +29,14 @@
         "amount": 12
       }
     ]
+  },
+  "payAndTax": {
+    "01318d7c-bcd9-47e2-8c38-551e7ccdfae3": {
+        "payAndTaxId":"2e2abe0a-8c4f-49fc-bdd2-cc13054e7172",
+        "taxablePayTotal":2222.22,
+        "taxTotal":111.11,
+        "earlierYearUpdates":[]
+      }
   }
+
 }
