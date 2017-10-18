@@ -529,7 +529,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       onlyRtiEmployments.size mustBe 0
     }
 
-    "get Employments successfully" in {
+    "fetch Employments successfully from cache" in {
       lazy val payeJson = loadFile("/json/model/api/paye.json")
 
       val employmentJson = Json.parse(
@@ -554,6 +554,18 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
       val result = await(TestEmploymentService.getEmployments("AA000000A", 2014))
       result.json must be (employmentJson)
+    }
+
+    "return not found when no employment res returned from cache" in {
+      lazy val payeJson = Json.parse(
+        """ [
+          |] """.stripMargin)
+
+      when(TestEmploymentService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+        .thenReturn(Future.successful(Some(payeJson)))
+
+      val result = await(TestEmploymentService.getEmployments("AA000000A", 2014))
+      result.status must be (NOT_FOUND)
     }
   }
 }
