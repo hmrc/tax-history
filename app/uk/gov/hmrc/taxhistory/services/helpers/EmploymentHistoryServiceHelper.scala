@@ -66,17 +66,18 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
       case Some(x) => new IabdsHelper(x).getAllowances()
     }
 
-    val payAsYouEarn =  mergeIntoSinglePayAsYouEarn(payAsYouEarnList = payAsYouEarnList,allowances=allowances)
+    val payAsYouEarn =  mergeIntoSinglePayAsYouEarn(payAsYouEarnList = payAsYouEarnList).copy(allowances=allowances)
 
     httpOkPayAsYouEarnJsonPayload(payAsYouEarn)
   }
 
-  def mergeIntoSinglePayAsYouEarn(payAsYouEarnList:List[PayAsYouEarn], allowances: List[Allowance]):PayAsYouEarn = {
-    payAsYouEarnList.fold(PayAsYouEarn(allowances=allowances))((paye1, paye2) => {
-      PayAsYouEarn(employments = paye1.employments ::: paye2.employments,
-        allowances = paye1.allowances ::: paye2.allowances,
-        benefits =  (paye1.benefits ++ paye2.benefits).reduceLeftOption((a,b)=>a++b),
-        payAndTax = (paye1.payAndTax ++ paye2.payAndTax).reduceLeftOption((a,b)=>a++b))
+  def mergeIntoSinglePayAsYouEarn(payAsYouEarnList:List[PayAsYouEarn]):PayAsYouEarn = {
+    payAsYouEarnList.reduce((p1, p2) => {
+      PayAsYouEarn(
+        employments = p1.employments ::: p2.employments,
+        allowances = p1.allowances ::: p2.allowances,
+        benefits =  (p1.benefits ++ p2.benefits).reduceLeftOption((a,b)=>a++b),
+        payAndTax = (p1.payAndTax ++ p2.payAndTax).reduceLeftOption((a,b)=>a++b))
     })
   }
 
