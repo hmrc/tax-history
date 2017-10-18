@@ -21,20 +21,20 @@ import org.mockito.Matchers
 import org.mockito.Mockito.when
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.{JsArray, JsValue, Json}
+import play.api.libs.json.{JsArray, Json}
 import play.api.test.Helpers._
-import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
+import uk.gov.hmrc.taxhistory.model.api.{Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
-import uk.gov.hmrc.taxhistory.model.taxhistory._
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 
 class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
@@ -164,8 +164,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
   lazy val rtiNoPaymentsResponse = loadFile("/json/rti/response/dummyRtiNoPaymentsResponse.json")
   lazy val npsEmptyEmployments = loadFile("/json/nps/response/emptyEmployments.json")
   lazy val iabdsJsonResponse = loadFile("/json/nps/response/iabds.json")
-  lazy val iabdsTotalBenfitInKindJsonResponse = loadFile("/json/nps/response/iabdsTotalBIK.json")
-  lazy val iabdsBenfitInKindJsonResponse = loadFile("/json/nps/response/iabdsBIK.json")
 
   lazy val employmentsJsonResponse = loadFile("/json/nps/response/employments.json")
   lazy val employmentsApiJsonResponse = loadFile("/json/model/api/employments.json")
@@ -250,18 +248,51 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val response =  await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
       response mustBe a[HttpResponse]
       response.status mustBe OK
-      val employments = response.json.as[List[uk.gov.hmrc.taxhistory.model.api.Employment]]
-
+      val payAsYouEarn = response.json.as[PayAsYouEarn]
+      val employments = payAsYouEarn.employments
       employments.size mustBe 1
       employments.head.employerName mustBe "Aldi"
       employments.head.payeReference mustBe "531/J4816"
-     // employments.head.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
-     // employments.head.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
-     // employments.head.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
+      // employments.head.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
+      // employments.head.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
+      // employments.head.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
       employments.head.startDate mustBe startDate
-     // employments.head.companyBenefits mustBe List(CompanyBenefit("Car Fuel Benefit",100,"CarFuelBenefit"), CompanyBenefit("Van Benefit",100,"VanBenefit"))
+      // employments.head.companyBenefits mustBe List(CompanyBenefit("Car Fuel Benefit",100,"CarFuelBenefit"), CompanyBenefit("Van Benefit",100,"VanBenefit"))
       employments.head.endDate mustBe None
     }
+
+
+//    "return success response from get Employments with getEmployments" in {
+//      when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+//        .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
+//      when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+//        .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
+//      when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+//        .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
+//
+//      when(mockCache.getFromCacheOrElse(Matchers.any())(Matchers.any(), Matchers.any()))
+//        .thenReturn(Future.successful(Some(npsEmploymentResponse)))
+//
+//      val response =  await(TestEmploymentService.getEmployments(testNino.nino,2016))
+//      response mustBe a[HttpResponse]
+//      response.status mustBe OK
+//      val payAsYouEarn = response.json.as[PayAsYouEarn]
+//      val employments = payAsYouEarn.employments
+//      employments.size mustBe 1
+//      employments.head.employerName mustBe "Aldi"
+//      employments.head.payeReference mustBe "531/J4816"
+//     // employments.head.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
+//     // employments.head.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
+//     // employments.head.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
+//      employments.head.startDate mustBe startDate
+//     // employments.head.companyBenefits mustBe List(CompanyBenefit("Car Fuel Benefit",100,"CarFuelBenefit"), CompanyBenefit("Van Benefit",100,"VanBenefit"))
+//      employments.head.endDate mustBe None
+//    }
+
+
+
+
+
 
     "successfully merge rti and nps employment1 data into employment1 list" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
@@ -271,7 +302,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       response mustBe a[HttpResponse]
 
       response.status mustBe OK
-      val employments = response.json.as[List[uk.gov.hmrc.taxhistory.model.api.Employment]]
+      val payAsYouEarn = response.json.as[PayAsYouEarn]
+      val employments = payAsYouEarn.employments
 
       employments.head.employerName mustBe "Aldi"
       employments.head.payeReference mustBe "531/J4816"
@@ -293,7 +325,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         val response = await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
         response mustBe a[HttpResponse]
         response.status mustBe OK
-        val employments = response.json.as[List[uk.gov.hmrc.taxhistory.model.api.Employment]]
+        val payAsYouEarn = response.json.as[PayAsYouEarn]
+        val employments = payAsYouEarn.employments
         employments.size mustBe 1
       }
 
@@ -336,39 +369,9 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       }
     }
 
-    "successfully merge if there are multiple matching rti employments for a single nps employment1 but single match on currentPayId" in {
-      val rtiData = rtiPartialDuplicateEmploymentsResponse.as[RtiData]
-      val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
 
-      val rtiEmployments = TestEmploymentService.getMatchedRtiEmployments(rtiData, npsEmployments.head)
-      rtiEmployments.size mustBe 1
 
-    }
 
-    "return Nil constructed list if there are zero matching rti employments for a single nps employment1" in {
-      val rtiData = rtiNonMatchingEmploymentsResponse.as[RtiData]
-      val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
-
-      val rtiEmployments =TestEmploymentService.getMatchedRtiEmployments(rtiData, npsEmployments.head)
-      rtiEmployments.size mustBe 0
-    }
-
-    "correctly compare matching numerical taxDistrictNumbers" in {
-      TestEmploymentService.formatString("12") mustBe "12"
-    }
-    "correctly compare matching alphabetical taxDistrictNumbers" in {
-      TestEmploymentService.formatString("ABC") mustBe "ABC"
-    }
-
-    "correctly compare taxDistrictNumbers as integers if one has a leading zero" in {
-      TestEmploymentService.formatString("073") mustBe "73"
-    }
-    "not match different taxDistrictNumbers" in {
-      TestEmploymentService.formatString("330") mustBe "330"
-    }
-    "not match taxDistrictNumbers if one is blank" in {
-      TestEmploymentService.formatString("")  mustBe ""
-    }
     "return any non success status response from get Nps Iabds api" in {
       when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(failureResponseJson))))
@@ -387,38 +390,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
     }
 
-   "Return a filtered Iabds from  List of Nps Iabds" in {
-      val iabds = iabdsJsonResponse.as[List[Iabd]]
-      iabds mustBe a [List[Iabd]]
-      val iabdsFiltered = TestEmploymentService.getRawCompanyBenefits(iabds)
-      iabdsFiltered.size mustBe 4
-      iabdsFiltered.toString() contains  ("FlatRateJobExpenses") mustBe false
-      iabdsFiltered.toString() contains  ("VanBenefit")  mustBe true
-      iabdsFiltered.toString() contains  ("CarFuelBenefit")  mustBe true
-
-    }
-
-
-    "Return a matched iabds  from  List of employments" in {
-      val iabds = iabdsJsonResponse.as[List[Iabd]]
-      val employments = npsEmploymentResponse.as[List[NpsEmployment]]
-
-      iabds mustBe a [List[Iabd]]
-      val matchedIabds = TestEmploymentService.getMatchedCompanyBenefits(iabds,employments.head)
-      matchedIabds.size mustBe 2
-      matchedIabds.toString() contains  ("VanBenefit") mustBe true
-      matchedIabds.toString() contains  ("CarFuelBenefit") mustBe true
-
-    }
-
-    "Return only Allowances from  List of Nps Iabds" in {
-      val iabds = iabdsJsonResponse.as[List[Iabd]]
-      iabds mustBe a [List[Iabd]]
-      val iabdsFiltered = TestEmploymentService.getRawAllowances(iabds)
-      iabdsFiltered.size mustBe 1
-      iabdsFiltered.toString() contains  ("FlatRateJobExpenses") mustBe true
-
-    }
 
     "Build employment1 from rti ,nps employment1 and Iabd data" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
@@ -513,30 +484,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.endDate mustBe None
     }
 
-    "Get CompanyBenfits from Iabd data and ignore Benefit In Kind (type 28)" in {
-
-      val iabds = iabdsBenfitInKindJsonResponse.as[List[Iabd]]
-      val companyBenefits=TestEmploymentService.getCompanyBenefits(iabds)
-      companyBenefits.size mustBe  7
-    }
-
-    "Get CompanyBenfits from Iabd data Benefit In Kind of type 28(Total Benefit In Kind)" in {
-
-      val iabds = iabdsTotalBenfitInKindJsonResponse.as[List[Iabd]]
-      val companyBenefits=TestEmploymentService.getCompanyBenefits(iabds)
-      companyBenefits.size mustBe  2
-    }
-
-    "Total Benefit In Kind  from Iabds list should return true if There is only BIK which is type 28" in {
-      val iabds = iabdsTotalBenfitInKindJsonResponse.as[List[Iabd]]
-      val bik=TestEmploymentService.isTotalBenefitInKind(iabds)
-       bik  mustBe  true
-    }
-    "Total Benefit In Kind  from Iabds list should return false if There is any BIK which is not type 28" in {
-      val iabds = iabdsBenfitInKindJsonResponse.as[List[Iabd]]
-      val bik=TestEmploymentService.isTotalBenefitInKind(iabds)
-      bik  mustBe  false
-    }
 
     "get rti payments from employment1 data" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
@@ -544,7 +491,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       paymentInfo._1 mustBe Some(BigDecimal.valueOf(20000.00))
       paymentInfo._2 mustBe Some(BigDecimal.valueOf(1880.00))
     }
-
 
     "get onlyRtiEmployments  from List of Rti employments and List Nps Employments" in {
       val rtiEmployment1 = RtiEmployment(1,"offNo1","ref1",None,Nil,Nil)
@@ -558,8 +504,11 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val npsEmployment2 = NpsEmployment(randomNino.toString(),2,"offNo2","ref2","empname2",None,false,false,LocalDate.now(),None)
       val npsEmployment3 = NpsEmployment(randomNino.toString(),3,"offNo3","ref3","empname3",None,false,false,LocalDate.now(),None)
       val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
+      val rtiData = RtiData("QQ0000002", rtiEmployments)
+      val rtiDataHelper = new RtiDataHelper(rtiData)
 
-      val onlyRtiEmployments = TestEmploymentService.onlyInRTI(rtiEmployments,npsEmployments)
+
+      val onlyRtiEmployments = rtiDataHelper.onlyInRTI(npsEmployments)
       onlyRtiEmployments.size mustBe 2
     }
 
@@ -574,9 +523,37 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val npsEmployment2 = NpsEmployment(randomNino.toString(),2,"offNo2","ref2","empname2",None,false,false,LocalDate.now(),None)
       val npsEmployment3 = NpsEmployment(randomNino.toString(),3,"offNo3","ref3","empname3",None,false,false,LocalDate.now(),None)
       val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
-
-      val onlyRtiEmployments = TestEmploymentService.onlyInRTI(rtiEmployments,npsEmployments)
+      val rtiData = RtiData("QQ0000002", rtiEmployments)
+      val rtiDataHelper = new RtiDataHelper(rtiData)
+      val onlyRtiEmployments = rtiDataHelper.onlyInRTI(npsEmployments)
       onlyRtiEmployments.size mustBe 0
+    }
+
+    "get Employments successfully" in {
+      lazy val payeJson = loadFile("/json/model/api/paye.json")
+
+      val employmentJson = Json.parse(
+        """ [
+          | {
+          |      "employmentId": "01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
+          |      "startDate": "2016-01-21",
+          |      "endDate": "2017-01-01",
+          |      "payeReference": "paye-1",
+          |      "employerName": "employer-1"
+          |    },
+          |    {
+          |      "employmentId": "019f5fee-d5e4-4f3e-9569-139b8ad81a87",
+          |      "startDate": "2016-02-22",
+          |      "payeReference": "paye-2",
+          |      "employerName": "employer-2"
+          |    }
+          |] """.stripMargin)
+
+      when(TestEmploymentService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+              .thenReturn(Future.successful(Some(payeJson)))
+
+      val result = await(TestEmploymentService.getEmployments("AA000000A", 2014))
+      result.json must be (employmentJson)
     }
   }
 }

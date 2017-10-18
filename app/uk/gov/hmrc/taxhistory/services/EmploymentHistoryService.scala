@@ -26,9 +26,10 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
+import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.api.{Allowance, CompanyBenefit, EarlierYearUpdate, PayAndTax}
+import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, EarlierYearUpdate, PayAndTax}
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 import uk.gov.hmrc.time.TaxYear
@@ -40,34 +41,47 @@ object EmploymentHistoryService extends EmploymentHistoryService {
   override def audit = new Audit(appName,MicroserviceAuditConnector)
 }
 
-trait EmploymentHistoryService extends EmploymentHistoryServiceHelper {
+trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Auditable {
   def npsConnector : NpsConnector = NpsConnector
   def rtiConnector : RtiConnector = RtiConnector
   def cacheService : TaxHistoryCacheService = TaxHistoryCacheService
 
   def getEmployments(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    val validatedNino = Nino(nino)
-    val validatedTaxYear = TaxYear(taxYear)
-
-    cacheService.getFromCache(validatedNino.nino,validatedTaxYear){
-      retrieveEmploymentsDirectFromSource(validatedNino,validatedTaxYear).map(h => {
-          Logger.warn("Refresh cached data")
-          h.json
-        })
-    }.map(js => {
+    implicit val validatedNino = Nino(nino)
+    implicit val validatedTaxYear = TaxYear(taxYear)
+    getFromCache.map(js => {
       Logger.warn("Returning js result from getEmployments")
-      HttpResponse(Status.OK,js)
+
+      val extractEmployments = js.map(json =>
+        json.\("employments").getOrElse(Json.obj())
+      )
+      HttpResponse(Status.OK, extractEmployments)
     })
+
+  }
+
+  def getFromCache(implicit validatedNino: Nino, validatedTaxYear: TaxYear, headerCarrier: HeaderCarrier) = {
+    cacheService.getFromCacheOrElse {
+      retrieveEmploymentsDirectFromSource(validatedNino, validatedTaxYear).map(h => {
+        Logger.warn("Refresh cached data")
+        h.json
+      })
+    }
   }
 
   def getAllowances(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    val allowances = List(
-                      new Allowance(
-                            iabdType = "FlatRateJobExpenses",
-                            amount=BigDecimal(11)))
-    //TODO remove mock stub allowances
-    Future.successful(HttpResponse(Status.OK,Some(Json.toJson(allowances))))
+    implicit val validatedNino = Nino(nino)
+    implicit val validatedTaxYear = TaxYear(taxYear)
+    getFromCache.map(js => {
+      Logger.warn("Returning js result from getAllowances")
+
+      val extractAllowances = js.map(json =>
+        json.\("allowances").getOrElse(Json.obj())
+      )
+      HttpResponse(Status.OK, extractAllowances)
+    })
   }
+
 
   def getPayAndTax(nino:String, taxYear:Int, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     val eyu = List(EarlierYearUpdate(

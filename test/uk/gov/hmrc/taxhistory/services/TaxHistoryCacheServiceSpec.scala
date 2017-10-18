@@ -17,16 +17,14 @@
 package uk.gov.hmrc.taxhistory.services
 
 
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Sequential}
 import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.cache.model.Cache
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.taxhistory.config.ApplicationConfig
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.services.TaxHistoryCacheService.mongoSource
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -97,13 +95,13 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
       }
 
     "When not in the mongo cache update the cache and fetch" in {
-      val nino = randomNino()
-      val year = TaxYear(2014)
-      val cacheMissUpdateAndGetFromCache = await(TestTaxHistoryCacheService.getFromCache(nino.nino,year)(toCache(nino.nino)))
+      implicit val nino = randomNino()
+      implicit val year = TaxYear(2014)
+      val cacheMissUpdateAndGetFromCache = await(TestTaxHistoryCacheService.getFromCacheOrElse(toCache(nino.nino)))
 
       cacheMissUpdateAndGetFromCache.get shouldBe someJson
 
-      val fromCache = await(TestTaxHistoryCacheService.getFromCache(nino.nino,year)(toCache(nino.nino)))
+      val fromCache = await(TestTaxHistoryCacheService.getFromCacheOrElse(toCache(nino.nino)))
 
       fromCache.get shouldBe someJson
 
