@@ -86,18 +86,20 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
 
 
   def getPayAndTax(nino:String, taxYear:Int, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    val eyu = List(EarlierYearUpdate(
-      taxablePayEYU = BigDecimal(1200),
-      taxEYU = BigDecimal(400),
-      receivedDate = new LocalDate("2015-12-29")))
-    val payAndTax = PayAndTax(
-      taxablePayTotal = Some(BigDecimal(21000.21)),
-      taxTotal = Some(BigDecimal(4000.04)),
-      earlierYearUpdates = eyu)
-    //TODO remove mock stub pay and tax
-    Future.successful(HttpResponse(Status.OK, Some(Json.toJson(payAndTax))))
-
+    implicit val validatedNino = Nino(nino)
+    implicit val validatedTaxYear = TaxYear(taxYear)
+    getFromCache.map(js => {
+      Logger.warn("Returning js result from getEmployments")
+      val extractPayAndTax = js.map(json =>
+        json.\("payAndTax").\(employmentId).getOrElse(Json.obj())
+      )
+      extractPayAndTax match {
+        case Some(emp) if emp.equals(Json.obj()) => HttpResponse(Status.NOT_FOUND, extractPayAndTax)
+        case _ => HttpResponse(Status.OK, extractPayAndTax)
+      }
+    })
   }
+
   def getCompanyBenefits(nino:String, taxYear:Int, employmentId:String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     //TODO Remove hard coding for stub company benefits
     val benefits = List(new CompanyBenefit(iabdType = "TaxableExpenseBenefit", amount=BigDecimal(666)))
