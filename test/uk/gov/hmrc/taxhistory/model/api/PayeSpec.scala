@@ -73,7 +73,7 @@ class PayeSpec extends TestUtil with UnitSpec {
   lazy val employmentList = List(employment1,employment2)
   lazy val allowanceList = List(allowance1)
   lazy val companyBenefitList = List(companyBenefit)
-  lazy val benefitsMap = Map("UUID" -> companyBenefitList)
+  lazy val benefitsMap = Map("01318d7c-bcd9-47e2-8c38-551e7ccdfae3" -> companyBenefitList)
 
  val paye = PayAsYouEarn(employmentList, allowanceList, Some(benefitsMap))
   val payeNoAllowances = PayAsYouEarn(employments=employmentList,benefits = Some(benefitsMap))
@@ -96,8 +96,6 @@ class PayeSpec extends TestUtil with UnitSpec {
     }
     "transform into Json when there are no company benefits" in {
       Json.toJson(payeNoCompanyBenefits) shouldBe payeNoCompanyBenefitsJson
-
-
     }
   }
 }

@@ -29,7 +29,7 @@ import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.api.{Allowance, CompanyBenefit, EarlierYearUpdate, PayAndTax}
+import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, EarlierYearUpdate, PayAndTax}
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 import uk.gov.hmrc.time.TaxYear
@@ -51,7 +51,11 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     implicit val validatedTaxYear = TaxYear(taxYear)
     getFromCache.map(js => {
       Logger.warn("Returning js result from getEmployments")
-      HttpResponse(Status.OK, js)
+
+      val extractEmployments = js.map(json =>
+        json.\("employments").getOrElse(Json.obj())
+      )
+      HttpResponse(Status.OK, extractEmployments)
     })
 
   }
@@ -66,12 +70,16 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
   }
 
   def getAllowances(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    val allowances = List(
-                      new Allowance(
-                            iabdType = "FlatRateJobExpenses",
-                            amount=BigDecimal(11)))
-    //TODO remove mock stub allowances
-    Future.successful(HttpResponse(Status.OK,Some(Json.toJson(allowances))))
+    implicit val validatedNino = Nino(nino)
+    implicit val validatedTaxYear = TaxYear(taxYear)
+    getFromCache.map(js => {
+      Logger.warn("Returning js result from getAllowances")
+
+      val extractAllowances = js.map(json =>
+        json.\("allowances").getOrElse(Json.obj())
+      )
+      HttpResponse(Status.OK, extractAllowances)
+    })
   }
 
 

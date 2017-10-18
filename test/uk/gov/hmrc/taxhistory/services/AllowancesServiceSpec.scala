@@ -84,9 +84,26 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val payAsYouEarn = response.json.as[PayAsYouEarn]
       val allowances = payAsYouEarn.allowances
       allowances.size mustBe 1
-
     }
 
+    "successfully retrieve allowance from cache" in {
+      lazy val payeJson = loadFile("/json/model/api/paye.json")
 
+      val allowanceJson = Json.parse(
+        """ [
+           {
+               "allowanceId": "c9923a63-4208-4e03-926d-7c7c88adc7ee",
+               "iabdType": "payeType",
+               "amount": 12
+          }
+          ] """.stripMargin)
+      when(TestEmploymentService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+        .thenReturn(Future.successful(Some(payeJson)))
+
+      val result = await(TestEmploymentService.getAllowances("AA000000A", 2014))
+      result.json must be(allowanceJson)
+
+
+    }
   }
 }

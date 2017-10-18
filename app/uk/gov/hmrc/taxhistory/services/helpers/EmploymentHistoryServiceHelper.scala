@@ -34,7 +34,7 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
     val iabdsOption = fetchResult(iabdResponse)
     val rtiOption = fetchResult(rtiResponse)
 
-    val employments = npsEmployments.map {
+    val payAsYouEarnList = npsEmployments.map {
       npsEmployment => {
         val companyBenefits = iabdsOption.map {
           iabds => {
@@ -60,7 +60,7 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
           }
         }
 
-        buildEmployment(npsEmployment = npsEmployment)
+        buildPayAsYouEarnList(rtiEmploymentsOption=rtiEmployments,iabdsOption=companyBenefits,npsEmployment = npsEmployment)
       }
     }
 
@@ -69,7 +69,13 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
       case Some(x) => new IabdsHelper(x).getAllowances()
     }
 
-    val payAsYouEarn = PayAsYouEarn(employments=employments,allowances=allowances)
+    val payAsYouEarn =  payAsYouEarnList.fold(PayAsYouEarn(allowances=allowances))((paye1, paye2) => {
+      PayAsYouEarn(employments = paye1.employments ::: paye2.employments,
+        allowances = paye1.allowances ::: paye2.allowances,
+        benefits = Some(paye1.benefits.getOrElse(Map()) ++ paye2.benefits.getOrElse(Map())),
+        payAndTax = Some(paye1.payAndTax.getOrElse(Map()) ++ paye2.payAndTax.getOrElse(Map())))
+    })
+
     httpOkPayAsYouEarnJsonPayload(payAsYouEarn)
   }
 
@@ -77,16 +83,7 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
     HttpResponse(Status.OK,Some(Json.toJson(payload)))
   }
 
-  def buildEmployment(npsEmployment: NpsEmployment): Employment = {
-    Employment(
-      employerName = npsEmployment.employerName,
-      payeReference = RtiDataHelper.getPayeRef(npsEmployment),
-      startDate = npsEmployment.startDate,
-      endDate = npsEmployment.endDate)
-  }
-
-  @Deprecated
-  def buildEmployment(rtiEmploymentsOption: Option[List[RtiEmployment]], iabdsOption: Option[List[Iabd]], npsEmployment: NpsEmployment): PayAsYouEarn = {
+  def buildPayAsYouEarnList(rtiEmploymentsOption: Option[List[RtiEmployment]], iabdsOption: Option[List[Iabd]], npsEmployment: NpsEmployment): PayAsYouEarn = {
 
     val emp = convertToEmployment(npsEmployment)
     (rtiEmploymentsOption, iabdsOption) match {
@@ -122,22 +119,14 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
      endDate = npsEmployment.endDate)
  }
 
-  def getRtiPayment(rtiEmployments: List[RtiEmployment])={
+  def getRtiPayment(rtiEmployments: List[RtiEmployment]):(Option[BigDecimal],Option[BigDecimal])={
     rtiEmployments.head.payments match {
       case Nil => (None,None)
-      case matchingPayments => {
-        val payment = matchingPayments.sorted.last
+      case matchingPayments =>
+        val payment = matchingPayments.sorted.max
         (Some(payment.taxablePayYTD), Some(payment.totalTaxYTD))
-      }
     }
   }
-
-
-
-
-
-
-
 }
 
 
