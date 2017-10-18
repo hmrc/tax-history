@@ -21,7 +21,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.model.api.{Employment, PayAsYouEarn}
+import uk.gov.hmrc.taxhistory.model.api.{Allowance, CompanyBenefit, Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps._
 
 trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
@@ -43,12 +43,10 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
         }
         val rtiEmployments = rtiOption.map {
           rtiData => {
-           val rtiDataHelper =  new RtiDataHelper(rtiData)
-
+            val rtiDataHelper =  new RtiDataHelper(rtiData)
             rtiDataHelper.auditEvent(rtiDataHelper.onlyInRTI(npsEmployments))("only-in-rti"){
               (x, y) =>   sendDataEvent(transactionName = "Paye for Agents",detail = y,eventType = x)
             }
-
             rtiDataHelper.getMatchedRtiEmployments(npsEmployment){
               rtiEmployments => {
                 rtiDataHelper.auditEvent(rtiEmployments)("miss-match"){
@@ -59,7 +57,6 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
 
           }
         }
-
         buildPayAsYouEarnList(rtiEmploymentsOption=rtiEmployments,iabdsOption=companyBenefits,npsEmployment = npsEmployment)
       }
     }
@@ -69,14 +66,18 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
       case Some(x) => new IabdsHelper(x).getAllowances()
     }
 
-    val payAsYouEarn =  payAsYouEarnList.fold(PayAsYouEarn(allowances=allowances))((paye1, paye2) => {
-      PayAsYouEarn(employments = paye1.employments ::: paye2.employments,
-        allowances = paye1.allowances ::: paye2.allowances,
-        benefits = Some(paye1.benefits.getOrElse(Map()) ++ paye2.benefits.getOrElse(Map())),
-        payAndTax = Some(paye1.payAndTax.getOrElse(Map()) ++ paye2.payAndTax.getOrElse(Map())))
-    })
+    val payAsYouEarn =  mergeIntoSinglePayAsYouEarn(payAsYouEarnList = payAsYouEarnList,allowances=allowances)
 
     httpOkPayAsYouEarnJsonPayload(payAsYouEarn)
+  }
+
+  def mergeIntoSinglePayAsYouEarn(payAsYouEarnList:List[PayAsYouEarn], allowances: List[Allowance]):PayAsYouEarn = {
+    payAsYouEarnList.fold(PayAsYouEarn(allowances=allowances))((paye1, paye2) => {
+      PayAsYouEarn(employments = paye1.employments ::: paye2.employments,
+        allowances = paye1.allowances ::: paye2.allowances,
+        benefits =  (paye1.benefits ++ paye2.benefits).reduceLeftOption((a,b)=>a++b),
+        payAndTax = (paye1.payAndTax ++ paye2.payAndTax).reduceLeftOption((a,b)=>a++b))
+    })
   }
 
   def httpOkPayAsYouEarnJsonPayload(payload: PayAsYouEarn): HttpResponse = {
@@ -88,25 +89,18 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
     val emp = convertToEmployment(npsEmployment)
     (rtiEmploymentsOption, iabdsOption) match {
 
-      case (None | Some(Nil), None | Some(Nil)) => {
-        PayAsYouEarn(employments = List(emp))
-      }
-      case (Some(Nil) | None, Some(y)) => {
-        lazy val benefits = Map(emp.employmentId.toString -> new IabdsHelper(y).getCompanyBenefits())
-        PayAsYouEarn(employments=List(emp),benefits=Some(benefits))
-      }
-      case (Some(x), Some(Nil) | None) => {
-        lazy val payAndTaxMap = Map(emp.employmentId.toString -> RtiDataHelper.convertToPayAndTax(x))
-        PayAsYouEarn(employments = List(emp),payAndTax=Some(payAndTaxMap))
-      }
-      case (Some(x), Some(y)) => {
-        lazy val payAndTaxMap = Map(emp.employmentId.toString -> RtiDataHelper.convertToPayAndTax(x))
-        lazy val benefits = Map(emp.employmentId.toString -> new IabdsHelper(y).getCompanyBenefits())
-        PayAsYouEarn(employments=List(emp),benefits=Some(benefits),payAndTax = Some(payAndTaxMap))
-      }
-      case _ => {
-        PayAsYouEarn(employments = List(emp))
-      }
+      case (None | Some(Nil), None | Some(Nil)) => PayAsYouEarn(employments = List(emp))
+      case (Some(Nil) | None, Some(y)) =>
+          val benefits = Map(emp.employmentId.toString -> new IabdsHelper(y).getCompanyBenefits())
+          PayAsYouEarn(employments=List(emp),benefits=Some(benefits))
+      case (Some(x), Some(Nil) | None) =>
+          val payAndTaxMap = Map(emp.employmentId.toString -> RtiDataHelper.convertToPayAndTax(x))
+          PayAsYouEarn(employments = List(emp),payAndTax=Some(payAndTaxMap))
+      case (Some(x), Some(y)) =>
+          val payAndTaxMap = Map(emp.employmentId.toString -> RtiDataHelper.convertToPayAndTax(x))
+          val benefits = Map(emp.employmentId.toString -> new IabdsHelper(y).getCompanyBenefits())
+          PayAsYouEarn(employments=List(emp),benefits=Some(benefits),payAndTax = Some(payAndTaxMap))
+      case _ => PayAsYouEarn(employments = List(emp))
     }
 
   }
@@ -128,5 +122,3 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
     }
   }
 }
-
-

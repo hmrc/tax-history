@@ -304,15 +304,27 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
       response.status mustBe OK
       val payAsYouEarn = response.json.as[PayAsYouEarn]
-      val employments = payAsYouEarn.employments
+      val employment = payAsYouEarn.employments.head
+      val payAndTax = payAsYouEarn.payAndTax.map(pMap => pMap.get(employment.employmentId.toString)).flatten
+      val benefits = payAsYouEarn.benefits.map(bMap => bMap.get(employment.employmentId.toString)).flatten
 
-      employments.head.employerName mustBe "Aldi"
-      employments.head.payeReference mustBe "531/J4816"
-     // employments.head.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
-     // employments.head.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
-     // employments.head.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
-      employments.head.startDate mustBe startDate
-      employments.head.endDate mustBe None
+      employment.employerName mustBe "Aldi"
+      employment.payeReference mustBe "531/J4816"
+      employment.startDate mustBe startDate
+      employment.endDate mustBe None
+      payAndTax.get.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
+      payAndTax.get.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
+      payAndTax.get.earlierYearUpdates.size mustBe 1
+      val eyu = payAndTax.get.earlierYearUpdates.head
+      eyu.taxablePayEYU mustBe BigDecimal(-600.99)
+      eyu.taxEYU mustBe BigDecimal(-10.99)
+      eyu.receivedDate mustBe new LocalDate("2016-06-01")
+      benefits.get.size mustBe 2
+      benefits.get.head.iabdType mustBe "CarFuelBenefit"
+      benefits.get.head.amount mustBe BigDecimal(100)
+      benefits.get.last.iabdType mustBe "VanBenefit"
+      benefits.get.last.amount mustBe BigDecimal(100)
+
     }
 
     "successfully exclude nps employment1 data" when {
