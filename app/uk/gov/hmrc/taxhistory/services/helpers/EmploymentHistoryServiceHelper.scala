@@ -54,10 +54,12 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
             rtiDataHelper.auditEvent(rtiDataHelper.onlyInRTI(npsEmployments))("only-in-rti"){
               (x, y) =>   sendDataEvent(transactionName = "Paye for Agents",detail = y,eventType = x)
             }
-            //auditEvent(rtiData,onlyInRTI(rtiData.employments,npsEmployments))("only-in-rti")
+
             rtiDataHelper.getMatchedRtiEmployments(npsEmployment){
-              rtiDataHelper.auditEvent(rtiDataHelper.onlyInRTI(npsEmployments))("miss-match"){
-                (x, y) =>   sendDataEvent(transactionName = "Paye for Agents",detail = y,eventType = x)
+              rtiEmployments => {
+                rtiDataHelper.auditEvent(rtiEmployments)("miss-match"){
+                  (x, y) =>   sendDataEvent(transactionName = "Paye for Agents",detail = y,eventType = x)
+                }
               }
             }
 

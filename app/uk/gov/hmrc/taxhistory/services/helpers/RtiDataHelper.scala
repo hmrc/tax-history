@@ -39,7 +39,7 @@ class RtiDataHelper(val rtiData: RtiData) extends TaxHistoryHelper {
   }
 
   def getMatchedRtiEmployments(npsEmployments: NpsEmployment)
-                              (auditEvent: =>Future[List[Unit]])(implicit headerCarrier: HeaderCarrier): List[RtiEmployment] = {
+                              (auditEvent: List[RtiEmployment]=> Future[List[Unit]])(implicit headerCarrier: HeaderCarrier): List[RtiEmployment] = {
 
     fetchFilteredList(rtiEmployments){
       (rtiEmployment) =>
@@ -58,8 +58,7 @@ class RtiDataHelper(val rtiData: RtiData) extends TaxHistoryHelper {
         subMatches match {
           case first :: Nil => List(first)
           case x  => {
-            auditEvent
-            //auditEvent(rtiData, x)("miss-match")
+            auditEvent(x)
             Nil
           }
         }

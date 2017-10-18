@@ -369,43 +369,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       }
     }
 
-    "successfully merge if there are multiple matching rti employments for a single nps employment1 but single match on currentPayId" in {
-      val rtiData = rtiPartialDuplicateEmploymentsResponse.as[RtiData]
-      val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
-       val rtiDataHelper = new RtiDataHelper(rtiData)
-      val rtiEmployments = rtiDataHelper.getMatchedRtiEmployments(npsEmployments.head){
-        Future.successful(List())
-      }
-      rtiEmployments.size mustBe 1
 
-    }
 
-    "return Nil constructed list if there are zero matching rti employments for a single nps employment1" in {
-      val rtiData = rtiNonMatchingEmploymentsResponse.as[RtiData]
-      val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
-      val rtiDataHelper = new RtiDataHelper(rtiData)
-      val rtiEmployments = rtiDataHelper.getMatchedRtiEmployments(npsEmployments.head){
-        Future.successful(List())
-      }
-      rtiEmployments.size mustBe 0
-    }
-
-    "correctly compare matching numerical taxDistrictNumbers" in {
-      TestEmploymentService.formatString("12") mustBe "12"
-    }
-    "correctly compare matching alphabetical taxDistrictNumbers" in {
-      TestEmploymentService.formatString("ABC") mustBe "ABC"
-    }
-
-    "correctly compare taxDistrictNumbers as integers if one has a leading zero" in {
-      TestEmploymentService.formatString("073") mustBe "73"
-    }
-    "not match different taxDistrictNumbers" in {
-      TestEmploymentService.formatString("330") mustBe "330"
-    }
-    "not match taxDistrictNumbers if one is blank" in {
-      TestEmploymentService.formatString("")  mustBe ""
-    }
 
     "return any non success status response from get Nps Iabds api" in {
       when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))

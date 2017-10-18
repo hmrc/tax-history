@@ -17,22 +17,14 @@
 package uk.gov.hmrc.taxhistory.services
 
 import org.joda.time.LocalDate
-import org.mockito.Matchers
-import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.{JsArray, Json}
-import play.api.test.Helpers._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.play.audit.model.Audit
+import play.api.libs.json.Json
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
-import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
-import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
-import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
+import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
-import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
@@ -75,7 +67,7 @@ class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil{
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
        val rtiDataHelper = new RtiDataHelper(rtiData)
       val rtiEmployments = rtiDataHelper.getMatchedRtiEmployments(npsEmployments.head){
-        Future.successful(List())
+        x =>  Future.successful(List())
       }
       rtiEmployments.size mustBe 1
 
@@ -86,7 +78,7 @@ class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil{
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
       val rtiDataHelper = new RtiDataHelper(rtiData)
       val rtiEmployments = rtiDataHelper.getMatchedRtiEmployments(npsEmployments.head){
-        Future.successful(List())
+       x => Future.successful(List())
       }
       rtiEmployments.size mustBe 0
     }
