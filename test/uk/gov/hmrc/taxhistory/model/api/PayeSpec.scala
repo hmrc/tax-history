@@ -96,8 +96,6 @@ class PayeSpec extends TestUtil with UnitSpec {
     }
     "transform into Json when there are no company benefits" in {
       Json.toJson(payeNoCompanyBenefits) shouldBe payeNoCompanyBenefitsJson
-
-
     }
   }
 }

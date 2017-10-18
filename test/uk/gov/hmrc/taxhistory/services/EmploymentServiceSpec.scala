@@ -28,7 +28,7 @@ import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
+import uk.gov.hmrc.taxhistory.model.api.{Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
@@ -527,6 +527,33 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val rtiDataHelper = new RtiDataHelper(rtiData)
       val onlyRtiEmployments = rtiDataHelper.onlyInRTI(npsEmployments)
       onlyRtiEmployments.size mustBe 0
+    }
+
+    "get Employments from mongo cache " in {
+      lazy val payeJson = loadFile("/json/model/api/paye.json")
+
+      val employmentJson = Json.parse(
+        """ [
+          | {
+          |      "employmentId": "01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
+          |      "startDate": "2016-01-21",
+          |      "endDate": "2017-01-01",
+          |      "payeReference": "paye-1",
+          |      "employerName": "employer-1"
+          |    },
+          |    {
+          |      "employmentId": "019f5fee-d5e4-4f3e-9569-139b8ad81a87",
+          |      "startDate": "2016-02-22",
+          |      "payeReference": "paye-2",
+          |      "employerName": "employer-2"
+          |    }
+          |] """.stripMargin)
+
+      when(TestEmploymentService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+              .thenReturn(Future.successful(Some(payeJson)))
+
+      val result = await(TestEmploymentService.getEmployments("AA000000A", 2014))
+      result.json must be (employmentJson)
     }
   }
 }

@@ -51,7 +51,11 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     implicit val validatedTaxYear = TaxYear(taxYear)
     getFromCache.map(js => {
       Logger.warn("Returning js result from getEmployments")
-      HttpResponse(Status.OK, js)
+
+      val extractEmployments = js.map(json =>
+        json.\("employments").getOrElse(Json.obj())
+      )
+      HttpResponse(Status.OK, extractEmployments)
     })
 
   }

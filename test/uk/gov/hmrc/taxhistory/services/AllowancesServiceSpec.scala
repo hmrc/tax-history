@@ -84,9 +84,6 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val payAsYouEarn = response.json.as[PayAsYouEarn]
       val allowances = payAsYouEarn.allowances
       allowances.size mustBe 1
-
     }
-
-
   }
 }
