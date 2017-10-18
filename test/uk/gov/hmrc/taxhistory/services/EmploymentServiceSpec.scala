@@ -529,7 +529,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       onlyRtiEmployments.size mustBe 0
     }
 
-    "get Employments from mongo cache " in {
+    "get Employments successfully" in {
       lazy val payeJson = loadFile("/json/model/api/paye.json")
 
       val employmentJson = Json.parse(
