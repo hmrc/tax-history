@@ -28,7 +28,7 @@ import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
+import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
@@ -396,15 +396,18 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
       val iabds = iabdsJsonResponse.as[List[Iabd]]
 
-      val employment=TestEmploymentService.buildEmployment(Some(rtiData.employments),Some(iabds), npsEmployments.head)
+      val payAsYouEarn=TestEmploymentService.buildEmployment(Some(rtiData.employments),Some(iabds), npsEmployments.head)
+      val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
-      //employment.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
-      //employment.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
-      //employment.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
-      employment.startDate mustBe startDate
-      employment.endDate mustBe None
-      //employment.companyBenefits.size mustBe  8
+      val payAndTax = payAsYouEarn.payAndTax.map(pMap => pMap.get(employment.employmentId.toString)).flatten
+      payAndTax.get.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
+      payAndTax.get.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
+      payAndTax.get.earlierYearUpdates.size mustBe 1
+      payAsYouEarn.employments.head.startDate mustBe startDate
+      payAsYouEarn.employments.head.endDate mustBe None
+      val companyBenefits = payAsYouEarn.benefits.map(bMap => bMap.get(employment.employmentId.toString)).flatten
+      companyBenefits.get.size mustBe  8
     }
 
     "Build employment1 when there is no  data for rti and Iabd" in {
@@ -412,79 +415,73 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
       val iabds = iabdsJsonResponse.as[List[Iabd]]
 
-      val employment=TestEmploymentService.buildEmployment(None,None, npsEmployments.head)
+      val payAsYouEarn=TestEmploymentService.buildEmployment(None,None, npsEmployments.head)
+      val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
-     // employment.taxablePayTotal mustBe None
-     // employment.taxTotal mustBe None
-     // employment.earlierYearUpdates mustBe List()
-     // employment.companyBenefits.size mustBe  0
       employment.startDate mustBe startDate
       employment.endDate mustBe None
+      val payAndTax = payAsYouEarn.payAndTax.map(pMap => pMap.get(employment.employmentId.toString)).flatten
+      payAndTax mustBe None
+      val companyBenefits = payAsYouEarn.benefits.map(bMap => bMap.get(employment.employmentId.toString)).flatten
+      companyBenefits mustBe  None
+
     }
     "Build employment1 when there is data for rti is Nil " in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
       val iabds = iabdsJsonResponse.as[List[Iabd]]
 
-      val employment=TestEmploymentService.buildEmployment(None,Some(iabds), npsEmployments.head)
+      val payAsYouEarn=TestEmploymentService.buildEmployment(None,Some(iabds), npsEmployments.head)
+      val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
-     // employment.taxablePayTotal mustBe None
-     // employment.taxTotal mustBe None
-     // employment.earlierYearUpdates mustBe List()
-     // employment.companyBenefits.size mustBe  8
       employment.startDate mustBe startDate
       employment.endDate mustBe None
+      val payAndTax = payAsYouEarn.payAndTax.map(pMap => pMap.get(employment.employmentId.toString)).flatten
+      payAndTax mustBe None
+      val companyBenefits = payAsYouEarn.benefits.map(bMap => bMap.get(employment.employmentId.toString)).flatten
+      companyBenefits.get.size mustBe  8
+
     }
 
-    "Build employment1 when data for rti is None or Null" in {
-      val rtiData = rtiEmploymentResponse.as[RtiData]
-      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
-      val iabds = iabdsJsonResponse.as[List[Iabd]]
-
-      val employment=TestEmploymentService.buildEmployment(None,Some(iabds), npsEmployments.head)
-      employment.employerName mustBe "Aldi"
-      employment.payeReference mustBe "0531/J4816"
-     // employment.taxablePayTotal mustBe None
-     // employment.taxTotal mustBe None
-     // employment.earlierYearUpdates mustBe List()
-     // employment.companyBenefits.size mustBe  8
-      employment.startDate mustBe startDate
-      employment.endDate mustBe None
-    }
     "Build employment1 when there is data for Iabd is None or Null" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
       val iabds = iabdsJsonResponse.as[List[Iabd]]
 
-      val employment=TestEmploymentService.buildEmployment(Some(rtiData.employments),None, npsEmployments.head)
+      val payAsYouEarn=TestEmploymentService.buildEmployment(Some(rtiData.employments),None, npsEmployments.head)
+      val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
-     // employment.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
-     // employment.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
-     // employment.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
-     // employment.companyBenefits.size mustBe  0
       employment.startDate mustBe startDate
       employment.endDate mustBe None
+      val payAndTax = payAsYouEarn.payAndTax.map(pMap => pMap.get(employment.employmentId.toString)).flatten
+      payAndTax.get.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
+      payAndTax.get.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
+      payAndTax.get.earlierYearUpdates.size mustBe 1
+      val companyBenefits = payAsYouEarn.benefits.map(bMap => bMap.get(employment.employmentId.toString)).flatten
+      companyBenefits mustBe None
+
     }
     "Build employment1 when there is no  data for Iabd" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
       val iabds = iabdsJsonResponse.as[List[Iabd]]
 
-      val employment=TestEmploymentService.buildEmployment(Some(rtiData.employments),Some(Nil), npsEmployments.head)
+      val payAsYouEarn=TestEmploymentService.buildEmployment(Some(rtiData.employments),Some(Nil), npsEmployments.head)
+      val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
-     // employment.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
-     // employment.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
-     // employment.earlierYearUpdates mustBe List(EarlierYearUpdate(-600.99,-10.99,LocalDate.parse("2016-06-01")))
-     // employment.companyBenefits.size mustBe  0
       employment.startDate mustBe startDate
       employment.endDate mustBe None
+      val payAndTax = payAsYouEarn.payAndTax.map(pMap => pMap.get(employment.employmentId.toString)).flatten
+      payAndTax.get.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
+      payAndTax.get.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
+      payAndTax.get.earlierYearUpdates.size mustBe 1
+      val companyBenefits = payAsYouEarn.benefits.map(bMap => bMap.get(employment.employmentId.toString)).flatten
+      companyBenefits mustBe  None
     }
-
-
     "get rti payments from employment1 data" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
       val paymentInfo =TestEmploymentService.getRtiPayment(rtiData.employments)

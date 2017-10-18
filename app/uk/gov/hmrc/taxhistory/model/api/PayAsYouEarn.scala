@@ -21,7 +21,8 @@ import play.api.libs.json.Json
 
 case class PayAsYouEarn(employments :List[Employment]=Nil ,
                         allowances: List[Allowance]=Nil ,
-                        benefits:Option[Map[String,List[CompanyBenefit]]]=None)
+                        benefits:Option[Map[String,List[CompanyBenefit]]]=None,
+                        payAndTax:Option[Map[String,PayAndTax]]=None)
 
 object PayAsYouEarn {
   implicit val formats = Json.format[PayAsYouEarn]
