@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
+import java.util.UUID
+
 import org.mockito.Matchers
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
@@ -31,7 +33,6 @@ import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 
 import scala.concurrent.Future
-import java.util.UUID
 
 class CompanyBenefitControllerSpec extends PlaySpec with OneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach  {
   private val mockEmploymentHistoryService = mock[EmploymentHistoryService]

@@ -17,8 +17,6 @@
 package uk.gov.hmrc.taxhistory.services.helpers
 
 
-import uk.gov.hmrc.taxhistory.auditable.Auditable
-
 import scala.util.{Failure, Success, Try}
 
 trait TaxHistoryHelper  {

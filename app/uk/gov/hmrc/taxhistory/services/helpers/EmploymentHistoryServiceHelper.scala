@@ -16,19 +16,13 @@
 
 package uk.gov.hmrc.taxhistory.services.helpers
 
-import play.Logger
 import play.api.http.Status
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.model.api.{Allowance, Employment, PayAsYouEarn}
+import uk.gov.hmrc.taxhistory.model.api.{Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps._
-import uk.gov.hmrc.taxhistory.model.taxhistory.{CompanyBenefit, EarlierYearUpdate}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
 
 trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
 
