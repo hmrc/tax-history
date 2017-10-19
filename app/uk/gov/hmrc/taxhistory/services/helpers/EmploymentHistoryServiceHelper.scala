@@ -133,15 +133,19 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
 
   def furnishEmploymentsWithGeneratedUrls(employments:List[Employment], taxYear:Int):List[Employment] = {
     employments.map(e => e.copy(
-      payAndTax = generatePayAndTaxUrl(e.employmentId,taxYear=taxYear),
-      companyBenefits = generateCompanyBenefitsUrl(e.employmentId,taxYear=taxYear)
+      payAndTaxURI = generatePayAndTaxUri(e.employmentId,taxYear=taxYear),
+      companyBenefitsURI = generateCompanyBenefitsUri(e.employmentId,taxYear=taxYear),
+      employmentURI = generateEmploymentUri(e.employmentId,taxYear=taxYear)
     ))
   }
 
-  def generatePayAndTaxUrl(employmentId:UUID, taxYear:Int):Option[String] = {
+  def generatePayAndTaxUri(employmentId:UUID, taxYear:Int):Option[String] = {
     Some(s"/$taxYear/employments/${employmentId.toString}/pay-and-tax")
   }
-  def generateCompanyBenefitsUrl(employmentId:UUID, taxYear:Int):Option[String] = {
+  def generateCompanyBenefitsUri(employmentId:UUID, taxYear:Int):Option[String] = {
     Some(s"/$taxYear/employments/${employmentId.toString}/company-benefits")
+  }
+  def generateEmploymentUri(employmentId:UUID, taxYear:Int):Option[String] = {
+    Some(s"/$taxYear/employments/${employmentId.toString}")
   }
 }

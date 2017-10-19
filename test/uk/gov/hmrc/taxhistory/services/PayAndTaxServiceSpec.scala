@@ -84,7 +84,7 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       payAndTax.size mustBe 1
     }
 
-    "successfully retrieve payAndTax from cache" in {
+    "successfully retrieve payAndTaxURI from cache" in {
       lazy val payeJson = loadFile("/json/model/api/paye.json")
 
       val payAndTaxJson = Json.parse(
@@ -101,7 +101,7 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       result.json must be(payAndTaxJson)
     }
 
-    "return not found and empty json object when failed to fetch payAndTax from cache" in {
+    "return not found and empty json object when failed to fetch payAndTaxURI from cache" in {
       lazy val payeJson = Json.obj()
 
       val payAndTaxJson  = Json.parse("""{}""".stripMargin)

@@ -429,16 +429,18 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
           |      "endDate": "2017-01-01",
           |      "payeReference": "paye-1",
           |      "employerName": "employer-1",
-          |      "companyBenefits": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits",
-          |      "payAndTax": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax"
+          |      "companyBenefitsURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits",
+          |      "payAndTaxURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax",
+          |      "employmentURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"
           |    },
           |    {
           |      "employmentId": "019f5fee-d5e4-4f3e-9569-139b8ad81a87",
           |      "startDate": "2016-02-22",
           |      "payeReference": "paye-2",
           |      "employerName": "employer-2",
-          |      "companyBenefits": "/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/company-benefits",
-          |      "payAndTax": "/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/pay-and-tax"
+          |      "companyBenefitsURI": "/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/company-benefits",
+          |      "payAndTaxURI": "/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/pay-and-tax",
+          |      "employmentURI": "/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87"
           |    }
           |] """.stripMargin)
 
@@ -472,8 +474,9 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
            |      "endDate": "2017-01-01",
            |      "payeReference": "paye-1",
            |      "employerName": "employer-1",
-           |      "companyBenefits": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits",
-           |      "payAndTax": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax"
+           |      "companyBenefitsURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits",
+           |      "payAndTaxURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax",
+           |      "employmentURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"
            |    }
            """.stripMargin)
 

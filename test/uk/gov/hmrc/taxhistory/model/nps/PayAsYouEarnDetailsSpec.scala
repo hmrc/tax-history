@@ -38,7 +38,7 @@ class PayAsYouEarnDetailsSpec extends TestUtil with UnitSpec {
     "correctly transformed to the Json " in {
       val payAsYouEarnDetailsJson = Json.toJson[PayAsYouEarnDetails](payAsYouEarnDetails)
       payAsYouEarnDetailsJson.toString() should include("employername")
-      (((payAsYouEarnDetailsJson \ "employments") (0) \ "companyBenefits") (0)).toString should include("[]")
+      (((payAsYouEarnDetailsJson \ "employments") (0) \ "companyBenefitsURI") (0)).toString should include("[]")
       payAsYouEarnDetailsJson.toString() should include("allowances")
       ((payAsYouEarnDetailsJson \ "allowances")(0)).toString should include("[]")
 
@@ -54,7 +54,7 @@ class PayAsYouEarnDetailsSpec extends TestUtil with UnitSpec {
 
         val payAsYouEarnDetailsJson = Json.toJson[PayAsYouEarnDetails](payAsYouEarnDetails)
         payAsYouEarnDetailsJson.toString() should include("employername")
-        (((payAsYouEarnDetailsJson \ "employments")(0) \ "companyBenefits")(0)).toString should include("""typeDescription":"Medical Insurance""")
+        (((payAsYouEarnDetailsJson \ "employments")(0) \ "companyBenefitsURI")(0)).toString should include("""typeDescription":"Medical Insurance""")
         payAsYouEarnDetailsJson.toString() should include("allowances")
         ((payAsYouEarnDetailsJson \ "allowances")(0)).toString should include(""""typeDescription":"FRE"""")
 
