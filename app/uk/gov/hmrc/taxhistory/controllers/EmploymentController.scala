@@ -34,6 +34,24 @@ trait EmploymentController extends AuthController {
       authorisedRelationship(nino, retrieveEmployments(nino, taxYear))
     }
   }
+  def getEmployment(nino: String, taxYear: Int,employmentId:String) = Action.async {
+    implicit request => {
+      authorisedRelationship(nino, retrieveEmployment(nino, taxYear,employmentId))
+    }
+  }
+
+  private def retrieveEmployment(nino: String,taxYear: Int,employmentId:String)(implicit hc:HeaderCarrier): Future[Result] = {
+    employmentHistoryService.getEmployment(nino, taxYear,employmentId) map {
+      response =>
+        response.status match {
+          case OK => Ok(response.body)
+          case NOT_FOUND => NotFound(response.body)
+          case BAD_REQUEST => BadRequest(response.body)
+          case SERVICE_UNAVAILABLE => ServiceUnavailable(response.body)
+          case _ => InternalServerError(response.body)
+        }
+    }
+  }
 
   private def retrieveEmployments(nino: String,taxYear: Int)(implicit hc:HeaderCarrier): Future[Result] = {
     employmentHistoryService.getEmployments(nino, taxYear) map {

@@ -19,8 +19,8 @@ package uk.gov.hmrc.taxhistory.services.helpers
 import play.Logger
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
+import uk.gov.hmrc.taxhistory.model.api.{PayAndTax,EarlierYearUpdate}
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
-import uk.gov.hmrc.taxhistory.model.taxhistory.EarlierYearUpdate
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -85,25 +85,34 @@ class RtiDataHelper(val rtiData: RtiData) extends TaxHistoryHelper {
     }
   }
 
-  def convertRtiEYUToEYU(): List[EarlierYearUpdate] = {
-    rtiEmployments.head.earlierYearUpdates.map(eyu => EarlierYearUpdate(eyu.taxablePayDelta,
-      eyu.totalTaxDelta,
-      eyu.receivedDate)).filter(x =>x.taxablePayEYU != 0 && x.taxEYU != 0)
-  }
+}
 
+object RtiDataHelper {
 
-  private def getPayeRef(npsEmployment: NpsEmployment) = {
-    npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber
-  }
-
-  def getRtiPayment(rtiEmployments: List[RtiEmployment])={
-    rtiEmployments.head.payments match {
-      case Nil => (None,None)
+  def convertToPayAndTax(rtiEmployments: List[RtiEmployment]): PayAndTax ={
+    val employment = rtiEmployments.head
+    val eyuList = convertRtiEYUToEYU(employment)
+    employment.payments match {
+      case Nil => PayAndTax(earlierYearUpdates = eyuList)
       case matchingPayments => {
-        val payment = matchingPayments.sorted.last
-        (Some(payment.taxablePayYTD), Some(payment.totalTaxYTD))
+        val payment =matchingPayments.sorted.last
+        PayAndTax(taxablePayTotal = Some(payment.taxablePayYTD),
+          taxTotal = Some(payment.totalTaxYTD),
+          earlierYearUpdates = eyuList)
       }
     }
   }
 
+  def convertRtiEYUToEYU(rtiEmployment: RtiEmployment): List[EarlierYearUpdate] = {
+    rtiEmployment.earlierYearUpdates.map(eyu => {
+      EarlierYearUpdate(
+        taxablePayEYU =  eyu.taxablePayDelta,
+        taxEYU = eyu.totalTaxDelta,
+        receivedDate = eyu.receivedDate)
+    }).filter(x =>x.taxablePayEYU != 0 && x.taxEYU != 0)
+  }
+
+  def getPayeRef(npsEmployment: NpsEmployment) = {
+    npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber
+  }
 }

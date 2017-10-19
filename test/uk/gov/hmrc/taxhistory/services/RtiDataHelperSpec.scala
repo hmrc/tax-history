@@ -85,13 +85,13 @@ class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil{
 
 
 
-    "get rti payments from employment1 data" in {
+    "get pay and tax from employment1 data" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
-      val rtiDataHelper = new RtiDataHelper(rtiData)
 
-      val paymentInfo =rtiDataHelper.getRtiPayment(rtiData.employments)
-      paymentInfo._1 mustBe Some(BigDecimal.valueOf(20000.00))
-      paymentInfo._2 mustBe Some(BigDecimal.valueOf(1880.00))
+      val payAndTax =RtiDataHelper.convertToPayAndTax(rtiData.employments)
+      payAndTax.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
+      payAndTax.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
+      payAndTax.earlierYearUpdates.size mustBe 1
     }
 
     "get onlyRtiEmployments  from List of Rti employments and List Nps Employments" in {

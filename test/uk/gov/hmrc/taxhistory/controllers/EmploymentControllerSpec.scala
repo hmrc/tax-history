@@ -134,4 +134,79 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
     }
   }
 
+  "getEmployment" must {
+
+    "respond with OK for successful get" in {
+      when(mockPlayAuthConnector.authorise(Matchers.any(),Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
+      (Matchers.any(), Matchers.any()))
+        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
+      when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
+      val result = TestEmploymentController.getEmployment(nino, 2016,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
+      status(result) must be(OK)
+    }
+
+    "respond with NOT_FOUND, for unsuccessful GET" in {
+      when(mockPlayAuthConnector.authorise(Matchers.any(),Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
+      (Matchers.any(), Matchers.any()))
+        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
+      when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(failureResponseJson))))
+      val result = TestEmploymentController.getEmployment(nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
+      status(result) must be(NOT_FOUND)
+    }
+
+    "respond with BAD_REQUEST, if HODS/Downstream sends BadRequest status" in {
+      when(mockPlayAuthConnector.authorise(Matchers.any(),Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
+      (Matchers.any(), Matchers.any()))
+        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
+      when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(errorResponseJson))))
+      val result = TestEmploymentController.getEmployment(nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
+      status(result) must be(BAD_REQUEST)
+    }
+
+    "respond with SERVICE_UNAVAILABLE, if HODS/Downstream is unavailable" in {
+      when(mockPlayAuthConnector.authorise(Matchers.any(),Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
+      (Matchers.any(), Matchers.any()))
+        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
+      when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future. successful(HttpResponse(SERVICE_UNAVAILABLE, Some(errorResponseJson))))
+      val result = TestEmploymentController.getEmployment(nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
+      status(result) must be(SERVICE_UNAVAILABLE)
+    }
+
+    "respond with InternalServerError, if HODS/Downstream  sends some server error response" in {
+      when(mockPlayAuthConnector.authorise(Matchers.any(),Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
+      (Matchers.any(),Matchers.any()))
+        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
+      when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(errorResponseJson))))
+      val result = TestEmploymentController.getEmployment(nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
+      status(result) must be(INTERNAL_SERVER_ERROR)
+    }
+
+    "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
+      when(mockPlayAuthConnector.authorise(Matchers.any(), Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
+      (Matchers.any(), Matchers.any()))
+        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(UnAuthorisedAgentEnrolments))))
+
+      when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
+      val result = TestEmploymentController.getEmployment(nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
+      status(result) must be(UNAUTHORIZED)
+    }
+
+    "respond with Unauthorised Status where affinity group is not retrieved" in {
+      when(mockPlayAuthConnector.authorise(Matchers.any(), Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
+      (Matchers.any(), Matchers.any()))
+        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](None, Enrolments(UnAuthorisedAgentEnrolments))))
+
+      when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
+      val result = TestEmploymentController.getEmployment(nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
+      status(result) must be(UNAUTHORIZED)
+    }
+  }
+
 }
