@@ -114,7 +114,7 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(TestEmploymentService.getAllowances("AA000000A", 2014))
-      result.status must be(OK)
+      result.status must be(NOT_FOUND)
       result.json must be(allowanceJson)
     }
   }

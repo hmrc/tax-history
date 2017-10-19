@@ -99,7 +99,11 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
       val extractAllowances = js.map(json =>
         json.\("allowances").getOrElse(Json.arr())
       )
-      HttpResponse(Status.OK, extractAllowances)
+
+      extractAllowances match {
+        case Some(emp) if emp.equals(Json.arr()) => HttpResponse(Status.NOT_FOUND, extractAllowances)
+        case _ => HttpResponse(Status.OK, extractAllowances)
+      }
     })
   }
 
