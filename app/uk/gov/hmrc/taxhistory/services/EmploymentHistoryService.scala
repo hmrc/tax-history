@@ -114,7 +114,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     getFromCache.map(js => {
       Logger.warn("Returning js result from getEmployments")
       val extractPayAndTax = js.map(json =>
-        json.\("payAndTax").\(employmentId).getOrElse(Json.obj())
+        (json \ "payAndTax"\ employmentId).getOrElse(Json.obj())
       )
       extractPayAndTax match {
         case Some(emp) if emp.equals(Json.obj()) => HttpResponse(Status.NOT_FOUND, extractPayAndTax)
