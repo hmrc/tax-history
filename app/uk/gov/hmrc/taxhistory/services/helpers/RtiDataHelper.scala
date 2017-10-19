@@ -103,16 +103,6 @@ object RtiDataHelper {
     }
   }
 
-  def getRtiPayment(rtiEmployments: List[RtiEmployment])={
-    rtiEmployments.head.payments match {
-      case Nil => (None,None)
-      case matchingPayments => {
-        val payment = matchingPayments.sorted.last
-        (Some(payment.taxablePayYTD), Some(payment.totalTaxYTD))
-      }
-    }
-  }
-
   def convertRtiEYUToEYU(rtiEmployment: RtiEmployment): List[EarlierYearUpdate] = {
     rtiEmployment.earlierYearUpdates.map(eyu => {
       EarlierYearUpdate(

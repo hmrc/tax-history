@@ -16,13 +16,11 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import java.util.UUID
 
-import org.joda.time.LocalDate
 import play.api.Logger
 import play.api.http.Status
 import play.api.http.Status._
-import play.api.libs.json.{JsNull, Json}
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit
@@ -31,7 +29,7 @@ import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, EarlierYearUpdate, Employment, PayAndTax}
+import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment}
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 import uk.gov.hmrc.time.TaxYear
@@ -50,31 +48,33 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
 
 
   def getEmployments(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    implicit val validatedNino = Nino(nino)
-    implicit val validatedTaxYear = TaxYear(taxYear)
+    implicit val validatedNino:Nino = Nino(nino)
+    implicit val validatedTaxYear:TaxYear = TaxYear(taxYear)
     getFromCache.map(js => {
       Logger.warn("Returning js result from getEmployment")
 
       val extractEmployments = js.map(json =>
-        json.\("employments").getOrElse(Json.obj())
+        json.\("employments").getOrElse(Json.arr())
       )
-      HttpResponse(Status.OK, extractEmployments)
-    })
 
+      extractEmployments match {
+        case Some(emp) if emp.equals(Json.arr()) => HttpResponse(Status.NOT_FOUND, extractEmployments)
+        case Some(emp) => HttpResponse(Status.OK, Some(furnishEmploymentsJsonWithGeneratedUrls(emp,taxYear=taxYear)))
+      }
+    })
   }
 
   def getEmployment(nino:String, taxYear:Int,employmentId:String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    implicit val validatedNino = Nino(nino)
-    implicit val validatedTaxYear = TaxYear(taxYear)
+    implicit val validatedNino:Nino = Nino(nino)
+    implicit val validatedTaxYear:TaxYear = TaxYear(taxYear)
     getFromCache.map(js => {
       Logger.warn("Returning js result of a Employment")
       js match {
-        case Some(jsValue) => {
+        case Some(jsValue) =>
           (jsValue \ "employments").as[List[Employment]].find(_.employmentId.toString==employmentId) match {
-            case Some(x) => HttpResponse(Status.OK,Some(Json.toJson(x)))
+            case Some(x) => HttpResponse(Status.OK,Some(Json.toJson(furnishEmploymentsWithGeneratedUrls(List(x),taxYear).head)))
             case _ => HttpResponse(Status.NOT_FOUND)
           }
-        }
         case _ => HttpResponse(Status.NOT_FOUND)
       }
     })
@@ -97,7 +97,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
       Logger.warn("Returning js result from getAllowances")
 
       val extractAllowances = js.map(json =>
-        json.\("allowances").getOrElse(Json.obj())
+        json.\("allowances").getOrElse(Json.arr())
       )
       HttpResponse(Status.OK, extractAllowances)
     })
@@ -105,18 +105,20 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
 
 
   def getPayAndTax(nino:String, taxYear:Int, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    val eyu = List(EarlierYearUpdate(
-      taxablePayEYU = BigDecimal(1200),
-      taxEYU = BigDecimal(400),
-      receivedDate = new LocalDate("2015-12-29")))
-    val payAndTax = PayAndTax(
-      taxablePayTotal = Some(BigDecimal(21000.21)),
-      taxTotal = Some(BigDecimal(4000.04)),
-      earlierYearUpdates = eyu)
-    //TODO remove mock stub pay and tax
-    Future.successful(HttpResponse(Status.OK, Some(Json.toJson(payAndTax))))
-
+    implicit val validatedNino = Nino(nino)
+    implicit val validatedTaxYear = TaxYear(taxYear)
+    getFromCache.map(js => {
+      Logger.warn("Returning js result from getEmployments")
+      val extractPayAndTax = js.map(json =>
+        json.\("payAndTax").\(employmentId).getOrElse(Json.obj())
+      )
+      extractPayAndTax match {
+        case Some(emp) if emp.equals(Json.obj()) => HttpResponse(Status.NOT_FOUND, extractPayAndTax)
+        case _ => HttpResponse(Status.OK, extractPayAndTax)
+      }
+    })
   }
+
   def getCompanyBenefits(nino:String, taxYear:Int, employmentId:String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     //TODO Remove hard coding for stub company benefits
     val benefits = List(new CompanyBenefit(iabdType = "TaxableExpenseBenefit", amount=BigDecimal(666)))

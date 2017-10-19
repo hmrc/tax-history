@@ -69,17 +69,21 @@ class PayeSpec extends TestUtil with UnitSpec {
     employerName = "employer-2",
     startDate = new LocalDate("2016-02-22")
   )
+  lazy val payAndTax = PayAndTax(
+    payAndTaxId = UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"),
+    taxablePayTotal = Some(BigDecimal(2222.22)),
+    taxTotal = Some(BigDecimal(111.11)),
+    earlierYearUpdates=Nil)
 
   lazy val employmentList = List(employment1,employment2)
   lazy val allowanceList = List(allowance1)
   lazy val companyBenefitList = List(companyBenefit)
   lazy val benefitsMap = Map("01318d7c-bcd9-47e2-8c38-551e7ccdfae3" -> companyBenefitList)
+  lazy val payAndTaxMap = Map("01318d7c-bcd9-47e2-8c38-551e7ccdfae3" -> payAndTax)
 
- val paye = PayAsYouEarn(employmentList, allowanceList, Some(benefitsMap))
+ val paye = PayAsYouEarn(employmentList, allowanceList, Some(benefitsMap), payAndTax = Some(payAndTaxMap))
   val payeNoAllowances = PayAsYouEarn(employments=employmentList,benefits = Some(benefitsMap))
   val payeNoCompanyBenefits = PayAsYouEarn(employments=employmentList)
-
-
 
   "Paye" should {
     "transform into Json from object correctly " in {

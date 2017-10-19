@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.taxhistory.services.helpers
 
+import java.util.UUID
+
 import play.api.http.Status
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
@@ -121,5 +123,25 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
         val payment = matchingPayments.sorted.max
         (Some(payment.taxablePayYTD), Some(payment.totalTaxYTD))
     }
+  }
+
+  def furnishEmploymentsJsonWithGeneratedUrls(employmentsListJson:JsValue,taxYear:Int): JsValue ={
+    val employments = employmentsListJson.as[List[Employment]]
+    val furnished = furnishEmploymentsWithGeneratedUrls(employments,taxYear)
+    Json.toJson(furnished)
+  }
+
+  def furnishEmploymentsWithGeneratedUrls(employments:List[Employment], taxYear:Int):List[Employment] = {
+    employments.map(e => e.copy(
+      payAndTax = generatePayAndTaxUrl(e.employmentId,taxYear=taxYear),
+      companyBenefits = generateCompanyBenefitsUrl(e.employmentId,taxYear=taxYear)
+    ))
+  }
+
+  def generatePayAndTaxUrl(employmentId:UUID, taxYear:Int):Option[String] = {
+    Some(s"/$taxYear/employments/${employmentId.toString}/pay-and-tax")
+  }
+  def generateCompanyBenefitsUrl(employmentId:UUID, taxYear:Int):Option[String] = {
+    Some(s"/$taxYear/employments/${employmentId.toString}/company-benefits")
   }
 }
