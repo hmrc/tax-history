@@ -16,11 +16,13 @@
 
 package uk.gov.hmrc.taxhistory.services
 
+import java.util.UUID
+
 import org.joda.time.LocalDate
 import play.api.Logger
 import play.api.http.Status
 import play.api.http.Status._
-import play.api.libs.json.Json
+import play.api.libs.json.{JsNull, Json}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit
@@ -29,7 +31,7 @@ import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, EarlierYearUpdate, PayAndTax}
+import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, EarlierYearUpdate, Employment, PayAndTax}
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 import uk.gov.hmrc.time.TaxYear
@@ -46,11 +48,12 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
   def rtiConnector : RtiConnector = RtiConnector
   def cacheService : TaxHistoryCacheService = TaxHistoryCacheService
 
+
   def getEmployments(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     implicit val validatedNino = Nino(nino)
     implicit val validatedTaxYear = TaxYear(taxYear)
     getFromCache.map(js => {
-      Logger.warn("Returning js result from getEmployments")
+      Logger.warn("Returning js result from getEmployment")
 
       val extractEmployments = js.map(json =>
         json.\("employments").getOrElse(Json.obj())
@@ -59,6 +62,24 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     })
 
   }
+
+  def getEmployment(nino:String, taxYear:Int,employmentId:String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+    implicit val validatedNino = Nino(nino)
+    implicit val validatedTaxYear = TaxYear(taxYear)
+    getFromCache.map(js => {
+      Logger.warn("Returning js result of a Employment")
+      js match {
+        case Some(jsValue) => {
+          (jsValue \ "employments").as[List[Employment]].find(_.employmentId.toString==employmentId) match {
+            case Some(x) => HttpResponse(Status.OK,Some(Json.toJson(x)))
+            case _ => HttpResponse(Status.NOT_FOUND)
+          }
+        }
+        case _ => HttpResponse(Status.NOT_FOUND)
+      }
+    })
+  }
+
 
   def getFromCache(implicit validatedNino: Nino, validatedTaxYear: TaxYear, headerCarrier: HeaderCarrier) = {
     cacheService.getFromCacheOrElse {

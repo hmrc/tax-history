@@ -542,7 +542,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     "get Employments successfully" in {
       lazy val payeJson = loadFile("/json/model/api/paye.json")
 
-      val employmentJson = Json.parse(
+      val employmentsJson = Json.parse(
         """ [
           | {
           |      "employmentId": "01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
@@ -563,7 +563,47 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
               .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(TestEmploymentService.getEmployments("AA000000A", 2014))
+      result.json must be (employmentsJson)
+    }
+
+    "get Employment successfully" in {
+      lazy val payeJson = loadFile("/json/model/api/paye.json")
+
+      val employmentJson = Json.parse(
+        """| {
+           |      "employmentId": "01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
+           |      "startDate": "2016-01-21",
+           |      "endDate": "2017-01-01",
+           |      "payeReference": "paye-1",
+           |      "employerName": "employer-1"
+           |    }
+           """.stripMargin)
+
+      when(TestEmploymentService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+        .thenReturn(Future.successful(Some(payeJson)))
+
+      val result = await(TestEmploymentService.getEmployment("AA000000A", 2014,"01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
       result.json must be (employmentJson)
+    }
+
+    "get Employment return none" in {
+      lazy val payeJson = loadFile("/json/model/api/paye.json")
+
+      val employmentJson = Json.parse(
+        """| {
+           |      "employmentId": "01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
+           |      "startDate": "2016-01-21",
+           |      "endDate": "2017-01-01",
+           |      "payeReference": "paye-1",
+           |      "employerName": "employer-1"
+           |    }
+        """.stripMargin)
+
+      when(TestEmploymentService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+        .thenReturn(Future.successful(Some(payeJson)))
+
+      val result = await(TestEmploymentService.getEmployment("AA000000A", 2014,"01318d7c-bcd9-47e2-8c38-551e7ccdfae6"))
+      result.status mustBe 404
     }
   }
 }
