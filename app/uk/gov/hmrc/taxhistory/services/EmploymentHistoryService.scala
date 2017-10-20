@@ -124,10 +124,18 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
   }
 
   def getCompanyBenefits(nino:String, taxYear:Int, employmentId:String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    //TODO Remove hard coding for stub company benefits
-    val benefits = List(new CompanyBenefit(iabdType = "TaxableExpenseBenefit", amount=BigDecimal(666)))
-    Future.successful(HttpResponse(Status.OK,Some(Json.toJson(benefits))))
-
+    implicit val validatedNino = Nino(nino)
+    implicit val validatedTaxYear = TaxYear(taxYear)
+    getFromCache.map(js => {
+      Logger.warn("Returning js result from getCompanyBenefits")
+      val extractCompanyBenefits = js.map(json =>
+        (json \ "benefits"\ employmentId).getOrElse(Json.obj())
+      )
+      extractCompanyBenefits match {
+        case Some(comBen) if comBen.equals(Json.obj()) => HttpResponse(Status.NOT_FOUND, extractCompanyBenefits)
+        case _ => HttpResponse(Status.OK, extractCompanyBenefits)
+      }
+    })
   }
 
   def retrieveEmploymentsDirectFromSource(validatedNino:Nino,validatedTaxYear:TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] ={
