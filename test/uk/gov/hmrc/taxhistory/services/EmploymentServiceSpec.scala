@@ -451,7 +451,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       result.json must be (employmentsJson)
     }
 
-    "return not found when no employment res returned from cache" in {
+    "return not found when no employment was returned from cache" in {
       lazy val payeJson = Json.parse(
         """ [
           |] """.stripMargin)
@@ -508,6 +508,35 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val result = await(TestEmploymentService.getEmployment("AA000000A", 2014,"01318d7c-bcd9-47e2-8c38-551e7ccdfae6"))
       result.status mustBe (NOT_FOUND)
 
+    }
+
+    "get company benefits from cache successfully" in {
+      lazy val payeJson = loadFile("/json/model/api/paye.json")
+
+      val companyBenefitsJson = Json.parse(
+        """| [{
+           |      "companyBenefitId": "c9923a63-4208-4e03-926d-7c7c88adc7ee",
+           |      "iabdType": "companyBenefitType",
+           |      "amount": 12
+           |    }]
+        """.stripMargin)
+
+      when(TestEmploymentService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+        .thenReturn(Future.successful(Some(payeJson)))
+
+      val result = await(TestEmploymentService.getCompanyBenefits("AA000000A", 2014, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
+      result.json must be (companyBenefitsJson)
+      result.status must be (OK)
+    }
+
+    "return not found when no company benefits returned from cache" in {
+      lazy val payeJson = loadFile("/json/model/api/payeNoCompanyBenefits.json")
+
+      when(TestEmploymentService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+        .thenReturn(Future.successful(Some(payeJson)))
+
+      val result = await(TestEmploymentService.getCompanyBenefits("AA000000A", 2014, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
+      result.status must be (NOT_FOUND)
     }
   }
 }
