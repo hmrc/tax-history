@@ -51,7 +51,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     implicit val validatedNino:Nino = Nino(nino)
     implicit val validatedTaxYear:TaxYear = TaxYear(taxYear)
     getFromCache.map(js => {
-      Logger.warn("Returning js result from getEmployment")
+      Logger.warn("Returning js result from getEmployments")
 
       val extractEmployments = js.map(json =>
         json.\("employments").getOrElse(Json.arr())
@@ -68,12 +68,15 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     implicit val validatedNino:Nino = Nino(nino)
     implicit val validatedTaxYear:TaxYear = TaxYear(taxYear)
     getFromCache.map(js => {
-      Logger.warn("Returning js result of a Employment")
+      Logger.warn("Returning js result of a getEmployment")
       js match {
         case Some(jsValue) =>
           (jsValue \ "employments").as[List[Employment]].find(_.employmentId.toString==employmentId) match {
             case Some(x) => HttpResponse(Status.OK,Some(Json.toJson(furnishEmploymentsWithGeneratedUrls(List(x),taxYear).head)))
-            case _ => HttpResponse(Status.NOT_FOUND)
+            case _ => {
+              Logger.warn("Cache has expired from mongo")
+              HttpResponse(Status.NOT_FOUND)
+            }
           }
         case _ => HttpResponse(Status.NOT_FOUND)
       }
