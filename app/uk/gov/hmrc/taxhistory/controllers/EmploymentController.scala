@@ -45,10 +45,10 @@ trait EmploymentController extends AuthController {
       response =>
         response.status match {
           case OK => Ok(response.body)
-          case NOT_FOUND => NotFound(response.body)
+          case NOT_FOUND => NotFound
           case BAD_REQUEST => BadRequest(response.body)
-          case SERVICE_UNAVAILABLE => ServiceUnavailable(response.body)
-          case _ => InternalServerError(response.body)
+          case SERVICE_UNAVAILABLE => ServiceUnavailable
+          case _ => InternalServerError
         }
     }
   }
@@ -58,10 +58,10 @@ trait EmploymentController extends AuthController {
       response =>
         response.status match {
           case OK => Ok(response.body)
-          case NOT_FOUND => NotFound(response.body)
+          case NOT_FOUND => NotFound
           case BAD_REQUEST => BadRequest(response.body)
-          case SERVICE_UNAVAILABLE => ServiceUnavailable(response.body)
-          case _ => InternalServerError(response.body)
+          case SERVICE_UNAVAILABLE => ServiceUnavailable
+          case _ => InternalServerError
         }
     }
   }
