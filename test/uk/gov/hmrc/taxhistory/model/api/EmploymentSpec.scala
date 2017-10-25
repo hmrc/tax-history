@@ -87,6 +87,19 @@ class EmploymentSpec extends TestUtil with UnitSpec {
     "allow omission of endDate in json" in {
       employmentNoEndDateJson.as[Employment] shouldBe employment2
     }
+    "enrich employment with URIs" in {
+      val taxYear = 2016
+      val enrichedEmployment = employment1.enrichWithURIs(taxYear=taxYear)
+      employment1.companyBenefitsURI shouldBe None
+      employment1.employmentURI shouldBe None
+      employment1.payAndTaxURI shouldBe None
+
+      val employmentURI = s"/$taxYear/employments/${employment1.employmentId.toString}"
+
+      enrichedEmployment.employmentURI shouldBe Some(employmentURI)
+      enrichedEmployment.companyBenefitsURI shouldBe Some(employmentURI + "/company-benefits")
+      enrichedEmployment.payAndTaxURI shouldBe Some(employmentURI + "/pay-and-tax")
+    }
 
   }
 }
