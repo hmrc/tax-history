@@ -28,7 +28,17 @@ case class Employment(employmentId:UUID = UUID.randomUUID(),
                       employerName:String,
                       companyBenefitsURI:Option[String] = None,
                       payAndTaxURI:Option[String] = None,
-                      employmentURI:Option[String] = None)
+                      employmentURI:Option[String] = None){
+
+  def enrichWithURIs(taxYear:Int):Employment = {
+    val baseURI = s"/$taxYear/employments/${employmentId.toString}"
+    this.copy(employmentURI = Some(baseURI),
+              companyBenefitsURI = Some(baseURI + "/company-benefits"),
+              payAndTaxURI=Some(baseURI + "/pay-and-tax"))
+  }
+
+
+}
 
 object Employment {
   implicit val formats = Json.format[Employment]

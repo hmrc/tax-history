@@ -125,27 +125,9 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
     }
   }
 
-  def furnishEmploymentsJsonWithGeneratedUrls(employmentsListJson:JsValue,taxYear:Int): JsValue ={
+  def enrichEmploymentsJsonWithGeneratedUrls(employmentsListJson:JsValue, taxYear:Int): JsValue ={
     val employments = employmentsListJson.as[List[Employment]]
-    val furnished = furnishEmploymentsWithGeneratedUrls(employments,taxYear)
+    val furnished = employments.map(e => e.enrichWithURIs(taxYear))
     Json.toJson(furnished)
-  }
-
-  def furnishEmploymentsWithGeneratedUrls(employments:List[Employment], taxYear:Int):List[Employment] = {
-    employments.map(e => e.copy(
-      payAndTaxURI = generatePayAndTaxUri(e.employmentId,taxYear=taxYear),
-      companyBenefitsURI = generateCompanyBenefitsUri(e.employmentId,taxYear=taxYear),
-      employmentURI = generateEmploymentUri(e.employmentId,taxYear=taxYear)
-    ))
-  }
-
-  def generatePayAndTaxUri(employmentId:UUID, taxYear:Int):Option[String] = {
-    Some(s"/$taxYear/employments/${employmentId.toString}/pay-and-tax")
-  }
-  def generateCompanyBenefitsUri(employmentId:UUID, taxYear:Int):Option[String] = {
-    Some(s"/$taxYear/employments/${employmentId.toString}/company-benefits")
-  }
-  def generateEmploymentUri(employmentId:UUID, taxYear:Int):Option[String] = {
-    Some(s"/$taxYear/employments/${employmentId.toString}")
   }
 }
