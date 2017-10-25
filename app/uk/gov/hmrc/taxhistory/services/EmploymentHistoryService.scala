@@ -59,7 +59,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
 
       extractEmployments match {
         case Some(emp) if emp.equals(Json.arr()) => HttpResponse(Status.NOT_FOUND, extractEmployments)
-        case Some(emp) => HttpResponse(Status.OK, Some(furnishEmploymentsJsonWithGeneratedUrls(emp,taxYear=taxYear)))
+        case Some(emp) => HttpResponse(Status.OK, Some(enrichEmploymentsJsonWithGeneratedUrls(emp,taxYear=taxYear)))
       }
     })
   }
@@ -72,7 +72,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
       js match {
         case Some(jsValue) =>
           (jsValue \ "employments").as[List[Employment]].find(_.employmentId.toString==employmentId) match {
-            case Some(x) => HttpResponse(Status.OK,Some(Json.toJson(furnishEmploymentsWithGeneratedUrls(List(x),taxYear).head)))
+            case Some(x) => HttpResponse(Status.OK,Some(Json.toJson(x.enrichWithURIs(taxYear))))
             case _ => HttpResponse(Status.NOT_FOUND)
           }
         case _ => HttpResponse(Status.NOT_FOUND)
