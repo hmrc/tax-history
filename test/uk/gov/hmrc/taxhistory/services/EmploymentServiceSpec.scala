@@ -63,6 +63,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                              |    "employerName": "Aldi",
                              |    "receivingJobseekersAllowance" : false,
                              |    "otherIncomeSourceIndicator" : false,
+                             |    "receivingOccupationalPension": false,
                              |    "startDate": "21/01/2015"
                              |    }]
                            """.stripMargin)
@@ -76,6 +77,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                             |    "employerName": "Aldi",
                                             |    "receivingJobseekersAllowance" : true,
                                             |    "otherIncomeSourceIndicator" : false,
+                                            |    "receivingOccupationalPension": false,
                                             |    "startDate": "21/01/2015"
                                             |    },
                                             |    {
@@ -87,6 +89,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                             |    "employerName": "Aldi",
                                             |    "receivingJobseekersAllowance" : false,
                                             |    "otherIncomeSourceIndicator" : false,
+                                            |    "receivingOccupationalPension": false,
                                             |    "startDate": "21/01/2015"
                                             |    }]
                                           """.stripMargin)
@@ -101,6 +104,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                                                   |    "employerName": "Aldi",
                                                                   |    "receivingJobseekersAllowance" : true,
                                                                   |    "otherIncomeSourceIndicator": false,
+                                                                  |    "receivingOccupationalPension": false,
                                                                   |    "startDate": "21/01/2015"
                                                                   |    },
                                                                   |    {
@@ -112,6 +116,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                                                   |    "employerName": "Aldi",
                                                                   |    "receivingJobseekersAllowance" : false,
                                                                   |    "otherIncomeSourceIndicator": true,
+                                                                  |    "receivingOccupationalPension": false,
                                                                   |    "startDate": "21/01/2015"
                                                                   |    }]
                                                                 """.stripMargin)
@@ -125,6 +130,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                                                           |    "employerName": "Aldi",
                                                                           |    "receivingJobseekersAllowance" : true,
                                                                           |    "otherIncomeSourceIndicator": false,
+                                                                          |    "receivingOccupationalPension": false,
                                                                           |    "startDate": "21/01/2015"
                                                                           |    }]
                                                                         """.stripMargin)
@@ -138,6 +144,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                                                       |    "employerName": "Aldi",
                                                                       |    "receivingJobseekersAllowance" : false,
                                                                       |     "otherIncomeSourceIndicator": true,
+                                                                      |     "receivingOccupationalPension": false,
                                                                       |    "startDate": "21/01/2015"
                                                                       |    }]
                                                                     """.stripMargin)
@@ -151,6 +158,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                             |    "employerName": "Aldi",
                                             |    "receivingJobseekersAllowance" : false,
                                             |    "otherIncomeSourceIndicator": false,
+                                            |    "receivingOccupationalPension": false,
                                             |    "startDate": "21/01/2015"
                                             |    }]
                                           """.stripMargin)

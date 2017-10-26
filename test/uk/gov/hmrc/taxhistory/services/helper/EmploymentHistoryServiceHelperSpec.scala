@@ -43,6 +43,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
                                                                  |    "employerName": "Aldi",
                                                                  |    "receivingJobseekersAllowance" : false,
                                                                  |    "otherIncomeSourceIndicator": false,
+                                                                 |    "receivingOccupationalPension": false,
                                                                  |    "startDate": "21/01/2015"
                                                                  |    }]
                                                                """.stripMargin)

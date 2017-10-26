@@ -61,6 +61,7 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                             |    "employerName": "Aldi",
                                             |    "receivingJobseekersAllowance" : false,
                                             |    "otherIncomeSourceIndicator" : false,
+                                            |    "receivingOccupationalPension": false,
                                             |    "startDate": "21/01/2015"
                                             |    }]
                                           """.stripMargin)
