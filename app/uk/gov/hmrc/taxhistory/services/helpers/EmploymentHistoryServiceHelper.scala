@@ -113,7 +113,8 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
      employerName = npsEmployment.employerName,
      payeReference = RtiDataHelper.getPayeRef(npsEmployment),
      startDate = npsEmployment.startDate,
-     endDate = npsEmployment.endDate)
+     endDate = npsEmployment.endDate,
+     receivingOccupationalPension =  npsEmployment.receivingOccupationalPension)
  }
 
   def getRtiPayment(rtiEmployments: List[RtiEmployment]):(Option[BigDecimal],Option[BigDecimal])={

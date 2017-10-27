@@ -63,7 +63,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                              |    "employerName": "Aldi",
                              |    "receivingJobseekersAllowance" : false,
                              |    "otherIncomeSourceIndicator" : false,
-                             |    "receivingOccupationalPension": false,
+                             |    "receivingOccupationalPension": true,
                              |    "startDate": "21/01/2015"
                              |    }]
                            """.stripMargin)
@@ -295,6 +295,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       employment.payeReference mustBe "531/J4816"
       employment.startDate mustBe startDate
       employment.endDate mustBe None
+      employment.receivingOccupationalPension mustBe true
       payAndTax.get.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       payAndTax.get.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       payAndTax.get.earlierYearUpdates.size mustBe 1
@@ -311,7 +312,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     }
 
     "successfully exclude nps employment1 data" when {
-      "nps receivingJobseekersAllowance is true form list of employments" in {
+      "nps receivingJobseekersAllowance is true from list of employments" in {
         when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithJobSeekerAllowance))))
         when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
@@ -326,7 +327,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         employments.size mustBe 1
       }
 
-      "nps receivingJobseekersAllowance and otherIncomeSourceIndicator is true form list of employments" in {
+      "nps receivingJobseekersAllowance and otherIncomeSourceIndicator is true from list of employments" in {
         when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithOtherIncomeSourceIndicator))))
         when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
@@ -439,7 +440,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
           |      "employerName": "employer-1",
           |      "companyBenefitsURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits",
           |      "payAndTaxURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax",
-          |      "employmentURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"
+          |      "employmentURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
+          |      "receivingOccupationalPension": false
           |    },
           |    {
           |      "employmentId": "019f5fee-d5e4-4f3e-9569-139b8ad81a87",
@@ -448,7 +450,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
           |      "employerName": "employer-2",
           |      "companyBenefitsURI": "/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/company-benefits",
           |      "payAndTaxURI": "/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/pay-and-tax",
-          |      "employmentURI": "/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87"
+          |      "employmentURI": "/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87",
+          |      "receivingOccupationalPension": false
           |    }
           |] """.stripMargin)
 
@@ -484,7 +487,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
            |      "employerName": "employer-1",
            |      "companyBenefitsURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits",
            |      "payAndTaxURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax",
-           |      "employmentURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"
+           |      "employmentURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
+           |      "receivingOccupationalPension": false
            |    }
            """.stripMargin)
 
