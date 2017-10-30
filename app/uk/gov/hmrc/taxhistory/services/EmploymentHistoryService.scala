@@ -144,17 +144,16 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
 
   def retrieveEmploymentsDirectFromSource(validatedNino:Nino,validatedTaxYear:TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] ={
     val x = for {
-      npsEmploymentsFuture <- getNpsEmployments(validatedNino, validatedTaxYear)
-    }
-      yield {
-        npsEmploymentsFuture match {
+          npsEmploymentsFuture <- getNpsEmployments(validatedNino, validatedTaxYear)
+        }yield {
+          npsEmploymentsFuture match {
           case Left(httpResponse) =>Future.successful(httpResponse)
           case Right(Nil) => Future.successful(HttpResponse(Status.NOT_FOUND, Some(Json.parse("[]"))))
           case Right(npsEmploymentList) => {
             mergeAndRetrieveEmployments(validatedNino,validatedTaxYear)(npsEmploymentList)
+            }
           }
         }
-      }
     x.flatMap(identity)
   }
 
