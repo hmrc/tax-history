@@ -28,7 +28,7 @@ import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, Employment, PayAsYouEarn}
+import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper

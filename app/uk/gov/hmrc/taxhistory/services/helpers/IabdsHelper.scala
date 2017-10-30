@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxhistory.services.helpers
 
 import play.Logger
-import uk.gov.hmrc.taxhistory.model.api.{Allowance,CompanyBenefit}
+import uk.gov.hmrc.taxhistory.model.api.{Allowance, CompanyBenefit}
 import uk.gov.hmrc.taxhistory.model.nps._
 
 class IabdsHelper(val iabds:List[Iabd]) extends TaxHistoryHelper {
