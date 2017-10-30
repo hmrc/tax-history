@@ -116,14 +116,7 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
      endDate = npsEmployment.endDate)
  }
 
-  def getRtiPayment(rtiEmployments: List[RtiEmployment]):(Option[BigDecimal],Option[BigDecimal])={
-    rtiEmployments.head.payments match {
-      case Nil => (None,None)
-      case matchingPayments =>
-        val payment = matchingPayments.sorted.max
-        (Some(payment.taxablePayYTD), Some(payment.totalTaxYTD))
-    }
-  }
+
 
   def enrichEmploymentsJsonWithGeneratedUrls(employmentsListJson:JsValue, taxYear:Int): JsValue ={
     val employments = employmentsListJson.as[List[Employment]]

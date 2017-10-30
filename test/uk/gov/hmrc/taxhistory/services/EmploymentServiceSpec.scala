@@ -375,12 +375,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
     }
 
-    "get rti payments from employment1 data" in {
-      val rtiData = rtiEmploymentResponse.as[RtiData]
-      val paymentInfo =TestEmploymentService.getRtiPayment(rtiData.employments)
-      paymentInfo._1 mustBe Some(BigDecimal.valueOf(20000.00))
-      paymentInfo._2 mustBe Some(BigDecimal.valueOf(1880.00))
-    }
 
     "get onlyRtiEmployments  from List of Rti employments and List Nps Employments" in {
       val rtiEmployment1 = RtiEmployment(1,"offNo1","ref1",None,Nil,Nil)
