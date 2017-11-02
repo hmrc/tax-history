@@ -28,7 +28,8 @@ case class Employment(employmentId:UUID = UUID.randomUUID(),
                       employerName:String,
                       companyBenefitsURI:Option[String] = None,
                       payAndTaxURI:Option[String] = None,
-                      employmentURI:Option[String] = None){
+                      employmentURI:Option[String] = None,
+                      receivingOccupationalPension: Boolean = false){
 
   def enrichWithURIs(taxYear:Int):Employment = {
     val baseURI = s"/$taxYear/employments/${employmentId.toString}"

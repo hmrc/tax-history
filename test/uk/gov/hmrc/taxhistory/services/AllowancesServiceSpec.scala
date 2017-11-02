@@ -61,6 +61,7 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                              |    "employerName": "Aldi",
                              |    "receivingJobseekersAllowance" : false,
                              |    "otherIncomeSourceIndicator" : false,
+                             |    "receivingOccupationalPension": true,
                              |    "startDate": "21/01/2015"
                              |    }]
                            """.stripMargin)

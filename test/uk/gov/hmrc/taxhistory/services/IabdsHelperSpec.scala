@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
@@ -76,6 +76,7 @@ val onlyIabdJson = """[{
                                             |    "employerName": "Aldi",
                                             |    "receivingJobseekersAllowance" : false,
                                             |    "otherIncomeSourceIndicator" : false,
+                                            |    "receivingOccupationalPension": false,
                                             |    "startDate": "21/01/2015"
                                             |    }]
                                           """.stripMargin)

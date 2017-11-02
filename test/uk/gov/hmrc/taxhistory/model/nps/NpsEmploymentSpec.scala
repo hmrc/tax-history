@@ -34,6 +34,7 @@ class NpsEmploymentSpec extends TestUtil with UnitSpec {
                              |    "employerName": "Aldi",
                              |    "receivingJobseekersAllowance" : true,
                              |    "otherIncomeSourceIndicator": true,
+                             |    "receivingOccupationalPension": true,
                              |    "startDate": "21/01/2015",
                              |    "endDate": "08/01/2016"
                              |    }
@@ -53,6 +54,7 @@ class NpsEmploymentSpec extends TestUtil with UnitSpec {
       employment.payeNumber  shouldBe "T2PP"
       employment.employerName  shouldBe "Aldi"
       employment.receivingJobSeekersAllowance shouldBe true
+      employment.receivingOccupationalPension shouldBe true
       employment.otherIncomeSourceIndicator shouldBe true
       employment.startDate shouldBe startDate
       employment.endDate shouldBe Some(endDate)
