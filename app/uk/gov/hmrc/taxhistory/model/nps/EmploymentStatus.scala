@@ -28,8 +28,6 @@ object EmploymentStatus {
 
   case object Ceased extends EmploymentStatus
 
-  case class Unknown(i: Int) extends EmploymentStatus
-
   implicit val jsonReads = {
     import play.api.libs.json.Reads.StringReads
     (__ \ "employmentStatus").read[Int].flatMap[EmploymentStatus] {
@@ -44,6 +42,5 @@ object EmploymentStatus {
       case Live => Json.obj("employmentStatus" -> 1)
       case PotentiallyCeased => Json.obj("employmentStatus" -> 2)
       case Ceased => Json.obj("employmentStatus" -> 3)
-      case Unknown(status) => Json.obj("employmentStatus" -> status)
     }
 }
