@@ -36,7 +36,7 @@ case class NpsEmployment(nino:String,
                       startDate: LocalDate,
                       endDate: Option[LocalDate] = None,
                       receivingOccupationalPension:Boolean = false,
-                      employmentStatus: EmploymentStatus = EmploymentStatus.Live
+                      employmentStatus: EmploymentStatus
                     )
 
 object NpsEmployment {

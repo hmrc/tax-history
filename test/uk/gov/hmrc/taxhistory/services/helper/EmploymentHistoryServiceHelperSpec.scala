@@ -23,7 +23,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment, PayAndTax, PayAsYouEarn}
-import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
+import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 
@@ -44,19 +44,22 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
                                                                  |    "receivingJobseekersAllowance" : false,
                                                                  |    "otherIncomeSourceIndicator": false,
                                                                  |    "receivingOccupationalPension": false,
-                                                                 |    "startDate": "21/01/2015"
+                                                                 |    "startDate": "21/01/2015",
+                                                                 |    "employmentStatus":1
                                                                  |    }]
                                                                """.stripMargin)
   lazy val rtiEmploymentResponse = loadFile("/json/rti/response/dummyRti.json")
   lazy val iabdsJsonResponse = loadFile("/json/nps/response/iabds.json")
   val startDate = new LocalDate("2015-01-21")
   lazy val employment1 = Employment(payeReference = "1234",
-                              startDate = new LocalDate("2016-10-20"),
-                              employerName = "AnEmployerName")
+    startDate = new LocalDate("2016-10-20"),
+    employerName = "AnEmployerName",
+    employmentStatus = EmploymentStatus.Live)
 
   lazy val employment2 = Employment(payeReference = "4321",
-                               startDate = new LocalDate("2015-12-01"),
-                               employerName = "AnotherEmployerName")
+    startDate = new LocalDate("2015-12-01"),
+    employerName = "AnotherEmployerName",
+    employmentStatus = EmploymentStatus.Live)
   lazy val companyBenefit = CompanyBenefit(iabdType = "type",
                                       amount = BigDecimal(123.00))
   lazy val payAndTax = PayAndTax(taxablePayTotal = Some(BigDecimal(2222.22)),

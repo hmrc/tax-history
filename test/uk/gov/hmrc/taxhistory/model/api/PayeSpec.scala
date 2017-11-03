@@ -37,6 +37,7 @@ import java.util.UUID
 import org.joda.time.LocalDate
 import play.api.libs.json.Json
 import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 class PayeSpec extends TestUtil with UnitSpec {
@@ -61,13 +62,15 @@ class PayeSpec extends TestUtil with UnitSpec {
     payeReference = "paye-1",
     employerName = "employer-1",
     startDate = new LocalDate("2016-01-21"),
-    endDate = Some(new LocalDate("2017-01-01"))
+    endDate = Some(new LocalDate("2017-01-01")),
+    employmentStatus = EmploymentStatus.Live
   )
   lazy val employment2 = Employment(
     employmentId = UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
     payeReference = "paye-2",
     employerName = "employer-2",
-    startDate = new LocalDate("2016-02-22")
+    startDate = new LocalDate("2016-02-22"),
+    employmentStatus = EmploymentStatus.Live
   )
   lazy val payAndTax = PayAndTax(
     payAndTaxId = UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"),

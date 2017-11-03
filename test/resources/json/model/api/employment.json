@@ -4,5 +4,6 @@
   "employerName": "employer-1",
   "startDate": "2016-01-21",
   "endDate": "2017-01-01",
-  "receivingOccupationalPension": false
+  "receivingOccupationalPension": false,
+  "employmentStatus":1
 }

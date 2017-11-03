@@ -19,7 +19,10 @@ package uk.gov.hmrc.taxhistory.model.api
 import java.util.UUID
 
 import org.joda.time.LocalDate
-import play.api.libs.json.Json
+import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads._
+import play.api.libs.json.{JsPath, Reads, Writes}
+import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 
 case class Employment(employmentId:UUID = UUID.randomUUID(),
                       startDate:LocalDate,
@@ -29,7 +32,8 @@ case class Employment(employmentId:UUID = UUID.randomUUID(),
                       companyBenefitsURI:Option[String] = None,
                       payAndTaxURI:Option[String] = None,
                       employmentURI:Option[String] = None,
-                      receivingOccupationalPension: Boolean = false){
+                      receivingOccupationalPension: Boolean = false,
+                      employmentStatus: EmploymentStatus){
 
   def enrichWithURIs(taxYear:Int):Employment = {
     val baseURI = s"/$taxYear/employments/${employmentId.toString}"
@@ -37,10 +41,35 @@ case class Employment(employmentId:UUID = UUID.randomUUID(),
               companyBenefitsURI = Some(baseURI + "/company-benefits"),
               payAndTaxURI=Some(baseURI + "/pay-and-tax"))
   }
-
-
 }
 
 object Employment {
-  implicit val formats = Json.format[Employment]
+
+  implicit val jsonReads :Reads[Employment]= (
+    (JsPath \ "employmentId").read[UUID] and
+      (JsPath \ "startDate").read[LocalDate] and
+      (JsPath \ "endDate").readNullable[LocalDate] and
+      (JsPath \ "payeReference").read[String] and
+      (JsPath \ "employerName").read[String] and
+      (JsPath \ "companyBenefitsURI").readNullable[String] and
+      (JsPath \ "payAndTaxURI").readNullable[String] and
+      (JsPath \ "employmentURI").readNullable[String] and
+      (JsPath \ "receivingOccupationalPension").read[Boolean] and
+      JsPath.read[EmploymentStatus]
+    ) (Employment.apply _)
+
+
+  implicit val locationWrites: Writes[Employment] = (
+    (JsPath \ "employmentId").write[UUID] and
+      (JsPath \ "startDate").write[LocalDate] and
+      (JsPath \ "endDate").writeNullable[LocalDate] and
+      (JsPath \ "payeReference").write[String] and
+      (JsPath \ "employerName").write[String] and
+      (JsPath \ "companyBenefitsURI").writeNullable[String] and
+      (JsPath \ "payAndTaxURI").writeNullable[String] and
+      (JsPath \ "employmentURI").writeNullable[String] and
+      (JsPath \ "receivingOccupationalPension").write[Boolean] and
+      JsPath.write[EmploymentStatus]
+    )(unlift(Employment.unapply))
+
 }

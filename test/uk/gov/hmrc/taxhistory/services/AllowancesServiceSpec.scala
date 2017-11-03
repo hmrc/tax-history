@@ -62,6 +62,7 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                              |    "receivingJobseekersAllowance" : false,
                              |    "otherIncomeSourceIndicator" : false,
                              |    "receivingOccupationalPension": true,
+                             |    "employmentStatus": 1,
                              |    "startDate": "21/01/2015"
                              |    }]
                            """.stripMargin)

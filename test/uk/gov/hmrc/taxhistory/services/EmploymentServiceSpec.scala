@@ -29,7 +29,7 @@ import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, Employment, PayAsYouEarn}
-import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
+import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
 import uk.gov.hmrc.time.TaxYear
@@ -64,7 +64,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                              |    "receivingJobseekersAllowance" : false,
                              |    "otherIncomeSourceIndicator" : false,
                              |    "receivingOccupationalPension": true,
-                             |    "startDate": "21/01/2015"
+                             |    "startDate": "21/01/2015",
+                             |    "employmentStatus":1
                              |    }]
                            """.stripMargin)
 
@@ -78,7 +79,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                             |    "receivingJobseekersAllowance" : true,
                                             |    "otherIncomeSourceIndicator" : false,
                                             |    "receivingOccupationalPension": false,
-                                            |    "startDate": "21/01/2015"
+                                            |    "startDate": "21/01/2015",
+                                            |    "employmentStatus":1
                                             |    },
                                             |    {
                                             |    "nino": "AA000000",
@@ -90,7 +92,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                             |    "receivingJobseekersAllowance" : false,
                                             |    "otherIncomeSourceIndicator" : false,
                                             |    "receivingOccupationalPension": false,
-                                            |    "startDate": "21/01/2015"
+                                            |    "startDate": "21/01/2015",
+                                            |    "employmentStatus":1
                                             |    }]
                                           """.stripMargin)
 
@@ -105,7 +108,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                                                   |    "receivingJobseekersAllowance" : true,
                                                                   |    "otherIncomeSourceIndicator": false,
                                                                   |    "receivingOccupationalPension": false,
-                                                                  |    "startDate": "21/01/2015"
+                                                                  |    "startDate": "21/01/2015",
+                                                                  |    "employmentStatus":1
                                                                   |    },
                                                                   |    {
                                                                   |    "nino": "AA000000",
@@ -117,7 +121,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                                                   |    "receivingJobseekersAllowance" : false,
                                                                   |    "otherIncomeSourceIndicator": true,
                                                                   |    "receivingOccupationalPension": false,
-                                                                  |    "startDate": "21/01/2015"
+                                                                  |    "startDate": "21/01/2015",
+                                                                  |    "employmentStatus":1
                                                                   |    }]
                                                                 """.stripMargin)
 
@@ -131,7 +136,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                                                           |    "receivingJobseekersAllowance" : true,
                                                                           |    "otherIncomeSourceIndicator": false,
                                                                           |    "receivingOccupationalPension": false,
-                                                                          |    "startDate": "21/01/2015"
+                                                                          |    "startDate": "21/01/2015",
+                                                                          |    "employmentStatus":1
                                                                           |    }]
                                                                         """.stripMargin)
 
@@ -145,7 +151,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                                                       |    "receivingJobseekersAllowance" : false,
                                                                       |     "otherIncomeSourceIndicator": true,
                                                                       |     "receivingOccupationalPension": false,
-                                                                      |    "startDate": "21/01/2015"
+                                                                      |    "startDate": "21/01/2015",
+                                                                      |    "employmentStatus":1
                                                                       |    }]
                                                                     """.stripMargin)
 
@@ -159,7 +166,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                             |    "receivingJobseekersAllowance" : false,
                                             |    "otherIncomeSourceIndicator": false,
                                             |    "receivingOccupationalPension": false,
-                                            |    "startDate": "21/01/2015"
+                                            |    "startDate": "21/01/2015",
+                                            |    "employmentStatus":1
                                             |    }]
                                           """.stripMargin)
 
@@ -399,9 +407,9 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
       val rtiEmployments = List(rtiEmployment1,rtiEmployment2,rtiEmployment3,rtiEmployment4)
 
-      val npsEmployment1 = NpsEmployment(randomNino.toString(),1,"offNo1","ref1","empname1",None,false,false,LocalDate.now(),None)
-      val npsEmployment2 = NpsEmployment(randomNino.toString(),2,"offNo2","ref2","empname2",None,false,false,LocalDate.now(),None)
-      val npsEmployment3 = NpsEmployment(randomNino.toString(),3,"offNo3","ref3","empname3",None,false,false,LocalDate.now(),None)
+      val npsEmployment1 = NpsEmployment(randomNino.toString(),1,"offNo1","ref1","empname1",None,false,false,LocalDate.now(),None, false, EmploymentStatus.Live)
+      val npsEmployment2 = NpsEmployment(randomNino.toString(),2,"offNo2","ref2","empname2",None,false,false,LocalDate.now(),None, false, EmploymentStatus.Live)
+      val npsEmployment3 = NpsEmployment(randomNino.toString(),3,"offNo3","ref3","empname3",None,false,false,LocalDate.now(),None, false, EmploymentStatus.Live)
       val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
       val rtiData = RtiData("QQ0000002", rtiEmployments)
       val rtiDataHelper = new RtiDataHelper(rtiData)
@@ -417,9 +425,9 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
       val rtiEmployments = List(rtiEmployment1,rtiEmployment2,rtiEmployment3)
 
-      val npsEmployment1 = NpsEmployment(randomNino.toString(),1,"offNo1","ref1","empname1",None,false,false,LocalDate.now(),None)
-      val npsEmployment2 = NpsEmployment(randomNino.toString(),2,"offNo2","ref2","empname2",None,false,false,LocalDate.now(),None)
-      val npsEmployment3 = NpsEmployment(randomNino.toString(),3,"offNo3","ref3","empname3",None,false,false,LocalDate.now(),None)
+      val npsEmployment1 = NpsEmployment(randomNino.toString(),1,"offNo1","ref1","empname1",None,false,false,LocalDate.now(),None, false, EmploymentStatus.Live)
+      val npsEmployment2 = NpsEmployment(randomNino.toString(),2,"offNo2","ref2","empname2",None,false,false,LocalDate.now(),None, false, EmploymentStatus.Live)
+      val npsEmployment3 = NpsEmployment(randomNino.toString(),3,"offNo3","ref3","empname3",None,false,false,LocalDate.now(),None, false, EmploymentStatus.Live)
       val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
       val rtiData = RtiData("QQ0000002", rtiEmployments)
       val rtiDataHelper = new RtiDataHelper(rtiData)
@@ -441,7 +449,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
           |      "companyBenefitsURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits",
           |      "payAndTaxURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax",
           |      "employmentURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
-          |      "receivingOccupationalPension": false
+          |      "receivingOccupationalPension": false,
+          |      "employmentStatus":1
           |    },
           |    {
           |      "employmentId": "019f5fee-d5e4-4f3e-9569-139b8ad81a87",
@@ -451,7 +460,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
           |      "companyBenefitsURI": "/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/company-benefits",
           |      "payAndTaxURI": "/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/pay-and-tax",
           |      "employmentURI": "/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87",
-          |      "receivingOccupationalPension": false
+          |      "receivingOccupationalPension": false,
+          |      "employmentStatus":1
           |    }
           |] """.stripMargin)
 
@@ -488,7 +498,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
            |      "companyBenefitsURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits",
            |      "payAndTaxURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax",
            |      "employmentURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
-           |      "receivingOccupationalPension": false
+           |      "receivingOccupationalPension": false,
+           |      "employmentStatus":1
            |    }
            """.stripMargin)
 
