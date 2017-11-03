@@ -15,6 +15,7 @@
  */
 
 package uk.gov.hmrc.taxhistory.model.nps
+
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
 
@@ -23,17 +24,18 @@ sealed trait EmploymentStatus
 object EmploymentStatus {
 
   case object Live extends EmploymentStatus
-
   case object PotentiallyCeased extends EmploymentStatus
-
   case object Ceased extends EmploymentStatus
 
+  val LIVE = 1
+  val POTENTIALLYCEASED = 2
+  val CEASED = 3
+
   implicit val jsonReads = {
-    import play.api.libs.json.Reads.StringReads
     (__ \ "employmentStatus").read[Int].flatMap[EmploymentStatus] {
-      case 1 => Reads(_ => JsSuccess(Live))
-      case 2 => Reads(_ => JsSuccess(PotentiallyCeased))
-      case 3 => Reads(_ => JsSuccess(Ceased))
+      case LIVE => Reads(_ => JsSuccess(Live))
+      case POTENTIALLYCEASED => Reads(_ => JsSuccess(PotentiallyCeased))
+      case CEASED => Reads(_ => JsSuccess(Ceased))
       case _ => Reads(_ => JsError(JsPath \ "employmentStatus", ValidationError("Invalid EmploymentStatus")))
     }
   }
