@@ -27,9 +27,9 @@ object EmploymentStatus {
   case object PotentiallyCeased extends EmploymentStatus
   case object Ceased extends EmploymentStatus
 
-  val LIVE = 1
-  val POTENTIALLYCEASED = 2
-  val CEASED = 3
+  private val LIVE = 1
+  private val POTENTIALLYCEASED = 2
+  private val CEASED = 3
 
   implicit val jsonReads = {
     (__ \ "employmentStatus").read[Int].flatMap[EmploymentStatus] {
