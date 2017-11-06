@@ -28,6 +28,7 @@ class NpsEmploymentSpec extends TestUtil with UnitSpec {
   val employmentResponse = """ {
                              |    "nino": "AA000000",
                              |    "sequenceNumber": 6,
+                             |    "employmentStatus": 1,
                              |    "worksNumber": "00191048716",
                              |    "taxDistrictNumber": "846",
                              |    "payeNumber": "T2PP",
@@ -58,6 +59,7 @@ class NpsEmploymentSpec extends TestUtil with UnitSpec {
       employment.otherIncomeSourceIndicator shouldBe true
       employment.startDate shouldBe startDate
       employment.endDate shouldBe Some(endDate)
+      employment.employmentStatus shouldBe EmploymentStatus.Live
     }
 
     "Multiple NpsEmployments Json" should {

@@ -37,6 +37,7 @@ import java.util.UUID
 import org.joda.time.LocalDate
 import play.api.libs.json.Json
 import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 class EmploymentSpec extends TestUtil with UnitSpec {
@@ -45,18 +46,21 @@ class EmploymentSpec extends TestUtil with UnitSpec {
   lazy val employmentNoEndDateJson = loadFile("/json/model/api/employmentNoEndDate.json")
   lazy val employmentListJson = loadFile("/json/model/api/employments.json")
 
-  lazy val employment1 =  Employment(
-      employmentId = UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
-      payeReference = "paye-1",
-      employerName = "employer-1",
-      startDate = new LocalDate("2016-01-21"),
-      endDate = Some(new LocalDate("2017-01-01"))
-    )
+  lazy val employment1 = Employment(
+    employmentId = UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
+    startDate = new LocalDate("2016-01-21"),
+    endDate = Some(new LocalDate("2017-01-01")),
+    payeReference = "paye-1",
+    employerName = "employer-1",
+    employmentStatus = EmploymentStatus.Live
+  )
+
   lazy val employment2 = Employment(
     employmentId = UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
     payeReference = "paye-2",
     employerName = "employer-2",
-    startDate = new LocalDate("2016-02-22")
+    startDate = new LocalDate("2016-02-22"),
+    employmentStatus = EmploymentStatus.Live
   )
 
   lazy val employmentList = List(employment1,employment2)
@@ -73,7 +77,8 @@ class EmploymentSpec extends TestUtil with UnitSpec {
       val emp = Employment(payeReference = "paye-1",
         employerName = "employer-1",
         startDate = new LocalDate("2016-01-21"),
-        endDate = Some(new LocalDate("2017-01-01"))
+        endDate = Some(new LocalDate("2017-01-01")),
+        employmentStatus = EmploymentStatus.Live
       )
       emp.employmentId.toString.nonEmpty shouldBe true
       emp.employmentId shouldNot be(employment1.employmentId)

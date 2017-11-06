@@ -62,7 +62,8 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                             |    "receivingJobseekersAllowance" : false,
                                             |    "otherIncomeSourceIndicator" : false,
                                             |    "receivingOccupationalPension": false,
-                                            |    "startDate": "21/01/2015"
+                                            |    "startDate": "21/01/2015",
+                                            |    "employmentStatus":1
                                             |    }]
                                           """.stripMargin)
 

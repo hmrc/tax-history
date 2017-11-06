@@ -77,7 +77,8 @@ val onlyIabdJson = """[{
                                             |    "receivingJobseekersAllowance" : false,
                                             |    "otherIncomeSourceIndicator" : false,
                                             |    "receivingOccupationalPension": false,
-                                            |    "startDate": "21/01/2015"
+                                            |    "startDate": "21/01/2015",
+                                            |    "employmentStatus":1
                                             |    }]
                                           """.stripMargin)
 
