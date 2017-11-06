@@ -20,7 +20,7 @@ package uk.gov.hmrc.taxhistory.services
 import play.api.Logger
 import play.api.http.Status
 import play.api.http.Status._
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit
@@ -29,7 +29,7 @@ import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment}
+import uk.gov.hmrc.taxhistory.model.api.Employment
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 import uk.gov.hmrc.time.TaxYear
@@ -144,17 +144,16 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
 
   def retrieveEmploymentsDirectFromSource(validatedNino:Nino,validatedTaxYear:TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] ={
     val x = for {
-      npsEmploymentsFuture <- getNpsEmployments(validatedNino, validatedTaxYear)
-    }
-      yield {
-        npsEmploymentsFuture match {
+          npsEmploymentsFuture <- getNpsEmployments(validatedNino, validatedTaxYear)
+        }yield {
+          npsEmploymentsFuture match {
           case Left(httpResponse) =>Future.successful(httpResponse)
           case Right(Nil) => Future.successful(HttpResponse(Status.NOT_FOUND, Some(Json.parse("[]"))))
           case Right(npsEmploymentList) => {
             mergeAndRetrieveEmployments(validatedNino,validatedTaxYear)(npsEmploymentList)
+            }
           }
         }
-      }
     x.flatMap(identity)
   }
 
