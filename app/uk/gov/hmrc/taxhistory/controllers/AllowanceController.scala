@@ -40,7 +40,7 @@ trait AllowanceController extends AuthController {
       response =>
         response.status match {
           case OK => Ok(response.body)
-          case NOT_FOUND => NotFound
+          case NOT_FOUND => NotFound(response.body)
           case BAD_REQUEST => BadRequest(response.body)
           case SERVICE_UNAVAILABLE => ServiceUnavailable
           case _ => InternalServerError
