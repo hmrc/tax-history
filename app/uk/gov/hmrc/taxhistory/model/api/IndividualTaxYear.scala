@@ -19,8 +19,8 @@ package uk.gov.hmrc.taxhistory.model.api
 import play.api.libs.json.Json
 
 case class IndividualTaxYear(year:Int,
-                             allowanceURI:String,
-                             employmentURI:String)
+                             allowancesURI:String,
+                             employmentsURI:String)
 
 object IndividualTaxYear {
   implicit val formats = Json.format[IndividualTaxYear]

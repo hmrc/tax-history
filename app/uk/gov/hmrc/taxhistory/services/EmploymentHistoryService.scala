@@ -29,7 +29,7 @@ import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.api.Employment
+import uk.gov.hmrc.taxhistory.model.api.{Employment, IndividualTaxYear}
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 import uk.gov.hmrc.time.TaxYear
@@ -125,6 +125,20 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
         case _ => HttpResponse(Status.OK, extractPayAndTax)
       }
     })
+  }
+
+  def getTaxYears(nino: String) (implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+
+    val taxYearList = List(TaxYear.current.back(1),
+                           TaxYear.current.back(2),
+                           TaxYear.current.back(3),
+                           TaxYear.current.back(4))
+
+    val taxYears = taxYearList.map(year => IndividualTaxYear(year = year.startYear,
+                                                             allowancesURI = s"/${year.startYear}/allowances",
+                                                             employmentsURI = s"/${year.startYear}/employments"))
+
+    Future.successful(HttpResponse(Status.OK, Some(Json.toJson(taxYears))))
   }
 
   def getCompanyBenefits(nino:String, taxYear:Int, employmentId:String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
