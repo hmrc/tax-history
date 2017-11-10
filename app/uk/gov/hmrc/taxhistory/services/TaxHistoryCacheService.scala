@@ -36,7 +36,7 @@ trait TaxHistoryCacheService extends MongoDbConnection{
   }
 
    def findById(id: String, taxYear: Int): Future[Option[JsValue]] = {
-    cacheRepository.findById(Id(id)).map(_.flatMap(_.data).map(_ \ taxYear.toString).map(_.get))
+    cacheRepository.findById(Id(id)).map(_.flatMap(_.data).map(_ \ taxYear.toString).flatMap(_.toOption))
   }
 
   def getFromCacheOrElse(toCache : => Future[JsValue])(implicit nino: Nino, year: TaxYear): Future[Option[JsValue]] = {
