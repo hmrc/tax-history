@@ -45,8 +45,6 @@ trait TaxHistoryCacheService extends MongoDbConnection{
       case _ => toCache.flatMap(js => createOrUpdate(nino.nino,year.currentYear.toString,js))
     }
   }
-
-
 }
 
 object TaxHistoryCacheService extends TaxHistoryCacheService {

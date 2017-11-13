@@ -31,7 +31,7 @@ trait CompanyBenefitController extends AuthController {
 
   def getCompanyBenefits(nino: String, taxYear: Int, employmentId:String) = Action.async {
     implicit request => {
-      authorisedRelationship(nino, retrieveCompanyBenefits(nino, taxYear, employmentId))
+      authorisedRelationship(nino, _ => retrieveCompanyBenefits(nino, taxYear, employmentId))
     }
   }
 

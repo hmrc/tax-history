@@ -31,12 +31,12 @@ trait EmploymentController extends AuthController {
 
   def getEmployments(nino: String, taxYear: Int) = Action.async {
     implicit request => {
-      authorisedRelationship(nino, retrieveEmployments(nino, taxYear))
+      authorisedRelationship(nino, _ => retrieveEmployments(nino, taxYear))
     }
   }
   def getEmployment(nino: String, taxYear: Int,employmentId:String) = Action.async {
     implicit request => {
-      authorisedRelationship(nino, retrieveEmployment(nino, taxYear,employmentId))
+      authorisedRelationship(nino, _ =>retrieveEmployment(nino, taxYear,employmentId))
     }
   }
 

@@ -31,7 +31,7 @@ trait AllowanceController extends AuthController {
 
   def getAllowances(nino: String, taxYear: Int) = Action.async {
     implicit request => {
-      authorisedRelationship(nino, retrieveAllowances(nino, taxYear))
+      authorisedRelationship(nino, _ => retrieveAllowances(nino, taxYear))
     }
   }
 
