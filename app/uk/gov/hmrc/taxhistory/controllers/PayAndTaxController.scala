@@ -31,7 +31,7 @@ trait PayAndTaxController extends AuthController {
 
   def getPayAndTax(nino: String, taxYear: Int, employmentId: String) = Action.async {
     implicit request => {
-      authorisedRelationship(nino, retrievePayAndTax(nino, taxYear, employmentId))
+      authorisedRelationship(nino, _ => retrievePayAndTax(nino, taxYear, employmentId))
     }
   }
 

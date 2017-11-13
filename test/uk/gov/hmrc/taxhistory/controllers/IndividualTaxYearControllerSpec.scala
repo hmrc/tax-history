@@ -29,6 +29,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.play.audit.model.{Audit, DataEvent}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 
@@ -39,6 +40,10 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
   private val mockEmploymentHistoryService = mock[EmploymentHistoryService]
   private val mockPlayAuthConnector = mock[PlayAuthConnector]
   private val nino =randomNino.toString()
+  object MockAudit extends Audit("mockApp", null) {
+    override def sendDataEvent: (DataEvent) => Unit =
+      _ => {}
+  }
   private lazy val successResponseJson = Json.parse( """{"test":"OK"}""")
   private val failureResponseJson = Json.parse( """{"reason":"Resource not found"}""")
   private val errorResponseJson = Json.parse( """{"reason":"Some error."}""")
@@ -59,6 +64,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
   object TestIndividualTaxYearController extends IndividualTaxYearController {
     override def employmentHistoryService: EmploymentHistoryService = mockEmploymentHistoryService
     override def authConnector: AuthConnector = mockPlayAuthConnector
+    override def audit = MockAudit
   }
 
   "getTaxYears" must {

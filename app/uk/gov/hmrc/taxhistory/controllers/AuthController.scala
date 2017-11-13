@@ -41,7 +41,7 @@ trait AuthController extends BaseController with AuthorisedFunctions {
     arn
   }
 
-  def authorisedRelationship(nino:String, action: => Future[Result])(implicit hc:HeaderCarrier) : Future[Result]= {
+  def authorisedRelationship(nino:String, action:(Option[String]) => Future[Result])(implicit hc:HeaderCarrier) : Future[Result]= {
 
     authorised(AgentEnrolmentForPAYE.withIdentifier("MTDITID", nino) and AuthProviderAgents).retrieve(affinityGroupAllEnrolls) {
 
@@ -50,7 +50,7 @@ trait AuthController extends BaseController with AuthorisedFunctions {
         Logger.info("allEnrols " + allEnrols)
         Logger.info("affinityGroup " + affinityG)
         (isAgent(affinityG), extractArn(allEnrols.enrolments)) match {
-          case (true, Some(arn)) => action
+          case (true, Some(arn)) => action(Some(arn))
           case _ => Future.successful(Unauthorized("Not Authorised"))
         }
       case _ => {

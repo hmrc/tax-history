@@ -16,30 +16,38 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
+import play.api.Logger
 import play.api.mvc.{Action, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxhistory.TaxHistoryAuthConnector
+import uk.gov.hmrc.play.audit.model.Audit
+import uk.gov.hmrc.taxhistory.{MicroserviceAuditConnector, TaxHistoryAuthConnector}
+import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait IndividualTaxYearController extends AuthController {
+trait IndividualTaxYearController extends AuthController with Auditable {
 
   def employmentHistoryService: EmploymentHistoryService = EmploymentHistoryService
 
   def getTaxYears(nino: String) = Action.async {
     implicit request => {
-      authorisedRelationship(nino, retrieveTaxYears(nino))
+      authorisedRelationship(nino, data =>retrieveTaxYears(nino, data.getOrElse("")))
     }
   }
 
-  private def retrieveTaxYears(nino: String)(implicit hc:HeaderCarrier): Future[Result] = {
+  private def retrieveTaxYears(nino: String, arn: String)(implicit hc:HeaderCarrier): Future[Result] = {
     employmentHistoryService.getTaxYears(nino = nino) map {
       response =>
         response.status match {
-          case OK => Ok(response.body)
+          case OK => {
+            sendDataEvent(transactionName = "Agent Client View",
+              detail=  Map("ARN" -> arn, "NINO" -> nino),
+              eventType = "AgentClientViews" )
+            Ok(response.body)
+          }
           case _ => InternalServerError
         }
     }
@@ -48,5 +56,6 @@ trait IndividualTaxYearController extends AuthController {
 
 object IndividualTaxYearController extends IndividualTaxYearController {
   override def authConnector: AuthConnector = TaxHistoryAuthConnector
+  override def audit = new Audit(appName, MicroserviceAuditConnector)
 }
 
