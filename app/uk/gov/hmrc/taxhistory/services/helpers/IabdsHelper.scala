@@ -62,7 +62,9 @@ class IabdsHelper(val iabds:List[Iabd]) extends TaxHistoryHelper {
             Logger.warn("Iabds grossAmount is blank")
             BigDecimal(0)
           }(x => x),
-          iabdType = iabd.`type`.toString)
+          iabdType = iabd.`type`.toString,
+          source = iabd.source
+        )
     }
   }
 
