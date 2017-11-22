@@ -120,10 +120,6 @@ val onlyIabdJson = """[{
 
     }
 
-
-
-
-
     "Return a matched iabds  from  List of employments" in {
       val iabds = iabdsJsonResponse.as[List[Iabd]]
       val iabdsHelper = new IabdsHelper(iabds)
@@ -146,6 +142,10 @@ val onlyIabdJson = """[{
 
       val companyBenefits=iabdsHelper.getCompanyBenefits()
       companyBenefits.size mustBe  7
+      val companyBenefit1 = companyBenefits.head
+      companyBenefit1.source mustBe Some(26)
+      companyBenefit1.iabdType mustBe "UnKnown"
+      companyBenefit1.amount mustBe 36795
     }
 
     "Get CompanyBenfits from Iabd data Benefit In Kind of type 28(Total Benefit In Kind)" in {
