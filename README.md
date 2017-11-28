@@ -20,7 +20,7 @@ In order to run the microservice, you must have SBT installed. You should then b
 > or to view coverage run: ```sbt coverage test coverageReport```
 
 ## RESTful Service Endpoints
-We have adhered to a hyper-media design allowing the api to describe its own use at runtime by providing URI's to further api calls.
+We have adhered to a hypermedia [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS) design allowing the api to describe its own use at runtime by providing URI's to further api calls.
 
 #### Get List of Employments
 Gets a list of employment objects for a given nino and tax year
