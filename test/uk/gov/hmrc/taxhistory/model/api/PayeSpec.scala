@@ -76,6 +76,7 @@ class PayeSpec extends TestUtil with UnitSpec {
     payAndTaxId = UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"),
     taxablePayTotal = Some(BigDecimal(2222.22)),
     taxTotal = Some(BigDecimal(111.11)),
+    paymentDate = Some(new LocalDate("2016-02-20")),
     earlierYearUpdates=Nil)
 
   lazy val employmentList = List(employment1,employment2)

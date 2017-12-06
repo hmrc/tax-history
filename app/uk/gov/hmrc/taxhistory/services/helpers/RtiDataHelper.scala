@@ -98,6 +98,7 @@ object RtiDataHelper {
         val payment =matchingPayments.sorted.last
         PayAndTax(taxablePayTotal = Some(payment.taxablePayYTD),
           taxTotal = Some(payment.totalTaxYTD),
+          paymentDate=Some(payment.paidOnDate),
           earlierYearUpdates = eyuList)
       }
     }
