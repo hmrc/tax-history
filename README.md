@@ -153,6 +153,7 @@ Gets pay and tax object containing a list of EYU's for a given nino, tax year an
         payAndTaxId: String UUID Format,
         taxablePayTotal: Option[BigDecimal],
          taxTotal: Option[BigDecimal],
+         paymentDate: Option[LocalDate],
          earlierYearUpdates: List[EarlierYearUpdate]
 
          ## - Above eyu list is of the below objects

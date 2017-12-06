@@ -94,6 +94,8 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
           |        "payAndTaxId":"2e2abe0a-8c4f-49fc-bdd2-cc13054e7172",
           |        "taxablePayTotal":2222.22,
           |        "taxTotal":111.11,
+          |        "paymentDate":"2016-02-20",
+          |        "paymentDate":"2016-02-20",
           |        "earlierYearUpdates":[]
           |      } """.stripMargin)
       when(TestEmploymentService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
