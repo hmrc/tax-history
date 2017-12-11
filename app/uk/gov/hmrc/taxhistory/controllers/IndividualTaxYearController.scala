@@ -44,7 +44,7 @@ trait IndividualTaxYearController extends AuthController with Auditable {
         response.status match {
           case OK => {
             sendDataEvent(transactionName = "Agent viewed client",
-              detail=  Map("ARN" -> arn, "NINO" -> nino),
+              detail=  Map("agentReferenceNumber" -> arn, "nino" -> nino),
               path = "/tax-history/select-tax-year",
               eventType = "AgentViewedClient" )
             Ok(response.body)
