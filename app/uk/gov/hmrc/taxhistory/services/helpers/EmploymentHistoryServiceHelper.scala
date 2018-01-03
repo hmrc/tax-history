@@ -34,7 +34,7 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
 
     val iabdsOption = fetchResult(iabdResponse)
     val rtiOption = fetchResult(rtiResponse)
-    val taxAccOption = fetchResult(taxAccResponse).flatMap(taxAcc => if(taxAcc.employmentSequenceNumber.isDefined) Some(taxAcc) else None)
+    val taxAccOption = fetchResult(taxAccResponse)
 
     val payAsYouEarnList = npsEmployments.map {
       npsEmployment => {
@@ -60,7 +60,7 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
           }
         }
 
-        val taxAccount = taxAccOption.flatMap(taxAcc => if(npsEmployment.sequenceNumber == taxAcc.employmentSequenceNumber) Some(taxAcc) else None)
+        val taxAccount = taxAccOption.find(_.getPrimaryEmploymentId().contains(npsEmployment.sequenceNumber))
         buildPayAsYouEarnList(rtiEmploymentsOption=rtiEmployments,iabdsOption=companyBenefits,npsEmployment = npsEmployment, npsTaxAccount = taxAccount)
       }
     }

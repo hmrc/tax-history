@@ -96,9 +96,9 @@ object RtiDataHelper {
       case (Nil,None) => PayAndTax(earlierYearUpdates = eyuList)
       case (Nil,Some(taxAccount)) => {
         PayAndTax(earlierYearUpdates = eyuList,
-          outstandingDebtRestriction = taxAccount.outstandingDebtRestriction,
-          underpaymentAmount = taxAccount.underpaymentAmount,
-          actualPUPCodedInCYPlusOneTaxYear = taxAccount.actualPUPCodedInCYPlusOneTaxYear)
+          outstandingDebtRestriction = taxAccount.getOutStandingDebt(),
+          underpaymentAmount = taxAccount.getUnderPayment(),
+          actualPUPCodedInCYPlusOneTaxYear = taxAccount.getActualPupCodedInCYPlusOne())
       }
       case (matchingPayments,None) => {
         val payment =matchingPayments.sorted.last
@@ -113,9 +113,9 @@ object RtiDataHelper {
           taxTotal = Some(payment.totalTaxYTD),
           paymentDate=Some(payment.paidOnDate),
           earlierYearUpdates = eyuList,
-          outstandingDebtRestriction = taxAccount.outstandingDebtRestriction,
-          underpaymentAmount = taxAccount.underpaymentAmount,
-          actualPUPCodedInCYPlusOneTaxYear = taxAccount.actualPUPCodedInCYPlusOneTaxYear)
+          outstandingDebtRestriction = taxAccount.getOutStandingDebt(),
+          underpaymentAmount = taxAccount.getUnderPayment(),
+          actualPUPCodedInCYPlusOneTaxYear = taxAccount.getActualPupCodedInCYPlusOne())
       }
     }
   }

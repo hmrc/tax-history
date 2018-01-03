@@ -52,7 +52,7 @@ class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil{
                              |    }]
                            """.stripMargin)
 
-
+  lazy val npsTaxAccountResponse = loadFile("/json/nps/response/GetTaxAccount.json")
   lazy val rtiEmploymentResponse = loadFile("/json/rti/response/dummyRti.json")
   lazy val rtiPartialDuplicateEmploymentsResponse = loadFile("/json/rti/response/dummyRtiPartialDuplicateEmployments.json")
   lazy val rtiNonMatchingEmploymentsResponse = loadFile("/json/rti/response/dummyRtiNonMatchingEmployment.json")
@@ -101,14 +101,14 @@ class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil{
 
     "get pay and tax from employment1 data with get tax account data" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
-      val taxAccount = NpsTaxAccount(Some(1),Some(BigDecimal(22.22)),Some(BigDecimal(333.33)),Some(BigDecimal(4444.44)))
+      val taxAccount = npsTaxAccountResponse.as[NpsTaxAccount]
       val payAndTax =RtiDataHelper.convertToPayAndTax(rtiData.employments, Some(taxAccount))
       payAndTax.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       payAndTax.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       payAndTax.earlierYearUpdates.size mustBe 1
-      payAndTax.actualPUPCodedInCYPlusOneTaxYear mustBe Some(BigDecimal(22.22))
-      payAndTax.outstandingDebtRestriction mustBe Some(BigDecimal(333.33))
-      payAndTax.underpaymentAmount mustBe Some(BigDecimal(4444.44))
+      payAndTax.actualPUPCodedInCYPlusOneTaxYear mustBe Some(BigDecimal(240))
+      payAndTax.outstandingDebtRestriction mustBe Some(BigDecimal(145.75))
+      payAndTax.underpaymentAmount mustBe Some(BigDecimal(15423.29))
     }
 
     "get onlyRtiEmployments  from List of Rti employments and List Nps Employments" in {
