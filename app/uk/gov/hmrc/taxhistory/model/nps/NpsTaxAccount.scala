@@ -40,7 +40,9 @@ case class NpsTaxAccount(incomeSources: List[IncomeSource]){
    val OutStandingDebtType = 41
    val UnderpaymentAmountType = 35
 
-
+  def getPrimaryEmploymentId()={
+    incomeSources.find(_.employmentType==PrimaryEmployment).map(_.employmentId)
+  }
   def getOutStandingDebt()={
     incomeSources.find(_.employmentType==PrimaryEmployment).
       flatMap(_.deductions.find(_.`type` == OutStandingDebtType)).flatMap(_.sourceAmount)
