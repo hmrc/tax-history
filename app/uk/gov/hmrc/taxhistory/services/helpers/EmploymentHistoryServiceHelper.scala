@@ -34,8 +34,7 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
 
     val iabdsOption = fetchResult(iabdResponse)
     val rtiOption = fetchResult(rtiResponse)
-    val taxAccOption = fetchResult(taxAccOption)
-### TODO this ^^^
+    val taxAccOption = fetchResult(taxAccResponse)
 
     val payAsYouEarnList = npsEmployments.map {
       npsEmployment => {

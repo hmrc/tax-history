@@ -2,7 +2,7 @@ package uk.gov.hmrc.taxhistory.model.nps
 
 import play.api.libs.json.{JsResult, JsValue, Json, Reads}
 
-case class NpsTaxAccount(sequenceNumber:Int,
+case class NpsTaxAccount(employmentSequenceNumber:Option[Int],
                          outstandingDebtRestriction: Option[BigDecimal],
                          underpaymentAmount: Option[BigDecimal],
                          actualPUPCodedInCYPlusOneTaxYear: Option[BigDecimal])
