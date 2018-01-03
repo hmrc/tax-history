@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import play.Logger
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, PayAndTax}
-import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
+import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, NpsTaxAccount}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -89,17 +89,33 @@ class RtiDataHelper(val rtiData: RtiData) extends TaxHistoryHelper {
 
 object RtiDataHelper {
 
-  def convertToPayAndTax(rtiEmployments: List[RtiEmployment]): PayAndTax ={
+  def convertToPayAndTax(rtiEmployments: List[RtiEmployment], npsTaxAccount: Option[NpsTaxAccount]): PayAndTax ={
     val employment = rtiEmployments.head
     val eyuList = convertRtiEYUToEYU(employment)
-    employment.payments match {
-      case Nil => PayAndTax(earlierYearUpdates = eyuList)
-      case matchingPayments => {
+    (employment.payments, npsTaxAccount) match {
+      case (Nil,None) => PayAndTax(earlierYearUpdates = eyuList)
+      case (Nil,Some(taxAccount)) => {
+        PayAndTax(earlierYearUpdates = eyuList,
+          outstandingDebtRestriction = taxAccount.outstandingDebtRestriction,
+          underpaymentAmount = taxAccount.underpaymentAmount,
+          actualPUPCodedInCYPlusOneTaxYear = taxAccount.actualPUPCodedInCYPlusOneTaxYear)
+      }
+      case (matchingPayments,None) => {
         val payment =matchingPayments.sorted.last
         PayAndTax(taxablePayTotal = Some(payment.taxablePayYTD),
           taxTotal = Some(payment.totalTaxYTD),
           paymentDate=Some(payment.paidOnDate),
           earlierYearUpdates = eyuList)
+      }
+      case (matchingPayments,Some(taxAccount)) => {
+        val payment =matchingPayments.sorted.last
+        PayAndTax(taxablePayTotal = Some(payment.taxablePayYTD),
+          taxTotal = Some(payment.totalTaxYTD),
+          paymentDate=Some(payment.paidOnDate),
+          earlierYearUpdates = eyuList,
+          outstandingDebtRestriction = taxAccount.outstandingDebtRestriction,
+          underpaymentAmount = taxAccount.underpaymentAmount,
+          actualPUPCodedInCYPlusOneTaxYear = taxAccount.actualPUPCodedInCYPlusOneTaxYear)
       }
     }
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,10 @@ case class PayAndTax(payAndTaxId:UUID = UUID.randomUUID(),
                      taxablePayTotal: Option[BigDecimal] = None,
                      taxTotal: Option[BigDecimal]= None,
                      paymentDate: Option[LocalDate] = None,
-                     earlierYearUpdates: List[EarlierYearUpdate])
+                     earlierYearUpdates: List[EarlierYearUpdate],
+                     outstandingDebtRestriction: Option[BigDecimal]= None,
+                     underpaymentAmount: Option[BigDecimal]= None,
+                     actualPUPCodedInCYPlusOneTaxYear: Option[BigDecimal]= None)
 
 object PayAndTax {
   implicit val formats = Json.format[PayAndTax]

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
 
     val iabdsOption = fetchResult(iabdResponse)
     val rtiOption = fetchResult(rtiResponse)
-    val taxAccOption = fetchResult(taxAccResponse)
+    val taxAccOption = fetchResult(taxAccResponse).flatMap(taxAcc => if(taxAcc.employmentSequenceNumber.isDefined) Some(taxAcc) else None)
 
     val payAsYouEarnList = npsEmployments.map {
       npsEmployment => {
@@ -59,7 +59,9 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
 
           }
         }
-        buildPayAsYouEarnList(rtiEmploymentsOption=rtiEmployments,iabdsOption=companyBenefits,npsEmployment = npsEmployment)
+
+        val taxAccount = taxAccOption.flatMap(taxAcc => if(npsEmployment.sequenceNumber == taxAcc.employmentSequenceNumber) Some(taxAcc) else None)
+        buildPayAsYouEarnList(rtiEmploymentsOption=rtiEmployments,iabdsOption=companyBenefits,npsEmployment = npsEmployment, npsTaxAccount = taxAccount)
       }
     }
 
@@ -87,25 +89,24 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
     HttpResponse(Status.OK,Some(Json.toJson(payload)))
   }
 
-  def buildPayAsYouEarnList(rtiEmploymentsOption: Option[List[RtiEmployment]], iabdsOption: Option[List[Iabd]], npsEmployment: NpsEmployment): PayAsYouEarn = {
+  def buildPayAsYouEarnList(rtiEmploymentsOption: Option[List[RtiEmployment]], iabdsOption: Option[List[Iabd]],
+                            npsEmployment: NpsEmployment, npsTaxAccount: Option[NpsTaxAccount]): PayAsYouEarn = {
 
     val emp = convertToEmployment(npsEmployment)
     (rtiEmploymentsOption, iabdsOption) match {
-
       case (None | Some(Nil), None | Some(Nil)) => PayAsYouEarn(employments = List(emp))
       case (Some(Nil) | None, Some(y)) =>
           val benefits = Map(emp.employmentId.toString -> new IabdsHelper(y).getCompanyBenefits())
           PayAsYouEarn(employments=List(emp),benefits=Some(benefits))
       case (Some(x), Some(Nil) | None) =>
-          val payAndTaxMap = Map(emp.employmentId.toString -> RtiDataHelper.convertToPayAndTax(x))
+          val payAndTaxMap = Map(emp.employmentId.toString -> RtiDataHelper.convertToPayAndTax(x, npsTaxAccount))
           PayAsYouEarn(employments = List(emp),payAndTax=Some(payAndTaxMap))
       case (Some(x), Some(y)) =>
-          val payAndTaxMap = Map(emp.employmentId.toString -> RtiDataHelper.convertToPayAndTax(x))
+          val payAndTaxMap = Map(emp.employmentId.toString -> RtiDataHelper.convertToPayAndTax(x, npsTaxAccount))
           val benefits = Map(emp.employmentId.toString -> new IabdsHelper(y).getCompanyBenefits())
           PayAsYouEarn(employments=List(emp),benefits=Some(benefits),payAndTax = Some(payAndTaxMap))
       case _ => PayAsYouEarn(employments = List(emp))
     }
-
   }
 
  def convertToEmployment(npsEmployment: NpsEmployment):Employment = {
