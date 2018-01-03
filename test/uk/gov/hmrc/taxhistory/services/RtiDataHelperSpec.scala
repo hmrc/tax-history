@@ -22,7 +22,7 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
-import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, NpsEmployment}
+import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
 
@@ -90,10 +90,25 @@ class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil{
     "get pay and tax from employment1 data" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
 
-      val payAndTax =RtiDataHelper.convertToPayAndTax(rtiData.employments)
+      val payAndTax =RtiDataHelper.convertToPayAndTax(rtiData.employments, None)
       payAndTax.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       payAndTax.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       payAndTax.earlierYearUpdates.size mustBe 1
+      payAndTax.actualPUPCodedInCYPlusOneTaxYear mustBe None
+      payAndTax.outstandingDebtRestriction mustBe None
+      payAndTax.underpaymentAmount mustBe None
+    }
+
+    "get pay and tax from employment1 data with get tax account data" in {
+      val rtiData = rtiEmploymentResponse.as[RtiData]
+      val taxAccount = NpsTaxAccount(Some(1),Some(BigDecimal(22.22)),Some(BigDecimal(333.33)),Some(BigDecimal(4444.44)))
+      val payAndTax =RtiDataHelper.convertToPayAndTax(rtiData.employments, Some(taxAccount))
+      payAndTax.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
+      payAndTax.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
+      payAndTax.earlierYearUpdates.size mustBe 1
+      payAndTax.actualPUPCodedInCYPlusOneTaxYear mustBe Some(BigDecimal(22.22))
+      payAndTax.outstandingDebtRestriction mustBe Some(BigDecimal(333.33))
+      payAndTax.underpaymentAmount mustBe Some(BigDecimal(4444.44))
     }
 
     "get onlyRtiEmployments  from List of Rti employments and List Nps Employments" in {
