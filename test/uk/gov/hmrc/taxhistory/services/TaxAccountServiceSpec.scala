@@ -95,36 +95,34 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       taxAccount.actualPUPCodedInCYPlusOneTaxYear mustBe Some(240)
     }
 
-    "successfully retrieve allowance from cache" in {
+    "successfully retrieve tax account from cache" in {
       lazy val payeJson = loadFile("/json/model/api/paye.json")
 
-      val allowanceJson = Json.parse(
-        """ [
-           {
-               "allowanceId": "c9923a63-4208-4e03-926d-7c7c88adc7ee",
-               "iabdType": "payeType",
-               "amount": 12
-          }
-          ] """.stripMargin)
+      val taxAccountJson = Json.parse(
+        """  {
+          |    "taxAccountId": "3923afda-41ee-4226-bda5-e39cc4c82934",
+          |    "outstandingDebtRestriction": 22.22,
+          |    "underpaymentAmount": 11.11,
+          |    "actualPUPCodedInCYPlusOneTaxYear": 33.33
+          |  }
+          |  """.stripMargin)
       when(TestEmploymentService.getFromCache(Matchers.any(), Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
-      val result = await(TestEmploymentService.getAllowances("AA000000A", 2014))
-      result.json must be(allowanceJson)
+      val result = await(TestEmploymentService.getTaxAccount(testNino.nino, TaxYear.current.previous.startYear))
+      result.json must be(taxAccountJson)
     }
 
-    "return empty array when failed to fetch allowance from cache" in {
-      lazy val payeJson = Json.arr()
+    "return empty object when failed to fetch tax account from cache" in {
+      lazy val payeJson = Json.obj()
 
-      val allowanceJson = Json.parse(
-        """ [
-          ] """.stripMargin)
+      val taxAccountJson  = Json.parse("""{}""".stripMargin)
       when(TestEmploymentService.getFromCache(Matchers.any(), Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
-      val result = await(TestEmploymentService.getAllowances("AA000000A", 2014))
+      val result = await(TestEmploymentService.getTaxAccount(testNino.nino, TaxYear.current.previous.startYear))
       result.status must be(NOT_FOUND)
-      result.json must be(allowanceJson)
+      result.json must be(taxAccountJson)
     }
   }
 }

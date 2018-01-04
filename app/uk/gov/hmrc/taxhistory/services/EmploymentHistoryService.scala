@@ -134,12 +134,12 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
       Logger.warn("Returning js result from getTaxAccount")
 
       val extractTaxAccount = js.map(json =>
-        json.\("taxAccount").getOrElse(Json.arr())
+        json.\("taxAccount").getOrElse(Json.obj())
       )
 
       extractTaxAccount match {
-        case Some(_) => HttpResponse(Status.OK, extractTaxAccount)
-        case _ => HttpResponse(Status.NOT_FOUND, extractTaxAccount)
+        case Some(emp) if emp.equals(Json.obj()) => HttpResponse(Status.NOT_FOUND, extractTaxAccount)
+        case _ => HttpResponse(Status.OK, extractTaxAccount)
       }
     })
   }
