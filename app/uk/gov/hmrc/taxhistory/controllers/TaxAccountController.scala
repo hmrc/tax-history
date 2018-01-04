@@ -49,6 +49,6 @@ trait TaxAccountController extends AuthController {
   }
 }
 
-object TaxAccountController extends AllowanceController {
+object TaxAccountController extends TaxAccountController {
   override def authConnector: AuthConnector = TaxHistoryAuthConnector
 }
