@@ -21,7 +21,7 @@ import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.model.api.{Employment, PayAsYouEarn}
+import uk.gov.hmrc.taxhistory.model.api.{Allowance, Employment, PayAsYouEarn, TaxAccount}
 import uk.gov.hmrc.taxhistory.model.nps._
 
 trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
@@ -60,8 +60,7 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
           }
         }
 
-        val taxAccount = taxAccOption.find(_.getPrimaryEmploymentId().contains(npsEmployment.sequenceNumber))
-        buildPayAsYouEarnList(rtiEmploymentsOption=rtiEmployments,iabdsOption=companyBenefits,npsEmployment = npsEmployment, npsTaxAccount = taxAccount)
+        buildPayAsYouEarnList(rtiEmploymentsOption=rtiEmployments,iabdsOption=companyBenefits,npsEmployment = npsEmployment)
       }
     }
 
@@ -69,20 +68,27 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
       case None => Nil
       case Some(x) => new IabdsHelper(x).getAllowances()
     }
-
-    val payAsYouEarn =  mergeIntoSinglePayAsYouEarn(payAsYouEarnList = payAsYouEarnList).copy(allowances=allowances)
+    val taxAccount = convertToTaxAccount(taxAccOption)
+    val payAsYouEarn =  mergeIntoSinglePayAsYouEarn(payAsYouEarnList = payAsYouEarnList, allowances=allowances, taxAccount=taxAccount)
 
     httpOkPayAsYouEarnJsonPayload(payAsYouEarn)
   }
 
-  def mergeIntoSinglePayAsYouEarn(payAsYouEarnList:List[PayAsYouEarn]):PayAsYouEarn = {
+  def convertToTaxAccount(npsTaxAccount: Option[NpsTaxAccount]):Option[TaxAccount] = npsTaxAccount match {
+    case Some(nta)  =>
+      Some(TaxAccount( outstandingDebtRestriction =  nta.getOutStandingDebt,
+        underpaymentAmount = nta.getUnderPayment,
+        actualPUPCodedInCYPlusOneTaxYear = nta.getActualPupCodedInCYPlusOne))
+    case _ => None
+  }
+
+  def mergeIntoSinglePayAsYouEarn(payAsYouEarnList:List[PayAsYouEarn], allowances:List[Allowance], taxAccount: Option[TaxAccount]):PayAsYouEarn = {
     payAsYouEarnList.reduce((p1, p2) => {
       PayAsYouEarn(
         employments = p1.employments ::: p2.employments,
-        allowances = p1.allowances ::: p2.allowances,
         benefits =  (p1.benefits ++ p2.benefits).reduceLeftOption((a,b)=>a++b),
         payAndTax = (p1.payAndTax ++ p2.payAndTax).reduceLeftOption((a,b)=>a++b))
-    })
+    }).copy(allowances=allowances, taxAccount=taxAccount)
   }
 
   def httpOkPayAsYouEarnJsonPayload(payload: PayAsYouEarn): HttpResponse = {
@@ -90,7 +96,7 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
   }
 
   def buildPayAsYouEarnList(rtiEmploymentsOption: Option[List[RtiEmployment]], iabdsOption: Option[List[Iabd]],
-                            npsEmployment: NpsEmployment, npsTaxAccount: Option[NpsTaxAccount]): PayAsYouEarn = {
+                            npsEmployment: NpsEmployment): PayAsYouEarn = {
 
     val emp = convertToEmployment(npsEmployment)
     (rtiEmploymentsOption, iabdsOption) match {
@@ -108,6 +114,7 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
       case _ => PayAsYouEarn(employments = List(emp))
     }
   }
+
 
  def convertToEmployment(npsEmployment: NpsEmployment):Employment = {
    Employment(
