@@ -1,9 +1,11 @@
 # microservice specific routes
 
-GET        /:nino/tax-years                                             uk.gov.hmrc.taxhistory.controllers.IndividualTaxYearController.getTaxYears(nino: String)
-GET        /:nino/:taxYear/allowances                                   uk.gov.hmrc.taxhistory.controllers.AllowanceController.getAllowances(nino:String,taxYear:Int)
-GET        /:nino/:taxYear/employments                                  uk.gov.hmrc.taxhistory.controllers.EmploymentController.getEmployments(nino:String,taxYear:Int)
-GET        /:nino/:taxYear/employments/:employmentId                    uk.gov.hmrc.taxhistory.controllers.EmploymentController.getEmployment(nino:String,taxYear:Int,employmentId:String)
-GET        /:nino/:taxYear/employments/:employmentId/company-benefits   uk.gov.hmrc.taxhistory.controllers.CompanyBenefitController.getCompanyBenefits(nino:String,taxYear:Int,employmentId:String)
-GET        /:nino/:taxYear/employments/:employmentId/pay-and-tax        uk.gov.hmrc.taxhistory.controllers.PayAndTaxController.getPayAndTax(nino:String,taxYear:Int,employmentId:String)
+GET        /:nino/tax-years                                                  uk.gov.hmrc.taxhistory.controllers.IndividualTaxYearController.getTaxYears(nino: String)
+GET        /:nino/:taxYear/allowances                                        uk.gov.hmrc.taxhistory.controllers.AllowanceController.getAllowances(nino:String,taxYear:Int)
+GET        /:nino/:taxYear/employments                                       uk.gov.hmrc.taxhistory.controllers.EmploymentController.getEmployments(nino:String,taxYear:Int)
+GET        /:nino/:taxYear/employments/:employmentId                         uk.gov.hmrc.taxhistory.controllers.EmploymentController.getEmployment(nino:String,taxYear:Int,employmentId:String)
+GET        /:nino/:taxYear/employments/:employmentId/company-benefits        uk.gov.hmrc.taxhistory.controllers.CompanyBenefitController.getCompanyBenefits(nino:String,taxYear:Int,employmentId:String)
+GET        /:nino/:taxYear/employments/:employmentId/pay-and-tax             uk.gov.hmrc.taxhistory.controllers.PayAndTaxController.getPayAndTax(nino:String,taxYear:Int,employmentId:String)
+GET        /:nino/:taxYear/tax-account                                       uk.gov.hmrc.taxhistory.controllers.TaxAccountController.getTaxAccount(ninio: String, taxYear: Int)
+
 

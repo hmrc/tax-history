@@ -127,6 +127,23 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     })
   }
 
+  def getTaxAccount(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+    implicit val validatedNino = Nino(nino)
+    implicit val validatedTaxYear = TaxYear(taxYear)
+    getFromCache.map(js => {
+      Logger.warn("Returning js result from getTaxAccount")
+
+      val extractTaxAccount = js.map(json =>
+        json.\("taxAccount").getOrElse(Json.arr())
+      )
+
+      extractTaxAccount match {
+        case Some(_) => HttpResponse(Status.OK, extractTaxAccount)
+        case _ => HttpResponse(Status.NOT_FOUND, extractTaxAccount)
+      }
+    })
+  }
+
   def getTaxYears(nino: String) (implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
 
     val taxYearList = List(TaxYear.current.back(1),
@@ -163,9 +180,8 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
           npsEmploymentsFuture match {
           case Left(httpResponse) =>Future.successful(httpResponse)
           case Right(Nil) => Future.successful(HttpResponse(Status.NOT_FOUND, Some(Json.parse("[]"))))
-          case Right(npsEmploymentList) => {
+          case Right(npsEmploymentList) =>
             mergeAndRetrieveEmployments(validatedNino,validatedTaxYear)(npsEmploymentList)
-            }
           }
         }
     x.flatMap(identity)
@@ -236,8 +252,6 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
   }
 
   def getNpsTaxAccount(nino:Nino, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,NpsTaxAccount]] = {
-
-
       npsConnector.getTaxAccount(nino, taxYear.currentYear).map {
         response => {
           response.status match {
@@ -252,4 +266,5 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
         }
       }
   }
+
 }
