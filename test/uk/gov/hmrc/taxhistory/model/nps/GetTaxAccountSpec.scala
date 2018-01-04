@@ -30,10 +30,10 @@ class GetTaxAccountSpec extends TestUtil with UnitSpec {
     "transform Nps Get Tax Account Response Json correctly to NpsTaxAccount Model " in {
 
       taxAccount shouldBe a[NpsTaxAccount]
-      taxAccount.getPrimaryEmploymentId() shouldBe Some(12)
-      taxAccount.getActualPupCodedInCYPlusOne() shouldBe Some(240)
-      taxAccount.getOutStandingDebt() shouldBe Some(145.75)
-      taxAccount.getUnderPayment() shouldBe Some(15423.29)
+      taxAccount.getPrimaryEmploymentId shouldBe Some(12)
+      taxAccount.getActualPupCodedInCYPlusOne shouldBe Some(240)
+      taxAccount.getOutStandingDebt shouldBe Some(145.75)
+      taxAccount.getUnderPayment shouldBe Some(15423.29)
 
     }
 
