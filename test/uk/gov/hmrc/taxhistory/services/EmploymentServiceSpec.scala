@@ -292,7 +292,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     }
 
     "successfully merge rti and nps employment1 data into employment1 list" in {
-     // val rtiData = rtiEmploymentResponse.as[RtiData]
 
       when(mockNpsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(npsGetTaxAccount))))
@@ -316,9 +315,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       payAndTax.get.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       payAndTax.get.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       payAndTax.get.earlierYearUpdates.size mustBe 1
-      payAndTax.get.underpaymentAmount mustBe Some(BigDecimal(1))
-      payAndTax.get.outstandingDebtRestriction mustBe Some(BigDecimal(1))
-      payAndTax.get.actualPUPCodedInCYPlusOneTaxYear mustBe Some(BigDecimal(1))
       val eyu = payAndTax.get.earlierYearUpdates.head
       eyu.taxablePayEYU mustBe BigDecimal(-600.99)
       eyu.taxEYU mustBe BigDecimal(-10.99)
@@ -331,41 +327,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
     }
 
-    "successfully merge rti and nps employment1 data into employment1 list without tax account" in {
-      val rtiData = rtiEmploymentResponse.as[RtiData]
-      val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
-
-      val response = await(TestEmploymentService.mergeAndRetrieveEmployments(testNino, TaxYear.current.previous.previous)(npsEmployments))
-      response mustBe a[HttpResponse]
-
-      response.status mustBe OK
-      val payAsYouEarn = response.json.as[PayAsYouEarn]
-      val employment = payAsYouEarn.employments.head
-      val payAndTax = payAsYouEarn.payAndTax.map(pMap => pMap.get(employment.employmentId.toString)).flatten
-      val benefits = payAsYouEarn.benefits.map(bMap => bMap.get(employment.employmentId.toString)).flatten
-
-      employment.employerName mustBe "Aldi"
-      employment.payeReference mustBe "531/J4816"
-      employment.startDate mustBe startDate
-      employment.endDate mustBe None
-      employment.receivingOccupationalPension mustBe true
-      payAndTax.get.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
-      payAndTax.get.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
-      payAndTax.get.earlierYearUpdates.size mustBe 1
-      payAndTax.get.underpaymentAmount mustBe None
-      payAndTax.get.outstandingDebtRestriction mustBe None
-      payAndTax.get.actualPUPCodedInCYPlusOneTaxYear mustBe None
-      val eyu = payAndTax.get.earlierYearUpdates.head
-      eyu.taxablePayEYU mustBe BigDecimal(-600.99)
-      eyu.taxEYU mustBe BigDecimal(-10.99)
-      eyu.receivedDate mustBe new LocalDate("2016-06-01")
-      benefits.get.size mustBe 2
-      benefits.get.head.iabdType mustBe "CarFuelBenefit"
-      benefits.get.head.amount mustBe BigDecimal(100)
-      benefits.get.last.iabdType mustBe "VanBenefit"
-      benefits.get.last.amount mustBe BigDecimal(100)
-
-    }
 
     "successfully exclude nps employment1 data" when {
       "nps receivingJobseekersAllowance is true from list of employments" in {

@@ -18,16 +18,14 @@ package uk.gov.hmrc.taxhistory.model.api
 
 import java.util.UUID
 
-import org.joda.time.LocalDate
 import play.api.libs.json.Json
 
-case class PayAndTax(payAndTaxId:UUID = UUID.randomUUID(),
-                     taxablePayTotal: Option[BigDecimal] = None,
-                     taxTotal: Option[BigDecimal]= None,
-                     paymentDate: Option[LocalDate] = None,
-                     earlierYearUpdates: List[EarlierYearUpdate])
+case class TaxAccount(employmentId:UUID = UUID.randomUUID(),
+                      outstandingDebtRestriction: Option[BigDecimal]= None,
+                      underpaymentAmount: Option[BigDecimal]= None,
+                      actualPUPCodedInCYPlusOneTaxYear: Option[BigDecimal]= None)
 
-object PayAndTax {
-  implicit val formats = Json.format[PayAndTax]
+object TaxAccount {
+  implicit val formats = Json.format[TaxAccount]
 }
 

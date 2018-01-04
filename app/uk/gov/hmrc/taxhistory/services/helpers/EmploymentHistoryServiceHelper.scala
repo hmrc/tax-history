@@ -99,10 +99,10 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
           val benefits = Map(emp.employmentId.toString -> new IabdsHelper(y).getCompanyBenefits())
           PayAsYouEarn(employments=List(emp),benefits=Some(benefits))
       case (Some(x), Some(Nil) | None) =>
-          val payAndTaxMap = Map(emp.employmentId.toString -> RtiDataHelper.convertToPayAndTax(x, npsTaxAccount))
+          val payAndTaxMap = Map(emp.employmentId.toString -> RtiDataHelper.convertToPayAndTax(x))
           PayAsYouEarn(employments = List(emp),payAndTax=Some(payAndTaxMap))
       case (Some(x), Some(y)) =>
-          val payAndTaxMap = Map(emp.employmentId.toString -> RtiDataHelper.convertToPayAndTax(x, npsTaxAccount))
+          val payAndTaxMap = Map(emp.employmentId.toString -> RtiDataHelper.convertToPayAndTax(x))
           val benefits = Map(emp.employmentId.toString -> new IabdsHelper(y).getCompanyBenefits())
           PayAsYouEarn(employments=List(emp),benefits=Some(benefits),payAndTax = Some(payAndTaxMap))
       case _ => PayAsYouEarn(employments = List(emp))

@@ -20,7 +20,7 @@ import play.Logger
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, PayAndTax}
-import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -89,33 +89,17 @@ class RtiDataHelper(val rtiData: RtiData) extends TaxHistoryHelper {
 
 object RtiDataHelper {
 
-  def convertToPayAndTax(rtiEmployments: List[RtiEmployment], npsTaxAccount: Option[NpsTaxAccount]): PayAndTax ={
+  def convertToPayAndTax(rtiEmployments: List[RtiEmployment]): PayAndTax ={
     val employment = rtiEmployments.head
     val eyuList = convertRtiEYUToEYU(employment)
-    (employment.payments, npsTaxAccount) match {
-      case (Nil,None) => PayAndTax(earlierYearUpdates = eyuList)
-      case (Nil,Some(taxAccount)) => {
-        PayAndTax(earlierYearUpdates = eyuList,
-          outstandingDebtRestriction = taxAccount.getOutStandingDebt(),
-          underpaymentAmount = taxAccount.getUnderPayment(),
-          actualPUPCodedInCYPlusOneTaxYear = taxAccount.getActualPupCodedInCYPlusOne())
-      }
-      case (matchingPayments,None) => {
+    employment.payments match {
+      case Nil => PayAndTax(earlierYearUpdates = eyuList)
+      case matchingPayments => {
         val payment =matchingPayments.sorted.last
         PayAndTax(taxablePayTotal = Some(payment.taxablePayYTD),
           taxTotal = Some(payment.totalTaxYTD),
           paymentDate=Some(payment.paidOnDate),
           earlierYearUpdates = eyuList)
-      }
-      case (matchingPayments,Some(taxAccount)) => {
-        val payment =matchingPayments.sorted.last
-        PayAndTax(taxablePayTotal = Some(payment.taxablePayYTD),
-          taxTotal = Some(payment.totalTaxYTD),
-          paymentDate=Some(payment.paidOnDate),
-          earlierYearUpdates = eyuList,
-          outstandingDebtRestriction = taxAccount.getOutStandingDebt(),
-          underpaymentAmount = taxAccount.getUnderPayment(),
-          actualPUPCodedInCYPlusOneTaxYear = taxAccount.getActualPupCodedInCYPlusOne())
       }
     }
   }

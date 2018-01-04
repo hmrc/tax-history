@@ -90,25 +90,10 @@ class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil{
     "get pay and tax from employment1 data" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
 
-      val payAndTax =RtiDataHelper.convertToPayAndTax(rtiData.employments, None)
+      val payAndTax =RtiDataHelper.convertToPayAndTax(rtiData.employments)
       payAndTax.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       payAndTax.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       payAndTax.earlierYearUpdates.size mustBe 1
-      payAndTax.actualPUPCodedInCYPlusOneTaxYear mustBe None
-      payAndTax.outstandingDebtRestriction mustBe None
-      payAndTax.underpaymentAmount mustBe None
-    }
-
-    "get pay and tax from employment1 data with get tax account data" in {
-      val rtiData = rtiEmploymentResponse.as[RtiData]
-      val taxAccount = npsTaxAccountResponse.as[NpsTaxAccount]
-      val payAndTax =RtiDataHelper.convertToPayAndTax(rtiData.employments, Some(taxAccount))
-      payAndTax.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
-      payAndTax.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
-      payAndTax.earlierYearUpdates.size mustBe 1
-      payAndTax.actualPUPCodedInCYPlusOneTaxYear mustBe Some(BigDecimal(240))
-      payAndTax.outstandingDebtRestriction mustBe Some(BigDecimal(145.75))
-      payAndTax.underpaymentAmount mustBe Some(BigDecimal(15423.29))
     }
 
     "get onlyRtiEmployments  from List of Rti employments and List Nps Employments" in {
