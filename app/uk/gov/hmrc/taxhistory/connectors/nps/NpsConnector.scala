@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,6 +74,28 @@ import scala.concurrent.Future
          case status =>
            metrics.incrementFailedCounter(MetricsEnum.NPS_GET_IABDS)
            Logger.warn(s"[NpsConnector][getIabds] - status: $status Error ${response.body}")
+           response
+       }
+     }
+   }
+
+   def getTaxAccount(nino: Nino, year: Int)
+               (implicit hc: HeaderCarrier): Future[HttpResponse] = {
+
+     implicit val hc = basicNpsHeaders(HeaderCarrier())
+     val urlToRead = npsPathUrl(nino, s"tax-account/$year")
+
+     val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_TAX_ACCOUNT)
+
+     httpGet.GET[HttpResponse](urlToRead).map { response =>
+       timerContext.stop()
+       response.status match {
+         case OK =>
+           metrics.incrementSuccessCounter(MetricsEnum.NPS_GET_TAX_ACCOUNT)
+           response
+         case status =>
+           metrics.incrementFailedCounter(MetricsEnum.NPS_GET_TAX_ACCOUNT)
+           Logger.warn(s"[NpsConnector][getTaxAccount] - status: $status Error ${response.body}")
            response
        }
      }

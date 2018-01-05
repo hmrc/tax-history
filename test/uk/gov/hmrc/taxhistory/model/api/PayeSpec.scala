@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,6 +48,7 @@ class PayeSpec extends TestUtil with UnitSpec {
 
   lazy val payeNoCompanyBenefitsJson = loadFile("/json/model/api/payeNoCompanyBenefits.json")
 
+  lazy val payeNoTaxAccountJson = loadFile("/json/model/api/payeNoTaxAccount.json")
 
   lazy val allowance1 = Allowance(allowanceId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
     iabdType = "payeType",
@@ -79,15 +80,22 @@ class PayeSpec extends TestUtil with UnitSpec {
     paymentDate = Some(new LocalDate("2016-02-20")),
     earlierYearUpdates=Nil)
 
+  lazy val taxAccount = TaxAccount(
+    taxAccountId = UUID.fromString("3923afda-41ee-4226-bda5-e39cc4c82934"),
+    underpaymentAmount = Some(BigDecimal(11.11)),
+    outstandingDebtRestriction = Some(BigDecimal(22.22)),
+    actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal(33.33)))
+
   lazy val employmentList = List(employment1,employment2)
   lazy val allowanceList = List(allowance1)
   lazy val companyBenefitList = List(companyBenefit)
   lazy val benefitsMap = Map("01318d7c-bcd9-47e2-8c38-551e7ccdfae3" -> companyBenefitList)
   lazy val payAndTaxMap = Map("01318d7c-bcd9-47e2-8c38-551e7ccdfae3" -> payAndTax)
 
- val paye = PayAsYouEarn(employmentList, allowanceList, Some(benefitsMap), payAndTax = Some(payAndTaxMap))
-  val payeNoAllowances = PayAsYouEarn(employments=employmentList,benefits = Some(benefitsMap))
-  val payeNoCompanyBenefits = PayAsYouEarn(employments=employmentList)
+ val paye = PayAsYouEarn(employmentList, allowanceList, Some(benefitsMap), payAndTax = Some(payAndTaxMap), taxAccount=Some(taxAccount))
+  val payeNoAllowances = PayAsYouEarn(employments=employmentList,benefits = Some(benefitsMap), allowances = Nil)
+  val payeNoCompanyBenefits = PayAsYouEarn(employments=employmentList, benefits = None)
+  val payeNoTaxAccount = PayAsYouEarn(employments=employmentList, taxAccount=None)
 
   "Paye" should {
     "transform into Json from object correctly " in {
@@ -104,6 +112,15 @@ class PayeSpec extends TestUtil with UnitSpec {
     }
     "transform into Json when there are no company benefits" in {
       Json.toJson(payeNoCompanyBenefits) shouldBe payeNoCompanyBenefitsJson
+    }
+    "transform into object from json with no company benefits" in {
+      payeNoCompanyBenefitsJson.as[PayAsYouEarn] shouldBe payeNoCompanyBenefits
+    }
+    "transform into Json when there is no tax account" in {
+      Json.toJson(payeNoTaxAccount) shouldBe payeNoTaxAccountJson
+    }
+    "transform into object from json with no tax account" in {
+      payeNoTaxAccountJson.as[PayAsYouEarn] shouldBe payeNoTaxAccount
     }
   }
 }

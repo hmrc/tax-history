@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
-import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, NpsEmployment}
+import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
 
@@ -52,7 +52,7 @@ class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil{
                              |    }]
                            """.stripMargin)
 
-
+  lazy val npsTaxAccountResponse = loadFile("/json/nps/response/GetTaxAccount.json")
   lazy val rtiEmploymentResponse = loadFile("/json/rti/response/dummyRti.json")
   lazy val rtiPartialDuplicateEmploymentsResponse = loadFile("/json/rti/response/dummyRtiPartialDuplicateEmployments.json")
   lazy val rtiNonMatchingEmploymentsResponse = loadFile("/json/rti/response/dummyRtiNonMatchingEmployment.json")

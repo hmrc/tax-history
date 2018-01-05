@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,8 @@ import play.api.libs.json.Json
 case class PayAsYouEarn(employments :List[Employment]=Nil ,
                         allowances: List[Allowance]=Nil ,
                         benefits:Option[Map[String,List[CompanyBenefit]]]=None,
-                        payAndTax:Option[Map[String,PayAndTax]]=None)
+                        payAndTax:Option[Map[String,PayAndTax]]=None,
+                        taxAccount:Option[TaxAccount]=None)
 
 object PayAsYouEarn {
   implicit val formats = Json.format[PayAsYouEarn]

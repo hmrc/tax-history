@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,5 +23,6 @@ object MetricsEnum extends Enumeration {
   val NPS_GET_EMPLOYMENTS = Value
   val RTI_GET_EMPLOYMENTS = Value
   val NPS_GET_IABDS = Value
+  val NPS_GET_TAX_ACCOUNT = Value
 
 }

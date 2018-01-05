@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,6 +78,8 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
       when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK,Some(rtiEmploymentResponse))))
+      when(mockNpsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST)))
       val response =  await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
       response mustBe a[HttpResponse]
       response.status mustBe OK

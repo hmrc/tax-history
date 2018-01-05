@@ -26,23 +26,24 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
+import uk.gov.hmrc.taxhistory.model.api.{PayAsYouEarn, TaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
-
-class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
-  private val mockNpsConnector= mock[NpsConnector]
-  private val mockRtiDataConnector= mock[RtiConnector]
-  private val mockAudit= mock[Audit]
+class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
+  private val mockNpsConnector = mock[NpsConnector]
+  private val mockRtiDataConnector = mock[RtiConnector]
+  private val mockAudit = mock[Audit]
   private val mockCache = mock[TaxHistoryCacheService]
 
   implicit val hc = HeaderCarrier()
   val testNino = randomNino()
+
   object TestEmploymentService extends EmploymentHistoryService {
     override def npsConnector: NpsConnector = mockNpsConnector
+
     override def rtiConnector: RtiConnector = mockRtiDataConnector
 
     override def cacheService: TaxHistoryCacheService = mockCache
@@ -52,74 +53,76 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
   val failureResponseJson = Json.parse("""{"reason":"Bad Request"}""")
 
-  val npsEmploymentResponse =  Json.parse(""" [{
-                             |    "nino": "AA000000",
-                             |    "sequenceNumber": 1,
-                             |    "worksNumber": "6044041000000",
-                             |    "taxDistrictNumber": "531",
-                             |    "payeNumber": "J4816",
-                             |    "employerName": "Aldi",
-                             |    "receivingJobseekersAllowance" : false,
-                             |    "otherIncomeSourceIndicator" : false,
-                             |    "receivingOccupationalPension": true,
-                             |    "employmentStatus": 1,
-                             |    "startDate": "21/01/2015"
-                             |    }]
-                           """.stripMargin)
+  val npsEmploymentResponse = Json.parse(
+    """ [{
+      |    "nino": "AA000000",
+      |    "sequenceNumber": 12,
+      |    "worksNumber": "6044041000000",
+      |    "taxDistrictNumber": "531",
+      |    "payeNumber": "J4816",
+      |    "employerName": "Aldi",
+      |    "receivingJobseekersAllowance" : false,
+      |    "otherIncomeSourceIndicator" : false,
+      |    "receivingOccupationalPension": true,
+      |    "employmentStatus": 1,
+      |    "startDate": "21/01/2015"
+      |    }]
+    """.stripMargin)
 
 
-  lazy val iabdsJsonResponse = loadFile("/json/nps/response/iabds.json")
+  lazy val taxAccountJsonResponse = loadFile("/json/nps/response/GetTaxAccount.json")
 
 
-
-  "Allowances " should {
-    "successfully  populated  from iabds" in {
+  "TaxAccount" should {
+    "successfully be populated from GetTaxAccount" in {
       when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
       when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
+        .thenReturn(Future.successful(HttpResponse(NOT_FOUND, None)))
       when(mockNpsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(NOT_FOUND)))
+        .thenReturn(Future.successful(HttpResponse(OK, Some(taxAccountJsonResponse))))
       when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(NOT_FOUND)))
-      val response =  await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
+
+      val response = await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino, TaxYear(2016)))
+
       response mustBe a[HttpResponse]
       response.status mustBe OK
       val payAsYouEarn = response.json.as[PayAsYouEarn]
-      val allowances = payAsYouEarn.allowances
-      allowances.size mustBe 1
+      val taxAccount = payAsYouEarn.taxAccount.get
+      taxAccount.outstandingDebtRestriction mustBe Some(145.75)
+      taxAccount.underpaymentAmount mustBe Some(15423.29)
+      taxAccount.actualPUPCodedInCYPlusOneTaxYear mustBe Some(240)
     }
 
-    "successfully retrieve allowance from cache" in {
+    "successfully retrieve tax account from cache" in {
       lazy val payeJson = loadFile("/json/model/api/paye.json")
 
-      val allowanceJson = Json.parse(
-        """ [
-           {
-               "allowanceId": "c9923a63-4208-4e03-926d-7c7c88adc7ee",
-               "iabdType": "payeType",
-               "amount": 12
-          }
-          ] """.stripMargin)
-      when(TestEmploymentService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      val taxAccountJson = Json.parse(
+        """  {
+          |    "taxAccountId": "3923afda-41ee-4226-bda5-e39cc4c82934",
+          |    "outstandingDebtRestriction": 22.22,
+          |    "underpaymentAmount": 11.11,
+          |    "actualPUPCodedInCYPlusOneTaxYear": 33.33
+          |  }
+          |  """.stripMargin)
+      when(TestEmploymentService.getFromCache(Matchers.any(), Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
-      val result = await(TestEmploymentService.getAllowances("AA000000A", 2014))
-      result.json must be(allowanceJson)
+      val result = await(TestEmploymentService.getTaxAccount(testNino.nino, TaxYear.current.previous.startYear))
+      result.json must be(taxAccountJson)
     }
 
-    "return empty array when failed to fetch allowance from cache" in {
-      lazy val payeJson = Json.arr()
+    "return empty object when failed to fetch tax account from cache" in {
+      lazy val payeJson = Json.obj()
 
-      val allowanceJson = Json.parse(
-        """ [
-          ] """.stripMargin)
-      when(TestEmploymentService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      val taxAccountJson  = Json.parse("""{}""".stripMargin)
+      when(TestEmploymentService.getFromCache(Matchers.any(), Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
-      val result = await(TestEmploymentService.getAllowances("AA000000A", 2014))
+      val result = await(TestEmploymentService.getTaxAccount(testNino.nino, TaxYear.current.previous.startYear))
       result.status must be(NOT_FOUND)
-      result.json must be(allowanceJson)
+      result.json must be(taxAccountJson)
     }
   }
 }

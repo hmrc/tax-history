@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -127,6 +127,23 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     })
   }
 
+  def getTaxAccount(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+    implicit val validatedNino = Nino(nino)
+    implicit val validatedTaxYear = TaxYear(taxYear)
+    getFromCache.map(js => {
+      Logger.warn("Returning js result from getTaxAccount")
+
+      val extractTaxAccount = js.map(json =>
+        json.\("taxAccount").getOrElse(Json.obj())
+      )
+
+      extractTaxAccount match {
+        case Some(emp) if emp.equals(Json.obj()) => HttpResponse(Status.NOT_FOUND, extractTaxAccount)
+        case _ => HttpResponse(Status.OK, extractTaxAccount)
+      }
+    })
+  }
+
   def getTaxYears(nino: String) (implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
 
     val taxYearList = List(TaxYear.current.back(1),
@@ -136,7 +153,8 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
 
     val taxYears = taxYearList.map(year => IndividualTaxYear(year = year.startYear,
                                                              allowancesURI = s"/${year.startYear}/allowances",
-                                                             employmentsURI = s"/${year.startYear}/employments"))
+                                                             employmentsURI = s"/${year.startYear}/employments",
+                                                             taxAccountURI = s"/${year.startYear}/tax-account"))
 
     Future.successful(HttpResponse(Status.OK, Some(Json.toJson(taxYears))))
   }
@@ -163,9 +181,8 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
           npsEmploymentsFuture match {
           case Left(httpResponse) =>Future.successful(httpResponse)
           case Right(Nil) => Future.successful(HttpResponse(Status.NOT_FOUND, Some(Json.parse("[]"))))
-          case Right(npsEmploymentList) => {
+          case Right(npsEmploymentList) =>
             mergeAndRetrieveEmployments(validatedNino,validatedTaxYear)(npsEmploymentList)
-            }
           }
         }
     x.flatMap(identity)
@@ -176,8 +193,9 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     for {
       iabdsF <- getNpsIabds(nino,taxYear)
       rtiF <- getRtiEmployments(nino,taxYear)
+      taxAccF <-  getNpsTaxAccount(nino,taxYear)
     }yield {
-      combineResult(iabdsF,rtiF)(npsEmployments)
+      combineResult(iabdsF,rtiF,taxAccF)(npsEmployments)
     }
   }
 
@@ -233,4 +251,27 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
       }
     }
   }
+
+  def getNpsTaxAccount(nino:Nino, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,Option[NpsTaxAccount]]] = {
+
+    if (taxYear.startYear != TaxYear.current.previous.startYear) {
+      Future.successful(Right(None))
+    }
+    else {
+      npsConnector.getTaxAccount(nino, taxYear.currentYear).map {
+        response => {
+          response.status match {
+            case OK => {
+              Right(Some(response.json.as[NpsTaxAccount]))
+            }
+            case _ => {
+              Logger.warn("Non 200 response code from nps iabd api.")
+              Left(response)
+            }
+          }
+        }
+      }
+    }
+  }
+
 }
