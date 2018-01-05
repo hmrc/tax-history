@@ -153,7 +153,8 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
 
     val taxYears = taxYearList.map(year => IndividualTaxYear(year = year.startYear,
                                                              allowancesURI = s"/${year.startYear}/allowances",
-                                                             employmentsURI = s"/${year.startYear}/employments"))
+                                                             employmentsURI = s"/${year.startYear}/employments",
+                                                             taxAccountURI = s"/${year.startYear}/tax-account"))
 
     Future.successful(HttpResponse(Status.OK, Some(Json.toJson(taxYears))))
   }

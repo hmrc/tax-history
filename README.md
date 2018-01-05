@@ -186,8 +186,33 @@ Gets list of tax years that can be used to query for employments and allowances 
     IndividualTaxYear {
         year : Int,
         allowancesURI : String (e.g. /2016/allowances),
-        employmentsURI : String (e.g. /2016/employments)
+        employmentsURI : String (e.g. /2016/employments),
+        taxAccountURI : String (e.g. /2016/tax-account)
     }
 ]
+```
+
+#### Get Tax Account
+Gets tax account information for a given nino and tax year
+
+| *URL* | *Supported Methods* | *Description* |
+|--------|----|----|
+| ```/:nino/:year/tax-account``` | GET | Retrieves all tax account information for a given nino and tax year. |
+
+**Parameters**
+
+|*Parameter*|*Required*|*Description*|
+|----|----|----|
+| ```:nino```| true | Standard National Insurance Number format e.g. QQ123456A |
+| ```:taxyear```| true | The first year in a tax year. e.g. for tax year 6th April 2016 - 5th April 2017 would be ```2016``` |
+
+**Return Format**
+```
+    TaxAccount {
+        taxAccountId :  String UUID Format,,
+        outstandingDebtRestriction: Option[BigDecimal],
+        underpaymentAmount: Option[BigDecimal],
+        actualPUPCodedInCYPlusOneTaxYear: Option[BigDecimal]
+    }
 ```
 
