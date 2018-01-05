@@ -28,7 +28,7 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
 
   def combineResult(iabdResponse:Either[HttpResponse,List[Iabd]],
                     rtiResponse:Either[HttpResponse,RtiData],
-                    taxAccResponse:Either[HttpResponse,NpsTaxAccount])
+                    taxAccResponse:Either[HttpResponse,Option[NpsTaxAccount]])
                    (npsEmployments: List[NpsEmployment])
                    (implicit headerCarrier: HeaderCarrier):HttpResponse={
 
@@ -68,7 +68,7 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
       case None => Nil
       case Some(x) => new IabdsHelper(x).getAllowances()
     }
-    val taxAccount = convertToTaxAccount(taxAccOption)
+    val taxAccount = convertToTaxAccount(taxAccOption.flatten)
     val payAsYouEarn =  mergeIntoSinglePayAsYouEarn(payAsYouEarnList = payAsYouEarnList, allowances=allowances, taxAccount=taxAccount)
 
     httpOkPayAsYouEarnJsonPayload(payAsYouEarn)

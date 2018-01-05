@@ -193,7 +193,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     for {
       iabdsF <- getNpsIabds(nino,taxYear)
       rtiF <- getRtiEmployments(nino,taxYear)
-      taxAccF <-  getNpsTaxAccount(nino,taxYear) if taxYear.startYear == TaxYear.current.previous.startYear
+      taxAccF <-  getNpsTaxAccount(nino,taxYear)
     }yield {
       combineResult(iabdsF,rtiF,taxAccF)(npsEmployments)
     }
@@ -252,12 +252,17 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     }
   }
 
-  def getNpsTaxAccount(nino:Nino, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,NpsTaxAccount]] = {
+  def getNpsTaxAccount(nino:Nino, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,Option[NpsTaxAccount]]] = {
+
+    if (taxYear.startYear != TaxYear.current.previous.startYear) {
+      Future.successful(Right(None))
+    }
+    else {
       npsConnector.getTaxAccount(nino, taxYear.currentYear).map {
         response => {
           response.status match {
             case OK => {
-              Right(response.json.as[NpsTaxAccount])
+              Right(Some(response.json.as[NpsTaxAccount]))
             }
             case _ => {
               Logger.warn("Non 200 response code from nps iabd api.")
@@ -266,6 +271,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
           }
         }
       }
+    }
   }
 
 }

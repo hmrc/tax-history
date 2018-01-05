@@ -29,7 +29,7 @@ import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, Employment, PayAsYouEarn}
-import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment}
+import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
 import uk.gov.hmrc.time.TaxYear
@@ -399,6 +399,29 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       response mustBe a[Either[HttpResponse,List[Iabd]]]
       response.left.get.status mustBe NOT_FOUND
 
+    }
+
+    "return none where tax year is not cy-1" in {
+      val response = await(TestEmploymentService.getNpsTaxAccount(testNino, TaxYear(2015)))
+      response mustBe a[Either[HttpResponse,Option[NpsTaxAccount]]]
+      response.right.get mustBe None
+    }
+
+    "return any non success status response from get Nps Tax Account api" in {
+      when(mockNpsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(failureResponseJson))))
+      val response =  await(TestEmploymentService.getNpsTaxAccount(testNino,TaxYear(2016)))
+      response mustBe a[Either[HttpResponse,Option[NpsTaxAccount]]]
+      response.left.get.status mustBe BAD_REQUEST
+
+    }
+
+    "return not found status response from get Nps Tax Account api" in {
+      when(mockNpsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(JsArray(Seq.empty)))))
+      val response =  await(TestEmploymentService.getNpsTaxAccount(testNino,TaxYear(2016)))
+      response mustBe a[Either[HttpResponse,Option[NpsTaxAccount]]]
+      response.left.get.status mustBe NOT_FOUND
     }
 
 
