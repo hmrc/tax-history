@@ -16,37 +16,27 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import play.api.mvc.{Action, Result}
+import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.TaxHistoryAuthConnector
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait AllowanceController extends AuthController {
+trait AllowanceController extends TaxHistoryController {
 
   def employmentHistoryService: EmploymentHistoryService = EmploymentHistoryService
 
-  def getAllowances(nino: String, taxYear: Int) = Action.async {
+  def getAllowances(nino: String, taxYear: Int): Action[AnyContent] = Action.async {
     implicit request => {
       authorisedRelationship(nino, _ => retrieveAllowances(nino, taxYear))
     }
   }
 
-  private def retrieveAllowances(nino: String,taxYear: Int)(implicit hc:HeaderCarrier): Future[Result] = {
-    employmentHistoryService.getAllowances(nino, taxYear) map {
-      response =>
-        response.status match {
-          case OK => Ok(response.body)
-          case NOT_FOUND => NotFound(response.body)
-          case BAD_REQUEST => BadRequest(response.body)
-          case SERVICE_UNAVAILABLE => ServiceUnavailable
-          case _ => InternalServerError
-        }
-    }
-  }
+  private def retrieveAllowances(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[Result] =
+    employmentHistoryService.getAllowances(nino, taxYear) map matchResponse
 }
 
 object AllowanceController extends AllowanceController {

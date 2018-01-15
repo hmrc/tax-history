@@ -29,11 +29,14 @@ import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 
 import scala.concurrent.Future
 
-trait BaseConnector extends ServicesConfig with Auditable{
+trait BaseConnector extends ServicesConfig with Auditable {
 
   def httpGet: CoreGet
+
   def httpPost: CorePost
+
   def originatorId: String
+
   def metrics: TaxHistoryMetrics = TaxHistoryMetrics
 
   val defaultVersion: Int = -1
@@ -46,7 +49,7 @@ trait BaseConnector extends ServicesConfig with Auditable{
     hc.withExtraHeaders("Gov-Uk-Originator-Id" -> originatorId)
   }
 
-  def withoutSuffix(nino: Nino) = {
+  def withoutSuffix(nino: Nino): String = {
     val BASIC_NINO_LENGTH = 8
     nino.value.take(BASIC_NINO_LENGTH)
   }
@@ -63,36 +66,30 @@ trait BaseConnector extends ServicesConfig with Auditable{
       timerContext.stop()
       res =>
         res.status match {
-          case Status.OK => {
+          case Status.OK =>
             metrics.incrementSuccessCounter(MetricsEnum.RTI_GET_EMPLOYMENTS)
             Future.successful(res)
-          }
-          case Status.BAD_REQUEST => {
+          case Status.BAD_REQUEST =>
             metrics.incrementFailedCounter(MetricsEnum.RTI_GET_EMPLOYMENTS)
             val errorMessage = s"RTIAPI - Bad Request error returned from RTI HODS"
             Logger.warn(errorMessage)
             Future.successful(res)
-          }
-          case Status.NOT_FOUND => {
+          case Status.NOT_FOUND =>
             metrics.incrementFailedCounter(MetricsEnum.RTI_GET_EMPLOYMENTS)
-            val errorMessage =s"RTIAPI - No DATA Found error returned from RTI HODS"
+            val errorMessage = s"RTIAPI - No DATA Found error returned from RTI HODS"
             Logger.warn(errorMessage)
             Future.successful(res)
-          }
-          case Status.INTERNAL_SERVER_ERROR => {
+          case Status.INTERNAL_SERVER_ERROR =>
             metrics.incrementFailedCounter(MetricsEnum.RTI_GET_EMPLOYMENTS)
-            val errorMessage =s"RTIAPI - Internal Server error returned from RTI HODS"
+            val errorMessage = s"RTIAPI - Internal Server error returned from RTI HODS"
             Logger.warn(errorMessage)
             Future.successful(res)
-          }
-          case status => {
+          case status =>
             metrics.incrementFailedCounter(MetricsEnum.RTI_GET_EMPLOYMENTS)
-            val errorMessage =s"RTIAPI - An error returned from RTI HODS with status $status"
+            val errorMessage = s"RTIAPI - An error returned from RTI HODS with status $status"
             Logger.warn(errorMessage)
             Future.successful(res)
-          }
         }
     }
   }
-
- }
+}

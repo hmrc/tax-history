@@ -16,44 +16,38 @@
 
 package uk.gov.hmrc.taxhistory.metrics
 
-import com.codahale.metrics.Timer
+import com.codahale.metrics.{MetricRegistry, Timer}
 import com.codahale.metrics.Timer.Context
 import uk.gov.hmrc.play.graphite.MicroserviceMetrics
 import uk.gov.hmrc.taxhistory.metrics.MetricsEnum.MetricsEnum
 
 trait TaxHistoryMetrics {
-
   def startTimer(api: MetricsEnum): Timer.Context
 
   def incrementSuccessCounter(api: MetricsEnum): Unit
 
   def incrementFailedCounter(api: MetricsEnum): Unit
-
 }
 
-
 object TaxHistoryMetrics extends TaxHistoryMetrics with MicroserviceMetrics {
-  val registry = metrics.defaultRegistry
+  val registry: MetricRegistry = metrics.defaultRegistry
   val timers = Map(
     MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.timer("nps-get-employments-response-timer"),
     MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.timer("rti-get-employments-response-timer"),
     MetricsEnum.NPS_GET_IABDS -> registry.timer("nps-get-iabds-response-timer"),
     MetricsEnum.NPS_GET_TAX_ACCOUNT -> registry.timer("nps-get-tax-account-response-timer")
-
   )
   val successCounters = Map(
     MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.counter("nps-get-employments-success-counter"),
     MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.counter("rti-get-employments-success-counter"),
     MetricsEnum.NPS_GET_IABDS -> registry.counter("nps-get-iabds-success-counter"),
     MetricsEnum.NPS_GET_TAX_ACCOUNT -> registry.counter("nps-get-tax-account-success-counter")
-
   )
   val failedCounters = Map(
     MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.counter("nps-get-employments-failed-counter"),
     MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.counter("rti-get-employments-failed-counter"),
     MetricsEnum.NPS_GET_IABDS -> registry.counter("nps-get-iabds-failed-counter"),
     MetricsEnum.NPS_GET_TAX_ACCOUNT -> registry.counter("nps-get-tax-account-failed-counter")
-
   )
 
   override def startTimer(api: MetricsEnum): Context = timers(api).time()
@@ -61,5 +55,4 @@ object TaxHistoryMetrics extends TaxHistoryMetrics with MicroserviceMetrics {
   override def incrementSuccessCounter(api: MetricsEnum): Unit = successCounters(api).inc()
 
   override def incrementFailedCounter(api: MetricsEnum): Unit = failedCounters(api).inc()
-
 }

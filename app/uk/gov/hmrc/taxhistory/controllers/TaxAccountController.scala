@@ -19,13 +19,13 @@ package uk.gov.hmrc.taxhistory.controllers
 import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.TaxHistoryAuthConnector
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait TaxAccountController extends AuthController {
+trait TaxAccountController extends TaxHistoryController {
 
   def employmentHistoryService: EmploymentHistoryService = EmploymentHistoryService
 
@@ -35,18 +35,8 @@ trait TaxAccountController extends AuthController {
     }
   }
 
-  private def retrieveTaxAccount(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[Result] = {
-    employmentHistoryService.getTaxAccount(nino, taxYear) map {
-      response =>
-        response.status match {
-          case OK => Ok(response.body)
-          case NOT_FOUND => NotFound(response.body)
-          case BAD_REQUEST => BadRequest(response.body)
-          case SERVICE_UNAVAILABLE => ServiceUnavailable
-          case _ => InternalServerError
-        }
-    }
-  }
+  private def retrieveTaxAccount(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[Result] =
+    employmentHistoryService.getTaxAccount(nino, taxYear) map matchResponse
 }
 
 object TaxAccountController extends TaxAccountController {

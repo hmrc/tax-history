@@ -16,56 +16,50 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 
-
 class IabdSpec extends TestUtil with UnitSpec {
 
-  lazy val employmentsResponse = loadFile("/json/nps/response/iabds.json")
+  lazy val employmentsResponse: JsValue = loadFile("/json/nps/response/iabds.json")
+  private val grossAmount = 200
 
-
-  val iabdJsonResponse = """{
-                             |        "nino": "QQ00000AB",
-                             |        "sequenceNumber": 201700001,
-                             |        "taxYear": 2017,
-                             |        "type": 8,
-                             |        "source": 15,
-                             |        "grossAmount": 200,
-                             |        "receiptDate": null,
-                             |        "captureDate": "10/04/2017",
-                             |        "typeDescription": "Total gift aid Payments",
-                             |        "netAmount": 100
-                             |
-                             |}
-                             """.stripMargin
-
-
+  val iabdJsonResponse: String =
+    s"""{
+      |        "nino": "QQ00000AB",
+      |        "sequenceNumber": 201700001,
+      |        "taxYear": 2017,
+      |        "type": 8,
+      |        "source": 15,
+      |        "grossAmount": $grossAmount,
+      |        "receiptDate": null,
+      |        "captureDate": "10/04/2017",
+      |        "typeDescription": "Total gift aid Payments",
+      |        "netAmount": 100
+      |
+      |}
+    """.stripMargin
 
   "Iabd Json" should {
     "transform Iabds Response Json correctly to Employment Model " in {
       val iabd = Json.parse(iabdJsonResponse).as[Iabd]
       iabd shouldBe a[Iabd]
-      iabd.nino  shouldBe "QQ00000AB"
+      iabd.nino shouldBe "QQ00000AB"
       iabd.`type` shouldBe a[CompanyBenefits]
-      iabd.`type`  shouldBe EmployerProvidedServices
-      iabd.grossAmount shouldBe Some(200)
-      iabd.typeDescription  shouldBe Some("Total gift aid Payments")
+      iabd.`type` shouldBe EmployerProvidedServices
+      iabd.grossAmount shouldBe Some(grossAmount)
+      iabd.typeDescription shouldBe Some("Total gift aid Payments")
 
-  }
-
+    }
 
     "List of Iabds Json" should {
       "transform List of Iabd" in {
         val iabds = employmentsResponse.as[List[Iabd]]
-        iabds shouldBe a [List[Iabd]]
+        iabds shouldBe a[List[Iabd]]
       }
     }
 
   }
-
-
-
 }
