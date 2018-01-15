@@ -17,29 +17,30 @@
 package uk.gov.hmrc.taxhistory.model.nps
 
 import org.joda.time.LocalDate
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 class NpsEmploymentSpec extends TestUtil with UnitSpec {
 
-  lazy val employmentsResponse = loadFile("/json/nps/response/employments.json")
+  lazy val employmentsResponse: JsValue = loadFile("/json/nps/response/employments.json")
 
-  val employmentResponse = """ {
-                             |    "nino": "AA000000",
-                             |    "sequenceNumber": 6,
-                             |    "employmentStatus": 1,
-                             |    "worksNumber": "00191048716",
-                             |    "taxDistrictNumber": "846",
-                             |    "payeNumber": "T2PP",
-                             |    "employerName": "Aldi",
-                             |    "receivingJobseekersAllowance" : true,
-                             |    "otherIncomeSourceIndicator": true,
-                             |    "receivingOccupationalPension": true,
-                             |    "startDate": "21/01/2015",
-                             |    "endDate": "08/01/2016"
-                             |    }
-                             """.stripMargin
+  val employmentResponse: String =
+    """ {
+      |    "nino": "AA000000",
+      |    "sequenceNumber": 6,
+      |    "employmentStatus": 1,
+      |    "worksNumber": "00191048716",
+      |    "taxDistrictNumber": "846",
+      |    "payeNumber": "T2PP",
+      |    "employerName": "Aldi",
+      |    "receivingJobseekersAllowance" : true,
+      |    "otherIncomeSourceIndicator": true,
+      |    "receivingOccupationalPension": true,
+      |    "startDate": "21/01/2015",
+      |    "endDate": "08/01/2016"
+      |    }
+    """.stripMargin
 
   val startDate = new LocalDate("2015-01-21")
   val endDate = new LocalDate("2016-01-08")
@@ -48,12 +49,12 @@ class NpsEmploymentSpec extends TestUtil with UnitSpec {
     "transform Nps Employment Response Json correctly to Employment Model " in {
       val employment = Json.parse(employmentResponse).as[NpsEmployment]
       employment shouldBe a[NpsEmployment]
-      employment.nino  shouldBe "AA000000"
-      employment.sequenceNumber  shouldBe 6
-      employment.worksNumber  shouldBe Some("00191048716")
-      employment.taxDistrictNumber  shouldBe "846"
-      employment.payeNumber  shouldBe "T2PP"
-      employment.employerName  shouldBe "Aldi"
+      employment.nino shouldBe "AA000000"
+      employment.sequenceNumber shouldBe 6
+      employment.worksNumber shouldBe Some("00191048716")
+      employment.taxDistrictNumber shouldBe "846"
+      employment.payeNumber shouldBe "T2PP"
+      employment.employerName shouldBe "Aldi"
       employment.receivingJobSeekersAllowance shouldBe true
       employment.receivingOccupationalPension shouldBe true
       employment.otherIncomeSourceIndicator shouldBe true
@@ -65,7 +66,7 @@ class NpsEmploymentSpec extends TestUtil with UnitSpec {
     "Multiple NpsEmployments Json" should {
       "transform List of NpsEmployment Model " in {
         val npsEmployments = employmentsResponse.as[List[NpsEmployment]]
-        npsEmployments shouldBe a [List[NpsEmployment]]
+        npsEmployments shouldBe a[List[NpsEmployment]]
       }
     }
   }

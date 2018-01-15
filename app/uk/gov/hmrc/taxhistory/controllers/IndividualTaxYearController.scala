@@ -16,47 +16,45 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import play.api.Logger
-import play.api.mvc.{Action, Result}
+import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.model.Audit
-import uk.gov.hmrc.taxhistory.{MicroserviceAuditConnector, TaxHistoryAuthConnector}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
+import uk.gov.hmrc.taxhistory.{MicroserviceAuditConnector, TaxHistoryAuthConnector}
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import scala.concurrent.Future
 
-trait IndividualTaxYearController extends AuthController with Auditable {
+trait IndividualTaxYearController extends TaxHistoryController with Auditable {
 
   def employmentHistoryService: EmploymentHistoryService = EmploymentHistoryService
 
-  def getTaxYears(nino: String) = Action.async {
+  def getTaxYears(nino: String): Action[AnyContent] = Action.async {
     implicit request => {
-      authorisedRelationship(nino, data =>retrieveTaxYears(nino, data.getOrElse("")))
+      authorisedRelationship(nino, data => retrieveTaxYears(nino, data.getOrElse("")))
     }
   }
 
-  private def retrieveTaxYears(nino: String, arn: String)(implicit hc:HeaderCarrier): Future[Result] = {
+  private def retrieveTaxYears(nino: String, arn: String)(implicit hc: HeaderCarrier): Future[Result] =
     employmentHistoryService.getTaxYears(nino = nino) map {
       response =>
         response.status match {
-          case OK => {
+          case OK =>
             sendDataEvent(transactionName = "Agent viewed client",
-              detail=  Map("agentReferenceNumber" -> arn, "nino" -> nino),
+              detail = Map("agentReferenceNumber" -> arn, "nino" -> nino),
               path = "/tax-history/select-tax-year",
-              eventType = "AgentViewedClient" )
+              eventType = "AgentViewedClient")
             Ok(response.body)
-          }
           case _ => InternalServerError
         }
     }
-  }
 }
 
 object IndividualTaxYearController extends IndividualTaxYearController {
   override def authConnector: AuthConnector = TaxHistoryAuthConnector
+
   override def audit = new Audit(appName, MicroserviceAuditConnector)
 }
 

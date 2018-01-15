@@ -15,6 +15,7 @@
  */
 
 package uk.gov.hmrc.taxhistory.connectors.des
+
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.taxhistory.WSHttp
@@ -24,22 +25,23 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.Future
 
 object RtiConnector extends RtiConnector {
-
   // $COVERAGE-OFF$
   override val httpGet: CoreGet = WSHttp
   override val httpPost: CorePost = WSHttp
 
   lazy val serviceUrl: String = s"${baseUrl("rti-hod")}"
-  lazy val authorization: String = "Bearer " + getConfString("rti-hod.authorizationToken","local")
-  lazy val environment: String = getConfString("rti-hod.env","local")
-  lazy val originatorId = getConfString("rti-hod.originatorId","local")
+  lazy val authorization: String = "Bearer " + getConfString("rti-hod.authorizationToken", "local")
+  lazy val environment: String = getConfString("rti-hod.env", "local")
+  lazy val originatorId: String = getConfString("rti-hod.originatorId", "local")
   // $COVERAGE-ON$
 }
 
 trait RtiConnector extends BaseConnector {
 
   def serviceUrl: String
+
   def authorization: String
+
   def environment: String
 
   def rtiBasicUrl(nino: Nino) = s"$serviceUrl/rti/individual/payments/nino/${withoutSuffix(nino)}"
@@ -54,9 +56,8 @@ trait RtiConnector extends BaseConnector {
 
   def getRTIEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val twoDigitYear = s"${taxYear.startYear % 100}-${taxYear.finishYear % 100}"
-    val urlToRead = rtiPathUrl(nino, s"tax-year/${twoDigitYear}")
+    val urlToRead = rtiPathUrl(nino, s"tax-year/$twoDigitYear")
     implicit val hc: HeaderCarrier = createHeader
     getFromRTI(urlToRead)
   }
-
 }

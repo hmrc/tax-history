@@ -16,37 +16,27 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import play.api.mvc.{Action, Result}
+import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.TaxHistoryAuthConnector
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import scala.concurrent.Future
 
-trait CompanyBenefitController extends AuthController {
+trait CompanyBenefitController extends TaxHistoryController {
 
   def employmentHistoryService: EmploymentHistoryService = EmploymentHistoryService
 
-  def getCompanyBenefits(nino: String, taxYear: Int, employmentId:String) = Action.async {
+  def getCompanyBenefits(nino: String, taxYear: Int, employmentId: String): Action[AnyContent] = Action.async {
     implicit request => {
       authorisedRelationship(nino, _ => retrieveCompanyBenefits(nino, taxYear, employmentId))
     }
   }
 
-  private def retrieveCompanyBenefits(nino: String, taxYear: Int, employmentId:String)(implicit hc:HeaderCarrier): Future[Result] = {
-    employmentHistoryService.getCompanyBenefits(nino, taxYear, employmentId) map {
-      response =>
-        response.status match {
-          case OK => Ok(response.body)
-          case NOT_FOUND => NotFound
-          case BAD_REQUEST => BadRequest(response.body)
-          case SERVICE_UNAVAILABLE => ServiceUnavailable
-          case _ => InternalServerError
-        }
-    }
-  }
+  private def retrieveCompanyBenefits(nino: String, taxYear: Int, employmentId: String)(implicit hc: HeaderCarrier): Future[Result] =
+    employmentHistoryService.getCompanyBenefits(nino, taxYear, employmentId) map matchResponse
 }
 
 object CompanyBenefitController extends CompanyBenefitController {

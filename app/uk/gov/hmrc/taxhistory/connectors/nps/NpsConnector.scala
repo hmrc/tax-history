@@ -24,19 +24,18 @@ import uk.gov.hmrc.taxhistory.WSHttp
 import uk.gov.hmrc.taxhistory.connectors.BaseConnector
 import uk.gov.hmrc.taxhistory.metrics.MetricsEnum
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import scala.concurrent.Future
 
-
- trait NpsConnector extends BaseConnector {
+trait NpsConnector extends BaseConnector {
 
   def serviceUrl: String
+
   def npsBaseUrl(nino: Nino) = s"$serviceUrl/person/$nino"
+
   def npsPathUrl(nino: Nino, path: String) = s"${npsBaseUrl(nino)}/$path"
 
-  def getEmployments(nino: Nino, year: Int)
-                    (implicit hc: HeaderCarrier): Future[HttpResponse] = {
-
+  def getEmployments(nino: Nino, year: Int)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     implicit val hc = basicNpsHeaders(HeaderCarrier())
     val urlToRead = npsPathUrl(nino, s"employment/$year")
 
@@ -56,62 +55,54 @@ import scala.concurrent.Future
     }
   }
 
+  def getIabds(nino: Nino, year: Int)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    implicit val hc = basicNpsHeaders(HeaderCarrier())
+    val urlToRead = npsPathUrl(nino, s"iabds/$year")
 
-   def getIabds(nino: Nino, year: Int)
-                     (implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_IABDS)
 
-     implicit val hc = basicNpsHeaders(HeaderCarrier())
-     val urlToRead = npsPathUrl(nino, s"iabds/$year")
+    httpGet.GET[HttpResponse](urlToRead).map { response =>
+      timerContext.stop()
+      response.status match {
+        case OK =>
+          metrics.incrementSuccessCounter(MetricsEnum.NPS_GET_IABDS)
+          response
+        case status =>
+          metrics.incrementFailedCounter(MetricsEnum.NPS_GET_IABDS)
+          Logger.warn(s"[NpsConnector][getIabds] - status: $status Error ${response.body}")
+          response
+      }
+    }
+  }
 
-     val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_IABDS)
+  def getTaxAccount(nino: Nino, year: Int)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    implicit val hc = basicNpsHeaders(HeaderCarrier())
+    val urlToRead = npsPathUrl(nino, s"tax-account/$year")
 
-     httpGet.GET[HttpResponse](urlToRead).map { response =>
-       timerContext.stop()
-       response.status match {
-         case OK =>
-           metrics.incrementSuccessCounter(MetricsEnum.NPS_GET_IABDS)
-           response
-         case status =>
-           metrics.incrementFailedCounter(MetricsEnum.NPS_GET_IABDS)
-           Logger.warn(s"[NpsConnector][getIabds] - status: $status Error ${response.body}")
-           response
-       }
-     }
-   }
+    val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_TAX_ACCOUNT)
 
-   def getTaxAccount(nino: Nino, year: Int)
-               (implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    httpGet.GET[HttpResponse](urlToRead).map { response =>
+      timerContext.stop()
+      response.status match {
+        case OK =>
+          metrics.incrementSuccessCounter(MetricsEnum.NPS_GET_TAX_ACCOUNT)
+          response
+        case status =>
+          metrics.incrementFailedCounter(MetricsEnum.NPS_GET_TAX_ACCOUNT)
+          Logger.warn(s"[NpsConnector][getTaxAccount] - status: $status Error ${response.body}")
+          response
+      }
+    }
+  }
 
-     implicit val hc = basicNpsHeaders(HeaderCarrier())
-     val urlToRead = npsPathUrl(nino, s"tax-account/$year")
-
-     val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_TAX_ACCOUNT)
-
-     httpGet.GET[HttpResponse](urlToRead).map { response =>
-       timerContext.stop()
-       response.status match {
-         case OK =>
-           metrics.incrementSuccessCounter(MetricsEnum.NPS_GET_TAX_ACCOUNT)
-           response
-         case status =>
-           metrics.incrementFailedCounter(MetricsEnum.NPS_GET_TAX_ACCOUNT)
-           Logger.warn(s"[NpsConnector][getTaxAccount] - status: $status Error ${response.body}")
-           response
-       }
-     }
-   }
-
-
- }
+}
 
 object NpsConnector extends NpsConnector {
-
   // $COVERAGE-OFF$
   override val httpGet: CoreGet = WSHttp
   override val httpPost: CorePost = WSHttp
   lazy val path: String = config("nps-hod").getString("path").fold("")(p => p)
   lazy val serviceUrl: String = s"${baseUrl("nps-hod")}$path"
-  lazy val originatorId = getConfString("nps-hod.originatorId","HMRC_GDS")
+  lazy val originatorId: String = getConfString("nps-hod.originatorId", "HMRC_GDS")
   // $COVERAGE-ON$
-
 }

@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import org.mockito.Matchers
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
@@ -28,13 +27,14 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
-class TaxAccountControllerSpec extends PlaySpec with OneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
+class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
 
   private val mockEmploymentHistoryService = mock[EmploymentHistoryService]
   private val mockPlayAuthConnector = mock[PlayAuthConnector]
@@ -71,9 +71,9 @@ class TaxAccountControllerSpec extends PlaySpec with OneServerPerSuite with Mock
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getTaxAccount(any[String], any[Int])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
-      
+
       val result = TestTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
-      status(result) must be(OK)
+      status(result) shouldBe OK
     }
 
     "respond with NOT_FOUND, for unsuccessful GET" in {
@@ -81,9 +81,9 @@ class TaxAccountControllerSpec extends PlaySpec with OneServerPerSuite with Mock
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getTaxAccount(any[String], any[Int])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(failureResponseJson))))
-      
+
       val result = TestTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
-      status(result) must be(NOT_FOUND)
+      status(result) shouldBe NOT_FOUND
     }
 
     "respond with BAD_REQUEST, if HODS/Downstream sends BadRequest status" in {
@@ -91,9 +91,9 @@ class TaxAccountControllerSpec extends PlaySpec with OneServerPerSuite with Mock
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getTaxAccount(any[String], any[Int])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(errorResponseJson))))
-      
+
       val result = TestTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
-      status(result) must be(BAD_REQUEST)
+      status(result) shouldBe BAD_REQUEST
     }
 
     "respond with SERVICE_UNAVAILABLE, if HODS/Downstream is unavailable" in {
@@ -101,39 +101,55 @@ class TaxAccountControllerSpec extends PlaySpec with OneServerPerSuite with Mock
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getTaxAccount(any[String], any[Int])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(SERVICE_UNAVAILABLE, Some(errorResponseJson))))
-      
+
       val result = TestTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
-      status(result) must be(SERVICE_UNAVAILABLE)
+      status(result) shouldBe SERVICE_UNAVAILABLE
     }
 
-    "respond with InternalServerError, if HODS/Downstream sends some server error response" in {
+    "respond with INTERNAL_SERVER_ERROR, if HODS/Downstream sends some server error response" in {
       when(mockPlayAuthConnector.authorise(any(), any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())(any(), any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getTaxAccount(any[String], any[Int])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(errorResponseJson))))
 
       val result = TestTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
-      status(result) must be(INTERNAL_SERVER_ERROR)
+      status(result) shouldBe INTERNAL_SERVER_ERROR
     }
 
-    "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
+    "respond with UNAUTHORIZED Status for enrolments which is not HMRC Agent" in {
       when(mockPlayAuthConnector.authorise(any(), any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())(any(), any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(UnAuthorisedAgentEnrolments))))
       when(mockEmploymentHistoryService.getTaxAccount(any[String], any[Int])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
 
       val result = TestTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
-      status(result) must be(UNAUTHORIZED)
+      status(result) shouldBe UNAUTHORIZED
     }
 
-    "respond with Unauthorised Status where affinity group is not retrieved" in {
+    "respond with UNAUTHORIZED Status where affinity group is not retrieved" in {
       when(mockPlayAuthConnector.authorise(any(), any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())(any(), any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](None, Enrolments(UnAuthorisedAgentEnrolments))))
       when(mockEmploymentHistoryService.getTaxAccount(any[String], any[Int])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
 
       val result = TestTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
-      status(result) must be(UNAUTHORIZED)
+      status(result) shouldBe UNAUTHORIZED
+    }
+
+    "respond with UNAUTHORIZED Status when the user is not logged in" in {
+      when(mockPlayAuthConnector.authorise(any(), any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())(any(), any()))
+        .thenReturn(Future.failed(new InsufficientEnrolments))
+
+      val result = TestTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
+      status(result) shouldBe UNAUTHORIZED
+    }
+
+    "respond with INTERNAL_SERVER_ERROR Status when there is an auth error" in {
+      when(mockPlayAuthConnector.authorise(any(), any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())(any(), any()))
+        .thenReturn(Future.failed(new MissingBearerToken))
+
+      val result = TestTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
+      status(result) shouldBe INTERNAL_SERVER_ERROR
     }
   }
 
