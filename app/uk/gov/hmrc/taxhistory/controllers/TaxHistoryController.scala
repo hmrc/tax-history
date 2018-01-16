@@ -18,13 +18,22 @@ package uk.gov.hmrc.taxhistory.controllers
 
 import play.api.mvc.Result
 import uk.gov.hmrc.http.HttpResponse
+import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
-trait TaxHistoryController extends AuthController {
+trait TaxHistoryController extends AuthController with TaxHistoryLogger{
   def matchResponse(response: HttpResponse): Result = response.status match {
     case OK => Ok(response.body)
-    case NOT_FOUND => NotFound
-    case BAD_REQUEST => BadRequest(response.body)
-    case SERVICE_UNAVAILABLE => ServiceUnavailable
-    case _ => InternalServerError
+    case NOT_FOUND =>
+      logger.warn("Page Not Found")
+      NotFound
+    case BAD_REQUEST =>
+      logger.warn("Bad Request")
+      BadRequest(response.body)
+    case SERVICE_UNAVAILABLE =>
+      logger.warn("Service Unavailable")
+      ServiceUnavailable
+    case _ =>
+      logger.warn("Internal Service Error")
+      InternalServerError
   }
 }

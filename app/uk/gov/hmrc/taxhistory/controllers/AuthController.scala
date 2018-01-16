@@ -27,10 +27,11 @@ import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.play.microservice.controller.BaseController
+import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
 import scala.concurrent.Future
 
-trait AuthController extends BaseController with AuthorisedFunctions {
+trait AuthController extends BaseController with AuthorisedFunctions with TaxHistoryLogger{
 
   lazy val affinityGroupAllEnrolls: Retrieval[~[Option[AffinityGroup], Enrolments]] = affinityGroup and allEnrolments
 
@@ -51,14 +52,14 @@ trait AuthController extends BaseController with AuthorisedFunctions {
           case _ => Future.successful(Unauthorized("Not Authorised"))
         }
       case _ =>
-        Logger.debug("Failed to retrieve affinity group or enrolments")
+        logger.debug("Failed to retrieve affinity group or enrolments")
         Future.successful(Unauthorized("Not Authorised"))
     }.recoverWith {
       case i: InsufficientEnrolments =>
-        Logger.error("Error thrown :" + i.getMessage)
+        logger.error("InsufficientEnrolments: " + i.getMessage)
         Future.successful(Unauthorized("Not Authorised"))
       case e =>
-        Logger.error("Error thrown :" + e.getMessage)
+        logger.error("Error thrown :" + e.getMessage)
         Future.successful(InternalServerError(e.getMessage))
     }
   }

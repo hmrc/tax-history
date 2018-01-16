@@ -46,7 +46,6 @@
     <logger name="com.google.inject" level="INFO"/>
 
     <logger name="uk.gov" level="INFO"/>
-    <logger name="org.asynchttpclient.netty" level="ERROR"/>
 
     <logger name="application" level="DEBUG"/>
 
@@ -54,7 +53,7 @@
         <appender-ref ref="STDOUT"/>
     </logger>
 
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>
     </root>
