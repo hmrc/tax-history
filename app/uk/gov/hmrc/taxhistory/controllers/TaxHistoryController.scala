@@ -27,13 +27,13 @@ trait TaxHistoryController extends AuthController with TaxHistoryLogger{
       logger.warn("Page Not Found")
       NotFound
     case BAD_REQUEST =>
-      logger.warn("Bad Request")
+      logger.warn(s"Bad Request: ${response.body}")
       BadRequest(response.body)
     case SERVICE_UNAVAILABLE =>
-      logger.warn("Service Unavailable")
+      logger.warn(s"Service Unavailable: ${response.body}")
       ServiceUnavailable
     case _ =>
-      logger.warn("Internal Service Error")
+      logger.warn(s"Internal Service Error : ${response.body}")
       InternalServerError
   }
 }

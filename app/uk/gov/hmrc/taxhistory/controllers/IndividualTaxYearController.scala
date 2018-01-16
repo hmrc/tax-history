@@ -49,7 +49,7 @@ trait IndividualTaxYearController extends TaxHistoryController with Auditable wi
               eventType = "AgentViewedClient")
             Ok(response.body)
           case _ =>
-            logger.warn(s"Internal Server Error")
+            logger.warn(s"Internal Server Error ${response.body}")
             InternalServerError
 
         }
