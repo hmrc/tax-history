@@ -23,11 +23,12 @@ import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 import uk.gov.hmrc.taxhistory.{MicroserviceAuditConnector, TaxHistoryAuthConnector}
-
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
+import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
+
 import scala.concurrent.Future
 
-trait IndividualTaxYearController extends TaxHistoryController with Auditable {
+trait IndividualTaxYearController extends TaxHistoryController with Auditable with TaxHistoryLogger{
 
   def employmentHistoryService: EmploymentHistoryService = EmploymentHistoryService
 
@@ -47,7 +48,10 @@ trait IndividualTaxYearController extends TaxHistoryController with Auditable {
               path = "/tax-history/select-tax-year",
               eventType = "AgentViewedClient")
             Ok(response.body)
-          case _ => InternalServerError
+          case _ =>
+            logger.warn(s"Internal Server Error ${response.body}")
+            InternalServerError
+
         }
     }
 }
