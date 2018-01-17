@@ -15,7 +15,7 @@ object MicroServiceBuild extends Build with MicroService {
     "uk.gov.hmrc" %% "domain" % "5.1.0",
     "uk.gov.hmrc" %% "tax-year" % "0.4.0",
     "uk.gov.hmrc" %% "auth-client" % "2.5.0",
-    "uk.gov.hmrc" %% "mongo-caching" % "5.0.0"
+    "uk.gov.hmrc" %% "mongo-caching" % "5.3.0"
   )
 
   def test(scope: String = "test,it") = Seq(
