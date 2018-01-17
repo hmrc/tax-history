@@ -21,11 +21,12 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, PayAndTax}
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
+import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class RtiDataHelper(val rtiData: RtiData) extends TaxHistoryHelper {
+class RtiDataHelper(val rtiData: RtiData) extends TaxHistoryHelper with TaxHistoryLogger{
 
   val rtiEmployments = this.rtiData.employments
 
@@ -47,7 +48,7 @@ class RtiDataHelper(val rtiData: RtiData) extends TaxHistoryHelper {
     } match {
       case (matchingEmp :: Nil) =>List(matchingEmp)
       case start :: end => {
-        Logger.warn("Multiple matching rti employments found.")
+        logger.warn("Multiple matching rti employments found.")
         val subMatches = (start :: end).filter {
           rtiEmployment => {
             rtiEmployment.currentPayId.isDefined &&

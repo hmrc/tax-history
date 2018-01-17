@@ -19,8 +19,9 @@ package uk.gov.hmrc.taxhistory.services.helpers
 import play.Logger
 import uk.gov.hmrc.taxhistory.model.api.{Allowance, CompanyBenefit}
 import uk.gov.hmrc.taxhistory.model.nps._
+import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
-class IabdsHelper(val iabds:List[Iabd]) extends TaxHistoryHelper {
+class IabdsHelper(val iabds:List[Iabd]) extends TaxHistoryHelper with TaxHistoryLogger{
 
 
 
@@ -59,7 +60,7 @@ class IabdsHelper(val iabds:List[Iabd]) extends TaxHistoryHelper {
       iabd =>
         CompanyBenefit(
           amount = iabd.grossAmount.fold {
-            Logger.warn("Iabds grossAmount is blank")
+            logger.warn("Iabds grossAmount is blank")
             BigDecimal(0)
           }(x => x),
           iabdType = iabd.`type`.toString,
@@ -96,7 +97,7 @@ class IabdsHelper(val iabds:List[Iabd]) extends TaxHistoryHelper {
     getRawAllowances() map {
       iabd => Allowance(
         amount = iabd.grossAmount.fold{
-          Logger.warn("Iabds grossAmount is blank")
+          logger.warn("Iabds grossAmount is blank")
           BigDecimal(0)
         }(x=>x),
         iabdType = iabd.`type`.toString)

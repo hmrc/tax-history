@@ -32,6 +32,7 @@ import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.model.api.{Employment, IndividualTaxYear}
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
+import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -41,7 +42,7 @@ object EmploymentHistoryService extends EmploymentHistoryService {
   override def audit = new Audit(appName,MicroserviceAuditConnector)
 }
 
-trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Auditable {
+trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Auditable with TaxHistoryLogger{
   def npsConnector : NpsConnector = NpsConnector
   def rtiConnector : RtiConnector = RtiConnector
   def cacheService : TaxHistoryCacheService = TaxHistoryCacheService
@@ -51,7 +52,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     implicit val validatedNino:Nino = Nino(nino)
     implicit val validatedTaxYear:TaxYear = TaxYear(taxYear)
     getFromCache.map(js => {
-      Logger.warn("Returning js result from getEmployments")
+      logger.warn("Returning js result from getEmployments")
 
       val extractEmployments = js.map(json =>
         json.\("employments").getOrElse(Json.arr())
@@ -68,13 +69,13 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     implicit val validatedNino:Nino = Nino(nino)
     implicit val validatedTaxYear:TaxYear = TaxYear(taxYear)
     getFromCache.map(js => {
-      Logger.warn("Returning js result of a getEmployment")
+      logger.warn("Returning js result of a getEmployment")
       js match {
         case Some(jsValue) =>
           (jsValue \ "employments").as[List[Employment]].find(_.employmentId.toString==employmentId) match {
             case Some(x) => HttpResponse(Status.OK,Some(Json.toJson(x.enrichWithURIs(taxYear))))
             case _ => {
-              Logger.warn("Cache has expired from mongo")
+              logger.warn("Cache has expired from mongo")
               HttpResponse(Status.NOT_FOUND)
             }
 
@@ -88,7 +89,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
   def getFromCache(implicit validatedNino: Nino, validatedTaxYear: TaxYear, headerCarrier: HeaderCarrier) = {
     cacheService.getFromCacheOrElse {
       retrieveEmploymentsDirectFromSource(validatedNino, validatedTaxYear).map(h => {
-        Logger.warn("Refresh cached data")
+        logger.warn("Refresh cached data")
         h.json
       })
     }
@@ -98,7 +99,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     implicit val validatedNino = Nino(nino)
     implicit val validatedTaxYear = TaxYear(taxYear)
     getFromCache.map(js => {
-      Logger.warn("Returning js result from getAllowances")
+      logger.warn("Returning js result from getAllowances")
 
       val extractAllowances = js.map(json =>
         json.\("allowances").getOrElse(Json.arr())
@@ -116,7 +117,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     implicit val validatedNino = Nino(nino)
     implicit val validatedTaxYear = TaxYear(taxYear)
     getFromCache.map(js => {
-      Logger.warn("Returning js result from getEmployments")
+      logger.warn("Returning js result from getEmployments")
       val extractPayAndTax = js.map(json =>
         (json \ "payAndTax"\ employmentId).getOrElse(Json.obj())
       )
@@ -131,7 +132,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     implicit val validatedNino = Nino(nino)
     implicit val validatedTaxYear = TaxYear(taxYear)
     getFromCache.map(js => {
-      Logger.warn("Returning js result from getTaxAccount")
+      logger.warn("Returning js result from getTaxAccount")
 
       val extractTaxAccount = js.map(json =>
         json.\("taxAccount").getOrElse(Json.obj())
@@ -163,7 +164,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     implicit val validatedNino = Nino(nino)
     implicit val validatedTaxYear = TaxYear(taxYear)
     getFromCache.map(js => {
-      Logger.warn("Returning js result from getCompanyBenefits")
+      logger.warn("Returning js result from getCompanyBenefits")
       val extractCompanyBenefits = js.map(json =>
         (json \ "benefits"\ employmentId).getOrElse(Json.obj())
       )
@@ -208,11 +209,11 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
             Right(employments)
           }
           case NOT_FOUND => {
-            Logger.warn("NPS employments responded with not found")
+            logger.warn("NPS employments responded with not found")
             Right(Nil)
           }
           case _ => {
-            Logger.warn("Non 200 response code from nps employment api.")
+            logger.warn("Non 200 response code from nps employment api.")
             Left(response)
           }
         }
@@ -228,7 +229,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
             Right(response.json.as[RtiData])
           }
           case _ =>  {
-            Logger.warn("Non 200 response code from rti employment api.")
+            logger.warn("Non 200 response code from rti employment api.")
             Left(response)
           }
         }
@@ -244,7 +245,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
             Right(response.json.as[List[Iabd]])
           }
           case _ =>  {
-            Logger.warn("Non 200 response code from nps iabd api.")
+            logger.warn("Non 200 response code from nps iabd api.")
             Left(response)
           }
         }
@@ -265,7 +266,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
               Right(Some(response.json.as[NpsTaxAccount]))
             }
             case _ => {
-              Logger.warn("Non 200 response code from nps iabd api.")
+              logger.warn("Non 200 response code from nps iabd api.")
               Left(response)
             }
           }
