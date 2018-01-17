@@ -45,12 +45,10 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
   private val testTaxYear = TaxYear.current.previous.currentYear
 
   val newEnrolments = Set(
-    Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), confidenceLevel = ConfidenceLevel.L200,
-      state = "", delegatedAuthRule = None)
+    Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), state = "", delegatedAuthRule = None)
   )
   val UnAuthorisedAgentEnrolments = Set(
-    Enrolment("HMRC-AS-UNAUTHORISED-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), confidenceLevel = ConfidenceLevel.L200,
-      state = "", delegatedAuthRule = None)
+    Enrolment("HMRC-AS-UNAUTHORISED-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), state = "", delegatedAuthRule = None)
   )
 
   override def beforeEach: Unit = {

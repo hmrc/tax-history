@@ -36,7 +36,6 @@ trait AuthController extends BaseController with AuthorisedFunctions with TaxHis
   lazy val affinityGroupAllEnrolls: Retrieval[~[Option[AffinityGroup], Enrolments]] = affinityGroup and allEnrolments
 
   lazy val AgentEnrolmentForPAYE: Enrolment = Enrolment("HMRC-AS-AGENT")
-    .withConfidenceLevel(L200)
     .withDelegatedAuthRule("afi-auth")
 
   def extractArn(enrolls: Enrolments): Option[String] = for {
