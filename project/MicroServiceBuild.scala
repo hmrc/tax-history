@@ -12,8 +12,8 @@ object MicroServiceBuild extends Build with MicroService {
     ws,
     "uk.gov.hmrc" %% "microservice-bootstrap" % "6.15.0",
     "uk.gov.hmrc" %% "play-url-binders" % "2.1.0",
-    "uk.gov.hmrc" %% "domain" % "4.1.0",
-    "uk.gov.hmrc" %% "tax-year" % "0.3.0",
+    "uk.gov.hmrc" %% "domain" % "5.1.0",
+    "uk.gov.hmrc" %% "tax-year" % "0.4.0",
     "uk.gov.hmrc" %% "auth-client" % "2.5.0",
     "uk.gov.hmrc" %% "mongo-caching" % "5.0.0"
   )
