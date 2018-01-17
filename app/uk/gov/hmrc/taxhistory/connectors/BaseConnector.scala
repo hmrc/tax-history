@@ -26,10 +26,11 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
+import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
 import scala.concurrent.Future
 
-trait BaseConnector extends ServicesConfig with Auditable {
+trait BaseConnector extends ServicesConfig with Auditable with TaxHistoryLogger{
 
   def httpGet: CoreGet
 
@@ -72,22 +73,22 @@ trait BaseConnector extends ServicesConfig with Auditable {
           case Status.BAD_REQUEST =>
             metrics.incrementFailedCounter(MetricsEnum.RTI_GET_EMPLOYMENTS)
             val errorMessage = s"RTIAPI - Bad Request error returned from RTI HODS"
-            Logger.warn(errorMessage)
+            logger.warn(errorMessage)
             Future.successful(res)
           case Status.NOT_FOUND =>
             metrics.incrementFailedCounter(MetricsEnum.RTI_GET_EMPLOYMENTS)
             val errorMessage = s"RTIAPI - No DATA Found error returned from RTI HODS"
-            Logger.warn(errorMessage)
+            logger.warn(errorMessage)
             Future.successful(res)
           case Status.INTERNAL_SERVER_ERROR =>
             metrics.incrementFailedCounter(MetricsEnum.RTI_GET_EMPLOYMENTS)
             val errorMessage = s"RTIAPI - Internal Server error returned from RTI HODS"
-            Logger.warn(errorMessage)
+            logger.warn(errorMessage)
             Future.successful(res)
           case status =>
             metrics.incrementFailedCounter(MetricsEnum.RTI_GET_EMPLOYMENTS)
             val errorMessage = s"RTIAPI - An error returned from RTI HODS with status $status"
-            Logger.warn(errorMessage)
+            logger.warn(errorMessage)
             Future.successful(res)
         }
     }

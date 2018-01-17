@@ -23,11 +23,12 @@ import uk.gov.hmrc.http._
 import uk.gov.hmrc.taxhistory.WSHttp
 import uk.gov.hmrc.taxhistory.connectors.BaseConnector
 import uk.gov.hmrc.taxhistory.metrics.MetricsEnum
-
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
+import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
+
 import scala.concurrent.Future
 
-trait NpsConnector extends BaseConnector {
+trait NpsConnector extends BaseConnector with TaxHistoryLogger{
 
   def serviceUrl: String
 
@@ -49,7 +50,7 @@ trait NpsConnector extends BaseConnector {
           response
         case status =>
           metrics.incrementFailedCounter(MetricsEnum.NPS_GET_EMPLOYMENTS)
-          Logger.warn(s"[NpsConnector][getEmploymentsOLD] - status: $status Error ${response.body}")
+          logger.warn(s"[NpsConnector][getEmploymentsOLD] - status: $status Error ${response.body}")
           response
       }
     }
@@ -69,7 +70,7 @@ trait NpsConnector extends BaseConnector {
           response
         case status =>
           metrics.incrementFailedCounter(MetricsEnum.NPS_GET_IABDS)
-          Logger.warn(s"[NpsConnector][getIabds] - status: $status Error ${response.body}")
+          logger.warn(s"[NpsConnector][getIabds] - status: $status Error ${response.body}")
           response
       }
     }
@@ -89,7 +90,7 @@ trait NpsConnector extends BaseConnector {
           response
         case status =>
           metrics.incrementFailedCounter(MetricsEnum.NPS_GET_TAX_ACCOUNT)
-          Logger.warn(s"[NpsConnector][getTaxAccount] - status: $status Error ${response.body}")
+          logger.warn(s"[NpsConnector][getTaxAccount] - status: $status Error ${response.body}")
           response
       }
     }
