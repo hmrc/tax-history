@@ -19,7 +19,7 @@ object MicroServiceBuild extends Build with MicroService {
   )
 
   def test(scope: String = "test,it") = Seq(
-    "uk.gov.hmrc" %% "hmrctest" % "2.4.0" % scope,
+    "uk.gov.hmrc" %% "hmrctest" % "3.0.0" % scope,
     "org.pegdown" % "pegdown" % "1.6.0" % scope,
     "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
     "uk.gov.hmrc" %% "reactivemongo-test" % "2.0.0" % scope,
