@@ -24,125 +24,88 @@ sealed trait IabdType
 
 sealed trait CompanyBenefits extends IabdType
 
-sealed trait Allowances extends IabdType
+case object EmployerProvidedServices extends CompanyBenefits
+case object CarFuelBenefit           extends CompanyBenefits
+case object MedicalInsurance         extends CompanyBenefits
+case object CarBenefit               extends CompanyBenefits
+case object TelephoneBenefit         extends CompanyBenefits
+case object ServiceBenefit           extends CompanyBenefits
+case object TaxableExpenseBenefit    extends CompanyBenefits
+case object VanBenefit               extends CompanyBenefits
+case object VanFuelBenefit           extends CompanyBenefits
+case object BeneficialLoan           extends CompanyBenefits
 
 sealed trait BenefitInKind extends CompanyBenefits
 
+case object TotalBenefitInKind                                extends BenefitInKind
+case object Accommodation                                     extends BenefitInKind
+case object Assets                                            extends BenefitInKind
+case object AssetTransfer                                     extends BenefitInKind
+case object EducationalService                                extends BenefitInKind
+case object Entertaining                                      extends BenefitInKind
+case object ExpensesPay                                       extends BenefitInKind
+case object Mileage                                           extends BenefitInKind
+case object NonQualifyingRelocationExpense                    extends BenefitInKind
+case object NurseryPlaces                                     extends BenefitInKind
+case object OtherItems                                        extends BenefitInKind
+case object PaymentEmployeesBehalf                            extends BenefitInKind
+case object PersonalIncidentExpenses                          extends BenefitInKind
+case object QualifyingRelocationExpenses                      extends BenefitInKind
+case object EmployerProvidedProfessionalSubscription          extends BenefitInKind
+case object IncomeTaxPaidNotDeductedFromDirectorsRemuneration extends BenefitInKind
+case object TravelAndSubsistence                              extends BenefitInKind
+case object VoucherAndCreditCards                             extends BenefitInKind
+case object NonCashBenefit                                    extends BenefitInKind
+
+sealed trait Allowances extends IabdType
+
+case object FlatRateJobExpenses       extends Allowances
+case object ProfessionalSubscriptions extends Allowances
+case object EarlierYearsAdjustment    extends Allowances
+
 case object UnKnown extends IabdType
-
-case object EmployerProvidedServices extends CompanyBenefits{val id=8}
-case object CarFuelBenefit extends CompanyBenefits{val id =29}
-case object MedicalInsurance extends CompanyBenefits{val id=30}
-case object CarBenefit extends CompanyBenefits{val id=31}
-case object TelephoneBenefit extends CompanyBenefits{val id=32}
-case object ServiceBenefit extends CompanyBenefits{val id=33}
-case object TaxableExpenseBenefit extends CompanyBenefits{val id=34}
-case object VanBenefit extends CompanyBenefits{val id=35}
-case object VanFuelBenefit extends CompanyBenefits{val id=36}
-case object BeneficialLoan extends CompanyBenefits{val id=37}
-
-case object TotalBenefitInKind extends BenefitInKind{val id=28}
-
-case object Accommodation extends BenefitInKind{val id=38}
-case object Assets extends BenefitInKind{val id=39}
-case object AssetTransfer extends BenefitInKind{val id=40}
-case object EducationalService extends BenefitInKind{val id=41}
-case object Entertaining extends BenefitInKind{val id=42}
-case object ExpensesPay extends BenefitInKind{val id=43}
-case object Mileage extends BenefitInKind{val id=44}
-case object NonQualifyingRelocationExpense extends BenefitInKind{val id=45}
-case object NurseryPlaces extends BenefitInKind{val id=46}
-case object OtherItems extends BenefitInKind{val id=47}
-case object PaymentEmployeesBehalf extends BenefitInKind{val id=48}
-case object PersonalIncidentExpenses extends BenefitInKind{val id=49}
-case object QualifyingRelocationExpenses extends BenefitInKind{val id=50}
-case object EmployerProvidedProfessionalSubscription extends BenefitInKind{val id=51}
-case object IncomeTaxPaidNotDeductedFromDirectorsRemuneration extends BenefitInKind{val id=52}
-case object TravelAndSubsistence extends BenefitInKind{val id=53}
-case object VoucherAndCreditCards extends BenefitInKind{val id=54}
-case object NonCashBenefit extends BenefitInKind{val id=117}
-
-case object FlatRateJobExpenses extends Allowances{val id=56}
-case object ProfessionalSubscriptions extends Allowances{val id=57}
-case object EarlierYearsAdjustment extends Allowances{val id=101}
-
 
 
 object IabdType {
+  val UnknownIabdTypeId = -1000
 
-  def apply(value: Int): IabdType = value match {
-    case TotalBenefitInKind.id => TotalBenefitInKind
-    case EmployerProvidedServices.id => EmployerProvidedServices
-    case CarFuelBenefit.id => CarFuelBenefit
-    case MedicalInsurance.id => MedicalInsurance
-    case CarBenefit.id => CarBenefit
-    case TelephoneBenefit.id => TelephoneBenefit
-    case ServiceBenefit.id => ServiceBenefit
-    case TaxableExpenseBenefit.id => TaxableExpenseBenefit
-    case VanBenefit.id => VanBenefit
-    case VanFuelBenefit.id => VanFuelBenefit
-    case BeneficialLoan.id => BeneficialLoan
-    case Accommodation.id => Accommodation
-    case Assets.id => Assets
-    case AssetTransfer.id => AssetTransfer
-    case EducationalService.id => EducationalService
-    case Entertaining.id => Entertaining
-    case ExpensesPay.id => ExpensesPay
-    case Mileage.id => Mileage
-    case NonQualifyingRelocationExpense.id => NonQualifyingRelocationExpense
-    case NurseryPlaces.id => NurseryPlaces
-    case OtherItems.id => OtherItems
-    case PaymentEmployeesBehalf.id => PaymentEmployeesBehalf
-    case PersonalIncidentExpenses.id => PersonalIncidentExpenses
-    case QualifyingRelocationExpenses.id => QualifyingRelocationExpenses
-    case EmployerProvidedProfessionalSubscription.id => EmployerProvidedProfessionalSubscription
-    case IncomeTaxPaidNotDeductedFromDirectorsRemuneration.id => IncomeTaxPaidNotDeductedFromDirectorsRemuneration
-    case TravelAndSubsistence.id => TravelAndSubsistence
-    case VoucherAndCreditCards.id => VoucherAndCreditCards
-    case NonCashBenefit.id => NonCashBenefit
-    case FlatRateJobExpenses.id => FlatRateJobExpenses
-    case ProfessionalSubscriptions.id => ProfessionalSubscriptions
-    case EarlierYearsAdjustment.id => EarlierYearsAdjustment
+  def apply(id: Int): IabdType = idMap.getOrElse(id, UnKnown)
+  def unapply(iabdType: IabdType): Int = idMap.collectFirst({ case (key, value) if value == iabdType => key }).getOrElse(UnknownIabdTypeId)
 
-    case _ => UnKnown
-  }
-
-  def unapply(value: IabdType): Int = value match {
-    case TotalBenefitInKind => TotalBenefitInKind.id
-    case EmployerProvidedServices => EmployerProvidedServices.id
-    case CarFuelBenefit => CarFuelBenefit.id
-    case MedicalInsurance => MedicalInsurance.id
-    case CarBenefit => CarBenefit.id
-    case TelephoneBenefit => TelephoneBenefit.id
-    case ServiceBenefit => ServiceBenefit.id
-    case TaxableExpenseBenefit => TaxableExpenseBenefit.id
-    case VanBenefit => VanBenefit.id
-    case VanFuelBenefit => VanFuelBenefit.id
-    case BeneficialLoan => BeneficialLoan.id
-    case Accommodation => Accommodation.id
-    case Assets => Assets.id
-    case AssetTransfer => AssetTransfer.id
-    case EducationalService => EducationalService.id
-    case Entertaining => Entertaining.id
-    case ExpensesPay => ExpensesPay.id
-    case Mileage => Mileage.id
-    case NonQualifyingRelocationExpense => NonQualifyingRelocationExpense.id
-    case NurseryPlaces => NurseryPlaces.id
-    case OtherItems => OtherItems.id
-    case PaymentEmployeesBehalf => PaymentEmployeesBehalf.id
-    case PersonalIncidentExpenses => PersonalIncidentExpenses.id
-    case QualifyingRelocationExpenses => QualifyingRelocationExpenses.id
-    case EmployerProvidedProfessionalSubscription => EmployerProvidedProfessionalSubscription.id
-    case IncomeTaxPaidNotDeductedFromDirectorsRemuneration => IncomeTaxPaidNotDeductedFromDirectorsRemuneration.id
-    case TravelAndSubsistence => TravelAndSubsistence.id
-    case VoucherAndCreditCards => VoucherAndCreditCards.id
-    case NonCashBenefit => NonCashBenefit.id
-    case FlatRateJobExpenses => FlatRateJobExpenses.id
-    case ProfessionalSubscriptions => ProfessionalSubscriptions.id
-    case EarlierYearsAdjustment => EarlierYearsAdjustment.id
-    case UnKnown => -1000 //TODO is their better way
-  }
-
+  val idMap: Map[Int, IabdType] = Map(
+    8   -> EmployerProvidedServices,
+    29  -> CarFuelBenefit,
+    30  -> MedicalInsurance,
+    31  -> CarBenefit,
+    32  -> TelephoneBenefit,
+    33  -> ServiceBenefit,
+    34  -> TaxableExpenseBenefit,
+    35  -> VanBenefit,
+    36  -> VanFuelBenefit,
+    37  -> BeneficialLoan,
+    28  -> TotalBenefitInKind,
+    38  -> Accommodation,
+    39  -> Assets,
+    40  -> AssetTransfer,
+    41  -> EducationalService,
+    42  -> Entertaining,
+    43  -> ExpensesPay,
+    44  -> Mileage,
+    45  -> NonQualifyingRelocationExpense,
+    46  -> NurseryPlaces,
+    47  -> OtherItems,
+    48  -> PaymentEmployeesBehalf,
+    49  -> PersonalIncidentExpenses,
+    50  -> QualifyingRelocationExpenses,
+    51  -> EmployerProvidedProfessionalSubscription,
+    52  -> IncomeTaxPaidNotDeductedFromDirectorsRemuneration,
+    53  -> TravelAndSubsistence,
+    54  -> VoucherAndCreditCards,
+    117 -> NonCashBenefit,
+    56  -> FlatRateJobExpenses,
+    57  -> ProfessionalSubscriptions,
+    101 -> EarlierYearsAdjustment
+  )
 
   implicit val format = new Format[IabdType] {
     def reads(json: JsValue) = JsSuccess(IabdType.apply(json.as[Int]))
