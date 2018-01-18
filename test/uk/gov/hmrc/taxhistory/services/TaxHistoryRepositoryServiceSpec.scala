@@ -50,32 +50,31 @@ class TaxHistoryRepositoryServiceSpec extends UnitSpec
 
 
 
-   val nino = randomNino()
+  val nino = randomNino()
 
-    private val expireAfterInSeconds = 60
+  private val expireAfterInSeconds = 60
 
-    private def repo(name: String, expiresAfter: Long = expireAfterInSeconds) = new  CacheMongoRepository(name, expiresAfter){
-      await(super.ensureIndexes)
-    }
-
+  private def repo(name: String, expiresAfter: Long = expireAfterInSeconds) = {
+    val instance = new CacheMongoRepository(name, expiresAfter)
+    await(instance.ensureIndexes)
+    instance
+  }
 
   "TaxHistoryCacheService" should {
 
     val repository = repo("taxhistory-test")
 
     "successfully add the Data in cache" in {
-      val cacheData = await(repository.createOrUpdate("AA000000","2015",someJson))
-      cacheData.updateType shouldBe a[Saved[_]]
-
+      val result = await(repository.createOrUpdate("AA000000","2015",someJson))
+      result.updateType shouldBe a[Saved[_]]
     }
 
-    "fetch from the  cache by ID " in {
-      val cacheData = await(repository.createOrUpdate("AA000000","2015",someJson))
-      val fromCache = await(repository.findById("AA000000"))
-      (fromCache.get.data.get \ "2015").get shouldBe someJson
-
+    "fetch from the cache by ID " in {
+      val result = await(repository.createOrUpdate("AA000000","2015",someJson))
+      val readbackData = await(repository.findById("AA000000"))
+      readbackData shouldBe defined
+      (readbackData.get.data.get \ "2015").get shouldBe someJson
     }
-
 
   }
 

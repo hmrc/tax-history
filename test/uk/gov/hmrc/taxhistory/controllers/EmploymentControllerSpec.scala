@@ -42,12 +42,10 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
   private val errorResponseJson = Json.parse( """{"reason":"Some error."}""")
 
   val newEnrolments = Set(
-    Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), confidenceLevel = ConfidenceLevel.L200,
-      state="",delegatedAuthRule = None)
+    Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), state="",delegatedAuthRule = None)
   )
   val UnAuthorisedAgentEnrolments = Set(
-    Enrolment("HMRC-AS-UNAUTHORISED-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), confidenceLevel = ConfidenceLevel.L200,
-      state="",delegatedAuthRule = None)
+    Enrolment("HMRC-AS-UNAUTHORISED-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), state = "", delegatedAuthRule = None)
   )
   override def beforeEach = {
     reset(mockEmploymentHistoryService)
