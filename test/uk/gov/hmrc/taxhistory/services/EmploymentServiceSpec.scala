@@ -32,25 +32,18 @@ import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, Employment, PayAsYou
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
+import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
 
 class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
-  private val mockNpsConnector= mock[NpsConnector]
-  private val mockRtiDataConnector= mock[RtiConnector]
-  private val mockAudit= mock[Audit]
-  private val mockCache = mock[TaxHistoryCacheService]
 
   implicit val hc = HeaderCarrier()
   val testNino = randomNino()
-  object TestEmploymentService extends EmploymentHistoryService {
-    override def npsConnector: NpsConnector = mockNpsConnector
-    override def rtiConnector: RtiConnector = mockRtiDataConnector
-    override def cacheService: TaxHistoryCacheService = mockCache
-    override def audit: Audit = mockAudit
-  }
+  
+  val testEmploymentHistoryService = new TestEmploymentHistoryService()
 
   val failureResponseJson = Json.parse("""{"reason":"Bad Request"}""")
 
@@ -187,74 +180,74 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
   "Employment Service" should {
     "successfully get Nps Employments Data" in {
-      when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
 
-      val eitherResponse = await(TestEmploymentService.getNpsEmployments(testNino, TaxYear(2016)))
+      val eitherResponse = await(testEmploymentHistoryService.getNpsEmployments(testNino, TaxYear(2016)))
       assert(eitherResponse.isRight)
     }
 
     "handle any non success status response from get Nps Employments" in {
-      when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(npsEmploymentResponse))))
 
-      val eitherResponse = await(TestEmploymentService.getNpsEmployments(testNino, TaxYear(2016)))
+      val eitherResponse = await(testEmploymentHistoryService.getNpsEmployments(testNino, TaxYear(2016)))
       assert(eitherResponse.isLeft)
     }
 
     "successfully get Rti Employments Data" in {
-      when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
 
-      val eitherResponse = await(TestEmploymentService.getRtiEmployments(testNino, TaxYear(2016)))
+      val eitherResponse = await(testEmploymentHistoryService.getRtiEmployments(testNino, TaxYear(2016)))
       assert(eitherResponse.isRight)
     }
 
     "handle any non success status response from get Rti Employments" in {
-      when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(rtiEmploymentResponse))))
 
-      val eitherResponse = await(TestEmploymentService.getRtiEmployments(testNino, TaxYear(2016)))
+      val eitherResponse = await(testEmploymentHistoryService.getRtiEmployments(testNino, TaxYear(2016)))
       assert(eitherResponse.isLeft)
     }
         
     "return any non success status response from get Nps Employments api" in {
-      when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(npsEmploymentResponse))))
-      val response =  await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
+      val response =  await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
       response.status mustBe BAD_REQUEST
     }
 
     "return not found status response from get Nps Employments api" in {
-      when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(JsArray(Seq.empty)))))
-      val response =  await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
+      val response =  await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
       response.status mustBe NOT_FOUND
     }
 
     "return success status despite failing response from get Rti Employments api when there are nps employments" in {
-      when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
-      when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(rtiEmploymentResponse))))
-      when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(iabdsJsonResponse))))
-      when(mockNpsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST)))
-      val response =  await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
+      val response =  await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
       response.status mustBe OK
     }
 
     "return success response from get Employments" in {
-      when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
-      when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
-      when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
-      when(mockNpsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST)))
-      val response =  await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
+      val response =  await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
       response mustBe a[HttpResponse]
       response.status mustBe OK
       val payAsYouEarn = response.json.as[PayAsYouEarn]
@@ -286,12 +279,12 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
     "successfully merge rti and nps employment1 data into employment1 list" in {
 
-      when(mockNpsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(npsGetTaxAccount))))
 
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
 
-      val response = await(TestEmploymentService.mergeAndRetrieveEmployments(testNino, TaxYear.current.previous)(npsEmployments))
+      val response = await(testEmploymentHistoryService.mergeAndRetrieveEmployments(testNino, TaxYear.current.previous)(npsEmployments))
       response mustBe a[HttpResponse]
 
       response.status mustBe OK
@@ -323,13 +316,13 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
     "successfully exclude nps employment1 data" when {
       "nps receivingJobseekersAllowance is true from list of employments" in {
-        when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithJobSeekerAllowance))))
-        when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
-        when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
-        val response = await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
+        val response = await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
         response.status mustBe OK
         val payAsYouEarn = response.json.as[PayAsYouEarn]
         val employments = payAsYouEarn.employments
@@ -337,74 +330,74 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       }
 
       "nps receivingJobseekersAllowance and otherIncomeSourceIndicator is true from list of employments" in {
-        when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithOtherIncomeSourceIndicator))))
-        when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
-        when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
-        val response = await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
+        val response = await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
         response.status mustBe NOT_FOUND
       }
     }
 
     "throw not found error" when {
       "nps employments contain single element with receivingJobseekersAllowance attribute is true" in {
-        when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithJustJobSeekerAllowance))))
-        when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
-        when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
-        val response = await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
+        val response = await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
         response.status mustBe NOT_FOUND
       }
 
       "nps employments contain single element with npsEmploymentWithJustOtherIncomeSourceIndicator attribute is true" in {
-        when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithJustOtherIncomeSourceIndicator))))
-        when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
-        when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
-        val response = await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
+        val response = await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
         response.status mustBe NOT_FOUND
       }
     }
 
     "return any non success status response from get Nps Iabds api" in {
-      when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(failureResponseJson))))
-      val response =  await(TestEmploymentService.getNpsIabds(testNino,TaxYear(2016)))
+      val response =  await(testEmploymentHistoryService.getNpsIabds(testNino,TaxYear(2016)))
       response.left.get.status mustBe BAD_REQUEST
 
     }
 
     "return not found status response from get Nps Iabds api" in {
-      when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(JsArray(Seq.empty)))))
-      val response =  await(TestEmploymentService.getNpsIabds(testNino,TaxYear(2016)))
+      val response =  await(testEmploymentHistoryService.getNpsIabds(testNino,TaxYear(2016)))
       response.left.get.status mustBe NOT_FOUND
 
     }
 
     "return none where tax year is not cy-1" in {
-      val response = await(TestEmploymentService.getNpsTaxAccount(testNino, TaxYear(2015)))
+      val response = await(testEmploymentHistoryService.getNpsTaxAccount(testNino, TaxYear(2015)))
       response.right.get mustBe None
     }
 
     "return any non success status response from get Nps Tax Account api" in {
-      when(mockNpsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(failureResponseJson))))
-      val response =  await(TestEmploymentService.getNpsTaxAccount(testNino,TaxYear(2016)))
+      val response =  await(testEmploymentHistoryService.getNpsTaxAccount(testNino,TaxYear(2016)))
       response.left.get.status mustBe BAD_REQUEST
 
     }
 
     "return not found status response from get Nps Tax Account api" in {
-      when(mockNpsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(JsArray(Seq.empty)))))
-      val response =  await(TestEmploymentService.getNpsTaxAccount(testNino,TaxYear(2016)))
+      val response =  await(testEmploymentHistoryService.getNpsTaxAccount(testNino,TaxYear(2016)))
       response.left.get.status mustBe NOT_FOUND
     }
 
@@ -475,10 +468,10 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
           |    }
           |] """.stripMargin)
 
-      when(TestEmploymentService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
               .thenReturn(Future.successful(Some(payeJson)))
 
-      val result = await(TestEmploymentService.getEmployments("AA000000A", 2014))
+      val result = await(testEmploymentHistoryService.getEmployments("AA000000A", 2014))
       result.json must be (employmentsJson)
     }
 
@@ -487,10 +480,10 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         """ [
           |] """.stripMargin)
 
-      when(TestEmploymentService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
-      val result = await(TestEmploymentService.getEmployments("AA000000A", 2014))
+      val result = await(testEmploymentHistoryService.getEmployments("AA000000A", 2014))
       result.status must be (NOT_FOUND)
     }
 
@@ -513,10 +506,10 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
            |    }
            """.stripMargin)
 
-      when(TestEmploymentService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
-      val result = await(TestEmploymentService.getEmployment("AA000000A", 2014,"01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
+      val result = await(testEmploymentHistoryService.getEmployment("AA000000A", 2014,"01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
       result.json must be (employmentJson)
       result.status must be (OK)
     }
@@ -535,10 +528,10 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
            |    }
         """.stripMargin)
 
-      when(TestEmploymentService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
-      val result = await(TestEmploymentService.getEmployment("AA000000A", 2014,"01318d7c-bcd9-47e2-8c38-551e7ccdfae6"))
+      val result = await(testEmploymentHistoryService.getEmployment("AA000000A", 2014,"01318d7c-bcd9-47e2-8c38-551e7ccdfae6"))
       result.status mustBe (NOT_FOUND)
 
     }
@@ -554,10 +547,10 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
            |    }]
         """.stripMargin)
 
-      when(TestEmploymentService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
-      val result = await(TestEmploymentService.getCompanyBenefits("AA000000A", 2014, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
+      val result = await(testEmploymentHistoryService.getCompanyBenefits("AA000000A", 2014, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
       result.json must be (companyBenefitsJson)
       result.status must be (OK)
     }
@@ -565,10 +558,10 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     "return not found when no company benefits returned from cache" in {
       lazy val payeJson = loadFile("/json/model/api/payeNoCompanyBenefits.json")
 
-      when(TestEmploymentService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
-      val result = await(TestEmploymentService.getCompanyBenefits("AA000000A", 2014, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
+      val result = await(testEmploymentHistoryService.getCompanyBenefits("AA000000A", 2014, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
       result.status must be (NOT_FOUND)
     }
   }
