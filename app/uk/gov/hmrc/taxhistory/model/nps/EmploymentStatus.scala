@@ -27,22 +27,22 @@ object EmploymentStatus {
   case object PotentiallyCeased extends EmploymentStatus
   case object Ceased extends EmploymentStatus
 
-  private val LIVE = 1
-  private val POTENTIALLYCEASED = 2
-  private val CEASED = 3
+  private val LiveCode = 1
+  private val PotentiallyCeasedCode = 2
+  private val CeasedCode = 3
 
   implicit val jsonReads = {
     (__ \ "employmentStatus").read[Int].flatMap[EmploymentStatus] {
-      case LIVE => Reads(_ => JsSuccess(Live))
-      case POTENTIALLYCEASED => Reads(_ => JsSuccess(PotentiallyCeased))
-      case CEASED => Reads(_ => JsSuccess(Ceased))
-      case _ => Reads(_ => JsError(JsPath \ "employmentStatus", ValidationError("Invalid EmploymentStatus")))
+      case LiveCode              => Reads(_ => JsSuccess(Live))
+      case PotentiallyCeasedCode => Reads(_ => JsSuccess(PotentiallyCeased))
+      case CeasedCode            => Reads(_ => JsSuccess(Ceased))
+      case _                     => Reads(_ => JsError(JsPath \ "employmentStatus", ValidationError("Invalid EmploymentStatus")))
     }
   }
 
     implicit val jsonWrites = Writes[EmploymentStatus] {
-      case Live => Json.obj("employmentStatus" -> 1)
-      case PotentiallyCeased => Json.obj("employmentStatus" -> 2)
-      case Ceased => Json.obj("employmentStatus" -> 3)
+      case Live              => Json.obj("employmentStatus" -> LiveCode)
+      case PotentiallyCeased => Json.obj("employmentStatus" -> PotentiallyCeasedCode)
+      case Ceased            => Json.obj("employmentStatus" -> CeasedCode)
     }
 }

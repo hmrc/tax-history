@@ -28,8 +28,8 @@ import uk.gov.hmrc.play.microservice.config.LoadAuditingConfig
 
 
 trait Hooks extends HttpHooks with HttpAuditing {
-  override val hooks = Seq(AuditingHook)
-  override lazy val auditConnector: AuditConnector = MicroserviceAuditConnector
+  val hooks = Seq(AuditingHook)
+  lazy val auditConnector: AuditConnector = MicroserviceAuditConnector
 }
 
 trait WSHttp extends HttpGet with WSGet
@@ -42,14 +42,14 @@ trait WSHttp extends HttpGet with WSGet
 object WSHttp extends WSHttp
 
 object MicroserviceAuditConnector extends AuditConnector with RunMode {
-  override lazy val auditingConfig = LoadAuditingConfig(s"auditing")
+  lazy val auditingConfig = LoadAuditingConfig(s"auditing")
 }
 
 object MicroserviceAuthConnector extends AuthConnector with ServicesConfig with WSHttp {
-  override val authBaseUrl = baseUrl("auth")
+  val authBaseUrl = baseUrl("auth")
 }
 
 object TaxHistoryAuthConnector extends PlayAuthConnector with ServicesConfig {
-  override val serviceUrl = baseUrl("auth")
-  override val http =WSHttp
+  val serviceUrl = baseUrl("auth")
+  val http = WSHttp
 }

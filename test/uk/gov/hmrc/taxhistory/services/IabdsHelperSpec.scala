@@ -95,14 +95,12 @@ val onlyIabdJson = """[{
     "correctly convert an iabd to an allowance model" in {
       val iabdsHelper = new IabdsHelper(iabdList)
       val allowances =  iabdsHelper.getAllowances()
-      allowances mustBe a [List[Allowance]]
       allowances.size mustBe 1
     }
     "Return an empty list of allowances when only iabd is present" in {
       val iabdsHelper = new IabdsHelper(onlyIabdList)
 
       val allowances =  iabdsHelper.getAllowances()
-      allowances mustBe a [List[Allowance]]
       allowances.size mustBe 0
     }
 
@@ -111,13 +109,11 @@ val onlyIabdJson = """[{
       val iabds = iabdsJsonResponse.as[List[Iabd]]
       val iabdsHelper = new IabdsHelper(iabds)
 
-      iabds mustBe a [List[Iabd]]
       val iabdsFiltered = iabdsHelper.getRawCompanyBenefits()
       iabdsFiltered.size mustBe 4
       iabdsFiltered.toString() contains  ("FlatRateJobExpenses") mustBe false
       iabdsFiltered.toString() contains  ("VanBenefit")  mustBe true
       iabdsFiltered.toString() contains  ("CarFuelBenefit")  mustBe true
-
     }
 
     "Return a matched iabds  from  List of employments" in {
@@ -126,14 +122,11 @@ val onlyIabdJson = """[{
 
       val employments = npsEmploymentResponse.as[List[NpsEmployment]]
 
-      iabds mustBe a [List[Iabd]]
       val matchedIabds = iabdsHelper.getMatchedCompanyBenefits(employments.head)
       matchedIabds.size mustBe 2
       matchedIabds.toString() contains  ("VanBenefit") mustBe true
       matchedIabds.toString() contains  ("CarFuelBenefit") mustBe true
-
     }
-
 
     "Get CompanyBenfits from Iabd data and ignore Benefit In Kind (type 28)" in {
 
@@ -164,6 +157,7 @@ val onlyIabdJson = """[{
       val bik=iabdsHelper.isTotalBenefitInKind()
       bik  mustBe  true
     }
+
     "Total Benefit In Kind  from Iabds list should return false if There is any BIK which is not type 28" in {
       val iabds = iabdsBenfitInKindJsonResponse.as[List[Iabd]]
       val iabdsHelper = new IabdsHelper(iabds)
@@ -172,19 +166,14 @@ val onlyIabdJson = """[{
       bik  mustBe  false
     }
 
-
     "Return only Allowances from  List of Nps Iabds" in {
       val iabds = iabdsJsonResponse.as[List[Iabd]]
-      iabds mustBe a [List[Iabd]]
       val iabdsHelper = new IabdsHelper(iabds)
 
       val iabdsFiltered = iabdsHelper.getRawAllowances()
       iabdsFiltered.size mustBe 1
       iabdsFiltered.toString() contains  ("FlatRateJobExpenses") mustBe true
-
     }
-
-
 
   }
 }

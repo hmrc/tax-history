@@ -192,7 +192,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
       val eitherResponse = await(TestEmploymentService.getNpsEmployments(testNino, TaxYear(2016)))
       assert(eitherResponse.isRight)
-      eitherResponse.right.get mustBe a[List[NpsEmployment]]
     }
 
     "handle any non success status response from get Nps Employments" in {
@@ -201,7 +200,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
       val eitherResponse = await(TestEmploymentService.getNpsEmployments(testNino, TaxYear(2016)))
       assert(eitherResponse.isLeft)
-      eitherResponse.left.get mustBe a[HttpResponse]
     }
 
     "successfully get Rti Employments Data" in {
@@ -210,7 +208,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
       val eitherResponse = await(TestEmploymentService.getRtiEmployments(testNino, TaxYear(2016)))
       assert(eitherResponse.isRight)
-      eitherResponse.right.get mustBe a[RtiData]
     }
 
     "handle any non success status response from get Rti Employments" in {
@@ -219,14 +216,12 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
       val eitherResponse = await(TestEmploymentService.getRtiEmployments(testNino, TaxYear(2016)))
       assert(eitherResponse.isLeft)
-      eitherResponse.left.get mustBe a[HttpResponse]
     }
         
     "return any non success status response from get Nps Employments api" in {
       when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(npsEmploymentResponse))))
       val response =  await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
-      response mustBe a[HttpResponse]
       response.status mustBe BAD_REQUEST
     }
 
@@ -234,7 +229,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(mockNpsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(JsArray(Seq.empty)))))
       val response =  await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
-      response mustBe a[HttpResponse]
       response.status mustBe NOT_FOUND
     }
 
@@ -248,7 +242,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(mockNpsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST)))
       val response =  await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
-      response mustBe a[HttpResponse]
       response.status mustBe OK
     }
 
@@ -337,7 +330,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
         val response = await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
-        response mustBe a[HttpResponse]
         response.status mustBe OK
         val payAsYouEarn = response.json.as[PayAsYouEarn]
         val employments = payAsYouEarn.employments
@@ -352,7 +344,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
         val response = await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
-        response mustBe a[HttpResponse]
         response.status mustBe NOT_FOUND
       }
     }
@@ -366,7 +357,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
         val response = await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
-        response mustBe a[HttpResponse]
         response.status mustBe NOT_FOUND
       }
 
@@ -378,7 +368,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         when(mockRtiDataConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
         val response = await(TestEmploymentService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
-        response mustBe a[HttpResponse]
         response.status mustBe NOT_FOUND
       }
     }
@@ -387,7 +376,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(failureResponseJson))))
       val response =  await(TestEmploymentService.getNpsIabds(testNino,TaxYear(2016)))
-      response mustBe a[Either[HttpResponse,List[Iabd]]]
       response.left.get.status mustBe BAD_REQUEST
 
     }
@@ -396,14 +384,12 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(mockNpsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(JsArray(Seq.empty)))))
       val response =  await(TestEmploymentService.getNpsIabds(testNino,TaxYear(2016)))
-      response mustBe a[Either[HttpResponse,List[Iabd]]]
       response.left.get.status mustBe NOT_FOUND
 
     }
 
     "return none where tax year is not cy-1" in {
       val response = await(TestEmploymentService.getNpsTaxAccount(testNino, TaxYear(2015)))
-      response mustBe a[Either[HttpResponse,Option[NpsTaxAccount]]]
       response.right.get mustBe None
     }
 
@@ -411,7 +397,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(mockNpsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(failureResponseJson))))
       val response =  await(TestEmploymentService.getNpsTaxAccount(testNino,TaxYear(2016)))
-      response mustBe a[Either[HttpResponse,Option[NpsTaxAccount]]]
       response.left.get.status mustBe BAD_REQUEST
 
     }
@@ -420,7 +405,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(mockNpsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(JsArray(Seq.empty)))))
       val response =  await(TestEmploymentService.getNpsTaxAccount(testNino,TaxYear(2016)))
-      response mustBe a[Either[HttpResponse,Option[NpsTaxAccount]]]
       response.left.get.status mustBe NOT_FOUND
     }
 

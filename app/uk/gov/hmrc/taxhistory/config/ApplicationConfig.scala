@@ -20,5 +20,5 @@ import uk.gov.hmrc.play.config.ServicesConfig
 
 object ApplicationConfig extends ServicesConfig {
   val mongoSource = "taxhistory"
-  val expireAfterSeconds: Int = runModeConfiguration.getInt("mongodb.cache.expire.seconds").fold(60 * 60 * 30 )(x => x)
+  val expireAfterSeconds: Int = runModeConfiguration.getInt("mongodb.cache.expire.seconds").getOrElse(60 * 60 * 30)
 }

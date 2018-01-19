@@ -20,11 +20,6 @@ import org.joda.time.LocalDate
 import play.api.libs.json._
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
 
-/**
-  * Created by shailesh on 15/06/17.
-  */
-
-
 case class NpsEmployment(nino:String,
                       sequenceNumber:Int,
                       taxDistrictNumber:String,
