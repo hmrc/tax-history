@@ -20,11 +20,11 @@ import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.model.Audit
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
-import uk.gov.hmrc.taxhistory.{MicroserviceAuditConnector, TaxHistoryAuthConnector}
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
+import uk.gov.hmrc.taxhistory.{MicroserviceAuditConnector, TaxHistoryAuthConnector}
 
 import scala.concurrent.Future
 

@@ -16,35 +16,26 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import org.mockito.Matchers
-import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.Json
 import play.api.test.Helpers._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.play.audit.model.Audit
-import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
-import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.api.{IndividualTaxYear, PayAsYouEarn}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.taxhistory.model.api.IndividualTaxYear
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 
-import scala.concurrent.Future
 
-
-class TaxYearServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
+class TaxYearServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   implicit val hc = HeaderCarrier()
   val testNino = randomNino().toString()
 
-  val testEmploymentHistoryService = new TestEmploymentHistoryService()
+  val testEmploymentHistoryService = TestEmploymentHistoryService.createNew
 
   "get Individual Tax Years " should {
     "successfully return list of four tax years" in {
-      val response =  await(testEmploymentHistoryService.getTaxYears(testNino))
-      response mustBe a[HttpResponse]
+      val response = await(testEmploymentHistoryService.getTaxYears(testNino))
       response.status mustBe OK
       val taxYears = response.json.as[List[IndividualTaxYear]]
       taxYears.size mustBe 4

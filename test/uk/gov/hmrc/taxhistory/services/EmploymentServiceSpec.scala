@@ -24,12 +24,9 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsArray, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
-import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
-import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, Employment, PayAsYouEarn}
-import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
+import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
@@ -43,7 +40,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
   implicit val hc = HeaderCarrier()
   val testNino = randomNino()
   
-  val testEmploymentHistoryService = new TestEmploymentHistoryService()
+  val testEmploymentHistoryService = TestEmploymentHistoryService.createNew
 
   val failureResponseJson = Json.parse("""{"reason":"Bad Request"}""")
 

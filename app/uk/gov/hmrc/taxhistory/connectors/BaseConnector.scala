@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
-import play.Logger
 import play.api.http.Status
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._

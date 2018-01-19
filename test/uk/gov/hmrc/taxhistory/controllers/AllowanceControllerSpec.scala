@@ -53,8 +53,8 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
   }
 
   object TestAllowanceController extends AllowanceController{
-    override def employmentHistoryService: EmploymentHistoryService = mockEmploymentHistoryService
-    override def authConnector: AuthConnector = mockPlayAuthConnector
+    def employmentHistoryService: EmploymentHistoryService = mockEmploymentHistoryService
+    def authConnector: AuthConnector = mockPlayAuthConnector
   }
 
   "getAllowances" must {
