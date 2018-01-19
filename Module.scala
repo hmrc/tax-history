@@ -18,8 +18,11 @@ import com.google.inject.AbstractModule
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.config.AppName
 import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
-import uk.gov.hmrc.taxhistory.auditable.{Auditable, AuditableImpl}
-import uk.gov.hmrc.play.auth.microservice.connectors.AuthConnector
+import uk.gov.hmrc.taxhistory.auditable.Auditable
+import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
+import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
+import uk.gov.hmrc.taxhistory.services.TaxHistoryCacheService
+import uk.gov.hmrc.taxhistory.TaxHistoryAuthConnector
 
 class Module extends AbstractModule {
 
@@ -27,7 +30,10 @@ class Module extends AbstractModule {
   // to injection from trait/object
 
   def configure() = {
-    bind(classOf[Audit]).toInstance(new Audit(AppName.appName, MicroserviceAuditConnector))
-    bind(classOf[Auditable]).to(classOf[AuditableImpl])
+//    bind(classOf[Audit]).toInstance(new Audit(AppName.appName, MicroserviceAuditConnector))
+//    bind(classOf[NpsConnector]).toInstance(NpsConnector)
+//    bind(classOf[RtiConnector]).toInstance(RtiConnector)
+//    bind(classOf[uk.gov.hmrc.auth.core.AuthConnector]).toInstance(TaxHistoryAuthConnector)
+//    bind(classOf[TaxHistoryCacheService]).toInstance(TaxHistoryCacheService)
   }
 }
