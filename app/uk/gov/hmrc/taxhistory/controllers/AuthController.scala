@@ -16,11 +16,9 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import play.api.Logger
 import play.api.mvc.Result
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
-import uk.gov.hmrc.auth.core.ConfidenceLevel.L200
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}

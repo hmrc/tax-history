@@ -19,15 +19,15 @@ package uk.gov.hmrc.taxhistory.controllers
 import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.TaxHistoryAuthConnector
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 import scala.concurrent.Future
 
 trait AllowanceController extends TaxHistoryController {
 
-  def employmentHistoryService: EmploymentHistoryService = EmploymentHistoryService
+  def employmentHistoryService: EmploymentHistoryService
 
   def getAllowances(nino: String, taxYear: Int): Action[AnyContent] = Action.async {
     implicit request => {
@@ -40,5 +40,7 @@ trait AllowanceController extends TaxHistoryController {
 }
 
 object AllowanceController extends AllowanceController {
-  override def authConnector: AuthConnector = TaxHistoryAuthConnector
+  def employmentHistoryService: EmploymentHistoryService = EmploymentHistoryService
+
+  def authConnector: AuthConnector = TaxHistoryAuthConnector
 }

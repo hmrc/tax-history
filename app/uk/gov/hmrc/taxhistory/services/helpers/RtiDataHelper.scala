@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.services.helpers
 
-import play.Logger
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, PayAndTax}

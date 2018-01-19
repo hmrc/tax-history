@@ -20,14 +20,9 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.model.Audit
-import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
-import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.model.api.Allowance
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.IabdsHelper
-import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 
 
 class IabdsHelperSpec extends PlaySpec with MockitoSugar with TestUtil{

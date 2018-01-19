@@ -17,13 +17,13 @@
 package uk.gov.hmrc.taxhistory.services
 
 
-import play.api.Logger
 import play.api.http.Status
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit
+import uk.gov.hmrc.play.config.AppName
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
 import uk.gov.hmrc.taxhistory.auditable.Auditable
@@ -38,19 +38,19 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-object EmploymentHistoryService extends EmploymentHistoryService {
+object EmploymentHistoryService extends EmploymentHistoryService(
+                                                                  Audit(new AppName {}.appName, MicroserviceAuditConnector),
+                                                                  NpsConnector,
+                                                                  RtiConnector,
+                                                                  TaxHistoryCacheService
+                                                                )
 
-  def audit = new Audit(appName,MicroserviceAuditConnector)
-  def npsConnector: NpsConnector = NpsConnector
-  def rtiConnector: RtiConnector = RtiConnector
-  def cacheService : TaxHistoryCacheService = TaxHistoryCacheService
-
-}
-
-trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Auditable with TaxHistoryLogger{
-  def npsConnector: NpsConnector
-  def rtiConnector: RtiConnector
-  def cacheService : TaxHistoryCacheService
+class EmploymentHistoryService(
+                              val audit: Audit,
+                              val npsConnector: NpsConnector,
+                              val rtiConnector: RtiConnector,
+                              val cacheService : TaxHistoryCacheService
+                              ) extends EmploymentHistoryServiceHelper with Auditable with TaxHistoryLogger {
 
   def getEmployments(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     implicit val validatedNino:Nino = Nino(nino)

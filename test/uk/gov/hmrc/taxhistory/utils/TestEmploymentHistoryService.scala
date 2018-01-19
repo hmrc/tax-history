@@ -22,9 +22,12 @@ import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, TaxHistoryCacheService}
 
-class TestEmploymentHistoryService() extends EmploymentHistoryService with MockitoSugar {
-  val npsConnector: NpsConnector = mock[NpsConnector]
-  val rtiConnector: RtiConnector = mock[RtiConnector]
-  val cacheService: TaxHistoryCacheService = mock[TaxHistoryCacheService]
-  val audit: Audit = mock[Audit]
+object TestEmploymentHistoryService extends AnyRef with MockitoSugar {
+  def createNew: EmploymentHistoryService =
+    new EmploymentHistoryService(
+      npsConnector = mock[NpsConnector],
+      rtiConnector = mock[RtiConnector],
+      cacheService = mock[TaxHistoryCacheService],
+      audit = mock[Audit]
+    )
 }
