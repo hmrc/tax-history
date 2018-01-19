@@ -39,14 +39,18 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 object EmploymentHistoryService extends EmploymentHistoryService {
-  override def audit = new Audit(appName,MicroserviceAuditConnector)
+
+  def audit = new Audit(appName,MicroserviceAuditConnector)
+  def npsConnector: NpsConnector = NpsConnector
+  def rtiConnector: RtiConnector = RtiConnector
+  def cacheService : TaxHistoryCacheService = TaxHistoryCacheService
+
 }
 
 trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Auditable with TaxHistoryLogger{
-  def npsConnector : NpsConnector = NpsConnector
-  def rtiConnector : RtiConnector = RtiConnector
-  def cacheService : TaxHistoryCacheService = TaxHistoryCacheService
-
+  def npsConnector: NpsConnector
+  def rtiConnector: RtiConnector
+  def cacheService : TaxHistoryCacheService
 
   def getEmployments(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     implicit val validatedNino:Nino = Nino(nino)
@@ -253,7 +257,7 @@ trait EmploymentHistoryService extends EmploymentHistoryServiceHelper with Audit
     }
   }
 
-  def getNpsTaxAccount(nino:Nino, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,Option[NpsTaxAccount]]] = {
+  def getNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse, Option[NpsTaxAccount]]] = {
 
     if (taxYear.startYear != TaxYear.current.previous.startYear) {
       Future.successful(Right(None))

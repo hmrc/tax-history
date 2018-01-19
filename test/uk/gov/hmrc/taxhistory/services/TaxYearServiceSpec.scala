@@ -28,23 +28,22 @@ import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.model.api.{IndividualTaxYear, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
 
 class TaxYearServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
-  private val mockAudit= mock[Audit]
 
   implicit val hc = HeaderCarrier()
   val testNino = randomNino().toString()
-  object TestEmploymentService extends EmploymentHistoryService {
-    override def audit: Audit = mockAudit
-  }
+
+  val testEmploymentHistoryService = new TestEmploymentHistoryService()
 
   "get Individual Tax Years " should {
     "successfully return list of four tax years" in {
-      val response =  await(TestEmploymentService.getTaxYears(testNino))
+      val response =  await(testEmploymentHistoryService.getTaxYears(testNino))
       response mustBe a[HttpResponse]
       response.status mustBe OK
       val taxYears = response.json.as[List[IndividualTaxYear]]
