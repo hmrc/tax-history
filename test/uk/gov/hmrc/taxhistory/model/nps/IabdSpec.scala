@@ -56,8 +56,7 @@ class IabdSpec extends TestUtil with UnitSpec {
 
     "List of Iabds Json" should {
       "transform List of Iabd" in {
-        val iabds = employmentsResponse.as[List[Iabd]]
-        iabds shouldBe a[List[Iabd]]
+        noException shouldBe thrownBy (employmentsResponse.as[List[Iabd]])
       }
     }
 
