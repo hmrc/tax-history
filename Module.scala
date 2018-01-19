@@ -21,8 +21,10 @@ import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
-import uk.gov.hmrc.taxhistory.services.TaxHistoryCacheService
+import uk.gov.hmrc.taxhistory.controllers.AllowanceController
+import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, TaxHistoryCacheService}
 import uk.gov.hmrc.taxhistory.TaxHistoryAuthConnector
+import uk.gov.hmrc.auth.core.AuthConnector
 
 class Module extends AbstractModule {
 
@@ -30,10 +32,14 @@ class Module extends AbstractModule {
   // to injection from trait/object
 
   def configure() = {
-//    bind(classOf[Audit]).toInstance(new Audit(AppName.appName, MicroserviceAuditConnector))
-//    bind(classOf[NpsConnector]).toInstance(NpsConnector)
-//    bind(classOf[RtiConnector]).toInstance(RtiConnector)
-//    bind(classOf[uk.gov.hmrc.auth.core.AuthConnector]).toInstance(TaxHistoryAuthConnector)
-//    bind(classOf[TaxHistoryCacheService]).toInstance(TaxHistoryCacheService)
+    //bind(classOf[Audit]).toInstance(new Audit(AppName.appName, MicroserviceAuditConnector))
+    bind(classOf[NpsConnector]).toInstance(NpsConnector)
+    bind(classOf[RtiConnector]).toInstance(RtiConnector)
+    bind(classOf[uk.gov.hmrc.auth.core.AuthConnector]).toInstance(TaxHistoryAuthConnector)
+    bind(classOf[TaxHistoryCacheService]).toInstance(TaxHistoryCacheService)
+    bind(classOf[EmploymentHistoryService]).toInstance(EmploymentHistoryService)
+//    bind(classOf[AllowanceController]).toInstance(new AllowanceController(employmentHistoryService = EmploymentHistoryService, authConnector = TaxHistoryAuthConnector))
+    //bind(classOf[AllowanceController]).to(classOf[AllowanceController])
+    bind(classOf[AuthConnector]).toInstance(TaxHistoryAuthConnector)
   }
 }

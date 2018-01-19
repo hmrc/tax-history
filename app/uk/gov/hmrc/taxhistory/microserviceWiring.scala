@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.taxhistory
 
+import javax.inject.Inject
+
 import uk.gov.hmrc.auth.core.PlayAuthConnector
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.hooks.HttpHooks
