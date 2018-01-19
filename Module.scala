@@ -16,10 +16,8 @@
 
 import com.google.inject.AbstractModule
 import uk.gov.hmrc.play.audit.model.Audit
-import uk.gov.hmrc.play.auth.microservice.connectors.AuthConnector
-import uk.gov.hmrc.auth.core.PlayAuthConnector
 import uk.gov.hmrc.play.config.AppName
-import uk.gov.hmrc.taxhistory.{MicroserviceAuditConnector, TaxHistoryAuthConnectorImpl}
+import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
 import uk.gov.hmrc.taxhistory.auditable.{Auditable, AuditableImpl}
 import uk.gov.hmrc.play.auth.microservice.connectors.AuthConnector
 
