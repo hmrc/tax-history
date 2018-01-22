@@ -42,31 +42,31 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
   "EmploymentsConnector" should {
     "have the nps basic url " when {
       "given a valid nino" in {
-        npsConnector.npsBaseUrl(testNino) mustBe s"/test/person/$testNino"
+        testNpsConnector.npsBaseUrl(testNino) mustBe s"/test/person/$testNino"
       }
     }
 
     "have the nps Path Url" when {
       "given a valid nino and path" in {
-        npsConnector.npsPathUrl(testNino, "path") mustBe s"/test/person/$testNino/path"
+        testNpsConnector.npsPathUrl(testNino, "path") mustBe s"/test/person/$testNino/path"
       }
     }
 
     "have withoutSuffix nino" when {
       "given a valid nino" in {
-        npsConnector.withoutSuffix(testNino) mustBe s"${testNino.value.take(8)}"
+        testNpsConnector.withoutSuffix(testNino) mustBe s"${testNino.value.take(8)}"
       }
     }
 
     "create the correct headers" in {
-      val headers = npsConnector.basicNpsHeaders(HeaderCarrier())
+      val headers = testNpsConnector.basicNpsHeaders(HeaderCarrier())
       headers.extraHeaders mustBe List(("Gov-Uk-Originator-Id", "orgId"))
     }
 
     "get EmploymentData data " when {
       "given a valid Nino and TaxYear" in {
         implicit val hc = HeaderCarrier()
-        val testemploymentsConnector = npsConnector
+        val testemploymentsConnector = testNpsConnector
         val fakeResponse: HttpResponse = HttpResponse(OK, Some(employmentsSuccessfulResponse))
 
         when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
@@ -83,7 +83,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       "return and handle a bad request response " in {
         val expectedResponse = Json.parse( """{"reason": "Some thing went wrong"}""")
         implicit val hc = HeaderCarrier()
-        val testemploymentsConnector = npsConnector
+        val testemploymentsConnector = testNpsConnector
         when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
@@ -97,7 +97,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       "return and handle a not found response " in {
         val expectedResponse = Json.parse( """{"reason": "Resource not found"}""")
         implicit val hc = HeaderCarrier()
-        val testemploymentsConnector = npsConnector
+        val testemploymentsConnector = testNpsConnector
         when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
@@ -111,7 +111,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       "return and handle an internal server error response " in {
         val expectedResponse = Json.parse( """{"reason": "Internal Server Error"}""")
         implicit val hc = HeaderCarrier()
-        val testemploymentsConnector = npsConnector
+        val testemploymentsConnector = testNpsConnector
         when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
@@ -125,7 +125,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       "return and handle an service unavailable error response " in {
         val expectedResponse = Json.parse( """{"reason": "Service Unavailable Error"}""")
         implicit val hc = HeaderCarrier()
-        val testemploymentsConnector = npsConnector
+        val testemploymentsConnector = testNpsConnector
         when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
@@ -143,7 +143,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     "get Iabds data " when {
       "given a valid Nino and TaxYear" in {
         implicit val hc = HeaderCarrier()
-        val testIabdsConnector = npsConnector
+        val testIabdsConnector = testNpsConnector
         val fakeResponse: HttpResponse = HttpResponse(OK, Some(iabdsSuccessfulResponse))
 
         when(testIabdsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
@@ -160,7 +160,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       "return and handle a bad request response " in {
         val expectedResponse = Json.parse( """{"reason": "Some thing went wrong"}""")
         implicit val hc = HeaderCarrier()
-        val testIabdsConnector = npsConnector
+        val testIabdsConnector = testNpsConnector
         when(testIabdsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testIabdsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
@@ -174,7 +174,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       "return and handle a not found response " in {
         val expectedResponse = Json.parse( """{"reason": "Resource not found"}""")
         implicit val hc = HeaderCarrier()
-        val testIabdsConnector = npsConnector
+        val testIabdsConnector = testNpsConnector
         when(testIabdsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testIabdsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
@@ -188,7 +188,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       "return and handle an internal server error response " in {
         val expectedResponse = Json.parse( """{"reason": "Internal Server Error"}""")
         implicit val hc = HeaderCarrier()
-        val testIabdsConnector = npsConnector
+        val testIabdsConnector = testNpsConnector
         when(testIabdsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testIabdsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
@@ -202,7 +202,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       "return and handle an service unavailable error response " in {
         val expectedResponse = Json.parse( """{"reason": "Service Unavailable Error"}""")
         implicit val hc = HeaderCarrier()
-        val testIabdsConnector = npsConnector
+        val testIabdsConnector = testNpsConnector
         when(testIabdsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testIabdsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
@@ -218,7 +218,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     "get Tax Account data " when {
       "given a valid Nino and TaxYear" in {
         implicit val hc = HeaderCarrier()
-        val testTaxAccountConnector = npsConnector
+        val testTaxAccountConnector = testNpsConnector
         val fakeResponse: HttpResponse = HttpResponse(OK, Some(iabdsSuccessfulResponse))
 
         when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
@@ -235,7 +235,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       "return and handle a bad request response " in {
         val expectedResponse = Json.parse( """{"reason": "Some thing went wrong"}""")
         implicit val hc = HeaderCarrier()
-        val testTaxAccountConnector = npsConnector
+        val testTaxAccountConnector = testNpsConnector
         when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testTaxAccountConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
@@ -249,7 +249,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       "return and handle a not found response " in {
         val expectedResponse = Json.parse( """{"reason": "Resource not found"}""")
         implicit val hc = HeaderCarrier()
-        val testTaxAccountConnector = npsConnector
+        val testTaxAccountConnector = testNpsConnector
         when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testTaxAccountConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
@@ -263,7 +263,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       "return and handle an internal server error response " in {
         val expectedResponse = Json.parse( """{"reason": "Internal Server Error"}""")
         implicit val hc = HeaderCarrier()
-        val testTaxAccountConnector = npsConnector
+        val testTaxAccountConnector = testNpsConnector
         when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testTaxAccountConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
@@ -277,7 +277,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       "return and handle an service unavailable error response " in {
         val expectedResponse = Json.parse( """{"reason": "Service Unavailable Error"}""")
         implicit val hc = HeaderCarrier()
-        val testTaxAccountConnector = npsConnector
+        val testTaxAccountConnector = testNpsConnector
         when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testTaxAccountConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
@@ -292,20 +292,17 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   }
 
-  private class TestNpsConnector extends NpsConnector {
-    override val serviceUrl: String = "/test"
-
+  lazy val testNpsConnector = new NpsConnector(httpGet = mock[HttpGet],
+    httpPost = ???,
+    audit = ???,
+    path = ???,
+    serviceUrl = "/test",
+    originatorId = "orgId"
+  ) {
     override val metrics = mock[TaxHistoryMetrics]
-
-    override val originatorId: String = "orgId"
-
-    override val httpGet: HttpGet = mock[HttpGet]
-
-    override lazy val httpPost: HttpPost = ???
 
     val mockTimerContext = mock[Timer.Context]
   }
-  private def npsConnector = new TestNpsConnector
 
 }
 

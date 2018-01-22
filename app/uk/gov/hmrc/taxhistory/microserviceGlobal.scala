@@ -16,10 +16,14 @@
 
 package uk.gov.hmrc.taxhistory
 
+import javax.inject.Inject
+
 import com.typesafe.config.Config
 import net.ceedubs.ficus.Ficus._
 import play.api.{Application, Configuration, Play}
+import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.auth.controllers.AuthParamsControllerConfig
+import uk.gov.hmrc.play.auth.microservice.connectors.AuthConnector
 import uk.gov.hmrc.play.auth.microservice.filters.AuthorisationFilter
 import uk.gov.hmrc.play.config.{AppName, ControllerConfig, RunMode}
 import uk.gov.hmrc.play.microservice.bootstrap.DefaultMicroserviceGlobal
@@ -34,8 +38,7 @@ object AuthParamsControllerConfiguration extends AuthParamsControllerConfig {
   lazy val controllerConfigs = ControllerConfiguration.controllerConfigs
 }
 
-object MicroserviceAuditFilter extends AuditFilter with AppName with MicroserviceFilterSupport {
-  override val auditConnector = MicroserviceAuditConnector
+class MicroserviceAuditFilter @Inject()(val auditConnector: AuditConnector) extends AuditFilter with AppName with MicroserviceFilterSupport {
   override def controllerNeedsAuditing(controllerName: String) = ControllerConfiguration.paramsForController(controllerName).needsAuditing
 }
 
@@ -43,20 +46,19 @@ object MicroserviceLoggingFilter extends LoggingFilter with MicroserviceFilterSu
   override def controllerNeedsLogging(controllerName: String) = ControllerConfiguration.paramsForController(controllerName).needsLogging
 }
 
-object MicroserviceAuthFilter extends AuthorisationFilter with MicroserviceFilterSupport {
+class MicroserviceAuthFilter @Inject()(val authConnector: AuthConnector) extends AuthorisationFilter with MicroserviceFilterSupport {
   override lazy val authParamsConfig = AuthParamsControllerConfiguration
-  override lazy val authConnector = MicroserviceAuthConnector
   override def controllerNeedsAuth(controllerName: String): Boolean = ControllerConfiguration.paramsForController(controllerName).needsAuth
 }
 
-object MicroserviceGlobal extends DefaultMicroserviceGlobal with RunMode with MicroserviceFilterSupport {
-  override val auditConnector = MicroserviceAuditConnector
+class MicroserviceGlobal @Inject()(val auditConnector: AuditConnector,
+                                   val auditFilter: AuditFilter) extends DefaultMicroserviceGlobal with RunMode with MicroserviceFilterSupport {
 
   override def microserviceMetricsConfig(implicit app: Application): Option[Configuration] = app.configuration.getConfig(s"microservice.metrics")
 
   override val loggingFilter = MicroserviceLoggingFilter
 
-  override val microserviceAuditFilter = MicroserviceAuditFilter
+  override val microserviceAuditFilter = auditFilter
 
-  override val authFilter = Some(MicroserviceAuthFilter)
+  override val authFilter = Some(auditFilter)
 }

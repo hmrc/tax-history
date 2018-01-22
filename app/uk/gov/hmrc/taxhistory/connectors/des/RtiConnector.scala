@@ -16,33 +16,24 @@
 
 package uk.gov.hmrc.taxhistory.connectors.des
 
+import javax.inject.{Inject, Named}
+
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.taxhistory.WSHttp
+import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.taxhistory.connectors.BaseConnector
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
-object RtiConnector extends RtiConnector {
-  // $COVERAGE-OFF$
-  override val httpGet: CoreGet = WSHttp
-  override val httpPost: CorePost = WSHttp
-
-  lazy val serviceUrl: String = s"${baseUrl("rti-hod")}"
-  lazy val authorization: String = "Bearer " + getConfString("rti-hod.authorizationToken", "local")
-  lazy val environment: String = getConfString("rti-hod.env", "local")
-  lazy val originatorId: String = getConfString("rti-hod.originatorId", "local")
-  // $COVERAGE-ON$
-}
-
-trait RtiConnector extends BaseConnector {
-
-  def serviceUrl: String
-
-  def authorization: String
-
-  def environment: String
+class RtiConnector @Inject()(val httpGet: CoreGet,
+                             val httpPost: CorePost,
+                             val audit: Audit,
+                             @Named("service-url") val serviceUrl: String,
+                             @Named("authorization") val authorization: String,
+                             @Named("environment") val environment: String,
+                             @Named("originator-id") val originatorId: String
+                            ) extends BaseConnector {
 
   def rtiBasicUrl(nino: Nino) = s"$serviceUrl/rti/individual/payments/nino/${withoutSuffix(nino)}"
 
