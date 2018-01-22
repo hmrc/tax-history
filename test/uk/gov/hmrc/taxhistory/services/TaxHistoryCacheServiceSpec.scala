@@ -107,8 +107,7 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
   }
 
   override protected def afterAll() = {
-   new ImplTaxHistoryCacheService().mongoConnector.db().drop()
+    testTaxHistoryCacheService.mongoConnector.db().drop()
   }
-
 
 }

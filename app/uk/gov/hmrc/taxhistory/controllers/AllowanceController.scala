@@ -38,5 +38,3 @@ class AllowanceController @Inject()(val employmentHistoryService: EmploymentHist
   private def retrieveAllowances(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[Result] =
     employmentHistoryService.getAllowances(nino, taxYear) map matchResponse
 }
-
-//object AllowanceController extends AllowanceController(employmentHistoryService = EmploymentHistoryService, authConnector = TaxHistoryAuthConnector)

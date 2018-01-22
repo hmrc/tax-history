@@ -29,7 +29,7 @@ import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
 import scala.concurrent.Future
 
-trait BaseConnector extends ServicesConfig with Auditable with TaxHistoryLogger{
+trait BaseConnector extends ServicesConfig with Auditable with TaxHistoryLogger {
 
   def httpGet: CoreGet
 
@@ -55,8 +55,6 @@ trait BaseConnector extends ServicesConfig with Auditable with TaxHistoryLogger{
   }
 
   override def appName: String = AppName.appName
-
-  override def audit: Audit = new Audit(AppName.appName, MicroserviceAuditConnector)
 
   def getFromRTI(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val timerContext = metrics.startTimer(MetricsEnum.RTI_GET_EMPLOYMENTS)

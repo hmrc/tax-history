@@ -26,10 +26,11 @@ import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import javax.inject.{Inject, Named}
 
-import javax.inject.Inject
-
-class TaxHistoryCacheService(expireAfterSeconds: Long, mongoSource: String) extends MongoDbConnection {
+class TaxHistoryCacheService @Inject()(
+                              @Named("cache-expire-after-seconds") expireAfterSeconds: Long,
+                              @Named("mongo-source") mongoSource: String) extends MongoDbConnection {
 
   val cacheRepository = new CacheMongoRepository(mongoSource, expireAfterSeconds, Cache.mongoFormats)
 
@@ -48,8 +49,3 @@ class TaxHistoryCacheService(expireAfterSeconds: Long, mongoSource: String) exte
     }
   }
 }
-
-class ImplTaxHistoryCacheService @Inject() extends TaxHistoryCacheService(
-  ApplicationConfig.expireAfterSeconds,
-  ApplicationConfig.mongoSource
-)

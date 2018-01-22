@@ -17,6 +17,8 @@
 package uk.gov.hmrc.taxhistory.services
 
 
+import javax.inject.Inject
+
 import play.api.http.Status
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -38,14 +40,7 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-object EmploymentHistoryService extends EmploymentHistoryService(
-                                                                  Audit(new AppName {}.appName, MicroserviceAuditConnector),
-                                                                  NpsConnector,
-                                                                  RtiConnector,
-                                                                  new ImplTaxHistoryCacheService()
-                                                                )
-
-class EmploymentHistoryService(
+class EmploymentHistoryService @Inject()(
                               val audit: Audit,
                               val npsConnector: NpsConnector,
                               val rtiConnector: RtiConnector,
