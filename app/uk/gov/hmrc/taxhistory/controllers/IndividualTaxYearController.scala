@@ -20,6 +20,7 @@ import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.model.Audit
+import uk.gov.hmrc.play.config.AppName
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
@@ -28,9 +29,9 @@ import uk.gov.hmrc.taxhistory.{MicroserviceAuditConnector, TaxHistoryAuthConnect
 
 import scala.concurrent.Future
 
-trait IndividualTaxYearController extends TaxHistoryController with Auditable with TaxHistoryLogger{
-
-  def employmentHistoryService: EmploymentHistoryService = EmploymentHistoryService
+class IndividualTaxYearController(val authConnector: AuthConnector,
+                                  val employmentHistoryService: EmploymentHistoryService,
+                                  val audit: Audit) extends TaxHistoryController with Auditable with TaxHistoryLogger{
 
   def getTaxYears(nino: String): Action[AnyContent] = Action.async {
     implicit request => {
@@ -56,9 +57,6 @@ trait IndividualTaxYearController extends TaxHistoryController with Auditable wi
     }
 }
 
-object IndividualTaxYearController extends IndividualTaxYearController {
-  override def authConnector: AuthConnector = TaxHistoryAuthConnector
-
-  override def audit = new Audit(appName, MicroserviceAuditConnector)
-}
+object ProdIndividualTaxYearController extends IndividualTaxYearController(new TaxHistoryAuthConnector(),
+  EmploymentHistoryService, new Audit(new AppName{}.appName, MicroserviceAuditConnector))
 

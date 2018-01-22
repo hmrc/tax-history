@@ -25,9 +25,7 @@ import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 
 import scala.concurrent.Future
 
-trait EmploymentController extends TaxHistoryController {
-
-  def employmentHistoryService: EmploymentHistoryService = EmploymentHistoryService
+class EmploymentController(val employmentHistoryService: EmploymentHistoryService, val authConnector: AuthConnector) extends TaxHistoryController {
 
   def getEmployments(nino: String, taxYear: Int): Action[AnyContent] = Action.async {
     implicit request => {
@@ -48,6 +46,4 @@ trait EmploymentController extends TaxHistoryController {
     employmentHistoryService.getEmployments(nino, taxYear) map matchResponse
 }
 
-object EmploymentController extends EmploymentController {
-  override def authConnector: AuthConnector = TaxHistoryAuthConnector
-}
+object EmploymentController extends EmploymentController(EmploymentHistoryService, new TaxHistoryAuthConnector())
