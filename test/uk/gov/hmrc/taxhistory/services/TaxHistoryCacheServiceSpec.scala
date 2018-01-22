@@ -37,14 +37,11 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
   with BeforeAndAfterEach
   with TestUtil
   with GuiceOneServerPerSuite{
-  val expireAfterSeconds: Int = 10
 
-  object TestTaxHistoryCacheService extends TaxHistoryCacheService{
-    override def cacheRepository: CacheMongoRepository =  new CacheMongoRepository(
-      mongoSource,expireAfterSeconds = expireAfterSeconds,Cache.mongoFormats)
-
-    override def mongoSource: String = "tax-history-test"
-  }
+  val testTaxHistoryCacheService = new TaxHistoryCacheService(
+    expireAfterSeconds = 10,
+    mongoSource = "tax-history-test"
+  )
 
   val someJson  =  Json.parse(""" [{
                              |    "nino": "AA000000",
@@ -85,23 +82,23 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
   "TaxHistoryCacheService" should {
 
       "successfully add the Data in cache" in {
-         val cacheData = await(TestTaxHistoryCacheService.createOrUpdate(nino.nino,"2015",someJson))
+         val cacheData = await(testTaxHistoryCacheService.createOrUpdate(nino.nino,"2015",someJson))
           cacheData.get shouldBe someJson
       }
 
       "fetch from the  cache by ID " in {
-         val fromCache = await(TestTaxHistoryCacheService.findById(nino.nino ,2015))
+         val fromCache = await(testTaxHistoryCacheService.findById(nino.nino ,2015))
          fromCache.get  shouldBe someJson
       }
 
     "When not in the mongo cache update the cache and fetch" in {
       implicit val nino = randomNino()
       implicit val year = TaxYear(2014)
-      val cacheMissUpdateAndGetFromCache = await(TestTaxHistoryCacheService.getFromCacheOrElse(toCache(nino.nino)))
+      val cacheMissUpdateAndGetFromCache = await(testTaxHistoryCacheService.getFromCacheOrElse(toCache(nino.nino)))
 
       cacheMissUpdateAndGetFromCache.get shouldBe someJson
 
-      val fromCache = await(TestTaxHistoryCacheService.getFromCacheOrElse(toCache(nino.nino)))
+      val fromCache = await(testTaxHistoryCacheService.getFromCacheOrElse(toCache(nino.nino)))
 
       fromCache.get shouldBe someJson
 
@@ -110,7 +107,7 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
   }
 
   override protected def afterAll() = {
-   TaxHistoryCacheService.mongoConnector.db().drop()
+   new ImplTaxHistoryCacheService().mongoConnector.db().drop()
   }
 
 

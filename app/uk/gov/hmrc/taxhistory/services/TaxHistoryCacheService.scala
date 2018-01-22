@@ -27,9 +27,11 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait TaxHistoryCacheService extends MongoDbConnection{
-  def cacheRepository: CacheMongoRepository
-  def mongoSource:String
+import javax.inject.Inject
+
+class TaxHistoryCacheService(expireAfterSeconds: Long, mongoSource: String) extends MongoDbConnection {
+
+  val cacheRepository = new CacheMongoRepository(mongoSource, expireAfterSeconds, Cache.mongoFormats)
 
    def createOrUpdate(id: String, key: String, toCache: JsValue): Future[Option[JsValue]] = {
     cacheRepository.createOrUpdate(Id(id),key,toCache).map(x => x.updateType.savedValue.data.map(_ \ key).map(_.get))
@@ -47,11 +49,7 @@ trait TaxHistoryCacheService extends MongoDbConnection{
   }
 }
 
-object TaxHistoryCacheService extends TaxHistoryCacheService {
-  override def cacheRepository : CacheMongoRepository = new CacheMongoRepository(
-    mongoSource,expireAfterSeconds = ApplicationConfig.expireAfterSeconds,Cache.mongoFormats)
-
-  override def mongoSource = ApplicationConfig.mongoSource
-
-
-}
+class ImplTaxHistoryCacheService @Inject() extends TaxHistoryCacheService(
+  ApplicationConfig.expireAfterSeconds,
+  ApplicationConfig.mongoSource
+)

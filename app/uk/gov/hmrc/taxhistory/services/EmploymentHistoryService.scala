@@ -42,7 +42,7 @@ object EmploymentHistoryService extends EmploymentHistoryService(
                                                                   Audit(new AppName {}.appName, MicroserviceAuditConnector),
                                                                   NpsConnector,
                                                                   RtiConnector,
-                                                                  TaxHistoryCacheService
+                                                                  new ImplTaxHistoryCacheService()
                                                                 )
 
 class EmploymentHistoryService(

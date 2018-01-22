@@ -51,7 +51,7 @@ object MicroserviceAuthConnector extends AuthConnector with ServicesConfig with 
   val authBaseUrl = baseUrl("auth")
 }
 
-object TaxHistoryAuthConnector extends PlayAuthConnector with ServicesConfig {
+class TaxHistoryAuthConnector @Inject() extends PlayAuthConnector with ServicesConfig {
   val serviceUrl = baseUrl("auth")
   val http = WSHttp
 }
