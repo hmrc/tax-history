@@ -29,16 +29,18 @@ import scala.concurrent.Future
 class RtiConnector @Inject()(val httpGet: CoreGet,
                              val httpPost: CorePost,
                              val audit: Audit,
-                             @Named("service-url") val serviceUrl: String,
-                             @Named("authorization") val authorization: String,
-                             @Named("environment") val environment: String,
-                             @Named("originator-id") val originatorId: String
+                             @Named("microservice.services.rti-hod.authorizationToken") val authorizationToken: String,
+                             @Named("microservice.services.rti-hod.env") val environment: String,
+                             @Named("microservice.services.rti-hod.originatorId") val originatorId: String
                             ) extends BaseConnector {
 
   def rtiBasicUrl(nino: Nino) = s"$serviceUrl/rti/individual/payments/nino/${withoutSuffix(nino)}"
 
   def rtiPathUrl(nino: Nino, path: String) = s"${rtiBasicUrl(nino)}/$path"
 
+  lazy val serviceUrl: String = s"${baseUrl("rti-hod")}"
+
+  lazy val authorization: String = s"Bearer $authorizationToken"
 
   def createHeader: HeaderCarrier = HeaderCarrier(extraHeaders =
     Seq("Environment" -> environment,
