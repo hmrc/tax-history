@@ -22,6 +22,7 @@ import play.api.http.Status.OK
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.audit.model.Audit
+import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.WSHttp
 import uk.gov.hmrc.taxhistory.connectors.BaseConnector
@@ -33,22 +34,22 @@ import scala.concurrent.Future
 class NpsConnector @Inject()(val httpGet: CoreGet,
                              val httpPost: CorePost,
                              val audit: Audit,
+                             val servicesConfig: ServicesConfig,
                              @Named("microservice.services.nps-hod.path") val path: String,
                              @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends BaseConnector with TaxHistoryLogger {
 
-  def npsBaseUrl(nino: Nino) = s"$serviceUrl/person/$nino"
+  lazy val serviceUrl: String = s"${servicesConfig.baseUrl("nps-hod")}$path"
 
-  def npsPathUrl(nino: Nino, path: String) = s"${npsBaseUrl(nino)}/$path"
-
-  lazy val serviceUrl: String = s"${baseUrl("nps-hod")}$path"
+  def employmentUrl(nino: Nino, year: Int) = s"$serviceUrl/person/${nino.nino}/employment/$year"
+  def iabdsUrl(nino: Nino, year: Int)      = s"$serviceUrl/person/${nino.nino}/iabds/$year"
+  def taxAccountUrl(nino: Nino, year: Int) = s"$serviceUrl/person/${nino.nino}/tax-account/$year"
 
   def getEmployments(nino: Nino, year: Int)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     implicit val hc = basicNpsHeaders(HeaderCarrier())
-    val urlToRead = npsPathUrl(nino, s"employment/$year")
 
     val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_EMPLOYMENTS)
 
-    httpGet.GET[HttpResponse](urlToRead).map { response =>
+    httpGet.GET[HttpResponse](employmentUrl(nino, year)).map { response =>
       timerContext.stop()
       response.status match {
         case OK =>
@@ -64,11 +65,10 @@ class NpsConnector @Inject()(val httpGet: CoreGet,
 
   def getIabds(nino: Nino, year: Int)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     implicit val hc = basicNpsHeaders(HeaderCarrier())
-    val urlToRead = npsPathUrl(nino, s"iabds/$year")
 
     val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_IABDS)
 
-    httpGet.GET[HttpResponse](urlToRead).map { response =>
+    httpGet.GET[HttpResponse](iabdsUrl(nino, year)).map { response =>
       timerContext.stop()
       response.status match {
         case OK =>
@@ -84,11 +84,10 @@ class NpsConnector @Inject()(val httpGet: CoreGet,
 
   def getTaxAccount(nino: Nino, year: Int)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     implicit val hc = basicNpsHeaders(HeaderCarrier())
-    val urlToRead = npsPathUrl(nino, s"tax-account/$year")
 
     val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_TAX_ACCOUNT)
 
-    httpGet.GET[HttpResponse](urlToRead).map { response =>
+    httpGet.GET[HttpResponse](taxAccountUrl(nino, year)).map { response =>
       timerContext.stop()
       response.status match {
         case OK =>
