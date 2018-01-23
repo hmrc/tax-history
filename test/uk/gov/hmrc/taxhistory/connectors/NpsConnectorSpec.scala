@@ -24,6 +24,7 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
+import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -38,7 +39,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   val testNino = randomNino()
   val testYear = 2016
-  
+
   "EmploymentsConnector" should {
     "have the nps basic url " when {
       "given a valid nino" in {
@@ -292,15 +293,14 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   }
 
-  lazy val testNpsConnector = new NpsConnector(httpGet = mock[HttpGet],
-    httpPost = ???,
-    audit = ???,
-    path = ???,
-    serviceUrl = "/test",
-    originatorId = "orgId"
+  lazy val testNpsConnector = new NpsConnector(
+    httpGet = mock[HttpGet],
+    httpPost = mock[HttpPost],
+    audit = mock[Audit],
+    originatorId = "orgId",
+    path = "testpath"
   ) {
     override val metrics = mock[TaxHistoryMetrics]
-
     val mockTimerContext = mock[Timer.Context]
   }
 

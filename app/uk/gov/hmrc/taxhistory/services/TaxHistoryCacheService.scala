@@ -21,7 +21,6 @@ import play.modules.reactivemongo.MongoDbConnection
 import uk.gov.hmrc.cache.model.{Cache, Id}
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.taxhistory.config.ApplicationConfig
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -29,8 +28,8 @@ import scala.concurrent.Future
 import javax.inject.{Inject, Named}
 
 class TaxHistoryCacheService @Inject()(
-                              @Named("cache-expire-after-seconds") expireAfterSeconds: Long,
-                              @Named("mongo-source") mongoSource: String) extends MongoDbConnection {
+                              @Named("mongodb.cache.expire.seconds") expireAfterSeconds: Int,
+                              @Named("mongodb.name") mongoSource: String) extends MongoDbConnection {
 
   val cacheRepository = new CacheMongoRepository(mongoSource, expireAfterSeconds, Cache.mongoFormats)
 

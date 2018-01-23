@@ -33,13 +33,14 @@ import scala.concurrent.Future
 class NpsConnector @Inject()(val httpGet: CoreGet,
                              val httpPost: CorePost,
                              val audit: Audit,
-                             @Named("nps-connector-path") val path: String,
-                             @Named("nps-service-url") val serviceUrl: String,
-                             @Named("nps-originator-id") val originatorId: String) extends BaseConnector with TaxHistoryLogger{
+                             @Named("microservice.services.nps-hod.path") val path: String,
+                             @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends BaseConnector with TaxHistoryLogger {
 
   def npsBaseUrl(nino: Nino) = s"$serviceUrl/person/$nino"
 
   def npsPathUrl(nino: Nino, path: String) = s"${npsBaseUrl(nino)}/$path"
+
+  lazy val serviceUrl: String = s"${baseUrl("nps-hod")}$path"
 
   def getEmployments(nino: Nino, year: Int)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     implicit val hc = basicNpsHeaders(HeaderCarrier())
