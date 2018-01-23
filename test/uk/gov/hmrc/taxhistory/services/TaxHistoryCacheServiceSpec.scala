@@ -36,7 +36,7 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
   with BeforeAndAfterAll
   with BeforeAndAfterEach
   with TestUtil
-  with GuiceOneServerPerSuite{
+  with GuiceOneServerPerSuite {
 
   val testTaxHistoryCacheService = new TaxHistoryCacheService(
     expireAfterSeconds = 10,

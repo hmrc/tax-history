@@ -38,6 +38,8 @@ class Module(val environment: Environment, val configuration: Configuration) ext
     bind(classOf[AuditConnector]).to(classOf[MicroserviceAuditConnector])
     bind(classOf[AuthConnector]).to(classOf[TaxHistoryAuthConnector])
 
+    bind(classOf[ServicesConfig]).toInstance(new ServicesConfig {})
+
     bindConfigInt("mongodb.cache.expire.seconds", default = Some(60 * 30))
     bindConfigString("mongodb.name")
     bindConfigString("microservice.services.nps-hod.originatorId",       default = Some("HMRC_GDS"))

@@ -25,6 +25,7 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit
+import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -35,20 +36,18 @@ import scala.concurrent.Future
 
 class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
   implicit val hc = HeaderCarrier()
+
+  val mockServicesConfig = mock[ServicesConfig]
+  when(mockServicesConfig.baseUrl(any[String])).thenReturn("/test")
+
   val testNino = randomNino()
   val testNinoWithoutSuffix=testNino.value.take(8)
   lazy val rtiSuccessfulResponseURLDummy = loadFile("/json/rti/response/dummyRti.json")
 
   "RtiConnector" should {
-    "have the rti basic url " when {
-      "given a valid nino" in {
-        testRtiConnector.rtiBasicUrl(testNino) mustBe s"/test/rti/individual/payments/nino/$testNinoWithoutSuffix"
-      }
-    }
-
-    "have the Rti Path Url" when {
-      "given a valid nino and path" in {
-        testRtiConnector.rtiPathUrl(testNino, "path") mustBe s"/test/rti/individual/payments/nino/$testNinoWithoutSuffix/path"
+    "have the correct RTI employments url" when {
+      "given a valid nino and tax year" in {
+        testRtiConnector.rtiEmploymentsUrl(testNino, TaxYear(2017)) mustBe s"/test/rti/individual/payments/nino/$testNinoWithoutSuffix/tax-year/17-18"
       }
     }
 
@@ -137,6 +136,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     httpGet = mock[HttpGet],
     httpPost = mock[HttpPost],
     audit = mock[Audit],
+    servicesConfig = mockServicesConfig,
     authorizationToken = "auth",
     environment = "env",
     originatorId = "orgId"

@@ -25,6 +25,7 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit
+import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -37,21 +38,13 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
   lazy val employmentsSuccessfulResponse = loadFile("/json/nps/response/employments.json")
   lazy val iabdsSuccessfulResponse = loadFile("/json/nps/response/iabds.json")
 
+  val mockServicesConfig = mock[ServicesConfig]
+  when(mockServicesConfig.baseUrl(any[String])).thenReturn("/test")
+
   val testNino = randomNino()
   val testYear = 2016
 
-  "EmploymentsConnector" should {
-    "have the nps basic url " when {
-      "given a valid nino" in {
-        testNpsConnector.npsBaseUrl(testNino) mustBe s"/test/person/$testNino"
-      }
-    }
-
-    "have the nps Path Url" when {
-      "given a valid nino and path" in {
-        testNpsConnector.npsPathUrl(testNino, "path") mustBe s"/test/person/$testNino/path"
-      }
-    }
+  "EmploymentConnector" should {
 
     "have withoutSuffix nino" when {
       "given a valid nino" in {
@@ -297,8 +290,9 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     httpGet = mock[HttpGet],
     httpPost = mock[HttpPost],
     audit = mock[Audit],
+    servicesConfig = mockServicesConfig,
     originatorId = "orgId",
-    path = "testpath"
+    path = "/path"
   ) {
     override val metrics = mock[TaxHistoryMetrics]
     val mockTimerContext = mock[Timer.Context]

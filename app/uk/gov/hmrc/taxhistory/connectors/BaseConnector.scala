@@ -29,7 +29,9 @@ import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
 import scala.concurrent.Future
 
-trait BaseConnector extends ServicesConfig with Auditable with TaxHistoryLogger {
+trait BaseConnector extends AnyRef with Auditable with TaxHistoryLogger {
+
+  val servicesConfig: ServicesConfig
 
   def httpGet: CoreGet
 
