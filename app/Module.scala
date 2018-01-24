@@ -28,6 +28,8 @@ import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.config.{AppName, ServicesConfig}
 import uk.gov.hmrc.play.microservice.config.LoadAuditingConfig
 import uk.gov.hmrc.taxhistory._
+import uk.gov.hmrc.taxhistory.auditable.{Auditable, AuditableImpl}
+import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 
 class Module(val environment: Environment, val configuration: Configuration) extends AbstractModule with ServicesConfig {
 
@@ -54,6 +56,8 @@ class Module(val environment: Environment, val configuration: Configuration) ext
     bind(classOf[String]).annotatedWith(Names.named("appName")).toProvider(AppNameProvider)
 
     bind(classOf[Audit]).to(classOf[MicroserviceAudit])
+    bind(classOf[Auditable]).to(classOf[AuditableImpl])
+
   }
 
   private def provide[A](value: => A): Provider[A] = new Provider[A] {
