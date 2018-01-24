@@ -28,7 +28,6 @@ import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.auth.microservice.connectors.AuthConnector
 import uk.gov.hmrc.play.config.{AppName, RunMode, ServicesConfig}
 import uk.gov.hmrc.play.http.ws._
-import uk.gov.hmrc.play.microservice.config.LoadAuditingConfig
 
 
 trait Hooks extends HttpHooks with HttpAuditing {

@@ -24,7 +24,6 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 
@@ -92,7 +91,7 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
           |    "actualPUPCodedInCYPlusOneTaxYear": 33.33
           |  }
           |  """.stripMargin)
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(), Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(), Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getTaxAccount(testNino.nino, TaxYear.current.previous.startYear))
@@ -103,7 +102,7 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       lazy val payeJson = Json.obj()
 
       val taxAccountJson  = Json.parse("""{}""".stripMargin)
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(), Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(), Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getTaxAccount(testNino.nino, TaxYear.current.previous.startYear))

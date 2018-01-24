@@ -27,7 +27,6 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, NpsEmployment}
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
@@ -465,7 +464,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
           |    }
           |] """.stripMargin)
 
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
               .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getEmployments("AA000000A", 2014))
@@ -477,7 +476,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         """ [
           |] """.stripMargin)
 
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getEmployments("AA000000A", 2014))
@@ -503,7 +502,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
            |    }
            """.stripMargin)
 
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getEmployment("AA000000A", 2014,"01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
@@ -525,7 +524,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
            |    }
         """.stripMargin)
 
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getEmployment("AA000000A", 2014,"01318d7c-bcd9-47e2-8c38-551e7ccdfae6"))
@@ -544,7 +543,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
            |    }]
         """.stripMargin)
 
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getCompanyBenefits("AA000000A", 2014, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
@@ -555,7 +554,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     "return not found when no company benefits returned from cache" in {
       lazy val payeJson = loadFile("/json/model/api/payeNoCompanyBenefits.json")
 
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getCompanyBenefits("AA000000A", 2014, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))

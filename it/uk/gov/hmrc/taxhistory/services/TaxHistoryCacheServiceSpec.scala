@@ -16,19 +16,17 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.libs.json.{JsValue, Json}
-import uk.gov.hmrc.cache.model.Cache
-import uk.gov.hmrc.cache.repository.CacheMongoRepository
+import play.api.libs.json.Json
+import play.modules.reactivemongo.MongoDbConnection
+import reactivemongo.api.{DB, DefaultDB}
+import uk.gov.hmrc.mongo.{MongoConnector, MongoSpecSupport}
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.ExecutionContext.Implicits.global
-
 
 
 class TaxHistoryCacheServiceSpec extends UnitSpec
@@ -36,14 +34,21 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
   with BeforeAndAfterAll
   with BeforeAndAfterEach
   with TestUtil
-  with GuiceOneServerPerSuite {
+  with GuiceOneServerPerSuite
+  with MongoSpecSupport {
+
+  val testMongoDbConnection = new MongoDbConnection {
+    override implicit val db: () => DefaultDB = mongo // this value comes from the trait MongoSpecSupport
+    override lazy val mongoConnector: MongoConnector = mongoConnectorForTest // this value comes from the trait MongoSpecSupport
+  }
 
   val testTaxHistoryCacheService = new TaxHistoryCacheService(
+    mongoDbConnection = testMongoDbConnection,
     expireAfterSeconds = 10,
     mongoSource = "tax-history-test"
   )
 
-  val someJson  =  Json.parse(""" [{
+  val someJson = Json.parse(""" [{
                              |    "nino": "AA000000",
                              |    "sequenceNumber": 1,
                              |    "worksNumber": "6044041000000",
@@ -56,58 +61,43 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
                              |    }]
                            """.stripMargin)
 
-   val nino = randomNino()
+  val nino = randomNino()
 
-
-  def toCache(nino:String):JsValue = {
-
-    println("Called ToCache" + nino)
-
-    Json.parse(""" [{
-                 |    "nino": "AA000000",
-                 |    "sequenceNumber": 1,
-                 |    "worksNumber": "6044041000000",
-                 |    "taxDistrictNumber": "531",
-                 |    "payeNumber": "J4816",
-                 |    "employerName": "Aldi",
-                 |    "receivingJobseekersAllowance" : false,
-                 |    "otherIncomeSourceIndicator" : false,
-                 |    "startDate": "21/01/2015"
-                 |    }]
-               """.stripMargin)
-
-
+  override def beforeEach() = {
+    testMongoDbConnection.mongoConnector.db().drop()
   }
 
   "TaxHistoryCacheService" should {
 
-      "successfully add the Data in cache" in {
-         val cacheData = await(testTaxHistoryCacheService.createOrUpdate(nino.nino,"2015",someJson))
-          cacheData.get shouldBe someJson
-      }
-
-      "fetch from the  cache by ID " in {
-         val fromCache = await(testTaxHistoryCacheService.findById(nino.nino ,2015))
-         fromCache.get  shouldBe someJson
-      }
-
-    "When not in the mongo cache update the cache and fetch" in {
-      implicit val nino = randomNino()
-      implicit val year = TaxYear(2014)
-      val cacheMissUpdateAndGetFromCache = await(testTaxHistoryCacheService.getFromCacheOrElse(toCache(nino.nino)))
-
-      cacheMissUpdateAndGetFromCache.get shouldBe someJson
-
-      val fromCache = await(testTaxHistoryCacheService.getFromCacheOrElse(toCache(nino.nino)))
-
-      fromCache.get shouldBe someJson
-
+    "successfully add the Data in cache" in {
+       val cacheData = await(testTaxHistoryCacheService.createOrUpdate(nino.nino,"2015",someJson))
+        cacheData shouldBe Some(someJson)
     }
 
+    "fetch from the cache by ID" in {
+      await(for {
+        _ <- testTaxHistoryCacheService.createOrUpdate(nino.nino,"2015",someJson)
+        readbackValue <- testTaxHistoryCacheService.findById(nino.nino, 2015)
+      } yield {
+        readbackValue shouldBe Some(someJson)
+      })
+    }
+
+    "When not in the mongo cache update the cache and fetch" in {
+      val nino = randomNino()
+      val taxYear = TaxYear(2014)
+
+      val cacheResult0 = await(testTaxHistoryCacheService.get(nino, taxYear))
+      cacheResult0 shouldBe None
+      val cacheResult1 = await(testTaxHistoryCacheService.getOrElseInsert(nino, taxYear)(someJson))
+      cacheResult1 shouldBe Some(someJson)
+      // The cache should now contain the value.
+      val cacheResult2 = await(testTaxHistoryCacheService.get(nino, taxYear))
+      cacheResult2 shouldBe Some(someJson)
+    }
   }
 
   override protected def afterAll() = {
-    testTaxHistoryCacheService.mongoConnector.db().drop()
+    testMongoDbConnection.mongoConnector.db().drop()
   }
-
 }

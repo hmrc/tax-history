@@ -16,8 +16,11 @@
 
 package uk.gov.hmrc.taxhistory.services
 
+import javax.inject.{Inject, Named}
+
 import play.api.libs.json.JsValue
 import play.modules.reactivemongo.MongoDbConnection
+import reactivemongo.api.DB
 import uk.gov.hmrc.cache.model.{Cache, Id}
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.domain.Nino
@@ -25,26 +28,30 @@ import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import javax.inject.{Inject, Named}
 
 class TaxHistoryCacheService @Inject()(
+                              val mongoDbConnection: MongoDbConnection,
                               @Named("mongodb.cache.expire.seconds") expireAfterSeconds: Int,
-                              @Named("mongodb.name") mongoSource: String) extends MongoDbConnection {
+                              @Named("mongodb.name") mongoSource: String) {
+
+  implicit val mongo: () => DB = mongoDbConnection.db
 
   val cacheRepository = new CacheMongoRepository(mongoSource, expireAfterSeconds, Cache.mongoFormats)
 
    def createOrUpdate(id: String, key: String, toCache: JsValue): Future[Option[JsValue]] = {
-    cacheRepository.createOrUpdate(Id(id),key,toCache).map(x => x.updateType.savedValue.data.map(_ \ key).map(_.get))
+    cacheRepository.createOrUpdate(Id(id), key, toCache).map(x => x.updateType.savedValue.data.map(_ \ key).map(_.get))
   }
 
    def findById(id: String, taxYear: Int): Future[Option[JsValue]] = {
     cacheRepository.findById(Id(id)).map(_.flatMap(_.data).map(_ \ taxYear.toString).flatMap(_.toOption))
   }
 
-  def getFromCacheOrElse(toCache : => Future[JsValue])(implicit nino: Nino, year: TaxYear): Future[Option[JsValue]] = {
-    findById(nino.nino,year.currentYear).flatMap {
+  def get(nino: Nino, year: TaxYear): Future[Option[JsValue]] = findById(nino.nino, year.currentYear)
+
+  def getOrElseInsert(nino: Nino, year: TaxYear)(defaultToInsert : => Future[JsValue]): Future[Option[JsValue]] = {
+    get(nino, year).flatMap {
       case Some(x) => Future.successful(Some(x))
-      case _ => toCache.flatMap(js => createOrUpdate(nino.nino,year.currentYear.toString,js))
+      case _       => defaultToInsert.flatMap(js => createOrUpdate(nino.nino, year.currentYear.toString, js))
     }
   }
 }

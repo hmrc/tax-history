@@ -24,7 +24,6 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 
@@ -87,7 +86,7 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
           |        "paymentDate":"2016-02-20",
           |        "earlierYearUpdates":[]
           |      } """.stripMargin)
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getPayAndTax("AA000000A", 2014, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
@@ -98,7 +97,7 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       lazy val payeJson = Json.obj()
 
       val payAndTaxJson  = Json.parse("""{}""".stripMargin)
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getPayAndTax("AA000000A", 2014, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))

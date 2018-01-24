@@ -22,7 +22,6 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.mongo.{MongoSpecSupport, Saved}
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -47,8 +46,6 @@ class TaxHistoryRepositoryServiceSpec extends UnitSpec
                              |    "startDate": "21/01/2015"
                              |    }]
                            """.stripMargin)
-
-
 
   val nino = randomNino()
 
@@ -81,6 +78,5 @@ class TaxHistoryRepositoryServiceSpec extends UnitSpec
   override protected def beforeEach() = {
     mongoConnectorForTest.db().drop
   }
-
 
 }

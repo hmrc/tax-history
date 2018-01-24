@@ -25,9 +25,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit
-import uk.gov.hmrc.play.config.AppName
 import uk.gov.hmrc.tai.model.rti.RtiData
-import uk.gov.hmrc.taxhistory.MicroserviceAuditConnector
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
@@ -48,9 +46,7 @@ class EmploymentHistoryService @Inject()(
                               ) extends EmploymentHistoryServiceHelper with Auditable with TaxHistoryLogger {
 
   def getEmployments(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    implicit val validatedNino:Nino = Nino(nino)
-    implicit val validatedTaxYear:TaxYear = TaxYear(taxYear)
-    getFromCache.map(js => {
+    getFromCache(Nino(nino), TaxYear(taxYear)).map(js => {
       logger.warn("Returning js result from getEmployments")
 
       val extractEmployments = js.map(json =>
@@ -65,9 +61,7 @@ class EmploymentHistoryService @Inject()(
   }
 
   def getEmployment(nino:String, taxYear:Int,employmentId:String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    implicit val validatedNino:Nino = Nino(nino)
-    implicit val validatedTaxYear:TaxYear = TaxYear(taxYear)
-    getFromCache.map(js => {
+    getFromCache(Nino(nino), TaxYear(taxYear)).map(js => {
       logger.warn("Returning js result of a getEmployment")
       js match {
         case Some(jsValue) =>
@@ -85,8 +79,8 @@ class EmploymentHistoryService @Inject()(
   }
 
 
-  def getFromCache(implicit validatedNino: Nino, validatedTaxYear: TaxYear, headerCarrier: HeaderCarrier) = {
-    cacheService.getFromCacheOrElse {
+  def getFromCache(validatedNino: Nino, validatedTaxYear: TaxYear)(implicit headerCarrier: HeaderCarrier) = {
+    cacheService.getOrElseInsert(validatedNino, validatedTaxYear) {
       retrieveEmploymentsDirectFromSource(validatedNino, validatedTaxYear).map(h => {
         logger.warn("Refresh cached data")
         h.json
@@ -95,9 +89,7 @@ class EmploymentHistoryService @Inject()(
   }
 
   def getAllowances(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    implicit val validatedNino = Nino(nino)
-    implicit val validatedTaxYear = TaxYear(taxYear)
-    getFromCache.map(js => {
+    getFromCache(Nino(nino), TaxYear(taxYear)).map(js => {
       logger.warn("Returning js result from getAllowances")
 
       val extractAllowances = js.map(json =>
@@ -113,9 +105,7 @@ class EmploymentHistoryService @Inject()(
 
 
   def getPayAndTax(nino:String, taxYear:Int, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    implicit val validatedNino = Nino(nino)
-    implicit val validatedTaxYear = TaxYear(taxYear)
-    getFromCache.map(js => {
+    getFromCache(Nino(nino), TaxYear(taxYear)).map(js => {
       logger.warn("Returning js result from getEmployments")
       val extractPayAndTax = js.map(json =>
         (json \ "payAndTax"\ employmentId).getOrElse(Json.obj())
@@ -128,9 +118,7 @@ class EmploymentHistoryService @Inject()(
   }
 
   def getTaxAccount(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    implicit val validatedNino = Nino(nino)
-    implicit val validatedTaxYear = TaxYear(taxYear)
-    getFromCache.map(js => {
+    getFromCache(Nino(nino), TaxYear(taxYear)).map(js => {
       logger.warn("Returning js result from getTaxAccount")
 
       val extractTaxAccount = js.map(json =>
@@ -160,9 +148,7 @@ class EmploymentHistoryService @Inject()(
   }
 
   def getCompanyBenefits(nino:String, taxYear:Int, employmentId:String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    implicit val validatedNino = Nino(nino)
-    implicit val validatedTaxYear = TaxYear(taxYear)
-    getFromCache.map(js => {
+    getFromCache(Nino(nino), TaxYear(taxYear)).map(js => {
       logger.warn("Returning js result from getCompanyBenefits")
       val extractCompanyBenefits = js.map(json =>
         (json \ "benefits"\ employmentId).getOrElse(Json.obj())
