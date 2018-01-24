@@ -20,6 +20,7 @@ import javax.inject.{Inject, Named}
 
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.taxhistory.connectors.BaseConnector
 import uk.gov.hmrc.time.TaxYear
@@ -28,6 +29,7 @@ import scala.concurrent.Future
 
 class RtiConnector @Inject()(val httpGet: CoreGet,
                              val httpPost: CorePost,
+                             val audit: Audit,
                              val servicesConfig: ServicesConfig,
                              @Named("microservice.services.rti-hod.authorizationToken") val authorizationToken: String,
                              @Named("microservice.services.rti-hod.env") val environment: String,

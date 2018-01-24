@@ -31,7 +31,7 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.Future
 
 
-class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
+class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   implicit val hc = HeaderCarrier()
   val testNino = randomNino()
@@ -89,7 +89,7 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                "amount": 12
           }
           ] """.stripMargin)
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getAllowances("AA000000A", 2014))
@@ -102,7 +102,7 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val allowanceJson = Json.parse(
         """ [
           ] """.stripMargin)
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getAllowances("AA000000A", 2014))

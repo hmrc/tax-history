@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxhistory.model.utils
+package uk.gov.hmrc.taxhistory.model.audit
 
-import play.api.libs.json.{JsValue, Json}
-import uk.gov.hmrc.domain.{Generator, Nino}
+trait DataEventAuditType
+case object OnlyInRti extends DataEventAuditType
+case object NpsRtiMismatch extends DataEventAuditType
+case object AgentViewedClientEvent extends DataEventAuditType
 
-import scala.io.Source
-import scala.util.Random
+trait DataEventTransaction
 
-trait TestUtil {
-  def loadFile(path:String): JsValue = {
-    val jsonString = Source.fromURL(getClass.getResource(path)).mkString
-    Json.parse(jsonString)
-  }
+case object PAYEForAgents extends DataEventTransaction
+case object AgentViewedClient extends DataEventTransaction
 
-  val randomNino = () => Nino(new Generator(new Random()).nextNino.value.replaceFirst("MA", "AA"))
-}
+
+// todo : look at the naming of this, in use we end up with detail.detail
+case class DataEventDetail (detail: Map[String, String])

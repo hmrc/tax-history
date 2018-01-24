@@ -135,6 +135,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
   lazy val testRtiConnector = new RtiConnector(
     httpGet = mock[HttpGet],
     httpPost = mock[HttpPost],
+    audit = mock[Audit],
     servicesConfig = mockServicesConfig,
     authorizationToken = "auth",
     environment = "env",

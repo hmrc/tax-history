@@ -26,13 +26,13 @@ import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
+import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, RtiDataHelper}
 
 class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with TestUtil{
 
   private val mockAuditable = mock[Auditable]
 
-  private val helper = new EmploymentHistoryServiceHelper(mockAuditable)
+  private val helper = new EmploymentHistoryServiceHelper(new RtiDataHelper(mockAuditable))
 
   lazy val npsEmploymentResponseWithTaxDistrictNumber =  Json.parse(""" [{
                                                                  |    "nino": "AA000000",
@@ -146,7 +146,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     }
 
 
-    "Build employment1 from rti ,nps employment1 and Iabd data" in {
+    "Build employment1 from rti, nps employment1 and Iabd data" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
       val iabds = iabdsJsonResponse.as[List[Iabd]]
@@ -184,7 +184,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       companyBenefits mustBe  None
 
     }
-    "Build employment1 when there is data for rti is Nil " in {
+    "Build employment1 when there is data for rti is Nil" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
       val iabds = iabdsJsonResponse.as[List[Iabd]]

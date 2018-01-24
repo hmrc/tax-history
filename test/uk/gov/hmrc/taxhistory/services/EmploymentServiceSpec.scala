@@ -25,7 +25,7 @@ import play.api.libs.json.{JsArray, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
-import uk.gov.hmrc.taxhistory.auditable.{Auditable, AuditableTestImpl}
+import uk.gov.hmrc.taxhistory.auditable.AuditableTestImpl
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -232,7 +232,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(iabdsJsonResponse))))
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST)))
-      val response = await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
+      val response =  await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
       response.status mustBe OK
     }
 
@@ -414,9 +414,9 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
       val rtiData = RtiData("QQ0000002", rtiEmployments)
       val auditable = new AuditableTestImpl
-      val rtiDataHelper = new RtiDataHelper(rtiData, auditable)
+      val rtiDataHelper = new RtiDataHelper(auditable)
 
-      rtiDataHelper.auditOnlyInRTI(npsEmployments, rtiEmployments)
+      rtiDataHelper.auditOnlyInRTI(testNino.toString, npsEmployments, rtiEmployments)
       auditable.sentDataEvents.size mustBe 2
     }
 
@@ -433,9 +433,9 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
       val rtiData = RtiData("QQ0000002", rtiEmployments)
       val auditable = new AuditableTestImpl
-      val rtiDataHelper = new RtiDataHelper(rtiData, auditable)
+      val rtiDataHelper = new RtiDataHelper(auditable)
 
-      rtiDataHelper.auditOnlyInRTI(npsEmployments, rtiEmployments)
+      rtiDataHelper.auditOnlyInRTI(testNino.toString, npsEmployments, rtiEmployments)
       auditable.sentDataEvents.size mustBe 0
     }
 
@@ -469,7 +469,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
           |    }
           |] """.stripMargin)
 
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
               .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getEmployments("AA000000A", 2014))
@@ -481,7 +481,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         """ [
           |] """.stripMargin)
 
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getEmployments("AA000000A", 2014))
@@ -507,7 +507,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
            |    }
            """.stripMargin)
 
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getEmployment("AA000000A", 2014,"01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
@@ -529,7 +529,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
            |    }
         """.stripMargin)
 
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getEmployment("AA000000A", 2014,"01318d7c-bcd9-47e2-8c38-551e7ccdfae6"))
@@ -548,7 +548,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
            |    }]
         """.stripMargin)
 
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getCompanyBenefits("AA000000A", 2014, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
@@ -559,7 +559,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     "return not found when no company benefits returned from cache" in {
       lazy val payeJson = loadFile("/json/model/api/payeNoCompanyBenefits.json")
 
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getCompanyBenefits("AA000000A", 2014, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))

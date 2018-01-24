@@ -19,6 +19,7 @@ import javax.inject.Provider
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names
 import play.api.{Configuration, Environment}
+import play.modules.reactivemongo.MongoDbConnection
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.{CoreGet, CorePost}
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
@@ -27,7 +28,6 @@ import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.config.{AppName, ServicesConfig}
 import uk.gov.hmrc.play.microservice.config.LoadAuditingConfig
 import uk.gov.hmrc.taxhistory._
-import uk.gov.hmrc.taxhistory.auditable.{Auditable, AuditableImpl}
 
 class Module(val environment: Environment, val configuration: Configuration) extends AbstractModule with ServicesConfig {
 
@@ -49,10 +49,15 @@ class Module(val environment: Environment, val configuration: Configuration) ext
     bindConfigString("microservice.services.rti-hod.env",                default = Some("local"))
     bindConfigString("microservice.services.rti-hod.authorizationToken", default = Some("local"))
 
+    bind(classOf[MongoDbConnection]).toProvider(provide(new MongoDbConnection {}))
+
     bind(classOf[String]).annotatedWith(Names.named("appName")).toProvider(AppNameProvider)
 
     bind(classOf[Audit]).to(classOf[MicroserviceAudit])
-    bind(classOf[Auditable]).to(classOf[AuditableImpl])
+  }
+
+  private def provide[A](value: => A): Provider[A] = new Provider[A] {
+    def get(): A = value
   }
 
   private object AppNameProvider extends Provider[String] {

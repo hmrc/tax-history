@@ -62,8 +62,8 @@ class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
       val rtiData = rtiPartialDuplicateEmploymentsResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
       val mockAuditable = mock[Auditable]
-      val rtiDataHelper = new RtiDataHelper(rtiData, mockAuditable)
-      val rtiEmployments = rtiDataHelper.getMatchedRtiEmployments(npsEmployments.head, rtiData.employments)
+      val rtiDataHelper = new RtiDataHelper(mockAuditable)
+      val rtiEmployments = rtiDataHelper.getMatchedRtiEmployments(testNino.toString, npsEmployments.head, rtiData.employments)
       rtiEmployments.size mustBe 1
       verifyZeroInteractions(mockAuditable)
       validateMockitoUsage()
@@ -73,8 +73,8 @@ class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
       val rtiData = rtiNonMatchingEmploymentsResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
       val mockAuditable = mock[Auditable]
-      val rtiDataHelper = new RtiDataHelper(rtiData, mockAuditable)
-      val rtiEmployments = rtiDataHelper.getMatchedRtiEmployments(npsEmployments.head, rtiData.employments)
+      val rtiDataHelper = new RtiDataHelper(mockAuditable)
+      val rtiEmployments = rtiDataHelper.getMatchedRtiEmployments(testNino.toString, npsEmployments.head, rtiData.employments)
       rtiEmployments.size mustBe 0
       verifyZeroInteractions(mockAuditable)
       validateMockitoUsage()
@@ -104,9 +104,9 @@ class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
       val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
       val auditable = new AuditableTestImpl
       val rtiData = RtiData("QQ0000002", rtiEmployments)
-      val rtiDataHelper = new RtiDataHelper(rtiData, auditable)
+      val rtiDataHelper = new RtiDataHelper(auditable)
 
-      rtiDataHelper.auditOnlyInRTI(npsEmployments, rtiEmployments)
+      rtiDataHelper.auditOnlyInRTI(testNino.toString, npsEmployments, rtiEmployments)
       auditable.sentDataEvents.size mustBe 2
     }
 
@@ -123,9 +123,9 @@ class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
       val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
       val auditable = new AuditableTestImpl
       val rtiData = RtiData("QQ0000002", rtiEmployments)
-      val rtiDataHelper = new RtiDataHelper(rtiData, auditable)
+      val rtiDataHelper = new RtiDataHelper(auditable)
 
-      rtiDataHelper.auditOnlyInRTI(npsEmployments, rtiEmployments)
+      rtiDataHelper.auditOnlyInRTI(testNino.toString, npsEmployments, rtiEmployments)
       auditable.sentDataEvents.size mustBe 0
     }
   }

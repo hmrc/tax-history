@@ -92,7 +92,7 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
           |    "actualPUPCodedInCYPlusOneTaxYear": 33.33
           |  }
           |  """.stripMargin)
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(), Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(), Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getTaxAccount(testNino.nino, TaxYear.current.previous.startYear))
@@ -103,7 +103,7 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       lazy val payeJson = Json.obj()
 
       val taxAccountJson  = Json.parse("""{}""".stripMargin)
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(), Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.getFromCache(Matchers.any(), Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
       val result = await(testEmploymentHistoryService.getTaxAccount(testNino.nino, TaxYear.current.previous.startYear))

@@ -18,24 +18,22 @@ package uk.gov.hmrc.taxhistory.services.helpers
 
 import com.google.inject.Inject
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
-import uk.gov.hmrc.taxhistory.auditable.{Auditable, AuditableImpl}
+import uk.gov.hmrc.tai.model.rti.RtiEmployment
+import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, PayAndTax}
 import uk.gov.hmrc.taxhistory.model.audit.{DataEventDetail, NpsRtiMismatch, OnlyInRti, PAYEForAgents}
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
-class RtiDataHelper @Inject()(val rtiData: RtiData, val auditable: Auditable) extends TaxHistoryHelper with TaxHistoryLogger{
+class RtiDataHelper @Inject()(val auditable: Auditable) extends TaxHistoryHelper with TaxHistoryLogger{
 
-  def auditOnlyInRTI(npsEmployments: List[NpsEmployment], rtiEmployments: List[RtiEmployment])
+  def auditOnlyInRTI(nino: String, npsEmployments: List[NpsEmployment], rtiEmployments: List[RtiEmployment])
                     (implicit headerCarrier: HeaderCarrier): Unit = {
     val employments = rtiEmployments.filter(rti => !npsEmployments.exists(nps => isMatch(nps, rti)))
     auditable.sendDataEvents(
       transactionName = PAYEForAgents,
-      details = buildEmploymentDataEventDetails(employments),
+      details = buildEmploymentDataEventDetails(nino, employments),
       eventType = OnlyInRti)
   }
 
@@ -48,7 +46,7 @@ class RtiDataHelper @Inject()(val rtiData: RtiData, val auditable: Auditable) ex
       npsEmployment.worksNumber.isDefined &&
       rtiEmployment.currentPayId == npsEmployment.worksNumber
 
-  def getMatchedRtiEmployments(npsEmployment: NpsEmployment, rtiEmployments: List[RtiEmployment])
+  def getMatchedRtiEmployments(nino: String, npsEmployment: NpsEmployment, rtiEmployments: List[RtiEmployment])
                               (implicit headerCarrier: HeaderCarrier): List[RtiEmployment] = {
 
     rtiEmployments.filter(rtiEmployment => isMatch(npsEmployment, rtiEmployment)) match {
@@ -58,17 +56,17 @@ class RtiDataHelper @Inject()(val rtiData: RtiData, val auditable: Auditable) ex
         (start :: end).filter(rtiEmployment => isSubMatch(npsEmployment, rtiEmployment)) match {
           case matchingEmp :: Nil => List(matchingEmp)
           case mismatchedEmployments =>
-            auditable.sendDataEvents(transactionName = PAYEForAgents, details = buildEmploymentDataEventDetails(mismatchedEmployments), eventType = NpsRtiMismatch)
+            auditable.sendDataEvents(transactionName = PAYEForAgents, details = buildEmploymentDataEventDetails(nino, mismatchedEmployments), eventType = NpsRtiMismatch)
             Nil
         }
       case Nil => Nil //Auditing will happen in the function onlyInRTI for this case
     }
   }
 
-  def buildEmploymentDataEventDetails(rtiEmployments: List[RtiEmployment]): Seq[DataEventDetail] =
+  def buildEmploymentDataEventDetails(nino: String, rtiEmployments: List[RtiEmployment]): Seq[DataEventDetail] =
     rtiEmployments.map(rE =>
       DataEventDetail(
-        Map("nino" -> rtiData.nino, "payeRef" -> rE.payeRef, "officeNumber" -> rE.officeNumber, "currentPayId" -> rE.currentPayId.getOrElse("")))
+        Map("nino" -> nino, "payeRef" -> rE.payeRef, "officeNumber" -> rE.officeNumber, "currentPayId" -> rE.currentPayId.getOrElse("")))
     )
 }
 

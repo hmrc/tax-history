@@ -25,7 +25,7 @@ import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.api.{Allowance, Employment, PayAsYouEarn, TaxAccount}
 import uk.gov.hmrc.taxhistory.model.nps._
 
-class EmploymentHistoryServiceHelper @Inject()(val auditable: Auditable) extends TaxHistoryHelper {
+class EmploymentHistoryServiceHelper @Inject()(val rtiDataHelper: RtiDataHelper) extends TaxHistoryHelper {
 
   def combineResult(iabdResponse:Either[HttpResponse,List[Iabd]],
                     rtiResponse:Either[HttpResponse,RtiData],
@@ -33,9 +33,9 @@ class EmploymentHistoryServiceHelper @Inject()(val auditable: Auditable) extends
                    (npsEmployments: List[NpsEmployment])
                    (implicit headerCarrier: HeaderCarrier):HttpResponse={
 
-    val iabdsOption = fetchResult(iabdResponse)
-    val rtiOption = fetchResult(rtiResponse)
-    val taxAccOption = fetchResult(taxAccResponse)
+    val iabdsOption  = iabdResponse.right.toOption
+    val rtiOption    = rtiResponse.right.toOption
+    val taxAccOption = taxAccResponse.right.toOption
 
     val payAsYouEarnList = npsEmployments.map {
       npsEmployment => {
@@ -46,9 +46,8 @@ class EmploymentHistoryServiceHelper @Inject()(val auditable: Auditable) extends
         }
         val rtiEmployments = rtiOption.map {
           rtiData => {
-            val rdh = new RtiDataHelper(rtiData, auditable)
-            rdh.auditOnlyInRTI(npsEmployments, rtiData.employments)
-            rdh.getMatchedRtiEmployments(npsEmployment, rtiData.employments)
+            rtiDataHelper.auditOnlyInRTI(rtiData.nino, npsEmployments, rtiData.employments)
+            rtiDataHelper.getMatchedRtiEmployments(rtiData.nino, npsEmployment, rtiData.employments)
           }
         }
 
@@ -107,7 +106,6 @@ class EmploymentHistoryServiceHelper @Inject()(val auditable: Auditable) extends
     }
   }
 
-
  def convertToEmployment(npsEmployment: NpsEmployment):Employment = {
    Employment(
      employerName = npsEmployment.employerName,
@@ -118,8 +116,6 @@ class EmploymentHistoryServiceHelper @Inject()(val auditable: Auditable) extends
      employmentStatus = npsEmployment.employmentStatus
    )
  }
-
-
 
   def enrichEmploymentsJsonWithGeneratedUrls(employmentsListJson:JsValue, taxYear:Int): JsValue ={
     val employments = employmentsListJson.as[List[Employment]]
