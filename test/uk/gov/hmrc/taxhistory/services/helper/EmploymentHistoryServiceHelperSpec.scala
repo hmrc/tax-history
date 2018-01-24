@@ -22,6 +22,7 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -29,11 +30,10 @@ import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 
 class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with TestUtil{
 
-  private val mockAudit= mock[Audit]
+  private val mockAuditable = mock[Auditable]
 
-  object EmploymentHistoryServiceHelperTest extends EmploymentHistoryServiceHelper{
-    override def audit: Audit = mockAudit
-  }
+  private val helper = new EmploymentHistoryServiceHelper(mockAuditable)
+
   lazy val npsEmploymentResponseWithTaxDistrictNumber =  Json.parse(""" [{
                                                                  |    "nino": "AA000000",
                                                                  |    "sequenceNumber": 6,
@@ -88,7 +88,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
 
   "EmploymentHistoryServiceHelper" should {
     "merge from two payAsYouEarn objects into one" in {
-      val merged = EmploymentHistoryServiceHelperTest.mergeIntoSinglePayAsYouEarn(List(payAsYouEarn1,payAsYouEarn2), Nil, Some(taxAccount))
+      val merged = helper.mergeIntoSinglePayAsYouEarn(List(payAsYouEarn1,payAsYouEarn2), Nil, Some(taxAccount))
       merged.employments.size mustBe 2
       merged.employments must contain(employment1)
       merged.employments must contain(employment2)
@@ -118,7 +118,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       mergedTaxAccount.outstandingDebtRestriction mustBe taxAccount.outstandingDebtRestriction
     }
     "merge from one payAsYouEarn objects into one" in {
-      val merged = EmploymentHistoryServiceHelperTest.mergeIntoSinglePayAsYouEarn(List(payAsYouEarn1),Nil, None)
+      val merged = helper.mergeIntoSinglePayAsYouEarn(List(payAsYouEarn1),Nil, None)
       merged.employments.size mustBe 1
       merged.employments must contain(employment1)
 
@@ -141,7 +141,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     "Build pay as you earn using empty tax account" in {
       val taxAccount = NpsTaxAccount(Nil)
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
-      val payAsYouEarn=EmploymentHistoryServiceHelperTest.buildPayAsYouEarnList(None,None, npsEmployments.head)
+      val payAsYouEarn=helper.buildPayAsYouEarnList(None,None, npsEmployments.head)
       payAsYouEarn.taxAccount mustBe None
     }
 
@@ -152,7 +152,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       val iabds = iabdsJsonResponse.as[List[Iabd]]
       val taxAccount = taxAccountJsonResponse.as[NpsTaxAccount]
 
-      val payAsYouEarn=EmploymentHistoryServiceHelperTest.buildPayAsYouEarnList(Some(rtiData.employments),Some(iabds), npsEmployments.head)
+      val payAsYouEarn=helper.buildPayAsYouEarnList(Some(rtiData.employments),Some(iabds), npsEmployments.head)
       val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
@@ -172,7 +172,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       val iabds = iabdsJsonResponse.as[List[Iabd]]
       val taxAccount = taxAccountJsonResponse.as[NpsTaxAccount]
 
-      val payAsYouEarn=EmploymentHistoryServiceHelperTest.buildPayAsYouEarnList(None,None, npsEmployments.head)
+      val payAsYouEarn=helper.buildPayAsYouEarnList(None,None, npsEmployments.head)
       val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
@@ -190,7 +190,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       val iabds = iabdsJsonResponse.as[List[Iabd]]
       val taxAccount = taxAccountJsonResponse.as[NpsTaxAccount]
 
-      val payAsYouEarn=EmploymentHistoryServiceHelperTest.buildPayAsYouEarnList(None,Some(iabds), npsEmployments.head)
+      val payAsYouEarn=helper.buildPayAsYouEarnList(None,Some(iabds), npsEmployments.head)
       val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
@@ -209,7 +209,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       val iabds = iabdsJsonResponse.as[List[Iabd]]
       val taxAccount = taxAccountJsonResponse.as[NpsTaxAccount]
 
-      val payAsYouEarn=EmploymentHistoryServiceHelperTest.buildPayAsYouEarnList(Some(rtiData.employments),None, npsEmployments.head)
+      val payAsYouEarn=helper.buildPayAsYouEarnList(Some(rtiData.employments),None, npsEmployments.head)
       val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
@@ -229,7 +229,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       val iabds = iabdsJsonResponse.as[List[Iabd]]
       val taxAccount = taxAccountJsonResponse.as[NpsTaxAccount]
 
-      val payAsYouEarn=EmploymentHistoryServiceHelperTest.buildPayAsYouEarnList(Some(rtiData.employments),Some(Nil), npsEmployments.head)
+      val payAsYouEarn=helper.buildPayAsYouEarnList(Some(rtiData.employments),Some(Nil), npsEmployments.head)
       val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"

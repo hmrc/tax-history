@@ -17,20 +17,33 @@
 package uk.gov.hmrc.taxhistory.auditable
 
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.audit.AuditExtensions
+import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.taxhistory.model.audit.{DataEventAuditType, DataEventDetail, DataEventTransaction}
+
+import scala.collection.mutable
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait Auditable {
+class AuditableTestImpl extends Auditable {
 
-  // This only has side-effects, making a fire and forget sendDataEvent
+  // This list provides access to the audit events sent to work-around the side-effect only nature of auditing
+  val sentDataEvents: mutable.MutableList[DataEvent] = mutable.MutableList.empty[DataEvent]
+
   def sendDataEvent(transactionName: DataEventTransaction, path: String = "N/A",
                     tags: Map[String, String] = Map.empty[String, String],
                     detail: DataEventDetail, eventType: DataEventAuditType)
-                   (implicit hc: HeaderCarrier): Future[Unit]
+                   (implicit hc: HeaderCarrier): Future[Unit] = {
+    sentDataEvents += DataEvent("TestAuditEvent", auditType = eventType.toString,
+      tags = AuditExtensions.auditHeaderCarrier(hc).toAuditTags(transactionName.toString, path) ++ tags,
+      detail = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails(detail.detail.toSeq: _*))
+    Future(Unit)
+  }
 
-  // This only has side-effects, making a fire and forget sendDataEvent
   def sendDataEvents(transactionName: DataEventTransaction, path: String = "N/A",
                      tags: Map[String, String] = Map.empty[String, String],
                      details: Seq[DataEventDetail], eventType: DataEventAuditType)
-                    (implicit hc: HeaderCarrier): Unit
+                    (implicit hc: HeaderCarrier): Unit =
+    details foreach (detail => sendDataEvent(transactionName, path, tags, detail, eventType))
+
 }

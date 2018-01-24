@@ -21,7 +21,6 @@ import javax.inject.{Inject, Named}
 import play.api.http.Status.OK
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.WSHttp
@@ -33,7 +32,6 @@ import scala.concurrent.Future
 
 class NpsConnector @Inject()(val httpGet: CoreGet,
                              val httpPost: CorePost,
-                             val audit: Audit,
                              val servicesConfig: ServicesConfig,
                              @Named("microservice.services.nps-hod.path") val path: String,
                              @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends BaseConnector with TaxHistoryLogger {

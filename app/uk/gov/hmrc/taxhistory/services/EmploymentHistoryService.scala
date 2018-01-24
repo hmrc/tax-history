@@ -41,11 +41,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class EmploymentHistoryService @Inject()(
-                              val audit: Audit,
                               val npsConnector: NpsConnector,
                               val rtiConnector: RtiConnector,
-                              val cacheService : TaxHistoryCacheService
-                              ) extends EmploymentHistoryServiceHelper with Auditable with TaxHistoryLogger {
+                              val cacheService : TaxHistoryCacheService,
+                              val helper: EmploymentHistoryServiceHelper
+                              ) extends TaxHistoryLogger {
 
   def getEmployments(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     implicit val validatedNino:Nino = Nino(nino)
@@ -59,7 +59,7 @@ class EmploymentHistoryService @Inject()(
 
       extractEmployments match {
         case Some(emp) if emp.equals(Json.arr()) => HttpResponse(Status.NOT_FOUND, extractEmployments)
-        case Some(emp) => HttpResponse(Status.OK, Some(enrichEmploymentsJsonWithGeneratedUrls(emp,taxYear=taxYear)))
+        case Some(emp) => HttpResponse(Status.OK, Some(helper.enrichEmploymentsJsonWithGeneratedUrls(emp,taxYear=taxYear)))
       }
     })
   }
@@ -195,7 +195,7 @@ class EmploymentHistoryService @Inject()(
       rtiF <- getRtiEmployments(nino,taxYear)
       taxAccF <-  getNpsTaxAccount(nino,taxYear)
     }yield {
-      combineResult(iabdsF,rtiF,taxAccF)(npsEmployments)
+      helper.combineResult(iabdsF,rtiF,taxAccF)(npsEmployments)
     }
   }
 
