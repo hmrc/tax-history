@@ -29,7 +29,7 @@ import uk.gov.hmrc.time.TaxYear
 class TaxYearServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   implicit val hc = HeaderCarrier()
-  val testNino = randomNino().toString()
+  val testNino = randomNino()
 
   val testEmploymentHistoryService = TestEmploymentHistoryService.createNew
 

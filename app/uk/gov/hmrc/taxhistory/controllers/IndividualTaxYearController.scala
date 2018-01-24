@@ -20,6 +20,7 @@ import javax.inject.Inject
 
 import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
@@ -35,17 +36,17 @@ class IndividualTaxYearController @Inject()(val authConnector: AuthConnector,
 
   def getTaxYears(nino: String): Action[AnyContent] = Action.async {
     implicit request => {
-      authorisedRelationship(nino, data => retrieveTaxYears(nino, data.getOrElse("")))
+      authorisedRelationship(nino, data => retrieveTaxYears(Nino(nino), data.getOrElse("")))
     }
   }
 
-  private def retrieveTaxYears(nino: String, arn: String)(implicit hc: HeaderCarrier): Future[Result] =
+  private def retrieveTaxYears(nino: Nino, arn: String)(implicit hc: HeaderCarrier): Future[Result] =
     employmentHistoryService.getTaxYears(nino = nino) map {
       response =>
         response.status match {
           case OK =>
             sendDataEvent(transactionName = "Agent viewed client",
-              detail = Map("agentReferenceNumber" -> arn, "nino" -> nino),
+              detail = Map("agentReferenceNumber" -> arn, "nino" -> nino.nino),
               path = "/tax-history/select-tax-year",
               eventType = "AgentViewedClient")
             Ok(response.body)

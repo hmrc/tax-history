@@ -89,13 +89,13 @@ class RtiDataHelper(val rtiData: RtiData) extends TaxHistoryHelper with TaxHisto
 
 object RtiDataHelper {
 
-  def convertToPayAndTax(rtiEmployments: List[RtiEmployment]): PayAndTax ={
+  def convertToPayAndTax(rtiEmployments: List[RtiEmployment]): PayAndTax = {
     val employment = rtiEmployments.head
     val eyuList = convertRtiEYUToEYU(employment)
     employment.payments match {
       case Nil => PayAndTax(earlierYearUpdates = eyuList)
       case matchingPayments => {
-        val payment =matchingPayments.sorted.last
+        val payment = matchingPayments.sorted.last
         PayAndTax(taxablePayTotal = Some(payment.taxablePayYTD),
           taxTotal = Some(payment.totalTaxYTD),
           paymentDate=Some(payment.paidOnDate),
@@ -107,10 +107,10 @@ object RtiDataHelper {
   def convertRtiEYUToEYU(rtiEmployment: RtiEmployment): List[EarlierYearUpdate] = {
     rtiEmployment.earlierYearUpdates.map(eyu => {
       EarlierYearUpdate(
-        taxablePayEYU =  eyu.taxablePayDelta,
+        taxablePayEYU = eyu.taxablePayDelta,
         taxEYU = eyu.totalTaxDelta,
         receivedDate = eyu.receivedDate)
-    }).filter(x =>x.taxablePayEYU != 0 && x.taxEYU != 0)
+    }).filter(x => x.taxablePayEYU != 0 && x.taxEYU != 0)
   }
 
   def getPayeRef(npsEmployment: NpsEmployment) = {

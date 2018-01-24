@@ -37,7 +37,7 @@ import scala.concurrent.Future
 class CompanyBenefitControllerSpec extends PlaySpec with OneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach  {
   private val mockEmploymentHistoryService = mock[EmploymentHistoryService]
   private val mockPlayAuthConnector = mock[PlayAuthConnector]
-  private val nino =randomNino.toString
+  private val nino = randomNino()
   private lazy val successResponseJson = Json.parse( """{"test":"OK"}""")
   private val failureResponseJson = Json.parse( """{"reason":"Resource not found"}""")
   private val errorResponseJson = Json.parse( """{"reason":"Some error."}""")
@@ -67,7 +67,7 @@ class CompanyBenefitControllerSpec extends PlaySpec with OneServerPerSuite with 
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getCompanyBenefits(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
-      val result = testCompanyBenefitController.getCompanyBenefits(nino, 2016, employmentId).apply(FakeRequest())
+      val result = testCompanyBenefitController.getCompanyBenefits(nino.nino, 2016, employmentId).apply(FakeRequest())
       status(result) must be(OK)
     }
 
@@ -77,7 +77,7 @@ class CompanyBenefitControllerSpec extends PlaySpec with OneServerPerSuite with 
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getCompanyBenefits(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(failureResponseJson))))
-      val result = testCompanyBenefitController.getCompanyBenefits(nino, 2016, employmentId).apply(FakeRequest())
+      val result = testCompanyBenefitController.getCompanyBenefits(nino.nino, 2016, employmentId).apply(FakeRequest())
       status(result) must be(NOT_FOUND)
     }
 
@@ -87,7 +87,7 @@ class CompanyBenefitControllerSpec extends PlaySpec with OneServerPerSuite with 
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getCompanyBenefits(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(errorResponseJson))))
-      val result = testCompanyBenefitController.getCompanyBenefits(nino, 2016, employmentId).apply(FakeRequest())
+      val result = testCompanyBenefitController.getCompanyBenefits(nino.nino, 2016, employmentId).apply(FakeRequest())
       status(result) must be(BAD_REQUEST)
     }
 
@@ -97,7 +97,7 @@ class CompanyBenefitControllerSpec extends PlaySpec with OneServerPerSuite with 
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getCompanyBenefits(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future. successful(HttpResponse(SERVICE_UNAVAILABLE, Some(errorResponseJson))))
-      val result = testCompanyBenefitController.getCompanyBenefits(nino, 2016, employmentId).apply(FakeRequest())
+      val result = testCompanyBenefitController.getCompanyBenefits(nino.nino, 2016, employmentId).apply(FakeRequest())
       status(result) must be(SERVICE_UNAVAILABLE)
     }
 
@@ -107,7 +107,7 @@ class CompanyBenefitControllerSpec extends PlaySpec with OneServerPerSuite with 
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getCompanyBenefits(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(errorResponseJson))))
-      val result = testCompanyBenefitController.getCompanyBenefits(nino, 2016, employmentId).apply(FakeRequest())
+      val result = testCompanyBenefitController.getCompanyBenefits(nino.nino, 2016, employmentId).apply(FakeRequest())
       status(result) must be(INTERNAL_SERVER_ERROR)
     }
 
@@ -118,7 +118,7 @@ class CompanyBenefitControllerSpec extends PlaySpec with OneServerPerSuite with 
 
       when(mockEmploymentHistoryService.getCompanyBenefits(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
-      val result = testCompanyBenefitController.getCompanyBenefits(nino, 2016, employmentId).apply(FakeRequest())
+      val result = testCompanyBenefitController.getCompanyBenefits(nino.nino, 2016, employmentId).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
 
@@ -129,7 +129,7 @@ class CompanyBenefitControllerSpec extends PlaySpec with OneServerPerSuite with 
 
       when(mockEmploymentHistoryService.getCompanyBenefits(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
-      val result = testCompanyBenefitController.getCompanyBenefits(nino, 2016, employmentId).apply(FakeRequest())
+      val result = testCompanyBenefitController.getCompanyBenefits(nino.nino, 2016, employmentId).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
   }

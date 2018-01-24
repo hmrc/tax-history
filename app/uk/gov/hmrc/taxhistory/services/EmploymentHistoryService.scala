@@ -45,8 +45,8 @@ class EmploymentHistoryService @Inject()(
                               val cacheService : TaxHistoryCacheService
                               ) extends EmploymentHistoryServiceHelper with Auditable with TaxHistoryLogger {
 
-  def getEmployments(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    getFromCache(Nino(nino), TaxYear(taxYear)).map(js => {
+  def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+    getFromCache(nino, taxYear).map { js =>
       logger.warn("Returning js result from getEmployments")
 
       val extractEmployments = js.map(json =>
@@ -55,27 +55,26 @@ class EmploymentHistoryService @Inject()(
 
       extractEmployments match {
         case Some(emp) if emp.equals(Json.arr()) => HttpResponse(Status.NOT_FOUND, extractEmployments)
-        case Some(emp) => HttpResponse(Status.OK, Some(enrichEmploymentsJsonWithGeneratedUrls(emp,taxYear=taxYear)))
+        case Some(emp) => HttpResponse(Status.OK, Some(enrichEmploymentsJsonWithGeneratedUrls(emp, taxYear=taxYear.startYear)))
       }
-    })
+    }
   }
 
-  def getEmployment(nino:String, taxYear:Int,employmentId:String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    getFromCache(Nino(nino), TaxYear(taxYear)).map(js => {
+  def getEmployment(nino: Nino, taxYear: TaxYear, employmentId:String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+    getFromCache(nino, taxYear).map { js =>
       logger.warn("Returning js result of a getEmployment")
       js match {
         case Some(jsValue) =>
-          (jsValue \ "employments").as[List[Employment]].find(_.employmentId.toString==employmentId) match {
-            case Some(x) => HttpResponse(Status.OK,Some(Json.toJson(x.enrichWithURIs(taxYear))))
-            case _ => {
+          (jsValue \ "employments").as[List[Employment]].find(_.employmentId.toString == employmentId) match {
+            case Some(x) =>
+              HttpResponse(Status.OK,Some(Json.toJson(x.enrichWithURIs(taxYear.startYear))))
+            case _ =>
               logger.warn("Cache has expired from mongo")
               HttpResponse(Status.NOT_FOUND)
-            }
-
           }
         case _ => HttpResponse(Status.NOT_FOUND)
       }
-    })
+    }
   }
 
 
@@ -88,8 +87,8 @@ class EmploymentHistoryService @Inject()(
     }
   }
 
-  def getAllowances(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    getFromCache(Nino(nino), TaxYear(taxYear)).map(js => {
+  def getAllowances(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+    getFromCache(nino, taxYear).map(js => {
       logger.warn("Returning js result from getAllowances")
 
       val extractAllowances = js.map(json =>
@@ -104,11 +103,11 @@ class EmploymentHistoryService @Inject()(
   }
 
 
-  def getPayAndTax(nino:String, taxYear:Int, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    getFromCache(Nino(nino), TaxYear(taxYear)).map(js => {
+  def getPayAndTax(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+    getFromCache(nino, taxYear).map(js => {
       logger.warn("Returning js result from getEmployments")
       val extractPayAndTax = js.map(json =>
-        (json \ "payAndTax"\ employmentId).getOrElse(Json.obj())
+        (json \ "payAndTax" \ employmentId).getOrElse(Json.obj())
       )
       extractPayAndTax match {
         case Some(emp) if emp.equals(Json.obj()) => HttpResponse(Status.NOT_FOUND, extractPayAndTax)
@@ -117,8 +116,8 @@ class EmploymentHistoryService @Inject()(
     })
   }
 
-  def getTaxAccount(nino:String, taxYear:Int)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    getFromCache(Nino(nino), TaxYear(taxYear)).map(js => {
+  def getTaxAccount(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+    getFromCache(nino, taxYear).map(js => {
       logger.warn("Returning js result from getTaxAccount")
 
       val extractTaxAccount = js.map(json =>
@@ -132,7 +131,7 @@ class EmploymentHistoryService @Inject()(
     })
   }
 
-  def getTaxYears(nino: String) (implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+  def getTaxYears(nino: Nino) (implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
 
     val taxYearList = List(TaxYear.current.back(1),
                            TaxYear.current.back(2),
@@ -147,11 +146,11 @@ class EmploymentHistoryService @Inject()(
     Future.successful(HttpResponse(Status.OK, Some(Json.toJson(taxYears))))
   }
 
-  def getCompanyBenefits(nino:String, taxYear:Int, employmentId:String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    getFromCache(Nino(nino), TaxYear(taxYear)).map(js => {
+  def getCompanyBenefits(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+    getFromCache(nino, taxYear).map(js => {
       logger.warn("Returning js result from getCompanyBenefits")
       val extractCompanyBenefits = js.map(json =>
-        (json \ "benefits"\ employmentId).getOrElse(Json.obj())
+        (json \ "benefits" \ employmentId).getOrElse(Json.obj())
       )
       extractCompanyBenefits match {
         case Some(comBen) if comBen.equals(Json.obj()) => HttpResponse(Status.NOT_FOUND, extractCompanyBenefits)
@@ -160,7 +159,7 @@ class EmploymentHistoryService @Inject()(
     })
   }
 
-  def retrieveEmploymentsDirectFromSource(validatedNino:Nino,validatedTaxYear:TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] ={
+  def retrieveEmploymentsDirectFromSource(validatedNino: Nino,validatedTaxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] ={
     val x = for {
           npsEmploymentsFuture <- getNpsEmployments(validatedNino, validatedTaxYear)
         }yield {
@@ -185,7 +184,7 @@ class EmploymentHistoryService @Inject()(
     }
   }
 
-  def getNpsEmployments(nino:Nino, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,List[NpsEmployment]]] = {
+  def getNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,List[NpsEmployment]]] = {
     npsConnector.getEmployments(nino,taxYear.currentYear).map{
       response => {
         response.status match {
@@ -206,8 +205,8 @@ class EmploymentHistoryService @Inject()(
     }
   }
 
-  def getRtiEmployments(nino:Nino, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse,RtiData]] = {
-    rtiConnector.getRTIEmployments(nino,taxYear).map{
+  def getRtiEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse,RtiData]] = {
+    rtiConnector.getRTIEmployments(nino, taxYear).map {
       response => {
         response.status match {
           case Status.OK => {
@@ -222,8 +221,8 @@ class EmploymentHistoryService @Inject()(
     }
   }
 
-  def getNpsIabds(nino:Nino, taxYear:TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,List[Iabd]]] = {
-    npsConnector.getIabds(nino,taxYear.currentYear).map{
+  def getNpsIabds(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,List[Iabd]]] = {
+    npsConnector.getIabds(nino, taxYear.currentYear).map{
       response => {
         response.status match {
           case OK => {
@@ -247,13 +246,11 @@ class EmploymentHistoryService @Inject()(
       npsConnector.getTaxAccount(nino, taxYear.currentYear).map {
         response => {
           response.status match {
-            case OK => {
+            case OK =>
               Right(Some(response.json.as[NpsTaxAccount]))
-            }
-            case _ => {
+            case _ =>
               logger.warn("Non 200 response code from nps iabd api.")
               Left(response)
-            }
           }
         }
       }

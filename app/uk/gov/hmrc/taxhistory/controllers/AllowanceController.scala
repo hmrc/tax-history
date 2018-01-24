@@ -20,9 +20,11 @@ import javax.inject.Inject
 
 import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
+import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
@@ -35,5 +37,5 @@ class AllowanceController @Inject()(val employmentHistoryService: EmploymentHist
   }
 
   private def retrieveAllowances(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[Result] =
-    employmentHistoryService.getAllowances(nino, taxYear) map matchResponse
+    employmentHistoryService.getAllowances(Nino(nino), TaxYear(taxYear)) map matchResponse
 }

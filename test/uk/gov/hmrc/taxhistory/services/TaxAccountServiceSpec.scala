@@ -95,7 +95,7 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testEmploymentHistoryService.getFromCache(Matchers.any(), Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
-      val result = await(testEmploymentHistoryService.getTaxAccount(testNino.nino, TaxYear.current.previous.startYear))
+      val result = await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear.current.previous))
       result.json must be(taxAccountJson)
     }
 
@@ -106,7 +106,7 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testEmploymentHistoryService.getFromCache(Matchers.any(), Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
-      val result = await(testEmploymentHistoryService.getTaxAccount(testNino.nino, TaxYear.current.previous.startYear))
+      val result = await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear.current.previous))
       result.status must be(NOT_FOUND)
       result.json must be(taxAccountJson)
     }

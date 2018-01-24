@@ -38,7 +38,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
 
   private val mockEmploymentHistoryService = mock[EmploymentHistoryService]
   private val mockPlayAuthConnector = mock[PlayAuthConnector]
-  private val nino =randomNino.toString()
+  private val nino = randomNino()
   object MockAudit extends Audit("mockApp", mock[AuditConnector]) {
     override def sendDataEvent: (DataEvent) => Unit =
       _ => {}
@@ -71,7 +71,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getTaxYears(Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
-      val result = testIndividualTaxYearController.getTaxYears(nino).apply(FakeRequest())
+      val result = testIndividualTaxYearController.getTaxYears(nino.nino).apply(FakeRequest())
       status(result) must be(OK)
     }
 
@@ -81,7 +81,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getTaxYears(Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(errorResponseJson))))
-      val result = testIndividualTaxYearController.getTaxYears(nino).apply(FakeRequest())
+      val result = testIndividualTaxYearController.getTaxYears(nino.nino).apply(FakeRequest())
       status(result) must be(INTERNAL_SERVER_ERROR)
     }
 
@@ -92,7 +92,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
 
       when(mockEmploymentHistoryService.getTaxYears(Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
-      val result = testIndividualTaxYearController.getTaxYears(nino).apply(FakeRequest())
+      val result = testIndividualTaxYearController.getTaxYears(nino.nino).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
 
@@ -103,7 +103,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
 
       when(mockEmploymentHistoryService.getTaxYears(Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
-      val result = testIndividualTaxYearController.getTaxYears(nino).apply(FakeRequest())
+      val result = testIndividualTaxYearController.getTaxYears(nino.nino).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
   }

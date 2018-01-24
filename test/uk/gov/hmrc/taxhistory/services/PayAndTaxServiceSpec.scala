@@ -22,6 +22,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -90,7 +91,7 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
-      val result = await(testEmploymentHistoryService.getPayAndTax("AA000000A", 2014, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
+      val result = await(testEmploymentHistoryService.getPayAndTax(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
       result.json must be(payAndTaxJson)
     }
 
@@ -101,7 +102,7 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(Some(payeJson)))
 
-      val result = await(testEmploymentHistoryService.getPayAndTax("AA000000A", 2014, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
+      val result = await(testEmploymentHistoryService.getPayAndTax(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
       result.status must be(NOT_FOUND)
       result.json must be(payAndTaxJson)
     }
