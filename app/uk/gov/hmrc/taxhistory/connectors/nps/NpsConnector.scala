@@ -16,33 +16,39 @@
 
 package uk.gov.hmrc.taxhistory.connectors.nps
 
-import play.api.Logger
+import javax.inject.{Inject, Named}
+
 import play.api.http.Status.OK
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.taxhistory.WSHttp
+import uk.gov.hmrc.play.audit.model.Audit
+import uk.gov.hmrc.play.config.ServicesConfig
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.connectors.BaseConnector
 import uk.gov.hmrc.taxhistory.metrics.MetricsEnum
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
 import scala.concurrent.Future
 
-trait NpsConnector extends BaseConnector with TaxHistoryLogger{
+class NpsConnector @Inject()(val httpGet: CoreGet,
+                             val httpPost: CorePost,
+                             val audit: Audit,
+                             val servicesConfig: ServicesConfig,
+                             @Named("microservice.services.nps-hod.path") val path: String,
+                             @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends BaseConnector with TaxHistoryLogger {
 
-  def serviceUrl: String
+  lazy val serviceUrl: String = s"${servicesConfig.baseUrl("nps-hod")}$path"
 
-  def npsBaseUrl(nino: Nino) = s"$serviceUrl/person/$nino"
-
-  def npsPathUrl(nino: Nino, path: String) = s"${npsBaseUrl(nino)}/$path"
+  def employmentUrl(nino: Nino, year: Int) = s"$serviceUrl/person/${nino.nino}/employment/$year"
+  def iabdsUrl(nino: Nino, year: Int)      = s"$serviceUrl/person/${nino.nino}/iabds/$year"
+  def taxAccountUrl(nino: Nino, year: Int) = s"$serviceUrl/person/${nino.nino}/tax-account/$year"
 
   def getEmployments(nino: Nino, year: Int)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     implicit val hc = basicNpsHeaders(HeaderCarrier())
-    val urlToRead = npsPathUrl(nino, s"employment/$year")
 
     val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_EMPLOYMENTS)
 
-    httpGet.GET[HttpResponse](urlToRead).map { response =>
+    httpGet.GET[HttpResponse](employmentUrl(nino, year)).map { response =>
       timerContext.stop()
       response.status match {
         case OK =>
@@ -58,11 +64,10 @@ trait NpsConnector extends BaseConnector with TaxHistoryLogger{
 
   def getIabds(nino: Nino, year: Int)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     implicit val hc = basicNpsHeaders(HeaderCarrier())
-    val urlToRead = npsPathUrl(nino, s"iabds/$year")
 
     val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_IABDS)
 
-    httpGet.GET[HttpResponse](urlToRead).map { response =>
+    httpGet.GET[HttpResponse](iabdsUrl(nino, year)).map { response =>
       timerContext.stop()
       response.status match {
         case OK =>
@@ -78,11 +83,10 @@ trait NpsConnector extends BaseConnector with TaxHistoryLogger{
 
   def getTaxAccount(nino: Nino, year: Int)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     implicit val hc = basicNpsHeaders(HeaderCarrier())
-    val urlToRead = npsPathUrl(nino, s"tax-account/$year")
 
     val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_TAX_ACCOUNT)
 
-    httpGet.GET[HttpResponse](urlToRead).map { response =>
+    httpGet.GET[HttpResponse](taxAccountUrl(nino, year)).map { response =>
       timerContext.stop()
       response.status match {
         case OK =>
@@ -95,15 +99,4 @@ trait NpsConnector extends BaseConnector with TaxHistoryLogger{
       }
     }
   }
-
-}
-
-object NpsConnector extends NpsConnector {
-  // $COVERAGE-OFF$
-  override val httpGet: CoreGet = WSHttp
-  override val httpPost: CorePost = WSHttp
-  lazy val path: String = config("nps-hod").getString("path").fold("")(p => p)
-  lazy val serviceUrl: String = s"${baseUrl("nps-hod")}$path"
-  lazy val originatorId: String = getConfString("nps-hod.originatorId", "HMRC_GDS")
-  // $COVERAGE-ON$
 }

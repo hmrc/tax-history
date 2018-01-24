@@ -23,7 +23,6 @@ import uk.gov.hmrc.play.config.AppName
 
 trait Auditable extends AppName{
 
-
   def audit: Audit
 
   def sendDataEvent(transactionName: String, path: String = "N/A",
@@ -33,7 +32,6 @@ trait Auditable extends AppName{
     audit.sendDataEvent(DataEvent(appName, auditType = eventType,
       tags = AuditExtensions.auditHeaderCarrier(hc).toAuditTags(transactionName, path) ++ tags,
       detail = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails(detail.toSeq: _*)))
-
 
 }
 

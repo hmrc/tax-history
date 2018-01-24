@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.services.helpers
 
-import play.Logger
 import uk.gov.hmrc.taxhistory.model.api.{Allowance, CompanyBenefit}
 import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
@@ -25,8 +24,8 @@ class IabdsHelper(val iabds:List[Iabd]) extends TaxHistoryHelper with TaxHistory
 
 
 
-  def getRawCompanyBenefits():List[Iabd] = {
-    fetchFilteredList(this.iabds){
+  def getRawCompanyBenefits(): List[Iabd] = {
+    iabds.filter {
       iabd => {
         iabd.`type`.isInstanceOf[CompanyBenefits]
       }
@@ -34,7 +33,7 @@ class IabdsHelper(val iabds:List[Iabd]) extends TaxHistoryHelper with TaxHistory
   }
 
   def getMatchedCompanyBenefits(npsEmployment: NpsEmployment):List[Iabd] = {
-    fetchFilteredList(getRawCompanyBenefits()){
+    getRawCompanyBenefits().filter {
       (iabd) => {
         iabd.employmentSequenceNumber.contains(npsEmployment.sequenceNumber)
       }
@@ -46,7 +45,7 @@ class IabdsHelper(val iabds:List[Iabd]) extends TaxHistoryHelper with TaxHistory
     if (isTotalBenefitInKind()) {
       convertToCompanyBenefits(this.iabds)
     }else{
-      convertToCompanyBenefits(fetchFilteredList(this.iabds) {
+      convertToCompanyBenefits(iabds.filter {
         iabd => {
           !iabd.`type`.isInstanceOf[TotalBenefitInKind.type]
         }
@@ -70,22 +69,22 @@ class IabdsHelper(val iabds:List[Iabd]) extends TaxHistoryHelper with TaxHistory
   }
 
   def isTotalBenefitInKind():Boolean = {
-    fetchFilteredList(this.iabds) {
+    iabds.exists {
       iabd => {
         iabd.`type`.isInstanceOf[TotalBenefitInKind.type]
       }
-    }.nonEmpty &&
-      fetchFilteredList(this.iabds) {
+    } &&
+      iabds.count {
         iabd => {
           iabd.`type`.isInstanceOf[uk.gov.hmrc.taxhistory.model.nps.BenefitInKind]
         }
-      }.size == 1
+      } == 1
   }
 
 
   def getRawAllowances():List[Iabd] = {
 
-    fetchFilteredList(iabds){
+    iabds.filter {
       iabd => {
         iabd.`type`.isInstanceOf[Allowances]
       }

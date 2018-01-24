@@ -16,20 +16,22 @@
 
 package uk.gov.hmrc.taxhistory
 
+import javax.inject.{Inject, Named}
+
 import uk.gov.hmrc.auth.core.PlayAuthConnector
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.hooks.HttpHooks
 import uk.gov.hmrc.play.audit.http.HttpAuditing
+import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.auth.microservice.connectors.AuthConnector
 import uk.gov.hmrc.play.config.{AppName, RunMode, ServicesConfig}
 import uk.gov.hmrc.play.http.ws._
-import uk.gov.hmrc.play.microservice.config.LoadAuditingConfig
 
 
 trait Hooks extends HttpHooks with HttpAuditing {
-  override val hooks = Seq(AuditingHook)
-  override lazy val auditConnector: AuditConnector = MicroserviceAuditConnector
+  val hooks = Seq(AuditingHook)
 }
 
 trait WSHttp extends HttpGet with WSGet
@@ -39,17 +41,22 @@ trait WSHttp extends HttpGet with WSGet
   with HttpPatch with WSPatch
   with Hooks with AppName
 
-object WSHttp extends WSHttp
+class WSHttpImpl @Inject()(val auditConnector: AuditConnector) extends HttpGet with WSGet
+  with HttpPut with WSPut
+  with HttpPost with WSPost
+  with HttpDelete with WSDelete
+  with HttpPatch with WSPatch
+  with Hooks with AppName
 
-object MicroserviceAuditConnector extends AuditConnector with RunMode {
-  override lazy val auditingConfig = LoadAuditingConfig(s"auditing")
+class MicroserviceAudit @Inject()(@Named("appName") val applicationName: String,
+                                  val auditConnector: AuditConnector) extends Audit(applicationName, auditConnector)
+
+class MicroserviceAuditConnector @Inject()(val auditingConfig: AuditingConfig) extends AuditConnector with RunMode
+
+class MicroserviceAuthConnector @Inject()(val auditConnector: AuditConnector) extends AuthConnector with ServicesConfig with WSHttp {
+  val authBaseUrl = baseUrl("auth")
 }
 
-object MicroserviceAuthConnector extends AuthConnector with ServicesConfig with WSHttp {
-  override val authBaseUrl = baseUrl("auth")
-}
-
-object TaxHistoryAuthConnector extends PlayAuthConnector with ServicesConfig {
+class TaxHistoryAuthConnector @Inject()(val http: CorePost) extends PlayAuthConnector with ServicesConfig {
   override val serviceUrl = baseUrl("auth")
-  override val http =WSHttp
 }

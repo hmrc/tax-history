@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxhistory.config
+package uk.gov.hmrc.taxhistory.model.audit
 
-import uk.gov.hmrc.play.config.ServicesConfig
+trait DataEventAuditType
+case object OnlyInRti extends DataEventAuditType
+case object NpsRtiMismatch extends DataEventAuditType
+case object AgentViewedClientEvent extends DataEventAuditType
 
-object ApplicationConfig extends ServicesConfig {
-  val mongoSource = "taxhistory"
-  val expireAfterSeconds: Int = runModeConfiguration.getInt("mongodb.cache.expire.seconds").fold(60 * 60 * 30 )(x => x)
-}
+trait DataEventTransaction
+
+case object PAYEForAgents extends DataEventTransaction
+case object AgentViewedClient extends DataEventTransaction
+
+
+// todo : look at the naming of this, in use we end up with detail.detail
+case class DataEventDetail (detail: Map[String, String])

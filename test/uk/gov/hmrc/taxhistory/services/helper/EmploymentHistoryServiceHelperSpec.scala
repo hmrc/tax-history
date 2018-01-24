@@ -146,7 +146,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     }
 
 
-    "Build employment1 from rti ,nps employment1 and Iabd data" in {
+    "Build employment1 from rti, nps employment1 and Iabd data" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
       val iabds = iabdsJsonResponse.as[List[Iabd]]
@@ -184,7 +184,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       companyBenefits mustBe  None
 
     }
-    "Build employment1 when there is data for rti is Nil " in {
+    "Build employment1 when there is data for rti is Nil" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
       val iabds = iabdsJsonResponse.as[List[Iabd]]

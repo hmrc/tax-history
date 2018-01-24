@@ -16,48 +16,42 @@
 
 package uk.gov.hmrc.taxhistory.connectors.des
 
+import javax.inject.{Inject, Named}
+
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.taxhistory.WSHttp
+import uk.gov.hmrc.play.audit.model.Audit
+import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.taxhistory.connectors.BaseConnector
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
-object RtiConnector extends RtiConnector {
-  // $COVERAGE-OFF$
-  override val httpGet: CoreGet = WSHttp
-  override val httpPost: CorePost = WSHttp
+class RtiConnector @Inject()(val httpGet: CoreGet,
+                             val httpPost: CorePost,
+                             val audit: Audit,
+                             val servicesConfig: ServicesConfig,
+                             @Named("microservice.services.rti-hod.authorizationToken") val authorizationToken: String,
+                             @Named("microservice.services.rti-hod.env") val environment: String,
+                             @Named("microservice.services.rti-hod.originatorId") val originatorId: String
+                            ) extends BaseConnector {
 
-  lazy val serviceUrl: String = s"${baseUrl("rti-hod")}"
-  lazy val authorization: String = "Bearer " + getConfString("rti-hod.authorizationToken", "local")
-  lazy val environment: String = getConfString("rti-hod.env", "local")
-  lazy val originatorId: String = getConfString("rti-hod.originatorId", "local")
-  // $COVERAGE-ON$
-}
+  lazy val serviceUrl: String = s"${servicesConfig.baseUrl("rti-hod")}"
 
-trait RtiConnector extends BaseConnector {
+  lazy val authorization: String = s"Bearer $authorizationToken"
 
-  def serviceUrl: String
-
-  def authorization: String
-
-  def environment: String
-
-  def rtiBasicUrl(nino: Nino) = s"$serviceUrl/rti/individual/payments/nino/${withoutSuffix(nino)}"
-
-  def rtiPathUrl(nino: Nino, path: String) = s"${rtiBasicUrl(nino)}/$path"
-
+  def rtiEmploymentsUrl(nino: Nino, taxYear: TaxYear): String = {
+    val formattedTaxYear = s"${taxYear.startYear % 100}-${taxYear.finishYear % 100}"
+    s"$serviceUrl/rti/individual/payments/nino/${withoutSuffix(nino)}/tax-year/$formattedTaxYear"
+  }
 
   def createHeader: HeaderCarrier = HeaderCarrier(extraHeaders =
     Seq("Environment" -> environment,
-      "Authorization" -> authorization,
+      "Authorization" -> authorizationToken,
       "Gov-Uk-Originator-Id" -> originatorId))
 
   def getRTIEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    val twoDigitYear = s"${taxYear.startYear % 100}-${taxYear.finishYear % 100}"
-    val urlToRead = rtiPathUrl(nino, s"tax-year/$twoDigitYear")
     implicit val hc: HeaderCarrier = createHeader
-    getFromRTI(urlToRead)
+    getFromRTI(rtiEmploymentsUrl(nino, taxYear))
   }
 }

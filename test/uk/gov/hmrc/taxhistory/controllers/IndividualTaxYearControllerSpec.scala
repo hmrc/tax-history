@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import java.util.UUID
-
 import org.mockito.Matchers
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
@@ -29,6 +27,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{Audit, DataEvent}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
@@ -40,7 +39,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
   private val mockEmploymentHistoryService = mock[EmploymentHistoryService]
   private val mockPlayAuthConnector = mock[PlayAuthConnector]
   private val nino =randomNino.toString()
-  object MockAudit extends Audit("mockApp", null) {
+  object MockAudit extends Audit("mockApp", mock[AuditConnector]) {
     override def sendDataEvent: (DataEvent) => Unit =
       _ => {}
   }
@@ -59,11 +58,11 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
     reset(mockPlayAuthConnector)
   }
 
-  object TestIndividualTaxYearController extends IndividualTaxYearController {
-    override def employmentHistoryService: EmploymentHistoryService = mockEmploymentHistoryService
-    override def authConnector: AuthConnector = mockPlayAuthConnector
-    override def audit = MockAudit
-  }
+  val testIndividualTaxYearController = new IndividualTaxYearController (
+    employmentHistoryService = mockEmploymentHistoryService,
+    authConnector = mockPlayAuthConnector,
+    audit = MockAudit
+  )
 
   "getTaxYears" must {
     "respond with OK for successful get" in {
@@ -72,7 +71,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getTaxYears(Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
-      val result = TestIndividualTaxYearController.getTaxYears(nino).apply(FakeRequest())
+      val result = testIndividualTaxYearController.getTaxYears(nino).apply(FakeRequest())
       status(result) must be(OK)
     }
 
@@ -82,7 +81,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getTaxYears(Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(errorResponseJson))))
-      val result = TestIndividualTaxYearController.getTaxYears(nino).apply(FakeRequest())
+      val result = testIndividualTaxYearController.getTaxYears(nino).apply(FakeRequest())
       status(result) must be(INTERNAL_SERVER_ERROR)
     }
 
@@ -93,7 +92,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
 
       when(mockEmploymentHistoryService.getTaxYears(Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
-      val result = TestIndividualTaxYearController.getTaxYears(nino).apply(FakeRequest())
+      val result = testIndividualTaxYearController.getTaxYears(nino).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
 
@@ -104,7 +103,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
 
       when(mockEmploymentHistoryService.getTaxYears(Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
-      val result = TestIndividualTaxYearController.getTaxYears(nino).apply(FakeRequest())
+      val result = testIndividualTaxYearController.getTaxYears(nino).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
   }

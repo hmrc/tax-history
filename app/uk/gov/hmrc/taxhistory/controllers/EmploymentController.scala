@@ -16,18 +16,18 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
+import javax.inject.Inject
+
 import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
-import uk.gov.hmrc.taxhistory.TaxHistoryAuthConnector
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 
 import scala.concurrent.Future
 
-trait EmploymentController extends TaxHistoryController {
-
-  def employmentHistoryService: EmploymentHistoryService = EmploymentHistoryService
+class EmploymentController @Inject()(val employmentHistoryService: EmploymentHistoryService,
+                                     val authConnector: AuthConnector) extends TaxHistoryController {
 
   def getEmployments(nino: String, taxYear: Int): Action[AnyContent] = Action.async {
     implicit request => {
@@ -46,8 +46,4 @@ trait EmploymentController extends TaxHistoryController {
 
   private def retrieveEmployments(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[Result] =
     employmentHistoryService.getEmployments(nino, taxYear) map matchResponse
-}
-
-object EmploymentController extends EmploymentController {
-  override def authConnector: AuthConnector = TaxHistoryAuthConnector
 }

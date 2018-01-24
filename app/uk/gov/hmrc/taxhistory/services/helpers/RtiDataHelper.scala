@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.services.helpers
 
-import play.Logger
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, PayAndTax}
@@ -42,11 +41,11 @@ class RtiDataHelper(val rtiData: RtiData) extends TaxHistoryHelper with TaxHisto
   def getMatchedRtiEmployments(npsEmployments: NpsEmployment)
                               (auditEvent: List[RtiEmployment]=> Future[List[Unit]])(implicit headerCarrier: HeaderCarrier): List[RtiEmployment] = {
 
-    fetchFilteredList(rtiEmployments){
+    rtiEmployments.filter {
       (rtiEmployment) =>
         isMatch(npsEmployments, rtiEmployment)
     } match {
-      case (matchingEmp :: Nil) =>List(matchingEmp)
+      case (matchingEmp :: Nil) => List(matchingEmp)
       case start :: end => {
         logger.warn("Multiple matching rti employments found.")
         val subMatches = (start :: end).filter {

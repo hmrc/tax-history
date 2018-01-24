@@ -24,6 +24,8 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
+import uk.gov.hmrc.play.audit.model.Audit
+import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -34,38 +36,35 @@ import scala.concurrent.Future
 
 class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
   implicit val hc = HeaderCarrier()
+
+  val mockServicesConfig = mock[ServicesConfig]
+  when(mockServicesConfig.baseUrl(any[String])).thenReturn("/test")
+
   val testNino = randomNino()
   val testNinoWithoutSuffix=testNino.value.take(8)
   lazy val rtiSuccessfulResponseURLDummy = loadFile("/json/rti/response/dummyRti.json")
 
   "RtiConnector" should {
-    "have the rti basic url " when {
-      "given a valid nino" in {
-        rtiConnector.rtiBasicUrl(testNino) mustBe s"/test/rti/individual/payments/nino/$testNinoWithoutSuffix"
-      }
-    }
-
-    "have the Rti Path Url" when {
-      "given a valid nino and path" in {
-        rtiConnector.rtiPathUrl(testNino, "path") mustBe s"/test/rti/individual/payments/nino/$testNinoWithoutSuffix/path"
+    "have the correct RTI employments url" when {
+      "given a valid nino and tax year" in {
+        testRtiConnector.rtiEmploymentsUrl(testNino, TaxYear(2017)) mustBe s"/test/rti/individual/payments/nino/$testNinoWithoutSuffix/tax-year/17-18"
       }
     }
 
     "have withoutSuffix nino" when {
       "given a valid nino" in {
-        rtiConnector.withoutSuffix(testNino) mustBe s"$testNinoWithoutSuffix"
+        testRtiConnector.withoutSuffix(testNino) mustBe s"$testNinoWithoutSuffix"
       }
     }
 
     "create the correct headers" in {
-      val headers = rtiConnector.createHeader
+      val headers = testRtiConnector.createHeader
       headers.extraHeaders mustBe List(("Environment", "env"), ("Authorization", "auth"), ("Gov-Uk-Originator-Id", "orgId"))
     }
 
     "get RTI data " when {
       "given a valid Nino and TaxYear" in {
         implicit val hc = HeaderCarrier()
-        val testRtiConnector = rtiConnector
         val fakeResponse: HttpResponse = HttpResponse(OK, Some(rtiSuccessfulResponseURLDummy))
         when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
@@ -81,7 +80,6 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     "return and handle a bad request response " in {
       val expectedResponse = Json.parse( """{"reason": "Some thing went wrong"}""")
       implicit val hc = HeaderCarrier()
-      val testRtiConnector = rtiConnector
       when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
       when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
@@ -96,7 +94,6 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       val expectedResponse = Json.parse( """{"reason": "Resource not found"}""")
       implicit val hc = HeaderCarrier()
 
-      val testRtiConnector = rtiConnector
       when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
       when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
@@ -110,7 +107,6 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     "return and handle an internal server error response " in {
       val expectedResponse = Json.parse( """{"reason": "Internal Server Error"}""")
       implicit val hc = HeaderCarrier()
-      val testRtiConnector = rtiConnector
       when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
       when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
@@ -124,7 +120,6 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     "return and handle an service unavailable error response " in {
       val expectedResponse = Json.parse( """{"reason": "Service Unavailable Error"}""")
       implicit val hc = HeaderCarrier()
-      val testRtiConnector = rtiConnector
       when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
       when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
@@ -137,23 +132,18 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     }
   }
 
-  private class TestRtiConnector extends RtiConnector {
-    override val serviceUrl: String = "/test"
-
-    override val environment: String = "env"
-
-    override val authorization: String = "auth"
-
-    override val originatorId: String = "orgId"
-
-    override val httpGet: HttpGet = mock[HttpGet]
-
-    override lazy val httpPost: HttpPost = ???
+  lazy val testRtiConnector = new RtiConnector(
+    httpGet = mock[HttpGet],
+    httpPost = mock[HttpPost],
+    audit = mock[Audit],
+    servicesConfig = mockServicesConfig,
+    authorizationToken = "auth",
+    environment = "env",
+    originatorId = "orgId"
+  ) {
     override val metrics =  mock[TaxHistoryMetrics]
-
     val mockTimerContext = mock[Timer.Context]
   }
-  private def rtiConnector = new TestRtiConnector
 
 }
 

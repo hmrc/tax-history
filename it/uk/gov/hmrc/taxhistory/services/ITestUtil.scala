@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxhistory.model.utils
+package uk.gov.hmrc.taxhistory.services
 
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.domain.{Generator, Nino}
@@ -22,7 +22,7 @@ import uk.gov.hmrc.domain.{Generator, Nino}
 import scala.io.Source
 import scala.util.Random
 
-trait TestUtil {
+object ITestUtil {
   def loadFile(path:String): JsValue = {
     val jsonString = Source.fromURL(getClass.getResource(path)).mkString
     Json.parse(jsonString)

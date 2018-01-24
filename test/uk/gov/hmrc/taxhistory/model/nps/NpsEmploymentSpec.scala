@@ -65,8 +65,7 @@ class NpsEmploymentSpec extends TestUtil with UnitSpec {
 
     "Multiple NpsEmployments Json" should {
       "transform List of NpsEmployment Model " in {
-        val npsEmployments = employmentsResponse.as[List[NpsEmployment]]
-        npsEmployments shouldBe a[List[NpsEmployment]]
+        noException shouldBe thrownBy (employmentsResponse.as[List[NpsEmployment]])
       }
     }
   }

@@ -20,7 +20,7 @@ import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
-import org.scalatestplus.play.{OneServerPerSuite, PlaySpec}
+import org.scalatestplus.play.OneServerPerSuite
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -56,11 +56,10 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
     reset(mockPlayAuthConnector)
   }
 
-  object TestTaxAccountController extends TaxAccountController {
-    override def employmentHistoryService: EmploymentHistoryService = mockEmploymentHistoryService
-
-    override def authConnector: AuthConnector = mockPlayAuthConnector
-  }
+  val testTaxAccountController = new TaxAccountController(
+    employmentHistoryService = mockEmploymentHistoryService,
+    authConnector = mockPlayAuthConnector
+  )
 
   "getTaxAccount" must {
 
@@ -70,7 +69,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
       when(mockEmploymentHistoryService.getTaxAccount(any[String], any[Int])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
 
-      val result = TestTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
+      val result = testTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
       status(result) shouldBe OK
     }
 
@@ -80,7 +79,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
       when(mockEmploymentHistoryService.getTaxAccount(any[String], any[Int])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(failureResponseJson))))
 
-      val result = TestTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
+      val result = testTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
       status(result) shouldBe NOT_FOUND
     }
 
@@ -90,7 +89,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
       when(mockEmploymentHistoryService.getTaxAccount(any[String], any[Int])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(errorResponseJson))))
 
-      val result = TestTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
+      val result = testTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
       status(result) shouldBe BAD_REQUEST
     }
 
@@ -100,7 +99,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
       when(mockEmploymentHistoryService.getTaxAccount(any[String], any[Int])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(SERVICE_UNAVAILABLE, Some(errorResponseJson))))
 
-      val result = TestTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
+      val result = testTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
       status(result) shouldBe SERVICE_UNAVAILABLE
     }
 
@@ -110,7 +109,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
       when(mockEmploymentHistoryService.getTaxAccount(any[String], any[Int])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(errorResponseJson))))
 
-      val result = TestTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
+      val result = testTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
       status(result) shouldBe INTERNAL_SERVER_ERROR
     }
 
@@ -120,7 +119,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
       when(mockEmploymentHistoryService.getTaxAccount(any[String], any[Int])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
 
-      val result = TestTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
+      val result = testTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
       status(result) shouldBe UNAUTHORIZED
     }
 
@@ -130,7 +129,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
       when(mockEmploymentHistoryService.getTaxAccount(any[String], any[Int])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
 
-      val result = TestTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
+      val result = testTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
       status(result) shouldBe UNAUTHORIZED
     }
 
@@ -138,7 +137,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
       when(mockPlayAuthConnector.authorise(any(), any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())(any(), any()))
         .thenReturn(Future.failed(new InsufficientEnrolments))
 
-      val result = TestTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
+      val result = testTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
       status(result) shouldBe UNAUTHORIZED
     }
 
@@ -146,7 +145,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
       when(mockPlayAuthConnector.authorise(any(), any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())(any(), any()))
         .thenReturn(Future.failed(new MissingBearerToken))
 
-      val result = TestTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
+      val result = testTaxAccountController.getTaxAccount(nino, testTaxYear).apply(FakeRequest())
       status(result) shouldBe INTERNAL_SERVER_ERROR
     }
   }
