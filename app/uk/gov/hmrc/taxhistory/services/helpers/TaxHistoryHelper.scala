@@ -21,18 +21,6 @@ import scala.util.{Failure, Success, Try}
 
 trait TaxHistoryHelper  {
 
-  def fetchResult[A,B](either:Either[A,B]):Option[B]={
-    either match {
-      case Left(x) => None
-      case Right(x) => Some(x)
-    }
-  }
-
-
-  def fetchFilteredList[A](listToFilter:List[A])(f:(A) => Boolean):List[A] = {
-    listToFilter.filter(f(_))
-  }
-
   def formatString(a: String):String = {
     Try(a.toInt) match {
       case Success(x) => x.toString

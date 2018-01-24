@@ -33,9 +33,10 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
   with MockitoSugar
   with BeforeAndAfterAll
   with BeforeAndAfterEach
-  with TestUtil
   with GuiceOneServerPerSuite
   with MongoSpecSupport {
+
+  import ITestUtil._
 
   val testMongoDbConnection = new MongoDbConnection {
     override implicit val db: () => DefaultDB = mongo // this value comes from the trait MongoSpecSupport

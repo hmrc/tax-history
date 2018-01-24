@@ -27,6 +27,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, NpsEmployment}
+import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear

@@ -31,8 +31,9 @@ class TaxHistoryRepositoryServiceSpec extends UnitSpec
   with MongoSpecSupport
   with BeforeAndAfterAll
   with BeforeAndAfterEach
-  with TestUtil
   {
+
+  import ITestUtil._
 
   val someJson  =  Json.parse(""" [{
                              |    "nino": "AA000000",

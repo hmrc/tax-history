@@ -22,9 +22,7 @@ import uk.gov.hmrc.domain.{Generator, Nino}
 import scala.io.Source
 import scala.util.Random
 
-object TestUtil extends TestUtil
-
-trait TestUtil {
+object ITestUtil {
   def loadFile(path:String): JsValue = {
     val jsonString = Source.fromURL(getClass.getResource(path)).mkString
     Json.parse(jsonString)

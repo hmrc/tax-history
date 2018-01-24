@@ -32,9 +32,9 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
                    (npsEmployments: List[NpsEmployment])
                    (implicit headerCarrier: HeaderCarrier):HttpResponse={
 
-    val iabdsOption = fetchResult(iabdResponse)
-    val rtiOption = fetchResult(rtiResponse)
-    val taxAccOption = fetchResult(taxAccResponse)
+    val iabdsOption  = iabdResponse.right.toOption
+    val rtiOption    = rtiResponse.right.toOption
+    val taxAccOption = taxAccResponse.right.toOption
 
     val payAsYouEarnList = npsEmployments.map {
       npsEmployment => {

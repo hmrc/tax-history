@@ -22,8 +22,6 @@ import uk.gov.hmrc.domain.{Generator, Nino}
 import scala.io.Source
 import scala.util.Random
 
-object TestUtil extends TestUtil
-
 trait TestUtil {
   def loadFile(path:String): JsValue = {
     val jsonString = Source.fromURL(getClass.getResource(path)).mkString

@@ -24,13 +24,14 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
+import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
 
-class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
+class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
   implicit val hc = HeaderCarrier()
   val testNino = randomNino()
   
