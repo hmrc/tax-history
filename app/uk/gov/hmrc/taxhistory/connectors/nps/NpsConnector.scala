@@ -26,7 +26,10 @@ import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.connectors.BaseConnector
 import uk.gov.hmrc.taxhistory.metrics.MetricsEnum
+import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
+
+import uk.gov.hmrc.taxhistory.HttpResponseOps
 
 import scala.concurrent.Future
 
@@ -43,22 +46,23 @@ class NpsConnector @Inject()(val httpGet: CoreGet,
   def iabdsUrl(nino: Nino, year: Int)      = s"$serviceUrl/person/${nino.nino}/iabds/$year"
   def taxAccountUrl(nino: Nino, year: Int) = s"$serviceUrl/person/${nino.nino}/tax-account/$year"
 
-  def getEmployments(nino: Nino, year: Int)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+  def getEmployments(nino: Nino, year: Int)(implicit hc: HeaderCarrier): Future[List[NpsEmployment]] = {
     implicit val hc = basicNpsHeaders(HeaderCarrier())
 
     val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_EMPLOYMENTS)
 
-    httpGet.GET[HttpResponse](employmentUrl(nino, year)).map { response =>
-      timerContext.stop()
-      response.status match {
-        case OK =>
-          metrics.incrementSuccessCounter(MetricsEnum.NPS_GET_EMPLOYMENTS)
-          response
-        case status =>
-          metrics.incrementFailedCounter(MetricsEnum.NPS_GET_EMPLOYMENTS)
-          logger.warn(s"[NpsConnector][getEmploymentsOLD] - status: $status Error ${response.body}")
-          response
-      }
+    for {
+      response    <- httpGet.GET[HttpResponse](employmentUrl(nino, year))
+      _            = timerContext.stop()
+      _            = if (response.status == OK) {
+                       metrics.incrementSuccessCounter(MetricsEnum.NPS_GET_EMPLOYMENTS)
+                     } else {
+                       metrics.incrementFailedCounter(MetricsEnum.NPS_GET_EMPLOYMENTS)
+                       logger.warn(s"[NpsConnector][getEmploymentsOLD] - status: ${response.status} Error ${response.body}")
+                     }
+      employments <- response.decodeJsonOrError[List[NpsEmployment]]
+    } yield {
+      employments
     }
   }
 

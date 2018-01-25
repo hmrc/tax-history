@@ -21,7 +21,7 @@ import javax.inject.Inject
 
 import play.api.http.Status
 import play.api.http.Status._
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit
@@ -34,9 +34,9 @@ import uk.gov.hmrc.taxhistory.model.api.{Employment, IndividualTaxYear}
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.time.TaxYear
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class EmploymentHistoryService @Inject()(
@@ -79,12 +79,12 @@ class EmploymentHistoryService @Inject()(
   }
 
 
-  def getFromCache(validatedNino: Nino, validatedTaxYear: TaxYear)(implicit headerCarrier: HeaderCarrier) = {
-    cacheService.getOrElseInsert(validatedNino, validatedTaxYear) {
-      retrieveEmploymentsDirectFromSource(validatedNino, validatedTaxYear).map(h => {
+  def getFromCache(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[Option[JsValue]] = {
+    cacheService.getOrElseInsert(nino, taxYear) {
+      retrieveEmploymentsDirectFromSource(nino, taxYear).map { h =>
         logger.warn("Refresh cached data")
         h.json
-      })
+      }
     }
   }
 
@@ -160,18 +160,18 @@ class EmploymentHistoryService @Inject()(
     })
   }
 
-  def retrieveEmploymentsDirectFromSource(validatedNino: Nino,validatedTaxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] ={
-    val x = for {
-          npsEmploymentsFuture <- getNpsEmployments(validatedNino, validatedTaxYear)
-        } yield {
-          npsEmploymentsFuture match {
-          case Left(httpResponse) =>Future.successful(httpResponse)
-          case Right(Nil) => Future.successful(HttpResponse(Status.NOT_FOUND, Some(Json.parse("[]"))))
-          case Right(npsEmploymentList) =>
-            mergeAndRetrieveEmployments(validatedNino,validatedTaxYear)(npsEmploymentList)
-          }
+  def retrieveEmploymentsDirectFromSource(validatedNino: Nino, validatedTaxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
+
+    for {
+      employments <- getNpsEmployments(validatedNino, validatedTaxYear)
+      result      <-
+        if (employments.isEmpty) {
+          Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND))))
+          // TODO this is to preserve existing logic. To review
+        } else {
+          mergeAndRetrieveEmployments(validatedNino, validatedTaxYear)(employments)
         }
-    x.flatMap(identity)
+    } yield result
   }
 
   def mergeAndRetrieveEmployments(nino: Nino, taxYear: TaxYear)(npsEmployments: List[NpsEmployment])
@@ -185,24 +185,11 @@ class EmploymentHistoryService @Inject()(
     }
   }
 
-  def getNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,List[NpsEmployment]]] = {
-    npsConnector.getEmployments(nino,taxYear.currentYear).map{
-      response => {
-        response.status match {
-          case OK => {
-            val employments = response.json.as[List[NpsEmployment]].filterNot(x => x.receivingJobSeekersAllowance || x.otherIncomeSourceIndicator)
-            Right(employments)
-          }
-          case NOT_FOUND => {
-            logger.warn("NPS employments responded with not found")
-            Right(Nil)
-          }
-          case _ => {
-            logger.warn("Non 200 response code from nps employment api.")
-            Left(response)
-          }
-        }
-      }
+  def getNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[NpsEmployment]] = {
+    npsConnector.getEmployments(nino, taxYear.currentYear).map { employments =>
+      employments.filterNot(x => x.receivingJobSeekersAllowance || x.otherIncomeSourceIndicator)
+    }.recover {
+      case TaxHistoryException(HttpNotOk(NOT_FOUND, _)) => Nil // In case of a 404 don't fail but instead return an empty list
     }
   }
 

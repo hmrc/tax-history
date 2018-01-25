@@ -26,6 +26,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
+import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
@@ -41,7 +42,7 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   val failureResponseJson = Json.parse("""{"reason":"Bad Request"}""")
 
-  val npsEmploymentResponse =  Json.parse(""" [{
+  val npsEmploymentResponseJson =  Json.parse(""" [{
                                             |    "nino": "AA000000",
                                             |    "sequenceNumber": 1,
                                             |    "worksNumber": "6044041000000",
@@ -56,6 +57,8 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
                                             |    }]
                                           """.stripMargin)
 
+  val npsEmploymentResponse = npsEmploymentResponseJson.as[List[NpsEmployment]]
+
   lazy val iabdsJsonResponse = loadFile("/json/nps/response/iabds.json")
   lazy val rtiEmploymentResponseJson = loadFile("/json/rti/response/dummyRti.json")
   lazy val rtiEmploymentResponse = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
@@ -63,7 +66,7 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
   "PayAndTax " should {
     "successfully  populated  from rti" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
+        .thenReturn(Future.successful(npsEmploymentResponse))
       when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))

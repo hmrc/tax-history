@@ -26,6 +26,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.taxhistory.{HttpNotOk, TaxHistoryException}
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
+import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
@@ -42,21 +43,22 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   val failureResponseJson = Json.parse("""{"reason":"Bad Request"}""")
 
-  val npsEmploymentResponse =  Json.parse(""" [{
-                             |    "nino": "AA000000",
-                             |    "sequenceNumber": 1,
-                             |    "worksNumber": "6044041000000",
-                             |    "taxDistrictNumber": "531",
-                             |    "payeNumber": "J4816",
-                             |    "employerName": "Aldi",
-                             |    "receivingJobseekersAllowance" : false,
-                             |    "otherIncomeSourceIndicator" : false,
-                             |    "receivingOccupationalPension": true,
-                             |    "employmentStatus": 1,
-                             |    "startDate": "21/01/2015"
-                             |    }]
-                           """.stripMargin)
+  val npsEmploymentResponseJson =  Json.parse(""" [{
+                                     |    "nino": "AA000000",
+                                     |    "sequenceNumber": 1,
+                                     |    "worksNumber": "6044041000000",
+                                     |    "taxDistrictNumber": "531",
+                                     |    "payeNumber": "J4816",
+                                     |    "employerName": "Aldi",
+                                     |    "receivingJobseekersAllowance" : false,
+                                     |    "otherIncomeSourceIndicator" : false,
+                                     |    "receivingOccupationalPension": true,
+                                     |    "employmentStatus": 1,
+                                     |    "startDate": "21/01/2015"
+                                     |    }]
+                                   """.stripMargin)
 
+  val npsEmploymentResponse = npsEmploymentResponseJson.as[List[NpsEmployment]]
 
   lazy val iabdsJsonResponse = loadFile("/json/nps/response/iabds.json")
 
@@ -65,7 +67,7 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
   "Allowances " should {
     "successfully  populated  from iabds" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
+        .thenReturn(Future.successful(npsEmploymentResponse))
       when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))

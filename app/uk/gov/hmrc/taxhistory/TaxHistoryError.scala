@@ -16,11 +16,13 @@
 
 package uk.gov.hmrc.taxhistory
 
-import play.api.http.Status
 import play.api.libs.json.JsResultException
 import uk.gov.hmrc.http.HttpResponse
 
-case class TaxHistoryException(error: TaxHistoryError) extends Exception
+case class TaxHistoryException(error: TaxHistoryError) extends Exception {
+  override def getMessage: String = error.toString
+  override def toString: String = s"ApiException($error)"
+}
 
 sealed trait TaxHistoryError
 
