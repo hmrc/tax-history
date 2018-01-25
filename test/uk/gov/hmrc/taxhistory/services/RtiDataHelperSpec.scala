@@ -82,7 +82,6 @@ class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil with Be
     "get onlyRtiEmployments must be size 0 when all the Rti employments are matched to the Nps Employments" in {
       val rtiEmployments = List(rtiEmployment1,rtiEmployment2,rtiEmployment3)
       val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
-      val mockAudit = mock[Audit]
       val mockAuditable = mock[Auditable]
       val rtiDataHelper = new RtiDataHelper(mockAuditable)
 
