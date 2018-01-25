@@ -1,0 +1,13 @@
+[{
+  "nino": "AA000000",
+  "sequenceNumber": 1,
+  "worksNumber": "6044041000000",
+  "taxDistrictNumber": "531",
+  "payeNumber": "J4816",
+  "employerName": "Aldi",
+  "receivingJobseekersAllowance" : false,
+  "otherIncomeSourceIndicator" : false,
+  "receivingOccupationalPension": false,
+  "startDate": "21/01/2015",
+  "employmentStatus":1
+}]

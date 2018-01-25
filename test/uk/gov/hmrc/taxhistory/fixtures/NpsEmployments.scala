@@ -16,6 +16,26 @@
 
 package uk.gov.hmrc.taxhistory.fixtures
 
-trait NpsEmployments {
+import org.joda.time.LocalDate
+import play.api.libs.json.JsValue
+import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, NpsEmployment}
+import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+
+trait NpsEmployments extends AnyRef with TestUtil {
+
+  lazy val npsEmploymentResponse: JsValue =  loadFile("/json/nps/response/employment.json")
+  lazy val npsTaxAccountResponse: JsValue = loadFile("/json/nps/response/GetTaxAccount.json")
+
+  val npsEmployment1: NpsEmployment = NpsEmployment(randomNino.toString(),1,"offNo1","ref1","empname1",worksNumber = None,
+    receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, startDate = LocalDate.now(), endDate = None,
+    receivingOccupationalPension = false, EmploymentStatus.Live)
+
+  val npsEmployment2: NpsEmployment = NpsEmployment(randomNino.toString(),2,"offNo2","ref2","empname2",worksNumber = None,
+    receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, startDate = LocalDate.now(), endDate = None,
+    receivingOccupationalPension = false, EmploymentStatus.Live)
+
+  val npsEmployment3: NpsEmployment = NpsEmployment(randomNino.toString(),3,"offNo3","ref3","empname3",worksNumber = None,
+    receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, startDate = LocalDate.now(), endDate = None,
+    receivingOccupationalPension = false, EmploymentStatus.Live)
 
 }
