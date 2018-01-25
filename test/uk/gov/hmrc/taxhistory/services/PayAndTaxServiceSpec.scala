@@ -25,8 +25,9 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.taxhistory.{HttpNotOk, TaxHistoryException}
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
-import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
+import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
@@ -59,20 +60,22 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   val npsEmploymentResponse = npsEmploymentResponseJson.as[List[NpsEmployment]]
 
-  lazy val iabdsJsonResponse = loadFile("/json/nps/response/iabds.json")
+  lazy val iabdsResponseJson = loadFile("/json/nps/response/iabds.json")
+  lazy val iabdsResponse = iabdsResponseJson.as[List[Iabd]]
+
   lazy val rtiEmploymentResponseJson = loadFile("/json/rti/response/dummyRti.json")
   lazy val rtiEmploymentResponse = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
 
   "PayAndTax " should {
-    "successfully  populated  from rti" in {
+    "successfully populated from rti" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(npsEmploymentResponse))
       when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
+        .thenReturn(Future.successful(iabdsResponse))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(rtiEmploymentResponse))
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST)))
+        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(BAD_REQUEST, HttpResponse(BAD_REQUEST)))))
       val response =  await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
       response mustBe a[HttpResponse]
       response.status mustBe OK

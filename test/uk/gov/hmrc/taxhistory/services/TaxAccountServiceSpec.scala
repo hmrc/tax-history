@@ -25,7 +25,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.taxhistory.{HttpNotOk, TaxHistoryException}
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
-import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
+import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
@@ -59,17 +59,17 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   val npsEmploymentResponse = npsEmploymentResponseJson.as[List[NpsEmployment]]
 
-  lazy val taxAccountJsonResponse = loadFile("/json/nps/response/GetTaxAccount.json")
-
+  lazy val taxAccountResponseJson = loadFile("/json/nps/response/GetTaxAccount.json")
+  lazy val taxAccountResponse = taxAccountResponseJson.as[NpsTaxAccount]
 
   "TaxAccount" should {
     "successfully be populated from GetTaxAccount" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(npsEmploymentResponse))
       when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(NOT_FOUND, None)))
+        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND)))))
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(taxAccountJsonResponse))))
+        .thenReturn(Future.successful(taxAccountResponse))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, (HttpResponse(NOT_FOUND))))))
 

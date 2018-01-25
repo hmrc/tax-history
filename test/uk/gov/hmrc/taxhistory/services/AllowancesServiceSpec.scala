@@ -26,7 +26,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.taxhistory.{HttpNotOk, TaxHistoryException}
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
-import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
+import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
@@ -60,18 +60,19 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   val npsEmploymentResponse = npsEmploymentResponseJson.as[List[NpsEmployment]]
 
-  lazy val iabdsJsonResponse = loadFile("/json/nps/response/iabds.json")
+  lazy val iabdsResponseJson = loadFile("/json/nps/response/iabds.json")
+  lazy val iabdsResponse = iabdsResponseJson.as[List[Iabd]]
 
 
 
   "Allowances " should {
-    "successfully  populated  from iabds" in {
+    "successfully populated from iabds" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(npsEmploymentResponse))
       when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
+        .thenReturn(Future.successful(iabdsResponse))
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(NOT_FOUND)))
+        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND)))))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND)))))
       val response =  await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))

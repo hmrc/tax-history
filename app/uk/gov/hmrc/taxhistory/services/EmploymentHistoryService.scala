@@ -177,9 +177,9 @@ class EmploymentHistoryService @Inject()(
   def mergeAndRetrieveEmployments(nino: Nino, taxYear: TaxYear)(npsEmployments: List[NpsEmployment])
                                  (implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     for {
-      iabdsF  <- getNpsIabds(nino,taxYear)
+      iabdsF  <- getNpsIabds(nino,taxYear).map(Right(_)).recover { case TaxHistoryException(HttpNotOk(_, response)) => Left(response) } // TODO this is done to preserve existing logic. Logic of 'combineResult' to be reviewed!
       rtiF    <- getRtiEmployments(nino,taxYear).map(Right(_)).recover { case TaxHistoryException(HttpNotOk(_, response)) => Left(response) } // TODO this is done to preserve existing logic. Logic of 'combineResult' to be reviewed!
-      taxAccF <- getNpsTaxAccount(nino,taxYear)
+      taxAccF <- getNpsTaxAccount(nino,taxYear).map(Right(_)).recover { case TaxHistoryException(HttpNotOk(_, response)) => Left(response) } // TODO this is done to preserve existing logic. Logic of 'combineResult' to be reviewed!
     } yield {
       combineResult(iabdsF,rtiF,taxAccF)(npsEmployments)
     }
@@ -193,44 +193,18 @@ class EmploymentHistoryService @Inject()(
     }
   }
 
-  def getRtiEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[RtiData] = {
+  def getRtiEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[RtiData] =
     rtiConnector.getRTIEmployments(nino, taxYear)
-  }
 
-  def getNpsIabds(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,List[Iabd]]] = {
-    npsConnector.getIabds(nino, taxYear.currentYear).map{
-      response => {
-        response.status match {
-          case OK => {
-            Right(response.json.as[List[Iabd]])
-          }
-          case _ =>  {
-            logger.warn("Non 200 response code from nps iabd api.")
-            Left(response)
-          }
-        }
-      }
-    }
-  }
+  def getNpsIabds(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[Iabd]] =
+    npsConnector.getIabds(nino, taxYear.currentYear)
 
-  def getNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse, Option[NpsTaxAccount]]] = {
+  def getNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[NpsTaxAccount]] = {
 
     if (taxYear.startYear != TaxYear.current.previous.startYear) {
-      Future.successful(Right(None))
-    }
-    else {
-      npsConnector.getTaxAccount(nino, taxYear.currentYear).map {
-        response => {
-          response.status match {
-            case OK =>
-              Right(Some(response.json.as[NpsTaxAccount]))
-            case _ =>
-              logger.warn("Non 200 response code from nps iabd api.")
-              Left(response)
-          }
-        }
-      }
+      Future.successful(None)
+    } else {
+      npsConnector.getTaxAccount(nino, taxYear.currentYear).map(Some(_))
     }
   }
-
 }
