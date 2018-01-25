@@ -23,6 +23,7 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.taxhistory.{HttpNotOk, TaxHistoryException}
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
@@ -68,11 +69,10 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(taxAccountJsonResponse))))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(NOT_FOUND)))
+        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, (HttpResponse(NOT_FOUND))))))
 
       val response = await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino, TaxYear(2016)))
 
-      response mustBe a[HttpResponse]
       response.status mustBe OK
       val payAsYouEarn = response.json.as[PayAsYouEarn]
       val taxAccount = payAsYouEarn.taxAccount.get

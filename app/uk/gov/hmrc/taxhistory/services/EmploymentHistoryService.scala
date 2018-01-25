@@ -26,6 +26,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.taxhistory.{HttpNotOk, TaxHistoryException}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
@@ -104,7 +105,7 @@ class EmploymentHistoryService @Inject()(
 
 
   def getPayAndTax(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
-    getFromCache(nino, taxYear).map(js => {
+    getFromCache(nino, taxYear).map { js =>
       logger.warn("Returning js result from getEmployments")
       val extractPayAndTax = js.map(json =>
         (json \ "payAndTax" \ employmentId).getOrElse(Json.obj())
@@ -113,7 +114,7 @@ class EmploymentHistoryService @Inject()(
         case Some(emp) if emp.equals(Json.obj()) => HttpResponse(Status.NOT_FOUND, extractPayAndTax)
         case _ => HttpResponse(Status.OK, extractPayAndTax)
       }
-    })
+    }
   }
 
   def getTaxAccount(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
@@ -162,7 +163,7 @@ class EmploymentHistoryService @Inject()(
   def retrieveEmploymentsDirectFromSource(validatedNino: Nino,validatedTaxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[HttpResponse] ={
     val x = for {
           npsEmploymentsFuture <- getNpsEmployments(validatedNino, validatedTaxYear)
-        }yield {
+        } yield {
           npsEmploymentsFuture match {
           case Left(httpResponse) =>Future.successful(httpResponse)
           case Right(Nil) => Future.successful(HttpResponse(Status.NOT_FOUND, Some(Json.parse("[]"))))
@@ -176,10 +177,10 @@ class EmploymentHistoryService @Inject()(
   def mergeAndRetrieveEmployments(nino: Nino, taxYear: TaxYear)(npsEmployments: List[NpsEmployment])
                                  (implicit headerCarrier: HeaderCarrier): Future[HttpResponse] = {
     for {
-      iabdsF <- getNpsIabds(nino,taxYear)
-      rtiF <- getRtiEmployments(nino,taxYear)
-      taxAccF <-  getNpsTaxAccount(nino,taxYear)
-    }yield {
+      iabdsF  <- getNpsIabds(nino,taxYear)
+      rtiF    <- getRtiEmployments(nino,taxYear).map(Right(_)).recover { case TaxHistoryException(HttpNotOk(_, response)) => Left(response) } // TODO this is done to preserve existing logic. Logic of 'combineResult' to be reviewed!
+      taxAccF <- getNpsTaxAccount(nino,taxYear)
+    } yield {
       combineResult(iabdsF,rtiF,taxAccF)(npsEmployments)
     }
   }
@@ -205,20 +206,8 @@ class EmploymentHistoryService @Inject()(
     }
   }
 
-  def getRtiEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse,RtiData]] = {
-    rtiConnector.getRTIEmployments(nino, taxYear).map {
-      response => {
-        response.status match {
-          case Status.OK => {
-            Right(response.json.as[RtiData])
-          }
-          case _ =>  {
-            logger.warn("Non 200 response code from rti employment api.")
-            Left(response)
-          }
-        }
-      }
-    }
+  def getRtiEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[RtiData] = {
+    rtiConnector.getRTIEmployments(nino, taxYear)
   }
 
   def getNpsIabds(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Either[HttpResponse ,List[Iabd]]] = {

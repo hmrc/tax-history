@@ -24,6 +24,7 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
@@ -56,7 +57,8 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
                                           """.stripMargin)
 
   lazy val iabdsJsonResponse = loadFile("/json/nps/response/iabds.json")
-  lazy val rtiEmploymentResponse = loadFile("/json/rti/response/dummyRti.json")
+  lazy val rtiEmploymentResponseJson = loadFile("/json/rti/response/dummyRti.json")
+  lazy val rtiEmploymentResponse = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
 
   "PayAndTax " should {
     "successfully  populated  from rti" in {
@@ -65,7 +67,7 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK,Some(rtiEmploymentResponse))))
+        .thenReturn(Future.successful(rtiEmploymentResponse))
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(BAD_REQUEST)))
       val response =  await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
