@@ -24,12 +24,16 @@ import reactivemongo.api.DB
 import uk.gov.hmrc.cache.model.{Cache, Id}
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+/**
+  * Uses MongoDB to cache instances of `PayAsYouEarn` for a given NINO and year.
+  */
 class TaxHistoryCacheService @Inject()(
                               val mongoDbConnection: MongoDbConnection,
                               @Named("mongodb.cache.expire.seconds") expireAfterSeconds: Int,
@@ -39,19 +43,24 @@ class TaxHistoryCacheService @Inject()(
 
   val cacheRepository = new CacheMongoRepository(mongoSource, expireAfterSeconds, Cache.mongoFormats)
 
-   def createOrUpdate(id: String, key: String, toCache: JsValue): Future[Option[JsValue]] = {
+  def createOrUpdate(id: String, key: String, toCache: JsValue): Future[Option[JsValue]] = {
     cacheRepository.createOrUpdate(Id(id), key, toCache).map(x => x.updateType.savedValue.data.map(_ \ key).map(_.get))
   }
 
-   def findById(id: String, taxYear: Int): Future[Option[JsValue]] = {
+  def findById(id: String, taxYear: Int): Future[Option[JsValue]] = {
     cacheRepository.findById(Id(id)).map(_.flatMap(_.data).map(_ \ taxYear.toString).flatMap(_.toOption))
   }
 
-  def get(nino: Nino, year: TaxYear): Future[Option[JsValue]] = findById(nino.nino, year.currentYear)
+  def get(nino: Nino, year: TaxYear): Future[Option[PayAsYouEarn]] = {
+    for {
+      jsonOption <- findById(nino.nino, year.currentYear)
+      paye        = jsonOption.map(_.as[PayAsYouEarn])
+    } yield paye
+  }
 
-  def getOrElseInsert[A : Format](nino: Nino, year: TaxYear)(defaultToInsert : => Future[A]): Future[A] = {
+  def getOrElseInsert(nino: Nino, year: TaxYear)(defaultToInsert : => Future[PayAsYouEarn]): Future[PayAsYouEarn] = {
 
-    def insertDefault(): Future[A] = {
+    def insertDefault(): Future[PayAsYouEarn] = {
       for {
         toInsert <- defaultToInsert
         insertionResult <- createOrUpdate(nino.nino, year.currentYear.toString, Json.toJson(toInsert))
@@ -64,7 +73,7 @@ class TaxHistoryCacheService @Inject()(
     for {
       cacheResult <- get(nino, year)
       returnValue <- cacheResult match {
-                        case Some(hit) => Future.successful(hit.as[A])
+                        case Some(hit) => Future.successful(hit)
                         case None      => insertDefault()
                       }
     } yield returnValue

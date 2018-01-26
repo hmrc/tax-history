@@ -24,6 +24,7 @@ import play.modules.reactivemongo.MongoDbConnection
 import reactivemongo.api.{DB, DefaultDB}
 import uk.gov.hmrc.mongo.{MongoConnector, MongoSpecSupport}
 import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -49,20 +50,22 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
     mongoSource = "tax-history-test"
   )
 
-  val someJson = Json.parse(""" [{
-                             |    "nino": "AA000000",
-                             |    "sequenceNumber": 1,
-                             |    "worksNumber": "6044041000000",
-                             |    "taxDistrictNumber": "531",
-                             |    "payeNumber": "J4816",
-                             |    "employerName": "Aldi",
-                             |    "receivingJobseekersAllowance" : false,
-                             |    "otherIncomeSourceIndicator" : false,
-                             |    "startDate": "21/01/2015"
-                             |    }]
-                           """.stripMargin)
+  val testPaye = PayAsYouEarn()
 
   val nino = randomNino()
+
+  val someJson = Json.parse(""" [{
+                              |    "nino": "AA000000",
+                              |    "sequenceNumber": 1,
+                              |    "worksNumber": "6044041000000",
+                              |    "taxDistrictNumber": "531",
+                              |    "payeNumber": "J4816",
+                              |    "employerName": "Aldi",
+                              |    "receivingJobseekersAllowance" : false,
+                              |    "otherIncomeSourceIndicator" : false,
+                              |    "startDate": "21/01/2015"
+                              |    }]
+                            """.stripMargin)
 
   override def beforeEach() = {
     testMongoDbConnection.mongoConnector.db().drop()
@@ -90,11 +93,11 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
 
       val cacheResult0 = await(testTaxHistoryCacheService.get(nino, taxYear))
       cacheResult0 shouldBe None
-      val cacheResult1 = await(testTaxHistoryCacheService.getOrElseInsert(nino, taxYear)(someJson))
-      cacheResult1 shouldBe Some(someJson)
+      val cacheResult1 = await(testTaxHistoryCacheService.getOrElseInsert(nino, taxYear)(testPaye))
+      cacheResult1 shouldBe (testPaye)
       // The cache should now contain the value.
       val cacheResult2 = await(testTaxHistoryCacheService.get(nino, taxYear))
-      cacheResult2 shouldBe Some(someJson)
+      cacheResult2 shouldBe Some(testPaye)
     }
   }
 

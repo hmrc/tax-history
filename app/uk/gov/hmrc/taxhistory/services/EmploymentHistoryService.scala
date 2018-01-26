@@ -73,7 +73,7 @@ class EmploymentHistoryService @Inject()(
 
 
   def getFromCache(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[PayAsYouEarn] = {
-    cacheService.getOrElseInsert[PayAsYouEarn](nino, taxYear) {
+    cacheService.getOrElseInsert(nino, taxYear) {
       retrieveEmploymentsDirectFromSource(nino, taxYear).map { h =>
         logger.warn(s"Refreshing cached data for $nino $taxYear")
         h

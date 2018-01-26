@@ -512,16 +512,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     "get Employment return none" in {
       lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
 
-      val testEmployment = Json.parse(
-        """| {
-           |      "employmentId": "01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
-           |      "startDate": "2016-01-21",
-           |      "endDate": "2017-01-01",
-           |      "payeReference": "paye-1",
-           |      "employerName": "employer-1"
-           |    }
-        """.stripMargin).as[Employment]
-
       when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(paye))
 
