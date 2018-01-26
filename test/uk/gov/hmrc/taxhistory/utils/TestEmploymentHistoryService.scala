@@ -17,9 +17,10 @@
 package uk.gov.hmrc.taxhistory.utils
 
 import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.play.audit.model.Audit
+import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
+import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, RtiDataHelper}
 import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, TaxHistoryCacheService}
 
 object TestEmploymentHistoryService extends AnyRef with MockitoSugar {
@@ -28,6 +29,6 @@ object TestEmploymentHistoryService extends AnyRef with MockitoSugar {
       npsConnector = mock[NpsConnector],
       rtiConnector = mock[RtiConnector],
       cacheService = mock[TaxHistoryCacheService],
-      audit = mock[Audit]
+      helper = new EmploymentHistoryServiceHelper(new RtiDataHelper(mock[Auditable]))
     )
 }

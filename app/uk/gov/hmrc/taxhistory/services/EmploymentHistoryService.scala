@@ -24,7 +24,6 @@ import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.{GenericHttpError, NotFound, TaxHistoryException}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
@@ -40,11 +39,11 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.Future
 
 class EmploymentHistoryService @Inject()(
-                              val audit: Audit,
                               val npsConnector: NpsConnector,
                               val rtiConnector: RtiConnector,
-                              val cacheService : TaxHistoryCacheService
-                              ) extends EmploymentHistoryServiceHelper with Auditable with TaxHistoryLogger {
+                              val cacheService : TaxHistoryCacheService,
+                              val helper: EmploymentHistoryServiceHelper
+                              ) extends TaxHistoryLogger {
 
   def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] = {
     getFromCache(nino, taxYear).flatMap { paye =>
@@ -170,7 +169,7 @@ class EmploymentHistoryService @Inject()(
       rtiF    <- getRtiEmployments(nino,taxYear).map(Some(_)).recover { case TaxHistoryException(_, _) => None } // TODO this is done to preserve existing logic. Logic of 'combineResult' to be reviewed!
       taxAccF <- getNpsTaxAccount(nino,taxYear).map(Some(_)).recover { case TaxHistoryException(_, _) => None } // TODO this is done to preserve existing logic. Logic of 'combineResult' to be reviewed!
     } yield {
-      combineResult(iabdsF,rtiF,taxAccF)(npsEmployments)
+      helper.combineResult(iabdsF,rtiF,taxAccF)(npsEmployments)
     }
   }
 

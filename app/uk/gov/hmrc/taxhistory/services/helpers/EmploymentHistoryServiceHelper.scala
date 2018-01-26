@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.services.helpers
 
+import com.google.inject.Inject
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
@@ -24,7 +25,7 @@ import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.api.{Allowance, Employment, PayAsYouEarn, TaxAccount}
 import uk.gov.hmrc.taxhistory.model.nps._
 
-trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
+class EmploymentHistoryServiceHelper @Inject()(val rtiDataHelper: RtiDataHelper) extends TaxHistoryHelper {
 
   def combineResult(iabdsOption: Option[List[Iabd]],
                     rtiOption: Option[RtiData],
@@ -36,15 +37,10 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
       val companyBenefits = iabdsOption.map { iabds =>
         new IabdsHelper(iabds).getMatchedCompanyBenefits(npsEmployment)
       }
-      val rtiEmployments = rtiOption.map { rtiData =>
-        val rtiDataHelper =  new RtiDataHelper(rtiData)
-        rtiDataHelper.auditEvent(rtiDataHelper.onlyInRTI(npsEmployments))("only-in-rti") {
-          (x, y) => sendDataEvent(transactionName = "Paye for Agents",detail = y, eventType = x)
-        }
-        rtiDataHelper.getMatchedRtiEmployments(npsEmployment) { rtiEmployments =>
-          rtiDataHelper.auditEvent(rtiEmployments)("miss-match") {
-            (x, y) => sendDataEvent(transactionName = "Paye for Agents", detail = y, eventType = x)
-          }
+      val rtiEmployments = rtiOption.map {
+        rtiData => {
+          rtiDataHelper.auditOnlyInRTI(rtiData.nino, npsEmployments, rtiData.employments)
+          rtiDataHelper.getMatchedRtiEmployments(rtiData.nino, npsEmployment, rtiData.employments)
         }
       }
 
@@ -90,5 +86,4 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
       case _ => PayAsYouEarn(employments = List(emp))
     }
   }
-
 }

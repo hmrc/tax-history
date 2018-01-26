@@ -16,75 +16,58 @@
 
 package uk.gov.hmrc.taxhistory.services.helpers
 
+import com.google.inject.Inject
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
+import uk.gov.hmrc.tai.model.rti.RtiEmployment
+import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, PayAndTax}
+import uk.gov.hmrc.taxhistory.model.audit.{DataEventDetail, NpsRtiMismatch, OnlyInRti, PAYEForAgents}
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
-class RtiDataHelper(val rtiData: RtiData) extends TaxHistoryHelper with TaxHistoryLogger{
+class RtiDataHelper @Inject()(val auditable: Auditable) extends TaxHistoryHelper with TaxHistoryLogger{
 
-  val rtiEmployments = this.rtiData.employments
-
-  def onlyInRTI(npsEmployments: List[NpsEmployment]):List[RtiEmployment]={
-    rtiEmployments.filter(rti => !npsEmployments.exists(nps => isMatch(nps,rti)))
+  def auditOnlyInRTI(nino: String, npsEmployments: List[NpsEmployment], rtiEmployments: List[RtiEmployment])
+                    (implicit headerCarrier: HeaderCarrier): Unit = {
+    val employments = rtiEmployments.filter(rti => !npsEmployments.exists(nps => isMatch(nps, rti)))
+    auditable.sendDataEvents(
+      transactionName = PAYEForAgents,
+      details = buildEmploymentDataEventDetails(nino, employments),
+      eventType = OnlyInRti)
   }
 
-  def isMatch(npsEmployment :NpsEmployment, rtiEmployment :RtiEmployment):Boolean={
+  private def isMatch(npsEmployment: NpsEmployment, rtiEmployment: RtiEmployment): Boolean =
     (formatString(rtiEmployment.officeNumber) == formatString(npsEmployment.taxDistrictNumber)) &&
       (rtiEmployment.payeRef == npsEmployment.payeNumber)
-  }
 
-  def getMatchedRtiEmployments(npsEmployments: NpsEmployment)
-                              (auditEvent: List[RtiEmployment]=> Future[List[Unit]])(implicit headerCarrier: HeaderCarrier): List[RtiEmployment] = {
+  private def isSubMatch(npsEmployment: NpsEmployment, rtiEmployment: RtiEmployment) =
+    rtiEmployment.currentPayId.isDefined &&
+      npsEmployment.worksNumber.isDefined &&
+      rtiEmployment.currentPayId == npsEmployment.worksNumber
 
-    rtiEmployments.filter {
-      (rtiEmployment) =>
-        isMatch(npsEmployments, rtiEmployment)
-    } match {
-      case (matchingEmp :: Nil) => List(matchingEmp)
-      case start :: end => {
+  def getMatchedRtiEmployments(nino: String, npsEmployment: NpsEmployment, rtiEmployments: List[RtiEmployment])
+                              (implicit headerCarrier: HeaderCarrier): List[RtiEmployment] = {
+
+    rtiEmployments.filter(rtiEmployment => isMatch(npsEmployment, rtiEmployment)) match {
+      case matchingEmp :: Nil => List(matchingEmp)
+      case start :: end =>
         logger.warn("Multiple matching rti employments found.")
-        val subMatches = (start :: end).filter {
-          rtiEmployment => {
-            rtiEmployment.currentPayId.isDefined &&
-              npsEmployments.worksNumber.isDefined &&
-              rtiEmployment.currentPayId == npsEmployments.worksNumber
-          }
-        }
-        subMatches match {
-          case first :: Nil => List(first)
-          case x  => {
-            auditEvent(x)
+        (start :: end).filter(rtiEmployment => isSubMatch(npsEmployment, rtiEmployment)) match {
+          case matchingEmp :: Nil => List(matchingEmp)
+          case mismatchedEmployments =>
+            auditable.sendDataEvents(transactionName = PAYEForAgents, details = buildEmploymentDataEventDetails(nino, mismatchedEmployments), eventType = NpsRtiMismatch)
             Nil
-          }
         }
-      }
-      case _ => Nil //Auditing will happen in the function onlyInRTI for this case
+      case Nil => Nil //Auditing will happen in the function onlyInRTI for this case
     }
   }
 
-
-  def auditEvent(x: List[RtiEmployment])
-                        (eventType:String)(sendAuditEvent  : (String,Map[String,String])=> Unit)
-                        (implicit headerCarrier: HeaderCarrier) = {
-    Future {
-      for {
-        r <- x
-      } yield {
-        val x = Map(
-          "nino" -> rtiData.nino,
-          "payeRef" -> r.payeRef,
-          "officeNumber" -> r.officeNumber,
-          "currentPayId" -> r.currentPayId.fold("")(a => a))
-          sendAuditEvent(eventType,x)
-      }
-    }
-  }
-
+  def buildEmploymentDataEventDetails(nino: String, rtiEmployments: List[RtiEmployment]): Seq[DataEventDetail] =
+    rtiEmployments.map(rE =>
+      DataEventDetail(
+        Map("nino" -> nino, "payeRef" -> rE.payeRef, "officeNumber" -> rE.officeNumber, "currentPayId" -> rE.currentPayId.getOrElse("")))
+    )
 }
 
 object RtiDataHelper {

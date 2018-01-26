@@ -31,6 +31,7 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{Audit, DataEvent}
 import uk.gov.hmrc.taxhistory.TaxHistoryException
 import uk.gov.hmrc.taxhistory.model.api.IndividualTaxYear
+import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 
@@ -40,16 +41,13 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
 
   val mockEmploymentHistoryService = mock[EmploymentHistoryService]
   val mockPlayAuthConnector = mock[PlayAuthConnector]
-  val nino = randomNino()
-  object MockAudit extends Audit("mockApp", mock[AuditConnector]) {
-    override def sendDataEvent: (DataEvent) => Unit =
-      _ => {}
-  }
-  val testTaxYears = List(IndividualTaxYear(2018, "fakeUri", "fakeUri", "fakeUri"))
 
   lazy val successResponseJson = Json.parse( """{"test":"OK"}""")
   val failureResponseJson = Json.parse( """{"reason":"Resource not found"}""")
   val errorResponseJson = Json.parse( """{"reason":"Some error."}""")
+  val nino = randomNino()
+  private val mockAuditable = mock[Auditable]
+  val testTaxYears = List(IndividualTaxYear(2018, "fakeUri", "fakeUri", "fakeUri"))
 
   val newEnrolments = Set(
     Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), state = "", delegatedAuthRule = None)
@@ -65,7 +63,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
   val testIndividualTaxYearController = new IndividualTaxYearController (
     employmentHistoryService = mockEmploymentHistoryService,
     authConnector = mockPlayAuthConnector,
-    audit = MockAudit
+    auditable = mockAuditable
   )
 
   "getTaxYears" must {

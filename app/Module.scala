@@ -54,6 +54,7 @@ class Module(val environment: Environment, val configuration: Configuration) ext
     bind(classOf[String]).annotatedWith(Names.named("appName")).toProvider(AppNameProvider)
 
     bind(classOf[Audit]).to(classOf[MicroserviceAudit])
+
   }
 
   private def provide[A](value: => A): Provider[A] = new Provider[A] {

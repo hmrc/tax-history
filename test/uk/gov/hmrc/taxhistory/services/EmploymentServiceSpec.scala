@@ -18,7 +18,8 @@ package uk.gov.hmrc.taxhistory.services
 
 import org.joda.time.LocalDate
 import org.mockito.Matchers
-import org.mockito.Mockito.when
+import org.mockito.Matchers.any
+import org.mockito.Mockito.{times, verify, when}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
@@ -28,6 +29,10 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.auditable.Auditable
+import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
+import uk.gov.hmrc.taxhistory.model.audit.{DataEventAuditType, DataEventDetail, DataEventTransaction}
+import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
@@ -411,10 +416,15 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val npsEmployment3 = NpsEmployment(randomNino.toString(),3,"offNo3","ref3","empname3",None,false,false,LocalDate.now(),None, false, EmploymentStatus.Live)
       val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
       val rtiData = RtiData("QQ0000002", rtiEmployments)
-      val rtiDataHelper = new RtiDataHelper(rtiData)
+      val mockAuditable = mock[Auditable]
+      val rtiDataHelper = new RtiDataHelper(mockAuditable)
 
-      val onlyRtiEmployments = rtiDataHelper.onlyInRTI(npsEmployments)
-      onlyRtiEmployments.size mustBe 2
+      rtiDataHelper.auditOnlyInRTI(testNino.toString, npsEmployments, rtiEmployments)
+      verify (
+        mockAuditable,
+        times(1))
+        .sendDataEvents(any[DataEventTransaction], any[String], any[Map[String, String]],
+          any[Seq[DataEventDetail]], any[DataEventAuditType])(hc = any[HeaderCarrier])
     }
 
     "get onlyRtiEmployments must be size 0 when all the Rti employments are matched to the Nps Employments" in {
@@ -429,9 +439,15 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val npsEmployment3 = NpsEmployment(randomNino.toString(),3,"offNo3","ref3","empname3",None,false,false,LocalDate.now(),None, false, EmploymentStatus.Live)
       val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
       val rtiData = RtiData("QQ0000002", rtiEmployments)
-      val rtiDataHelper = new RtiDataHelper(rtiData)
-      val onlyRtiEmployments = rtiDataHelper.onlyInRTI(npsEmployments)
-      onlyRtiEmployments.size mustBe 0
+      val mockAuditable = mock[Auditable]
+      val rtiDataHelper = new RtiDataHelper(mockAuditable)
+
+      rtiDataHelper.auditOnlyInRTI(testNino.toString, npsEmployments, rtiEmployments)
+      verify (
+        mockAuditable,
+        times(1))
+        .sendDataEvents(any[DataEventTransaction], any[String], any[Map[String, String]],
+          any[Seq[DataEventDetail]], any[DataEventAuditType])(hc = any[HeaderCarrier])
     }
 
     "fetch Employments successfully from cache" in {
