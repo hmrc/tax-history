@@ -80,7 +80,7 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND)))))
+        .thenReturn(Future.failed(TaxHistoryException.notFound(classOf[Allowance], "")))
       val result = testAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
       status(result) must be(NOT_FOUND)
     }

@@ -82,7 +82,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
       when(mockPlayAuthConnector.authorise(any(), any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())(any(), any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getTaxAccount(any[Nino], any[TaxYear])(any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND)))))
+        .thenReturn(Future.failed(TaxHistoryException.notFound(classOf[TaxAccount], "")))
 
       val result = testTaxAccountController.getTaxAccount(nino.nino, testTaxYear).apply(FakeRequest())
       status(result) shouldBe NOT_FOUND

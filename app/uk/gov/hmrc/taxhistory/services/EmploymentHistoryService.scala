@@ -26,7 +26,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.tai.model.rti.RtiData
-import uk.gov.hmrc.taxhistory.{HttpNotOk, TaxHistoryException}
+import uk.gov.hmrc.taxhistory.{HttpNotOk, NotFound, TaxHistoryException}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
@@ -51,7 +51,8 @@ class EmploymentHistoryService @Inject()(
       logger.warn("Returning js result from getEmployments")
 
       if (paye.employments.isEmpty) {
-        Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND)))) // TODO If no employments, return 404. This preserves the existing logic for now. Review logic
+        // If no employments, return a not found error. This preserves the existing logic for now. TODO Review logic
+        Future.failed(TaxHistoryException.notFound(classOf[Employment], (nino, taxYear)))
       } else {
         Future.successful(paye.employments.map(_.enrichWithURIs(taxYear.startYear)))
       }
@@ -66,7 +67,7 @@ class EmploymentHistoryService @Inject()(
           Future.successful(employment.enrichWithURIs(taxYear.startYear))
         case None =>
           logger.warn("Cache has expired from mongo")
-          Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND))))
+          Future.failed(TaxHistoryException.notFound(classOf[Employment], (nino, taxYear)))
       }
     }
   }
@@ -86,7 +87,7 @@ class EmploymentHistoryService @Inject()(
       logger.warn("Returning js result from getAllowances")
 
       if (paye.allowances.isEmpty) {
-        Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND))))
+        Future.failed(TaxHistoryException.notFound(classOf[Allowance], (nino, taxYear)))
       } else {
         Future.successful(paye.allowances)
       }
@@ -99,11 +100,11 @@ class EmploymentHistoryService @Inject()(
       logger.warn("Returning js result from getEmployments")
 
       paye.payAndTax match {
-        case None => Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND))))
+        case None => Future.failed(TaxHistoryException.notFound(classOf[PayAndTax], (nino, taxYear, employmentId)))
         case Some(payAndTax) =>
           payAndTax.get(employmentId)
             .map(Future.successful(_))
-            .getOrElse(Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND)))))
+            .getOrElse(Future.failed(TaxHistoryException.notFound(classOf[PayAndTax], (nino, taxYear, employmentId))))
       }
     }
   }
@@ -114,7 +115,7 @@ class EmploymentHistoryService @Inject()(
 
       paye.taxAccount match {
         case Some(taxAccount) => Future.successful(taxAccount)
-        case None => Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND))))
+        case None => Future.failed(TaxHistoryException.notFound(classOf[TaxAccount], (nino, taxYear)))
       }
     }
   }
@@ -139,25 +140,25 @@ class EmploymentHistoryService @Inject()(
       logger.warn("Returning js result from getCompanyBenefits")
 
       paye.benefits match {
-        case None => Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND))))
+        case None => Future.failed(TaxHistoryException.notFound(classOf[CompanyBenefit], (nino, taxYear, employmentId)))
         case Some(companyBenefits) =>
           companyBenefits.get(employmentId)
             .map(Future.successful(_))
-            .getOrElse(Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND)))))
+            .getOrElse(Future.failed(TaxHistoryException.notFound(classOf[CompanyBenefit], (nino, taxYear, employmentId))))
       }
     }
   }
 
-  def retrieveEmploymentsDirectFromSource(validatedNino: Nino, validatedTaxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[PayAsYouEarn] = {
+  def retrieveEmploymentsDirectFromSource(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[PayAsYouEarn] = {
 
     for {
-      employments <- getNpsEmployments(validatedNino, validatedTaxYear)
+      employments <- getNpsEmployments(nino, taxYear)
       result      <-
         if (employments.isEmpty) {
-          Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND))))
+          Future.failed(TaxHistoryException.notFound(classOf[PayAsYouEarn], (nino, taxYear)))
           // TODO this is to preserve existing logic. To review
         } else {
-          mergeAndRetrieveEmployments(validatedNino, validatedTaxYear)(employments)
+          mergeAndRetrieveEmployments(nino, taxYear)(employments)
         }
     } yield result
   }
@@ -165,9 +166,9 @@ class EmploymentHistoryService @Inject()(
   def mergeAndRetrieveEmployments(nino: Nino, taxYear: TaxYear)(npsEmployments: List[NpsEmployment])
                                  (implicit headerCarrier: HeaderCarrier): Future[PayAsYouEarn] = {
     for {
-      iabdsF  <- getNpsIabds(nino,taxYear).map(Right(_)).recover { case TaxHistoryException(HttpNotOk(_, response)) => Left(response) } // TODO this is done to preserve existing logic. Logic of 'combineResult' to be reviewed!
-      rtiF    <- getRtiEmployments(nino,taxYear).map(Right(_)).recover { case TaxHistoryException(HttpNotOk(_, response)) => Left(response) } // TODO this is done to preserve existing logic. Logic of 'combineResult' to be reviewed!
-      taxAccF <- getNpsTaxAccount(nino,taxYear).map(Right(_)).recover { case TaxHistoryException(HttpNotOk(_, response)) => Left(response) } // TODO this is done to preserve existing logic. Logic of 'combineResult' to be reviewed!
+      iabdsF  <- getNpsIabds(nino,taxYear).map(Some(_)).recover { case TaxHistoryException(_, _) => None } // TODO this is done to preserve existing logic. Logic of 'combineResult' to be reviewed!
+      rtiF    <- getRtiEmployments(nino,taxYear).map(Some(_)).recover { case TaxHistoryException(_, _) => None } // TODO this is done to preserve existing logic. Logic of 'combineResult' to be reviewed!
+      taxAccF <- getNpsTaxAccount(nino,taxYear).map(Some(_)).recover { case TaxHistoryException(_, _) => None } // TODO this is done to preserve existing logic. Logic of 'combineResult' to be reviewed!
     } yield {
       combineResult(iabdsF,rtiF,taxAccF)(npsEmployments)
     }
@@ -177,7 +178,7 @@ class EmploymentHistoryService @Inject()(
     npsConnector.getEmployments(nino, taxYear.currentYear).map { employments =>
       employments.filterNot(x => x.receivingJobSeekersAllowance || x.otherIncomeSourceIndicator)
     }.recover {
-      case TaxHistoryException(HttpNotOk(NOT_FOUND, _)) => Nil // In case of a 404 don't fail but instead return an empty list
+      case TaxHistoryException(NotFound(_, _), _) => Nil // In case of a 404 don't fail but instead return an empty list
     }
   }
 

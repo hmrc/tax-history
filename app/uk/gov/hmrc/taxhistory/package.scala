@@ -27,16 +27,22 @@ import scala.util.{Failure, Success, Try}
 package object taxhistory {
 
   implicit class HttpResponseFutureOps(responseFuture: Future[HttpResponse])(implicit ec: ExecutionContext) {
-    def decodeJsonOrError[A : Reads]: Future[A] = for {
-      response   <- responseFuture
-      okResponse <- response.expectOk
-      decoded    <- okResponse.decodeJsonOrError[A]
-    } yield {
-      decoded
-    }
+//    def decodeJsonOrError[A : Reads]: Future[A] = for {
+//      response   <- responseFuture
+//      okResponse <- response.expectOk
+//      decoded    <- okResponse.decodeJsonOrError[A]
+//    } yield {
+//      decoded
+//    }
   }
 
   implicit class HttpResponseOps(response: HttpResponse)(implicit ec: ExecutionContext) {
+    def orNotFound(itemType: Class[_], id: Any): Future[HttpResponse] = response.status match {
+      case Status.OK        => Future.successful(response)
+      case Status.NOT_FOUND => Future.failed(TaxHistoryException.notFound(itemType, id))
+      case status           => Future.failed(TaxHistoryException(HttpNotOk(response.status, response)))
+    }
+
     def expectOk: Future[HttpResponse] = {
       if (response.status == Status.OK) {
         Future.successful(response)

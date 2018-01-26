@@ -88,7 +88,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
 
         intercept[Exception](await(result)) must matchPattern {
-          case TaxHistoryException(HttpNotOk(INTERNAL_SERVER_ERROR, _)) =>
+          case TaxHistoryException(HttpNotOk(INTERNAL_SERVER_ERROR, _), _) =>
         }
       }
 

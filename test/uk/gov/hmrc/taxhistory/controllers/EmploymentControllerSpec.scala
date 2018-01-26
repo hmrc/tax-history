@@ -82,7 +82,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND)))))
+        .thenReturn(Future.failed(TaxHistoryException.notFound(classOf[Employment], "")))
       val result = testEmploymentController.getEmployments(nino.nino, 2015).apply(FakeRequest())
       status(result) must be(NOT_FOUND)
     }
@@ -157,7 +157,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND)))))
+        .thenReturn(Future.failed(TaxHistoryException.notFound(classOf[Employment], "")))
       val result = testEmploymentController.getEmployment(nino.nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
       status(result) must be(NOT_FOUND)
     }

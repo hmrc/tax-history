@@ -93,7 +93,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         val result = testemploymentsConnector.getEmployments(testNino, testYear)
 
         intercept[Exception] (await(result)) must matchPattern {
-          case TaxHistoryException(HttpNotOk(BAD_REQUEST, _)) =>
+          case TaxHistoryException(HttpNotOk(BAD_REQUEST, _), _) =>
         }
       }
     }
@@ -127,7 +127,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         val result = testIabdsConnector.getIabds(testNino, testYear)
 
         intercept[Exception](await(result)) must matchPattern {
-          case TaxHistoryException(HttpNotOk(SERVICE_UNAVAILABLE, _)) =>
+          case TaxHistoryException(HttpNotOk(SERVICE_UNAVAILABLE, _), _) =>
         }
       }
     }
@@ -159,7 +159,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
 
         intercept[Exception](await(result)) must matchPattern {
-          case TaxHistoryException(HttpNotOk(BAD_REQUEST, _)) =>
+          case TaxHistoryException(HttpNotOk(BAD_REQUEST, _), _) =>
         }
       }
     }

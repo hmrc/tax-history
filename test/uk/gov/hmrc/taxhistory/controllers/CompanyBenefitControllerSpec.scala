@@ -81,7 +81,7 @@ class CompanyBenefitControllerSpec extends PlaySpec with OneServerPerSuite with 
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getCompanyBenefits(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND)))))
+        .thenReturn(Future.failed(TaxHistoryException.notFound(classOf[CompanyBenefit], "")))
       val result = testCompanyBenefitController.getCompanyBenefits(nino.nino, 2016, employmentId).apply(FakeRequest())
       status(result) must be(NOT_FOUND)
     }

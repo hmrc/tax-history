@@ -26,15 +26,11 @@ import uk.gov.hmrc.taxhistory.model.nps._
 
 trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
 
-  def combineResult(iabdResponse: Either[HttpResponse,List[Iabd]],
-                    rtiResponse: Either[HttpResponse,RtiData],
-                    taxAccResponse: Either[HttpResponse,Option[NpsTaxAccount]])
+  def combineResult(iabdsOption: Option[List[Iabd]],
+                    rtiOption: Option[RtiData],
+                    taxAccOption: Option[Option[NpsTaxAccount]])
                    (npsEmployments: List[NpsEmployment])
                    (implicit headerCarrier: HeaderCarrier): PayAsYouEarn = {
-
-    val iabdsOption  = iabdResponse.right.toOption
-    val rtiOption    = rtiResponse.right.toOption
-    val taxAccOption = taxAccResponse.right.toOption
 
     val payAsYouEarnList = npsEmployments.map { npsEmployment =>
       val companyBenefits = iabdsOption.map { iabds =>

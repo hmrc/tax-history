@@ -19,13 +19,20 @@ package uk.gov.hmrc.taxhistory
 import play.api.libs.json.JsResultException
 import uk.gov.hmrc.http.HttpResponse
 
-case class TaxHistoryException(error: TaxHistoryError) extends Exception {
+case class TaxHistoryException(error: TaxHistoryError, originator: Option[String] = None) extends Exception {
   override def getMessage: String = error.toString
   override def toString: String = s"ApiException($error)"
 }
 
+object TaxHistoryException {
+  def notFound(itemType: Class[_], id: Any) = TaxHistoryException(NotFound(itemType, id))
+}
+
 sealed trait TaxHistoryError
 
+final case class NotFound(itemType: Class[_], id: Any) extends TaxHistoryError
+case object ServiceUnavailable extends TaxHistoryError
+final case class BadRequest(url: String) extends TaxHistoryError
 final case class HttpNotOk(status: Int, response: HttpResponse) extends TaxHistoryError
 final case class JsonParsingError(jsonResultException: JsResultException) extends TaxHistoryError
 final case class UnknownError(throwable: Throwable) extends TaxHistoryError

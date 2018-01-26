@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxhistory.controllers
 
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.Result
-import uk.gov.hmrc.taxhistory.{HttpNotOk, TaxHistoryException}
+import uk.gov.hmrc.taxhistory.{HttpNotOk, NotFound, TaxHistoryException}
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -26,13 +26,20 @@ import scala.concurrent.{ExecutionContext, Future}
 trait TaxHistoryController extends AuthController with TaxHistoryLogger {
   def toResult[A : Writes](fa: Future[A])(implicit ec: ExecutionContext): Future[Result] = {
     fa.map(value => Ok(Json.toJson(value))).recover {
-      case TaxHistoryException(HttpNotOk(NOT_FOUND, response)) =>
+      case TaxHistoryException(uk.gov.hmrc.taxhistory.NotFound(itemType, id), originator) =>
+        val itemTypeStr = itemType.getSimpleName
+        originator match {
+          case Some(org) => logger.warn(s"$org returned a Not Found response for item of type $itemTypeStr requested with parameters $id")
+          case None      => logger.warn(s"Not found: item of type $itemTypeStr with id $id")
+        }
+        NotFound // TODO add details to the result?
+      case TaxHistoryException(HttpNotOk(NOT_FOUND, response), originator) =>
         logger.warn("Page Not Found")
         NotFound
-      case TaxHistoryException(HttpNotOk(BAD_REQUEST, response)) =>
+      case TaxHistoryException(HttpNotOk(BAD_REQUEST, response), originator) =>
         logger.warn(s"Bad Request: ${response.body}")
         BadRequest
-      case TaxHistoryException(HttpNotOk(SERVICE_UNAVAILABLE, response)) =>
+      case TaxHistoryException(HttpNotOk(SERVICE_UNAVAILABLE, response), originator) =>
         logger.warn(s"Service Unavailable: ${response.body}")
         ServiceUnavailable
       case _ =>
