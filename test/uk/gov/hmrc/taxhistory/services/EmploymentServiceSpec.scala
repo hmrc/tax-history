@@ -26,7 +26,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
-import uk.gov.hmrc.taxhistory.{HttpNotOk, TaxHistoryException}
+import uk.gov.hmrc.taxhistory.{HttpNotOk, NotFound, TaxHistoryException}
 import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -218,7 +218,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(Nil))
       intercept[Exception](await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))) must matchPattern {
-        case TaxHistoryException(HttpNotOk(NOT_FOUND, _), _) =>
+        case TaxHistoryException(NotFound(_, _), _) =>
       }
     }
 
@@ -332,7 +332,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
           .thenReturn(Future.successful(rtiEmploymentResponse))
 
         intercept[Exception](await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))) must matchPattern {
-          case TaxHistoryException(HttpNotOk(NOT_FOUND, _), _) =>
+          case TaxHistoryException(NotFound(_, _), _) =>
         }
       }
     }
@@ -347,7 +347,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
           .thenReturn(Future.successful(rtiEmploymentResponse))
 
         intercept[Exception](await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))) must matchPattern {
-          case TaxHistoryException(HttpNotOk(NOT_FOUND, _), _) =>
+          case TaxHistoryException(NotFound(_, _), _) =>
         }
       }
 
@@ -360,7 +360,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
           .thenReturn(Future.successful(rtiEmploymentResponse))
 
         intercept[Exception](await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))) must matchPattern {
-          case TaxHistoryException(HttpNotOk(NOT_FOUND, _), _) =>
+          case TaxHistoryException(NotFound(_, _), _) =>
         }
       }
     }
@@ -393,7 +393,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         .thenReturn(Future.failed(TaxHistoryException.notFound(classOf[NpsTaxAccount], "")))
 
       intercept[Exception](await(testEmploymentHistoryService.getNpsTaxAccount(testNino,TaxYear(2016)))) must matchPattern {
-        case TaxHistoryException(HttpNotOk(NOT_FOUND, _), _) =>
+        case TaxHistoryException(NotFound(_, _), _) =>
       }
     }
 
@@ -478,7 +478,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         .thenReturn(Future.successful(paye))
 
       intercept[Exception](await(testEmploymentHistoryService.getEmployments(Nino("AA000000A"), TaxYear(2014)))) must matchPattern {
-        case TaxHistoryException(HttpNotOk(NOT_FOUND, _), _) =>
+        case TaxHistoryException(NotFound(_, _), _) =>
       }
     }
 
@@ -516,7 +516,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         .thenReturn(Future.successful(paye))
 
       intercept[Exception](await(testEmploymentHistoryService.getEmployment(Nino("AA000000A"), TaxYear(2014),"01318d7c-bcd9-47e2-8c38-551e7ccdfae6"))) must matchPattern {
-        case TaxHistoryException(HttpNotOk(NOT_FOUND, _), _) =>
+        case TaxHistoryException(NotFound(_, _), _) =>
       }
     }
 
@@ -546,7 +546,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         .thenReturn(Future.successful(payeNoBenefits))
 
       intercept[Exception](await(testEmploymentHistoryService.getCompanyBenefits(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))) must matchPattern {
-        case TaxHistoryException(HttpNotOk(NOT_FOUND, _), _) =>
+        case TaxHistoryException(NotFound(_, _), _) =>
       }
 
     }
