@@ -112,8 +112,4 @@ object RtiDataHelper {
         receivedDate = eyu.receivedDate)
     }).filter(x => x.taxablePayEYU != 0 && x.taxEYU != 0)
   }
-
-  def getPayeRef(npsEmployment: NpsEmployment) = {
-    npsEmployment.taxDistrictNumber + "/" + npsEmployment.payeNumber
-  }
 }

@@ -18,12 +18,13 @@ package uk.gov.hmrc.taxhistory.services
 
 import javax.inject.{Inject, Named}
 
-import play.api.libs.json.JsValue
+import play.api.libs.json.{Format, JsValue, Json}
 import play.modules.reactivemongo.MongoDbConnection
 import reactivemongo.api.DB
 import uk.gov.hmrc.cache.model.{Cache, Id}
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,7 +33,7 @@ import scala.concurrent.Future
 class TaxHistoryCacheService @Inject()(
                               val mongoDbConnection: MongoDbConnection,
                               @Named("mongodb.cache.expire.seconds") expireAfterSeconds: Int,
-                              @Named("mongodb.name") mongoSource: String) {
+                              @Named("mongodb.name") mongoSource: String) extends AnyRef with TaxHistoryLogger {
 
   implicit val mongo: () => DB = mongoDbConnection.db
 
@@ -48,10 +49,24 @@ class TaxHistoryCacheService @Inject()(
 
   def get(nino: Nino, year: TaxYear): Future[Option[JsValue]] = findById(nino.nino, year.currentYear)
 
-  def getOrElseInsert(nino: Nino, year: TaxYear)(defaultToInsert : => Future[JsValue]): Future[Option[JsValue]] = {
-    get(nino, year).flatMap {
-      case Some(x) => Future.successful(Some(x))
-      case _       => defaultToInsert.flatMap(js => createOrUpdate(nino.nino, year.currentYear.toString, js))
+  def getOrElseInsert[A : Format](nino: Nino, year: TaxYear)(defaultToInsert : => Future[A]): Future[A] = {
+
+    def insertDefault(): Future[A] = {
+      for {
+        toInsert <- defaultToInsert
+        insertionResult <- createOrUpdate(nino.nino, year.currentYear.toString, Json.toJson(toInsert))
+      } yield {
+        if (insertionResult.isEmpty) logger.warn(s"Cache insertion failed for $nino $year")
+        toInsert
+      }
     }
+
+    for {
+      cacheResult <- get(nino, year)
+      returnValue <- cacheResult match {
+                        case Some(hit) => Future.successful(hit.as[A])
+                        case None      => insertDefault()
+                      }
+    } yield returnValue
   }
 }

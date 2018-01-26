@@ -16,24 +16,28 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
+import play.api.libs.json.{Json, Writes}
 import play.api.mvc.Result
-import uk.gov.hmrc.http.HttpResponse
+import uk.gov.hmrc.taxhistory.{HttpNotOk, TaxHistoryException}
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
-trait TaxHistoryController extends AuthController with TaxHistoryLogger{
-  def matchResponse(response: HttpResponse): Result = response.status match {
-    case OK => Ok(response.body)
-    case NOT_FOUND =>
-      logger.warn("Page Not Found")
-      NotFound
-    case BAD_REQUEST =>
-      logger.warn(s"Bad Request: ${response.body}")
-      BadRequest(response.body)
-    case SERVICE_UNAVAILABLE =>
-      logger.warn(s"Service Unavailable: ${response.body}")
-      ServiceUnavailable
-    case _ =>
-      logger.warn(s"Internal Service Error : ${response.body}")
-      InternalServerError
+import scala.concurrent.{ExecutionContext, Future}
+
+trait TaxHistoryController extends AuthController with TaxHistoryLogger {
+  def toResult[A : Writes](fa: Future[A])(implicit ec: ExecutionContext): Future[Result] = {
+    fa.map(value => Ok(Json.toJson(value))).recover {
+      case TaxHistoryException(HttpNotOk(NOT_FOUND, response)) =>
+        logger.warn("Page Not Found")
+        NotFound
+      case TaxHistoryException(HttpNotOk(BAD_REQUEST, response)) =>
+        logger.warn(s"Bad Request: ${response.body}")
+        BadRequest
+      case TaxHistoryException(HttpNotOk(SERVICE_UNAVAILABLE, response)) =>
+        logger.warn(s"Service Unavailable: ${response.body}")
+        ServiceUnavailable
+      case _ =>
+        logger.warn(s"Internal Service Error")
+        InternalServerError
+    }
   }
 }

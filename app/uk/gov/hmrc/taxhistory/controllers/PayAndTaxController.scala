@@ -37,6 +37,7 @@ class PayAndTaxController @Inject()(val authConnector: AuthConnector,
     }
   }
 
-  private def retrievePayAndTax(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit hc:HeaderCarrier): Future[Result] =
-    employmentHistoryService.getPayAndTax(nino, taxYear, employmentId) map matchResponse
+  private def retrievePayAndTax(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit hc:HeaderCarrier): Future[Result] = toResult {
+    employmentHistoryService.getPayAndTax(nino, taxYear, employmentId)
+  }
 }

@@ -43,9 +43,11 @@ class EmploymentController @Inject()(val employmentHistoryService: EmploymentHis
     }
   }
 
-  private def retrieveEmployment(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit hc: HeaderCarrier): Future[Result] =
-    employmentHistoryService.getEmployment(nino, taxYear, employmentId) map matchResponse
+  private def retrieveEmployment(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit hc: HeaderCarrier): Future[Result] = toResult {
+    employmentHistoryService.getEmployment(nino, taxYear, employmentId)
+  }
 
-  private def retrieveEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Result] =
-    employmentHistoryService.getEmployments(nino, taxYear) map matchResponse
+  private def retrieveEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Result] = toResult {
+    employmentHistoryService.getEmployments(nino, taxYear)
+  }
 }

@@ -30,7 +30,7 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
                     rtiResponse: Either[HttpResponse,RtiData],
                     taxAccResponse: Either[HttpResponse,Option[NpsTaxAccount]])
                    (npsEmployments: List[NpsEmployment])
-                   (implicit headerCarrier: HeaderCarrier):HttpResponse={
+                   (implicit headerCarrier: HeaderCarrier): PayAsYouEarn = {
 
     val iabdsOption  = iabdResponse.right.toOption
     val rtiOption    = rtiResponse.right.toOption
@@ -45,34 +45,24 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
         rtiDataHelper.auditEvent(rtiDataHelper.onlyInRTI(npsEmployments))("only-in-rti") {
           (x, y) => sendDataEvent(transactionName = "Paye for Agents",detail = y, eventType = x)
         }
-        rtiDataHelper.getMatchedRtiEmployments(npsEmployment) {
-          rtiEmployments => {
-            rtiDataHelper.auditEvent(rtiEmployments)("miss-match") {
-              (x, y) => sendDataEvent(transactionName = "Paye for Agents", detail = y, eventType = x)
-            }
+        rtiDataHelper.getMatchedRtiEmployments(npsEmployment) { rtiEmployments =>
+          rtiDataHelper.auditEvent(rtiEmployments)("miss-match") {
+            (x, y) => sendDataEvent(transactionName = "Paye for Agents", detail = y, eventType = x)
           }
         }
       }
 
-      buildPayAsYouEarnList(rtiEmploymentsOption=rtiEmployments,iabdsOption=companyBenefits,npsEmployment = npsEmployment)
+      buildPayAsYouEarnList(rtiEmploymentsOption = rtiEmployments, iabdsOption = companyBenefits, npsEmployment = npsEmployment)
     }
 
     val allowances = iabdsOption match {
       case None => Nil
       case Some(x) => new IabdsHelper(x).getAllowances()
     }
-    val taxAccount = convertToTaxAccount(taxAccOption.flatten)
+    val taxAccount = taxAccOption.flatten.map(_.toTaxAccount)
     val payAsYouEarn =  mergeIntoSinglePayAsYouEarn(payAsYouEarnList = payAsYouEarnList, allowances=allowances, taxAccount=taxAccount)
 
-    httpOkPayAsYouEarnJsonPayload(payAsYouEarn)
-  }
-
-  def convertToTaxAccount(npsTaxAccount: Option[NpsTaxAccount]):Option[TaxAccount] = npsTaxAccount match {
-    case Some(nta)  =>
-      Some(TaxAccount( outstandingDebtRestriction =  nta.getOutStandingDebt,
-        underpaymentAmount = nta.getUnderPayment,
-        actualPUPCodedInCYPlusOneTaxYear = nta.getActualPupCodedInCYPlusOne))
-    case _ => None
+    payAsYouEarn
   }
 
   def mergeIntoSinglePayAsYouEarn(payAsYouEarnList:List[PayAsYouEarn], allowances:List[Allowance], taxAccount: Option[TaxAccount]):PayAsYouEarn = {
@@ -84,14 +74,10 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
     }).copy(allowances=allowances, taxAccount=taxAccount)
   }
 
-  def httpOkPayAsYouEarnJsonPayload(payload: PayAsYouEarn): HttpResponse = {
-    HttpResponse(Status.OK,Some(Json.toJson(payload)))
-  }
-
   def buildPayAsYouEarnList(rtiEmploymentsOption: Option[List[RtiEmployment]], iabdsOption: Option[List[Iabd]],
                             npsEmployment: NpsEmployment): PayAsYouEarn = {
 
-    val emp = convertToEmployment(npsEmployment)
+    val emp = npsEmployment.toEmployment
     (rtiEmploymentsOption, iabdsOption) match {
       case (None | Some(Nil), None | Some(Nil)) =>
         PayAsYouEarn(employments = List(emp))
@@ -109,20 +95,4 @@ trait EmploymentHistoryServiceHelper extends TaxHistoryHelper with Auditable {
     }
   }
 
-
-  def convertToEmployment(npsEmployment: NpsEmployment):Employment =
-    Employment(
-      employerName = npsEmployment.employerName,
-      payeReference = RtiDataHelper.getPayeRef(npsEmployment),
-      startDate = npsEmployment.startDate,
-      endDate = npsEmployment.endDate,
-      receivingOccupationalPension =  npsEmployment.receivingOccupationalPension,
-      employmentStatus = npsEmployment.employmentStatus
-    )
-
-  def enrichEmploymentsJsonWithGeneratedUrls(employmentsListJson:JsValue, taxYear:Int): JsValue ={
-    val employments = employmentsListJson.as[List[Employment]]
-    val furnished = employments.map(e => e.enrichWithURIs(taxYear))
-    Json.toJson(furnished)
-  }
 }

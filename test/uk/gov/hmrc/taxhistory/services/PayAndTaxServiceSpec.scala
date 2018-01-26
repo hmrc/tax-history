@@ -26,7 +26,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.{HttpNotOk, TaxHistoryException}
-import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
+import uk.gov.hmrc.taxhistory.model.api.{PayAndTax, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
@@ -39,7 +39,7 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
   implicit val hc = HeaderCarrier()
   val testNino = randomNino()
   
-  val testEmploymentHistoryService = TestEmploymentHistoryService.createNew
+  val testEmploymentHistoryService = TestEmploymentHistoryService.createNew()
 
   val failureResponseJson = Json.parse("""{"reason":"Bad Request"}""")
 
@@ -76,18 +76,16 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
         .thenReturn(Future.successful(rtiEmploymentResponse))
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(BAD_REQUEST, HttpResponse(BAD_REQUEST)))))
-      val response =  await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
-      response mustBe a[HttpResponse]
-      response.status mustBe OK
-      val payAsYouEarn = response.json.as[PayAsYouEarn]
+      val payAsYouEarn = await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
+
       val payAndTax = payAsYouEarn.payAndTax
       payAndTax.size mustBe 1
     }
 
     "successfully retrieve payAndTaxURI from cache" in {
-      lazy val payeJson = loadFile("/json/model/api/paye.json")
+      lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
 
-      val payAndTaxJson = Json.parse(
+      val testPayAndTax = Json.parse(
         """ {
           |        "payAndTaxId":"2e2abe0a-8c4f-49fc-bdd2-cc13054e7172",
           |        "taxablePayTotal":2222.22,
@@ -95,24 +93,13 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
           |        "paymentDate":"2016-02-20",
           |        "paymentDate":"2016-02-20",
           |        "earlierYearUpdates":[]
-          |      } """.stripMargin)
+          |      } """.stripMargin).as[PayAndTax]
       when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
-        .thenReturn(Future.successful(Some(payeJson)))
+        .thenReturn(Future.successful(paye))
 
-      val result = await(testEmploymentHistoryService.getPayAndTax(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
-      result.json must be(payAndTaxJson)
+      val payAndTax = await(testEmploymentHistoryService.getPayAndTax(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
+      payAndTax must be(testPayAndTax)
     }
 
-    "return not found and empty json object when failed to fetch payAndTaxURI from cache" in {
-      lazy val payeJson = Json.obj()
-
-      val payAndTaxJson  = Json.parse("""{}""".stripMargin)
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
-        .thenReturn(Future.successful(Some(payeJson)))
-
-      val result = await(testEmploymentHistoryService.getPayAndTax(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
-      result.status must be(NOT_FOUND)
-      result.json must be(payAndTaxJson)
-    }
   }
 }

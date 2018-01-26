@@ -37,6 +37,7 @@ class CompanyBenefitController @Inject()(val authConnector: AuthConnector,
     }
   }
 
-  private def retrieveCompanyBenefits(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit hc: HeaderCarrier): Future[Result] =
-    employmentHistoryService.getCompanyBenefits(nino, taxYear, employmentId) map matchResponse
+  private def retrieveCompanyBenefits(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit hc: HeaderCarrier): Future[Result] = toResult {
+    employmentHistoryService.getCompanyBenefits(nino, taxYear, employmentId)
+  }
 }

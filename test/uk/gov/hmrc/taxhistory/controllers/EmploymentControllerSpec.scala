@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
+import org.joda.time.LocalDate
 import org.mockito.Matchers
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
@@ -27,6 +28,9 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.taxhistory.{HttpNotOk, TaxHistoryException}
+import uk.gov.hmrc.taxhistory.model.api.Employment
+import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 
@@ -34,12 +38,16 @@ import scala.concurrent.Future
 
 class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
 
-  private val mockEmploymentHistoryService = mock[EmploymentHistoryService]
-  private val mockPlayAuthConnector = mock[PlayAuthConnector]
-  private val nino = randomNino()
-  private lazy val successResponseJson = Json.parse( """{"test":"OK"}""")
-  private val failureResponseJson = Json.parse( """{"reason":"Resource not found"}""")
-  private val errorResponseJson = Json.parse( """{"reason":"Some error."}""")
+  val mockEmploymentHistoryService = mock[EmploymentHistoryService]
+  val mockPlayAuthConnector = mock[PlayAuthConnector]
+  val nino = randomNino()
+
+  val testEmployment = Employment(startDate = LocalDate.now(), payeReference = "SOME_PAYE", employerName = "Megacorp Plc", employmentStatus = EmploymentStatus.Live)
+  val testEmployments = List(testEmployment)
+
+  val successResponseJson = Json.parse( """{"test":"OK"}""")
+  val failureResponseJson = Json.parse( """{"reason":"Resource not found"}""")
+  val errorResponseJson = Json.parse( """{"reason":"Some error."}""")
 
   val newEnrolments = Set(
     Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), state="",delegatedAuthRule = None)
@@ -64,7 +72,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
+        .thenReturn(Future.successful(testEmployments))
       val result = testEmploymentController.getEmployments(nino.nino, 2016).apply(FakeRequest())
       status(result) must be(OK)
     }
@@ -74,7 +82,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(failureResponseJson))))
+        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND)))))
       val result = testEmploymentController.getEmployments(nino.nino, 2015).apply(FakeRequest())
       status(result) must be(NOT_FOUND)
     }
@@ -84,7 +92,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(errorResponseJson))))
+        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(BAD_REQUEST, HttpResponse(BAD_REQUEST)))))
       val result = testEmploymentController.getEmployments(nino.nino, 2015).apply(FakeRequest())
       status(result) must be(BAD_REQUEST)
     }
@@ -94,7 +102,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future. successful(HttpResponse(SERVICE_UNAVAILABLE, Some(errorResponseJson))))
+        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(SERVICE_UNAVAILABLE, HttpResponse(SERVICE_UNAVAILABLE)))))
       val result = testEmploymentController.getEmployments(nino.nino, 2015).apply(FakeRequest())
       status(result) must be(SERVICE_UNAVAILABLE)
     }
@@ -104,7 +112,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(),Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(errorResponseJson))))
+        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(INTERNAL_SERVER_ERROR, HttpResponse(INTERNAL_SERVER_ERROR)))))
       val result = testEmploymentController.getEmployments(nino.nino, 2015).apply(FakeRequest())
       status(result) must be(INTERNAL_SERVER_ERROR)
     }
@@ -115,7 +123,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(UnAuthorisedAgentEnrolments))))
 
       when(mockEmploymentHistoryService.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
+        .thenReturn(Future.successful(testEmployments))
       val result = testEmploymentController.getEmployments(nino.nino, 2015).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
@@ -126,7 +134,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](None, Enrolments(UnAuthorisedAgentEnrolments))))
 
       when(mockEmploymentHistoryService.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
+        .thenReturn(Future.successful(testEmployments))
       val result = testEmploymentController.getEmployments(nino.nino, 2015).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
@@ -139,7 +147,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
+        .thenReturn(Future.successful(testEmployment))
       val result = testEmploymentController.getEmployment(nino.nino, 2016,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
       status(result) must be(OK)
     }
@@ -149,7 +157,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(failureResponseJson))))
+        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(NOT_FOUND, HttpResponse(NOT_FOUND)))))
       val result = testEmploymentController.getEmployment(nino.nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
       status(result) must be(NOT_FOUND)
     }
@@ -159,7 +167,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(errorResponseJson))))
+        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(BAD_REQUEST, HttpResponse(BAD_REQUEST)))))
       val result = testEmploymentController.getEmployment(nino.nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
       status(result) must be(BAD_REQUEST)
     }
@@ -169,7 +177,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future. successful(HttpResponse(SERVICE_UNAVAILABLE, Some(errorResponseJson))))
+        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(SERVICE_UNAVAILABLE, HttpResponse(SERVICE_UNAVAILABLE)))))
       val result = testEmploymentController.getEmployment(nino.nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
       status(result) must be(SERVICE_UNAVAILABLE)
     }
@@ -179,7 +187,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(),Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(errorResponseJson))))
+        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(INTERNAL_SERVER_ERROR, HttpResponse(INTERNAL_SERVER_ERROR)))))
       val result = testEmploymentController.getEmployment(nino.nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
       status(result) must be(INTERNAL_SERVER_ERROR)
     }
@@ -190,7 +198,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(UnAuthorisedAgentEnrolments))))
 
       when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
+        .thenReturn(Future.successful(testEmployment))
       val result = testEmploymentController.getEmployment(nino.nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
@@ -201,7 +209,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](None, Enrolments(UnAuthorisedAgentEnrolments))))
 
       when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
+        .thenReturn(Future.successful(testEmployment))
       val result = testEmploymentController.getEmployment(nino.nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }

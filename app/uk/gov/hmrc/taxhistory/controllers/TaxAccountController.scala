@@ -36,6 +36,7 @@ class TaxAccountController @Inject()(val authConnector: AuthConnector, val emplo
     }
   }
 
-  private def retrieveTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Result] =
-    employmentHistoryService.getTaxAccount(nino, taxYear) map matchResponse
+  private def retrieveTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Result] = toResult {
+    employmentHistoryService.getTaxAccount(nino, taxYear)
+  }
 }

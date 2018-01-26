@@ -40,20 +40,16 @@ class IndividualTaxYearController @Inject()(val authConnector: AuthConnector,
     }
   }
 
-  private def retrieveTaxYears(nino: Nino, arn: String)(implicit hc: HeaderCarrier): Future[Result] =
-    employmentHistoryService.getTaxYears(nino = nino) map {
-      response =>
-        response.status match {
-          case OK =>
-            sendDataEvent(transactionName = "Agent viewed client",
-              detail = Map("agentReferenceNumber" -> arn, "nino" -> nino.nino),
-              path = "/tax-history/select-tax-year",
-              eventType = "AgentViewedClient")
-            Ok(response.body)
-          case _ =>
-            logger.warn(s"Internal Server Error ${response.body}")
-            InternalServerError
-
-        }
+  private def retrieveTaxYears(nino: Nino, arn: String)(implicit hc: HeaderCarrier): Future[Result] = {
+    val taxYears = employmentHistoryService.getTaxYears(nino = nino)
+    taxYears.onSuccess { case _ =>
+      sendDataEvent(
+        transactionName = "Agent viewed client",
+        detail = Map("agentReferenceNumber" -> arn, "nino" -> nino.nino),
+        path = "/tax-history/select-tax-year",
+        eventType = "AgentViewedClient"
+      )
     }
+    toResult(taxYears)
+  }
 }

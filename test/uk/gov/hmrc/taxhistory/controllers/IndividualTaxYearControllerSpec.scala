@@ -29,6 +29,8 @@ import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{Audit, DataEvent}
+import uk.gov.hmrc.taxhistory.model.api.IndividualTaxYear
+import uk.gov.hmrc.taxhistory.{HttpNotOk, TaxHistoryException}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 
@@ -36,16 +38,18 @@ import scala.concurrent.Future
 
 class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
 
-  private val mockEmploymentHistoryService = mock[EmploymentHistoryService]
-  private val mockPlayAuthConnector = mock[PlayAuthConnector]
-  private val nino = randomNino()
+  val mockEmploymentHistoryService = mock[EmploymentHistoryService]
+  val mockPlayAuthConnector = mock[PlayAuthConnector]
+  val nino = randomNino()
   object MockAudit extends Audit("mockApp", mock[AuditConnector]) {
     override def sendDataEvent: (DataEvent) => Unit =
       _ => {}
   }
-  private lazy val successResponseJson = Json.parse( """{"test":"OK"}""")
-  private val failureResponseJson = Json.parse( """{"reason":"Resource not found"}""")
-  private val errorResponseJson = Json.parse( """{"reason":"Some error."}""")
+  val testTaxYears = List(IndividualTaxYear(2018, "fakeUri", "fakeUri", "fakeUri"))
+
+  lazy val successResponseJson = Json.parse( """{"test":"OK"}""")
+  val failureResponseJson = Json.parse( """{"reason":"Resource not found"}""")
+  val errorResponseJson = Json.parse( """{"reason":"Some error."}""")
 
   val newEnrolments = Set(
     Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), state = "", delegatedAuthRule = None)
@@ -70,7 +74,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getTaxYears(Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
+        .thenReturn(Future.successful(testTaxYears))
       val result = testIndividualTaxYearController.getTaxYears(nino.nino).apply(FakeRequest())
       status(result) must be(OK)
     }
@@ -80,7 +84,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
       (Matchers.any(),Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getTaxYears(Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(errorResponseJson))))
+        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(INTERNAL_SERVER_ERROR, HttpResponse(INTERNAL_SERVER_ERROR)))))
       val result = testIndividualTaxYearController.getTaxYears(nino.nino).apply(FakeRequest())
       status(result) must be(INTERNAL_SERVER_ERROR)
     }
@@ -91,7 +95,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(UnAuthorisedAgentEnrolments))))
 
       when(mockEmploymentHistoryService.getTaxYears(Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
+        .thenReturn(Future.successful(testTaxYears))
       val result = testIndividualTaxYearController.getTaxYears(nino.nino).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
@@ -102,7 +106,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](None, Enrolments(UnAuthorisedAgentEnrolments))))
 
       when(mockEmploymentHistoryService.getTaxYears(Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
+        .thenReturn(Future.successful(testTaxYears))
       val result = testIndividualTaxYearController.getTaxYears(nino.nino).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
