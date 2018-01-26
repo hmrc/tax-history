@@ -26,42 +26,64 @@ import scala.util.{Failure, Success, Try}
 
 package object taxhistory {
 
-  implicit class HttpResponseFutureOps(responseFuture: Future[HttpResponse])(implicit ec: ExecutionContext) {
-//    def decodeJsonOrError[A : Reads]: Future[A] = for {
-//      response   <- responseFuture
-//      okResponse <- response.expectOk
-//      decoded    <- okResponse.decodeJsonOrError[A]
-//    } yield {
-//      decoded
-//    }
-  }
+  /*
+  Please note that the following conversions from HttpResponse to Successful/failed futures are only appropriate
+  as long as we are only performing GET requests. If we perform other types of requests we need to take into account
+  other possible response codes which are not the simple 'OK' but are still successful.
+   */
 
+  /**
+    * An enriched utility method for `HttpResponse`.
+    * If the response is 'not found', tag the resulting failed Future with the details of the item that was not found.
+    * If the response is successful, produce a successful Future.
+    * If any other failure occurred, produce a failed future as appropriate.
+    */
   implicit class HttpResponseOps(response: HttpResponse)(implicit ec: ExecutionContext) {
     def orNotFound(itemType: Class[_], id: Any): Future[HttpResponse] = response.status match {
-      case Status.OK        => Future.successful(response)
-      case Status.NOT_FOUND => Future.failed(TaxHistoryException.notFound(itemType, id))
-      case status           => Future.failed(TaxHistoryException(HttpNotOk(response.status, response)))
+      case Status.NOT_FOUND             => Future.failed(TaxHistoryException.notFound(itemType, id))
+      case other @ _                    => response.expectOk
     }
 
-    def expectOk: Future[HttpResponse] = {
-      if (response.status == Status.OK) {
-        Future.successful(response)
-      } else {
-        Future.failed(TaxHistoryException(HttpNotOk(response.status, response)))
-      }
+    /**
+      * Convert a `HttpResponse` into a successful or failed future.
+      * This enables an alternative modelling of HTTP failures which helps to combine it
+      * with other Futures and other failures.
+      */
+    def expectOk: Future[HttpResponse] = response.status match {
+      case Status.OK                    => Future.successful(response)
+      case Status.NOT_FOUND             => Future.failed(TaxHistoryException.notFound(classOf[Any], ""))
+      case Status.SERVICE_UNAVAILABLE   => Future.failed(TaxHistoryException.serviceUnavailable)
+      case Status.INTERNAL_SERVER_ERROR => Future.failed(TaxHistoryException.internalServerError)
+      case Status.BAD_REQUEST           => Future.failed(TaxHistoryException.badRequest)
+      case otherStatus                  => Future.failed(TaxHistoryException(GenericHttpError(otherStatus, response)))
     }
 
-    def decodeJsonOrError[A : Reads]: Future[A] = {
-      if (response.status == Status.OK) {
-        Try(response.json.as[A]) match {
+    /**
+      * An enriched utility method for `HttpResponse`.
+      * If the response is successful, attempt to parse and instantiate it as the given type.
+      * If the response is 'not found', tag the resulting failed future with the details of the item that was not found.
+      * If any other failure occurred, produce a failed future as appropriate.
+      */
+    def decodeJsonOrNotFound[A : Reads](itemType: Class[_], id: Any): Future[A] = {
+      response.orNotFound(itemType, id).flatMap { resp =>
+        Try(resp.json.as[A]) match {
           case Success(decoded)                        => Future.successful[A](decoded)
           case Failure(jsException: JsResultException) => Future.failed[A](TaxHistoryException(JsonParsingError(jsException)))
           case Failure(throwable)                      => Future.failed[A](TaxHistoryException(UnknownError(throwable)))
         }
-      } else {
-        Future.failed[A](TaxHistoryException(HttpNotOk(response.status, response)))
       }
     }
   }
 
+  implicit class TaxHistoryExceptionFailedFutureOps[A](fa: Future[A])(implicit ec: ExecutionContext) {
+    /**
+      * If this Future has failed with a `TaxHistoryException`, set the 'originator' field to the given value,
+      * to allow tracing of the service where this failure took place.
+      */
+    def tagWithOriginator(originator: String): Future[A] = {
+      fa.recoverWith {
+        case TaxHistoryException(error, _) => Future.failed(TaxHistoryException(error, Some(originator)))
+      }
+    }
+  }
 }

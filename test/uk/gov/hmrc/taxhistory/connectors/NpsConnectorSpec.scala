@@ -26,11 +26,11 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.taxhistory.{HttpNotOk, TaxHistoryException}
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.{BadRequest, GenericHttpError, ServiceUnavailable, TaxHistoryException}
 
 import scala.concurrent.Future
 
@@ -93,7 +93,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         val result = testemploymentsConnector.getEmployments(testNino, testYear)
 
         intercept[Exception] (await(result)) must matchPattern {
-          case TaxHistoryException(HttpNotOk(BAD_REQUEST, _), _) =>
+          case TaxHistoryException(BadRequest, _) =>
         }
       }
     }
@@ -127,7 +127,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         val result = testIabdsConnector.getIabds(testNino, testYear)
 
         intercept[Exception](await(result)) must matchPattern {
-          case TaxHistoryException(HttpNotOk(SERVICE_UNAVAILABLE, _), _) =>
+          case TaxHistoryException(ServiceUnavailable, _) =>
         }
       }
     }
@@ -154,12 +154,12 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testTaxAccountConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(BAD_REQUEST, HttpResponse(BAD_REQUEST)))))
+          .thenReturn(Future.failed(TaxHistoryException.badRequest))
 
         val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
 
         intercept[Exception](await(result)) must matchPattern {
-          case TaxHistoryException(HttpNotOk(BAD_REQUEST, _), _) =>
+          case TaxHistoryException(BadRequest, _) =>
         }
       }
     }

@@ -29,6 +29,7 @@ import uk.gov.hmrc.taxhistory.metrics.MetricsEnum
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 import uk.gov.hmrc.taxhistory.HttpResponseOps
+import uk.gov.hmrc.taxhistory.TaxHistoryExceptionFailedFutureOps
 
 import scala.concurrent.Future
 
@@ -50,7 +51,7 @@ class NpsConnector @Inject()(val httpGet: CoreGet,
 
     val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_EMPLOYMENTS)
 
-    for {
+    (for {
       response    <- httpGet.GET[HttpResponse](employmentUrl(nino, year))
       _            = timerContext.stop()
       _            = if (response.status == OK) {
@@ -59,10 +60,10 @@ class NpsConnector @Inject()(val httpGet: CoreGet,
                        metrics.incrementFailedCounter(MetricsEnum.NPS_GET_EMPLOYMENTS)
                        logger.warn(s"[NpsConnector][getEmploymentsOLD] - status: ${response.status} Error ${response.body}")
                      }
-      employments <- response.decodeJsonOrError[List[NpsEmployment]]
+      employments <- response.decodeJsonOrNotFound[List[NpsEmployment]](classOf[NpsEmployment], (nino, year))
     } yield {
       employments
-    }
+    }).tagWithOriginator("NPS connector")
   }
 
   def getIabds(nino: Nino, year: Int)(implicit hc: HeaderCarrier): Future[List[Iabd]] = {
@@ -70,7 +71,7 @@ class NpsConnector @Inject()(val httpGet: CoreGet,
 
     val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_IABDS)
 
-    for {
+    (for {
       response <- httpGet.GET[HttpResponse](iabdsUrl(nino, year))
       _         = timerContext.stop()
       _         = if (response.status == OK) {
@@ -79,8 +80,10 @@ class NpsConnector @Inject()(val httpGet: CoreGet,
                     metrics.incrementFailedCounter(MetricsEnum.NPS_GET_IABDS)
                     logger.warn(s"[NpsConnector][getIabds] - status: ${response.status} Error ${response.body}")
                   }
-      iabds    <- response.decodeJsonOrError[List[Iabd]]
-    } yield iabds
+      iabds    <- response.decodeJsonOrNotFound[List[Iabd]](classOf[Iabd], (nino, year))
+    } yield {
+      iabds
+    }).tagWithOriginator("NPS connector")
   }
 
   def getTaxAccount(nino: Nino, year: Int)(implicit hc: HeaderCarrier): Future[NpsTaxAccount] = {
@@ -88,7 +91,7 @@ class NpsConnector @Inject()(val httpGet: CoreGet,
 
     val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_TAX_ACCOUNT)
 
-    for {
+    (for {
       response <- httpGet.GET[HttpResponse](taxAccountUrl(nino, year))
       _         = timerContext.stop()
       _         = if (response.status == OK) {
@@ -97,8 +100,10 @@ class NpsConnector @Inject()(val httpGet: CoreGet,
                     metrics.incrementFailedCounter(MetricsEnum.NPS_GET_TAX_ACCOUNT)
                     logger.warn(s"[NpsConnector][getTaxAccount] - status: ${response.status} Error ${response.body}")
                   }
-      taxAccount <- response.decodeJsonOrError[NpsTaxAccount]
-    } yield taxAccount
+      taxAccount <- response.decodeJsonOrNotFound[NpsTaxAccount](classOf[NpsTaxAccount], (nino, year))
+    } yield {
+      taxAccount
+    }).tagWithOriginator("NPS connector")
 
   }
 }

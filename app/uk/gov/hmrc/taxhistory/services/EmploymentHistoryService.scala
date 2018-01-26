@@ -26,7 +26,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.tai.model.rti.RtiData
-import uk.gov.hmrc.taxhistory.{HttpNotOk, NotFound, TaxHistoryException}
+import uk.gov.hmrc.taxhistory.{GenericHttpError, NotFound, TaxHistoryException}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector

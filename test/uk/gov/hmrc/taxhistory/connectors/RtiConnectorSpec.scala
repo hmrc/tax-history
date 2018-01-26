@@ -21,17 +21,16 @@ import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.tai.model.rti.RtiData
-import uk.gov.hmrc.taxhistory.{HttpNotOk, TaxHistoryException}
 import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.{GenericHttpError, InternalServerError, TaxHistoryException}
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
@@ -66,6 +65,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     }
 
     "get RTI data " when {
+
       "given a valid Nino and TaxYear" in {
         implicit val hc = HeaderCarrier()
         val fakeResponse: HttpResponse = HttpResponse(OK, Some(rtiSuccessfulResponseURLDummy))
@@ -77,6 +77,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         await(result) mustBe rtiSuccessfulResponseURLDummy.as[RtiData]
       }
+
       "return and handle an error response" in {
         val expectedResponse = Json.parse( """{"reason": "Internal Server Error"}""")
         implicit val hc = HeaderCarrier()
@@ -88,10 +89,9 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
 
         intercept[Exception](await(result)) must matchPattern {
-          case TaxHistoryException(HttpNotOk(INTERNAL_SERVER_ERROR, _), _) =>
+          case TaxHistoryException(InternalServerError, _) =>
         }
       }
-
     }
   }
 

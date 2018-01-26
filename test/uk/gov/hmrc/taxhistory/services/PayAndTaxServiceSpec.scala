@@ -23,9 +23,9 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.tai.model.rti.RtiData
-import uk.gov.hmrc.taxhistory.{HttpNotOk, TaxHistoryException}
+import uk.gov.hmrc.taxhistory.TaxHistoryException
 import uk.gov.hmrc.taxhistory.model.api.{PayAndTax, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -75,7 +75,7 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(rtiEmploymentResponse))
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(BAD_REQUEST, HttpResponse(BAD_REQUEST)))))
+        .thenReturn(Future.failed(TaxHistoryException.badRequest))
       val payAsYouEarn = await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
 
       val payAndTax = payAsYouEarn.payAndTax

@@ -28,8 +28,8 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.taxhistory.{HttpNotOk, TaxHistoryException}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.taxhistory.TaxHistoryException
 import uk.gov.hmrc.taxhistory.model.api.CompanyBenefit
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
@@ -91,7 +91,7 @@ class CompanyBenefitControllerSpec extends PlaySpec with OneServerPerSuite with 
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getCompanyBenefits(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(BAD_REQUEST, HttpResponse(BAD_REQUEST)))))
+        .thenReturn(Future.failed(TaxHistoryException.badRequest))
       val result = testCompanyBenefitController.getCompanyBenefits(nino.nino, 2016, employmentId).apply(FakeRequest())
       status(result) must be(BAD_REQUEST)
     }
@@ -101,7 +101,7 @@ class CompanyBenefitControllerSpec extends PlaySpec with OneServerPerSuite with 
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getCompanyBenefits(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(SERVICE_UNAVAILABLE, HttpResponse(SERVICE_UNAVAILABLE)))))
+        .thenReturn(Future.failed(TaxHistoryException.serviceUnavailable))
       val result = testCompanyBenefitController.getCompanyBenefits(nino.nino, 2016, employmentId).apply(FakeRequest())
       status(result) must be(SERVICE_UNAVAILABLE)
     }
@@ -111,7 +111,7 @@ class CompanyBenefitControllerSpec extends PlaySpec with OneServerPerSuite with 
       (Matchers.any(),Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getCompanyBenefits(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(INTERNAL_SERVER_ERROR, HttpResponse(INTERNAL_SERVER_ERROR)))))
+        .thenReturn(Future.failed(TaxHistoryException.internalServerError))
       val result = testCompanyBenefitController.getCompanyBenefits(nino.nino, 2016, employmentId).apply(FakeRequest())
       status(result) must be(INTERNAL_SERVER_ERROR)
     }

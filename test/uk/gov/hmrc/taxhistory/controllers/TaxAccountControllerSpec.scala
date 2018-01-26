@@ -27,9 +27,9 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.taxhistory.{HttpNotOk, TaxHistoryException}
+import uk.gov.hmrc.taxhistory.TaxHistoryException
 import uk.gov.hmrc.taxhistory.model.api.TaxAccount
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
@@ -92,7 +92,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
       when(mockPlayAuthConnector.authorise(any(), any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())(any(), any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getTaxAccount(any[Nino], any[TaxYear])(any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(BAD_REQUEST, HttpResponse(BAD_REQUEST)))))
+        .thenReturn(Future.failed(TaxHistoryException.badRequest))
 
       val result = testTaxAccountController.getTaxAccount(nino.nino, testTaxYear).apply(FakeRequest())
       status(result) shouldBe BAD_REQUEST
@@ -102,7 +102,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
       when(mockPlayAuthConnector.authorise(any(), any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())(any(), any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getTaxAccount(any[Nino], any[TaxYear])(any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(SERVICE_UNAVAILABLE, HttpResponse(SERVICE_UNAVAILABLE)))))
+        .thenReturn(Future.failed(TaxHistoryException.serviceUnavailable))
 
       val result = testTaxAccountController.getTaxAccount(nino.nino, testTaxYear).apply(FakeRequest())
       status(result) shouldBe SERVICE_UNAVAILABLE
@@ -112,7 +112,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
       when(mockPlayAuthConnector.authorise(any(), any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())(any(), any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getTaxAccount(any[Nino], any[TaxYear])(any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException(HttpNotOk(INTERNAL_SERVER_ERROR, HttpResponse(INTERNAL_SERVER_ERROR)))))
+        .thenReturn(Future.failed(TaxHistoryException.internalServerError))
 
       val result = testTaxAccountController.getTaxAccount(nino.nino, testTaxYear).apply(FakeRequest())
       status(result) shouldBe INTERNAL_SERVER_ERROR

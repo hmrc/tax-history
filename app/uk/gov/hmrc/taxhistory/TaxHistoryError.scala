@@ -21,18 +21,22 @@ import uk.gov.hmrc.http.HttpResponse
 
 case class TaxHistoryException(error: TaxHistoryError, originator: Option[String] = None) extends Exception {
   override def getMessage: String = error.toString
-  override def toString: String = s"ApiException($error)"
+  override def toString: String = s"TaxHistoryException($error)"
 }
 
 object TaxHistoryException {
-  def notFound(itemType: Class[_], id: Any) = TaxHistoryException(NotFound(itemType, id))
+  def notFound(itemType: Class[_], id: Any): TaxHistoryException = TaxHistoryException(NotFound(itemType, id))
+  def serviceUnavailable: TaxHistoryException = TaxHistoryException(ServiceUnavailable)
+  def internalServerError: TaxHistoryException = TaxHistoryException(InternalServerError)
+  def badRequest: TaxHistoryException = TaxHistoryException(BadRequest)
 }
 
 sealed trait TaxHistoryError
 
 final case class NotFound(itemType: Class[_], id: Any) extends TaxHistoryError
 case object ServiceUnavailable extends TaxHistoryError
-final case class BadRequest(url: String) extends TaxHistoryError
-final case class HttpNotOk(status: Int, response: HttpResponse) extends TaxHistoryError
+case object InternalServerError extends TaxHistoryError
+case object BadRequest extends TaxHistoryError
+final case class GenericHttpError(status: Int, response: HttpResponse) extends TaxHistoryError
 final case class JsonParsingError(jsonResultException: JsResultException) extends TaxHistoryError
 final case class UnknownError(throwable: Throwable) extends TaxHistoryError

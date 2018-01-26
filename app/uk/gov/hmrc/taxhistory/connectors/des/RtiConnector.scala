@@ -31,6 +31,7 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.tai.model.rti.RtiData
 
 import uk.gov.hmrc.taxhistory.HttpResponseOps
+import uk.gov.hmrc.taxhistory.TaxHistoryExceptionFailedFutureOps
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -60,12 +61,12 @@ class RtiConnector @Inject()(val httpGet: CoreGet,
   def getRTIEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[RtiData] = {
     implicit val hc: HeaderCarrier = createHeader
 
-    for {
+    (for {
       response <- getFromRTI(rtiEmploymentsUrl(nino, taxYear))
-      rtiData  <- response.decodeJsonOrError[RtiData]
+      rtiData  <- response.decodeJsonOrNotFound[RtiData](classOf[RtiData], (nino, taxYear))
     } yield {
       rtiData
-    }
+    }).tagWithOriginator("RTI connector")
   }
 
   private def getFromRTI(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
