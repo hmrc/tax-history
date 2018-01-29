@@ -31,7 +31,6 @@ import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.{BadRequest, GenericHttpError, ServiceUnavailable, TaxHistoryException}
 
 import scala.concurrent.Future
 
@@ -146,13 +145,11 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testTaxAccountConnector.http.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.failed(TaxHistoryException.badRequest))
+          .thenReturn(Future.failed(new BadRequestException("")))
 
         val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
 
-        intercept[Exception](await(result)) must matchPattern {
-          case TaxHistoryException(BadRequest, _) =>
-        }
+        intercept[BadRequestException](await(result))
       }
     }
 

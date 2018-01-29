@@ -29,7 +29,6 @@ import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.{GenericHttpError, InternalServerError, TaxHistoryException}
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future

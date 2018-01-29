@@ -26,10 +26,9 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, Upstream5xxResponse}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{Audit, DataEvent}
-import uk.gov.hmrc.taxhistory.TaxHistoryException
 import uk.gov.hmrc.taxhistory.model.api.IndividualTaxYear
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -82,7 +81,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
       (Matchers.any(),Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getTaxYears(Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException.internalServerError))
+        .thenReturn(Future.failed(new Upstream5xxResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
       val result = testIndividualTaxYearController.getTaxYears(nino.nino).apply(FakeRequest())
       status(result) must be(INTERNAL_SERVER_ERROR)
     }

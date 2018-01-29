@@ -27,8 +27,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxhistory.TaxHistoryException
+import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException, Upstream5xxResponse}
 import uk.gov.hmrc.taxhistory.model.api.Employment
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -82,7 +81,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException.notFound(classOf[Employment], "")))
+        .thenReturn(Future.failed(new NotFoundException("")))
       val result = testEmploymentController.getEmployments(nino.nino, 2015).apply(FakeRequest())
       status(result) must be(NOT_FOUND)
     }
@@ -92,7 +91,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException.badRequest))
+        .thenReturn(Future.failed(new BadRequestException("")))
       val result = testEmploymentController.getEmployments(nino.nino, 2015).apply(FakeRequest())
       status(result) must be(BAD_REQUEST)
     }
@@ -102,7 +101,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException.serviceUnavailable))
+        .thenReturn(Future.failed(new Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
       val result = testEmploymentController.getEmployments(nino.nino, 2015).apply(FakeRequest())
       status(result) must be(SERVICE_UNAVAILABLE)
     }
@@ -112,7 +111,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(),Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException.internalServerError))
+        .thenReturn(Future.failed(new Upstream5xxResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
       val result = testEmploymentController.getEmployments(nino.nino, 2015).apply(FakeRequest())
       status(result) must be(INTERNAL_SERVER_ERROR)
     }
@@ -157,7 +156,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException.notFound(classOf[Employment], "")))
+        .thenReturn(Future.failed(new NotFoundException("")))
       val result = testEmploymentController.getEmployment(nino.nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
       status(result) must be(NOT_FOUND)
     }
@@ -167,7 +166,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException.badRequest))
+        .thenReturn(Future.failed(new BadRequestException("")))
       val result = testEmploymentController.getEmployment(nino.nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
       status(result) must be(BAD_REQUEST)
     }
@@ -177,7 +176,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException.serviceUnavailable))
+        .thenReturn(Future.failed(new Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
       val result = testEmploymentController.getEmployment(nino.nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
       status(result) must be(SERVICE_UNAVAILABLE)
     }
@@ -187,7 +186,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
       (Matchers.any(),Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException.internalServerError))
+        .thenReturn(Future.failed(new Upstream5xxResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
       val result = testEmploymentController.getEmployment(nino.nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
       status(result) must be(INTERNAL_SERVER_ERROR)
     }
