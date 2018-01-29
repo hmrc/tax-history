@@ -25,18 +25,15 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
-import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment, PayAsYouEarn}
-import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
+import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.audit.{DataEventAuditType, DataEventDetail, DataEventTransaction}
-import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, NpsEmployment}
+import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
-import uk.gov.hmrc.taxhistory.{BadRequest, NotFound, TaxHistoryException}
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
@@ -204,11 +201,9 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
     "return any non success status response from get Nps Employments api" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException.badRequest))
+        .thenReturn(Future.failed(new BadRequestException("")))
 
-      intercept[Exception](await(testEmploymentHistoryService.getNpsEmployments(testNino, TaxYear(2016)))) must matchPattern {
-        case TaxHistoryException(BadRequest, _) =>
-      }
+      intercept[BadRequestException](await(testEmploymentHistoryService.getNpsEmployments(testNino, TaxYear(2016))))
     }
 
     "successfully get Rti Employments Data" in {
@@ -222,20 +217,18 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     "return not found status response from get Nps Employments api" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(Nil))
-      intercept[Exception](await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))) must matchPattern {
-        case TaxHistoryException(NotFound(_, _), _) =>
-      }
+      intercept[NotFoundException](await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016))))
     }
 
     "return success status despite failing response from get Rti Employments api when there are nps employments" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(npsEmploymentResponse))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException.badRequest))
+        .thenReturn(Future.failed(new BadRequestException("")))
       when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException.badRequest))
+        .thenReturn(Future.failed(new BadRequestException("")))
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException.badRequest))
+        .thenReturn(Future.failed(new BadRequestException("")))
 
       noException shouldBe thrownBy {
         await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
@@ -250,7 +243,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(rtiEmploymentResponse))
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException.badRequest))
+        .thenReturn(Future.failed(new BadRequestException("")))
 
       val paye = await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
 
@@ -336,9 +329,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(rtiEmploymentResponse))
 
-        intercept[Exception](await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))) must matchPattern {
-          case TaxHistoryException(NotFound(_, _), _) =>
-        }
+        intercept[NotFoundException](await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016))))
       }
     }
 
@@ -351,9 +342,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(rtiEmploymentResponse))
 
-        intercept[Exception](await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))) must matchPattern {
-          case TaxHistoryException(NotFound(_, _), _) =>
-        }
+        intercept[NotFoundException](await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016))))
       }
 
       "nps employments contain single element with npsEmploymentWithJustOtherIncomeSourceIndicator attribute is true" in {
@@ -364,19 +353,15 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.successful(rtiEmploymentResponse))
 
-        intercept[Exception](await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))) must matchPattern {
-          case TaxHistoryException(NotFound(_, _), _) =>
-        }
+        intercept[NotFoundException](await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016))))
       }
     }
 
     "return any non success status response from get Nps Iabds api" in {
       when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException.badRequest))
+        .thenReturn(Future.failed(new BadRequestException("")))
 
-      intercept[Exception](await(testEmploymentHistoryService.getNpsIabds(testNino,TaxYear(2016)))) must matchPattern {
-        case TaxHistoryException(BadRequest, _) =>
-      }
+      intercept[BadRequestException](await(testEmploymentHistoryService.getNpsIabds(testNino,TaxYear(2016))))
     }
 
     "return none where tax year is not cy-1" in {
@@ -386,20 +371,16 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
     "return any non success status response from get Nps Tax Account api" in {
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException.badRequest))
+        .thenReturn(Future.failed(new BadRequestException("")))
 
-      intercept[Exception](await(testEmploymentHistoryService.getNpsTaxAccount(testNino,TaxYear(2016)))) must matchPattern {
-        case TaxHistoryException(BadRequest, _) =>
-      }
+      intercept[BadRequestException](await(testEmploymentHistoryService.getNpsTaxAccount(testNino,TaxYear(2016))))
     }
 
     "return not found status response from get Nps Tax Account api" in {
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(TaxHistoryException.notFound(classOf[NpsTaxAccount], "")))
+        .thenReturn(Future.failed(new NotFoundException("")))
 
-      intercept[Exception](await(testEmploymentHistoryService.getNpsTaxAccount(testNino,TaxYear(2016)))) must matchPattern {
-        case TaxHistoryException(NotFound(_, _), _) =>
-      }
+      intercept[NotFoundException](await(testEmploymentHistoryService.getNpsTaxAccount(testNino,TaxYear(2016))))
     }
 
 
@@ -493,9 +474,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(paye))
 
-      intercept[Exception](await(testEmploymentHistoryService.getEmployments(Nino("AA000000A"), TaxYear(2014)))) must matchPattern {
-        case TaxHistoryException(NotFound(_, _), _) =>
-      }
+      intercept[NotFoundException](await(testEmploymentHistoryService.getEmployments(Nino("AA000000A"), TaxYear(2014))))
     }
 
 
@@ -531,9 +510,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(paye))
 
-      intercept[Exception](await(testEmploymentHistoryService.getEmployment(Nino("AA000000A"), TaxYear(2014),"01318d7c-bcd9-47e2-8c38-551e7ccdfae6"))) must matchPattern {
-        case TaxHistoryException(NotFound(_, _), _) =>
-      }
+      intercept[NotFoundException](await(testEmploymentHistoryService.getEmployment(Nino("AA000000A"), TaxYear(2014),"01318d7c-bcd9-47e2-8c38-551e7ccdfae6")))
     }
 
     "get company benefits from cache successfully" in {
@@ -561,10 +538,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(payeNoBenefits))
 
-      intercept[Exception](await(testEmploymentHistoryService.getCompanyBenefits(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))) must matchPattern {
-        case TaxHistoryException(NotFound(_, _), _) =>
-      }
-
+      intercept[NotFoundException](await(testEmploymentHistoryService.getCompanyBenefits(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3")))
     }
   }
 }

@@ -18,8 +18,7 @@ package uk.gov.hmrc.taxhistory.utils
 
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
-import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
+import uk.gov.hmrc.taxhistory.connectors.{NpsConnector, RtiConnector}
 import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, RtiDataHelper}
 import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, TaxHistoryCacheService}
 

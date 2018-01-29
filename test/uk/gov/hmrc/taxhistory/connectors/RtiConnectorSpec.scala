@@ -23,14 +23,12 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
+import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.tai.model.rti.RtiData
-import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.{GenericHttpError, InternalServerError, TaxHistoryException}
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
@@ -44,7 +42,8 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   val testNino = randomNino()
   val testNinoWithoutSuffix=testNino.value.take(8)
-  lazy val rtiSuccessfulResponseURLDummy = loadFile("/json/rti/response/dummyRti.json")
+  lazy val rtiSuccessfulResponseJson = loadFile("/json/rti/response/dummyRti.json")
+  lazy val rtiSuccessfulResponse = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
 
   "RtiConnector" should {
     "have the correct RTI employments url" when {
@@ -55,7 +54,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
     "have withoutSuffix nino" when {
       "given a valid nino" in {
-        testRtiConnector.withoutSuffix(testNino) mustBe s"$testNinoWithoutSuffix"
+        testNino.withoutSuffix mustBe s"$testNinoWithoutSuffix"
       }
     }
 
@@ -68,14 +67,13 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
       "given a valid Nino and TaxYear" in {
         implicit val hc = HeaderCarrier()
-        val fakeResponse: HttpResponse = HttpResponse(OK, Some(rtiSuccessfulResponseURLDummy))
         when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any(), any())).thenReturn(Future.successful(fakeResponse))
+        when(testRtiConnector.http.GET[RtiData](any())(any(), any(), any())).thenReturn(Future.successful(rtiSuccessfulResponse))
 
         val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
 
-        await(result) mustBe rtiSuccessfulResponseURLDummy.as[RtiData]
+        await(result) mustBe rtiSuccessfulResponse
       }
 
       "return and handle an error response" in {
@@ -83,23 +81,21 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         implicit val hc = HeaderCarrier()
         when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testRtiConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(expectedResponse))))
+        when(testRtiConnector.http.GET[HttpResponse](any())(any(), any(), any()))
+          .thenReturn(Future.failed(new Upstream5xxResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
 
         val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
 
-        intercept[Exception](await(result)) must matchPattern {
-          case TaxHistoryException(InternalServerError, _) =>
-        }
+        intercept[Upstream5xxResponse](await(result))
       }
     }
   }
 
   lazy val testRtiConnector = new RtiConnector(
-    httpGet = mock[HttpGet],
-    httpPost = mock[HttpPost],
+    http = mock[HttpGet],
     audit = mock[Audit],
     servicesConfig = mockServicesConfig,
+    metrics = mock[TaxHistoryMetrics],
     authorizationToken = "auth",
     environment = "env",
     originatorId = "orgId"

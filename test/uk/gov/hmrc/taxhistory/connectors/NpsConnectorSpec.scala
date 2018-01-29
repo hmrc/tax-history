@@ -23,14 +23,12 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost, HttpResponse}
+import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.{BadRequest, GenericHttpError, ServiceUnavailable, TaxHistoryException}
 
 import scala.concurrent.Future
 
@@ -57,7 +55,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
     "have withoutSuffix nino" when {
       "given a valid nino" in {
-        testNpsConnector.withoutSuffix(testNino) mustBe s"${testNino.value.take(8)}"
+        testNino.withoutSuffix mustBe s"${testNino.value.take(8)}"
       }
     }
 
@@ -66,15 +64,14 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       headers.extraHeaders mustBe List(("Gov-Uk-Originator-Id", "orgId"))
     }
 
-    "get EmploymentData data " when {
+    "get EmploymentData data" when {
       "given a valid Nino and TaxYear" in {
         implicit val hc = HeaderCarrier()
         val testemploymentsConnector = testNpsConnector
-        val fakeResponse: HttpResponse = HttpResponse(OK, Some(employmentsSuccessfulResponseJson))
 
         when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any())).thenReturn(Future.successful(fakeResponse))
+        when(testemploymentsConnector.http.GET[List[NpsEmployment]](any())(any(), any(), any())).thenReturn(Future.successful(employmentsSuccessfulResponse))
 
         val result = testemploymentsConnector.getEmployments(testNino, testYear)
 
@@ -87,28 +84,23 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         val testemploymentsConnector = testNpsConnector
         when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(expectedResponse))))
+        when(testemploymentsConnector.http.GET[List[NpsEmployment]](any())(any(), any(), any()))
+          .thenReturn(Future.failed(new BadRequestException("")))
 
         val result = testemploymentsConnector.getEmployments(testNino, testYear)
 
-        intercept[Exception] (await(result)) must matchPattern {
-          case TaxHistoryException(BadRequest, _) =>
-        }
+        intercept[BadRequestException](await(result))
       }
     }
-
-
 
     "get Iabds data " when {
       "given a valid Nino and TaxYear" in {
         implicit val hc = HeaderCarrier()
         val testIabdsConnector = testNpsConnector
-        val fakeResponse: HttpResponse = HttpResponse(OK, Some(iabdsSuccessfulResponseJson))
 
         when(testIabdsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testIabdsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any())).thenReturn(Future.successful(fakeResponse))
+        when(testIabdsConnector.http.GET[List[Iabd]](any())(any(), any(), any())).thenReturn(Future.successful(iabdsSuccessfulResponse))
 
         val result = testIabdsConnector.getIabds(testNino, testYear)
 
@@ -121,14 +113,12 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         val testIabdsConnector = testNpsConnector
         when(testIabdsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testIabdsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(SERVICE_UNAVAILABLE, Some(expectedResponse))))
+        when(testIabdsConnector.http.GET[HttpResponse](any())(any(), any(), any()))
+          .thenReturn(Future.failed(new Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
 
         val result = testIabdsConnector.getIabds(testNino, testYear)
 
-        intercept[Exception](await(result)) must matchPattern {
-          case TaxHistoryException(ServiceUnavailable, _) =>
-        }
+        intercept[Upstream5xxResponse](await(result))
       }
     }
 
@@ -136,11 +126,10 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       "given a valid Nino and TaxYear" in {
         implicit val hc = HeaderCarrier()
         val testTaxAccountConnector = testNpsConnector
-        val fakeResponse: HttpResponse = HttpResponse(OK, Some(taxAccountResponseJson))
 
         when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testTaxAccountConnector.httpGet.GET[HttpResponse](any())(any(), any(), any())).thenReturn(Future.successful(fakeResponse))
+        when(testTaxAccountConnector.http.GET[NpsTaxAccount](any())(any(), any(), any())).thenReturn(Future.successful(taxAccountResponse))
 
         val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
 
@@ -153,24 +142,22 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         val testTaxAccountConnector = testNpsConnector
         when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testTaxAccountConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.failed(TaxHistoryException.badRequest))
+        when(testTaxAccountConnector.http.GET[HttpResponse](any())(any(), any(), any()))
+          .thenReturn(Future.failed(new BadRequestException("")))
 
         val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
 
-        intercept[Exception](await(result)) must matchPattern {
-          case TaxHistoryException(BadRequest, _) =>
-        }
+        intercept[BadRequestException](await(result))
       }
     }
 
   }
 
   lazy val testNpsConnector = new NpsConnector(
-    httpGet = mock[HttpGet],
-    httpPost = mock[HttpPost],
+    http = mock[HttpGet],
     audit = mock[Audit],
     servicesConfig = mockServicesConfig,
+    metrics = mock[TaxHistoryMetrics],
     originatorId = "orgId",
     path = "/path"
   ) {

@@ -20,7 +20,6 @@ import org.joda.time.LocalDate
 import play.api.libs.json._
 import uk.gov.hmrc.taxhistory.model.api.Employment
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
-import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
 
 case class NpsEmployment(nino:String,
                       sequenceNumber:Int,

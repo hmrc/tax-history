@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import org.mockito.Mockito.{times, verify, verifyZeroInteractions, validateMockitoUsage}
 import org.mockito.Matchers.any
+import org.mockito.Mockito.{times, validateMockitoUsage, verify, verifyZeroInteractions}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.fixtures.{NpsEmployments, RtiEmployments}

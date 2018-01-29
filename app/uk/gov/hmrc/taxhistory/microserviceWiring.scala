@@ -57,6 +57,6 @@ class MicroserviceAuthConnector @Inject()(val auditConnector: AuditConnector) ex
   val authBaseUrl = baseUrl("auth")
 }
 
-class TaxHistoryAuthConnector @Inject()(val http: CorePost) extends PlayAuthConnector with ServicesConfig {
+class TaxHistoryAuthConnector @Inject()(val http: HttpPost) extends PlayAuthConnector with ServicesConfig {
   override val serviceUrl = baseUrl("auth")
 }
