@@ -20,9 +20,11 @@ import javax.inject.Inject
 
 import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
+import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
@@ -31,10 +33,11 @@ class CompanyBenefitController @Inject()(val authConnector: AuthConnector,
 
   def getCompanyBenefits(nino: String, taxYear: Int, employmentId: String): Action[AnyContent] = Action.async {
     implicit request => {
-      authorisedRelationship(nino, _ => retrieveCompanyBenefits(nino, taxYear, employmentId))
+      authorisedRelationship(nino, _ => retrieveCompanyBenefits(Nino(nino), TaxYear(taxYear), employmentId))
     }
   }
 
-  private def retrieveCompanyBenefits(nino: String, taxYear: Int, employmentId: String)(implicit hc: HeaderCarrier): Future[Result] =
-    employmentHistoryService.getCompanyBenefits(nino, taxYear, employmentId) map matchResponse
+  private def retrieveCompanyBenefits(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit hc: HeaderCarrier): Future[Result] = toResult {
+    employmentHistoryService.getCompanyBenefits(nino, taxYear, employmentId)
+  }
 }

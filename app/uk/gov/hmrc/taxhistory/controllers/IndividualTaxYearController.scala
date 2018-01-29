@@ -20,6 +20,7 @@ import javax.inject.Inject
 
 import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.auditable.Auditable
@@ -35,24 +36,19 @@ class IndividualTaxYearController @Inject()(val authConnector: AuthConnector,
 
   def getTaxYears(nino: String): Action[AnyContent] = Action.async {
     implicit request => {
-      authorisedRelationship(nino, data => retrieveTaxYears(nino, data.getOrElse("")))
+      authorisedRelationship(nino, data => retrieveTaxYears(Nino(nino), data.getOrElse("")))
     }
   }
 
-  private def retrieveTaxYears(nino: String, arn: String)(implicit hc: HeaderCarrier): Future[Result] =
-    employmentHistoryService.getTaxYears(nino = nino) map {
-      response =>
-        response.status match {
-          case OK =>
-            auditable.sendDataEvent(transactionName = AgentViewedClient,
-              path = "/tax-history/select-tax-year",
-              detail = DataEventDetail(Map("agentReferenceNumber" -> arn, "nino" -> nino)),
-              eventType = AgentViewedClientEvent)
-            Ok(response.body)
-          case _ =>
-            logger.warn(s"Internal Server Error ${response.body}")
-            InternalServerError
-
-        }
+  private def retrieveTaxYears(nino: Nino, arn: String)(implicit hc: HeaderCarrier): Future[Result] = {
+    val taxYears = employmentHistoryService.getTaxYears(nino)
+    taxYears.onSuccess { case _ =>
+      auditable.sendDataEvent(transactionName = AgentViewedClient,
+        path = "/tax-history/select-tax-year",
+        detail = DataEventDetail(Map("agentReferenceNumber" -> arn, "nino" -> nino.nino)),
+        eventType = AgentViewedClientEvent
+      )
     }
+    toResult(taxYears)
+  }
 }

@@ -20,9 +20,11 @@ import javax.inject.Inject
 
 import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
+import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
@@ -31,19 +33,21 @@ class EmploymentController @Inject()(val employmentHistoryService: EmploymentHis
 
   def getEmployments(nino: String, taxYear: Int): Action[AnyContent] = Action.async {
     implicit request => {
-      authorisedRelationship(nino, _ => retrieveEmployments(nino, taxYear))
+      authorisedRelationship(nino, _ => retrieveEmployments(Nino(nino), TaxYear(taxYear)))
     }
   }
 
   def getEmployment(nino: String, taxYear: Int, employmentId: String): Action[AnyContent] = Action.async {
     implicit request => {
-      authorisedRelationship(nino, _ => retrieveEmployment(nino, taxYear, employmentId))
+      authorisedRelationship(nino, _ => retrieveEmployment(Nino(nino), TaxYear(taxYear), employmentId))
     }
   }
 
-  private def retrieveEmployment(nino: String, taxYear: Int, employmentId: String)(implicit hc: HeaderCarrier): Future[Result] =
-    employmentHistoryService.getEmployment(nino, taxYear, employmentId) map matchResponse
+  private def retrieveEmployment(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit hc: HeaderCarrier): Future[Result] = toResult {
+    employmentHistoryService.getEmployment(nino, taxYear, employmentId)
+  }
 
-  private def retrieveEmployments(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[Result] =
-    employmentHistoryService.getEmployments(nino, taxYear) map matchResponse
+  private def retrieveEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Result] = toResult {
+    employmentHistoryService.getEmployments(nino, taxYear)
+  }
 }

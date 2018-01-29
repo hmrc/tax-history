@@ -16,24 +16,45 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
+import play.api.libs.json.{Json, Writes}
 import play.api.mvc.Result
-import uk.gov.hmrc.http.HttpResponse
+import uk.gov.hmrc.taxhistory.{GenericHttpError, NotFound, TaxHistoryException}
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
-trait TaxHistoryController extends AuthController with TaxHistoryLogger{
-  def matchResponse(response: HttpResponse): Result = response.status match {
-    case OK => Ok(response.body)
-    case NOT_FOUND =>
-      logger.warn("Page Not Found")
-      NotFound
-    case BAD_REQUEST =>
-      logger.warn(s"Bad Request: ${response.body}")
-      BadRequest(response.body)
-    case SERVICE_UNAVAILABLE =>
-      logger.warn(s"Service Unavailable: ${response.body}")
-      ServiceUnavailable
-    case _ =>
-      logger.warn(s"Internal Service Error : ${response.body}")
-      InternalServerError
+import scala.concurrent.{ExecutionContext, Future}
+
+trait TaxHistoryController extends AuthController with TaxHistoryLogger {
+  def toResult[A : Writes](fa: Future[A])(implicit ec: ExecutionContext): Future[Result] = {
+    fa.map(value => Ok(Json.toJson(value))).recover {
+      case TaxHistoryException(uk.gov.hmrc.taxhistory.NotFound(itemType, id), originator) =>
+        val itemTypeStr = itemType.getSimpleName
+        log(originator, s"Not found: item of type $itemTypeStr with id $id")
+        NotFound // TODO add details to the result?
+      case TaxHistoryException(uk.gov.hmrc.taxhistory.ServiceUnavailable, originator) =>
+        log(originator, s"Service Unavailable")
+        ServiceUnavailable // TODO add details to the result?
+      case TaxHistoryException(uk.gov.hmrc.taxhistory.InternalServerError, originator) =>
+        log(originator, "Internal Server Error")
+        InternalServerError // TODO add details to the result?
+      case TaxHistoryException(uk.gov.hmrc.taxhistory.BadRequest, originator) =>
+        log(originator, "Bad Request")
+        BadRequest // TODO add details to the result?
+      case TaxHistoryException(GenericHttpError(status, response), originator) =>
+        log(originator, "HTTP error " + status)
+        Status(status)
+      case TaxHistoryException(error, originator) =>
+        log(originator, "Error: " + error)
+        InternalServerError
+      case _ =>
+        logger.warn("Unknown error")
+        InternalServerError
+    }
+  }
+
+  def log(originator: Option[String], message: String) = {
+    originator match {
+      case Some(org) => logger.warn(s"$org returned: $message")
+      case None      => logger.warn(message)
+    }
   }
 }

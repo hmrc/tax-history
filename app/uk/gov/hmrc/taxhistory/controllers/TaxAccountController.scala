@@ -20,9 +20,11 @@ import javax.inject.Inject
 
 import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
+import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
@@ -30,10 +32,11 @@ class TaxAccountController @Inject()(val authConnector: AuthConnector, val emplo
 
   def getTaxAccount(nino: String, taxYear: Int): Action[AnyContent] = Action.async {
     implicit request => {
-      authorisedRelationship(nino, _ => retrieveTaxAccount(nino, taxYear))
+      authorisedRelationship(nino, _ => retrieveTaxAccount(Nino(nino), TaxYear(taxYear)))
     }
   }
 
-  private def retrieveTaxAccount(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[Result] =
-    employmentHistoryService.getTaxAccount(nino, taxYear) map matchResponse
+  private def retrieveTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Result] = toResult {
+    employmentHistoryService.getTaxAccount(nino, taxYear)
+  }
 }

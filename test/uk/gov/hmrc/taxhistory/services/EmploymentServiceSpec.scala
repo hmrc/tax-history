@@ -22,10 +22,13 @@ import org.mockito.Matchers.any
 import org.mockito.Mockito.{times, verify, when}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.{JsArray, Json}
+import play.api.libs.json.Json
 import play.api.test.Helpers._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
+import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment, PayAsYouEarn}
+import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
 import uk.gov.hmrc.taxhistory.model.audit.{DataEventAuditType, DataEventDetail, DataEventTransaction}
@@ -33,6 +36,7 @@ import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
+import uk.gov.hmrc.taxhistory.{BadRequest, NotFound, TaxHistoryException}
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
@@ -43,11 +47,11 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
   implicit val hc = HeaderCarrier()
   val testNino = randomNino()
   
-  val testEmploymentHistoryService = TestEmploymentHistoryService.createNew
+  val testEmploymentHistoryService = TestEmploymentHistoryService.createNew()
 
   val failureResponseJson = Json.parse("""{"reason":"Bad Request"}""")
 
-  val npsEmploymentResponse =  Json.parse(""" [{
+  val npsEmploymentResponseJson =  Json.parse(""" [{
                              |    "nino": "AA000000",
                              |    "sequenceNumber": 1,
                              |    "worksNumber": "6044041000000",
@@ -62,7 +66,9 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                              |    }]
                            """.stripMargin)
 
-  private val npsEmploymentWithJobSeekerAllowance =  Json.parse(""" [{
+  val npsEmploymentResponse = npsEmploymentResponseJson.as[List[NpsEmployment]]
+
+  private val npsEmploymentWithJobSeekerAllowanceJson =  Json.parse(""" [{
                                             |    "nino": "AA000000",
                                             |    "sequenceNumber": 1,
                                             |    "worksNumber": "6044041000000",
@@ -90,8 +96,9 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                             |    }]
                                           """.stripMargin)
 
+  val npsEmploymentWithJobSeekerAllowance = npsEmploymentWithJobSeekerAllowanceJson.as[List[NpsEmployment]]
 
-  private val npsEmploymentWithOtherIncomeSourceIndicator =  Json.parse(""" [{
+  private val npsEmploymentWithOtherIncomeSourceIndicatorJson =  Json.parse(""" [{
                                                                   |    "nino": "AA000000",
                                                                   |    "sequenceNumber": 1,
                                                                   |    "worksNumber": "6044041000000",
@@ -119,7 +126,9 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                                                   |    }]
                                                                 """.stripMargin)
 
-  private val npsEmploymentWithJustJobSeekerAllowance =  Json.parse(""" [{
+  val npsEmploymentWithOtherIncomeSourceIndicator = npsEmploymentWithOtherIncomeSourceIndicatorJson.as[List[NpsEmployment]]
+
+  private val npsEmploymentWithJustJobSeekerAllowanceJson =  Json.parse(""" [{
                                                                           |    "nino": "AA000000",
                                                                           |    "sequenceNumber": 1,
                                                                           |    "worksNumber": "6044041000000",
@@ -134,7 +143,9 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                                                           |    }]
                                                                         """.stripMargin)
 
-  private val npsEmploymentWithJustOtherIncomeSourceIndicator =  Json.parse(""" [{
+  val npsEmploymentWithJustJobSeekerAllowance = npsEmploymentWithJustJobSeekerAllowanceJson.as[List[NpsEmployment]]
+
+  private val npsEmploymentWithJustOtherIncomeSourceIndicatorJson =  Json.parse(""" [{
                                                                       |    "nino": "AA000000",
                                                                       |    "sequenceNumber": 1,
                                                                       |    "worksNumber": "6044041000000",
@@ -148,6 +159,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                                                       |    "employmentStatus":1
                                                                       |    }]
                                                                     """.stripMargin)
+
+  val npsEmploymentWithJustOtherIncomeSourceIndicator = npsEmploymentWithJustOtherIncomeSourceIndicatorJson.as[List[NpsEmployment]]
 
   val npsEmploymentResponseWithTaxDistrictNumber =  Json.parse(""" [{
                                             |    "nino": "AA000000",
@@ -164,14 +177,17 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
                                             |    }]
                                           """.stripMargin)
 
-  lazy val rtiEmploymentResponse = loadFile("/json/rti/response/dummyRti.json")
+  lazy val rtiEmploymentResponseJson = loadFile("/json/rti/response/dummyRti.json")
+  lazy val rtiEmploymentResponse = rtiEmploymentResponseJson.as[RtiData]
   lazy val rtiDuplicateEmploymentsResponse = loadFile("/json/rti/response/dummyRtiDuplicateEmployments.json")
   lazy val rtiPartialDuplicateEmploymentsResponse = loadFile("/json/rti/response/dummyRtiPartialDuplicateEmployments.json")
   lazy val rtiNonMatchingEmploymentsResponse = loadFile("/json/rti/response/dummyRtiNonMatchingEmployment.json")
   lazy val rtiNoPaymentsResponse = loadFile("/json/rti/response/dummyRtiNoPaymentsResponse.json")
   lazy val npsEmptyEmployments = loadFile("/json/nps/response/emptyEmployments.json")
-  lazy val npsGetTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json")
-  lazy val iabdsJsonResponse = loadFile("/json/nps/response/iabds.json")
+  lazy val npsGetTaxAccountJson = loadFile("/json/nps/response/GetTaxAccount.json")
+  lazy val npsGetTaxAccount = npsGetTaxAccountJson.as[NpsTaxAccount]
+  lazy val iabdsResponseJson = loadFile("/json/nps/response/iabds.json")
+  lazy val iabdsResponse = iabdsResponseJson.as[List[Iabd]]
 
   lazy val employmentsJsonResponse = loadFile("/json/nps/response/employments.json")
   lazy val employmentsApiJsonResponse = loadFile("/json/model/api/employments.json")
@@ -181,84 +197,71 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
   "Employment Service" should {
     "successfully get Nps Employments Data" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
+        .thenReturn(Future.successful(npsEmploymentResponse))
 
-      val eitherResponse = await(testEmploymentHistoryService.getNpsEmployments(testNino, TaxYear(2016)))
-      assert(eitherResponse.isRight)
+      noException shouldBe thrownBy(await(testEmploymentHistoryService.getNpsEmployments(testNino, TaxYear(2016))))
     }
 
-    "handle any non success status response from get Nps Employments" in {
+    "return any non success status response from get Nps Employments api" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(npsEmploymentResponse))))
+        .thenReturn(Future.failed(TaxHistoryException.badRequest))
 
-      val eitherResponse = await(testEmploymentHistoryService.getNpsEmployments(testNino, TaxYear(2016)))
-      assert(eitherResponse.isLeft)
+      intercept[Exception](await(testEmploymentHistoryService.getNpsEmployments(testNino, TaxYear(2016)))) must matchPattern {
+        case TaxHistoryException(BadRequest, _) =>
+      }
     }
 
     "successfully get Rti Employments Data" in {
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
+        .thenReturn(Future.successful(rtiEmploymentResponse))
 
-      val eitherResponse = await(testEmploymentHistoryService.getRtiEmployments(testNino, TaxYear(2016)))
-      assert(eitherResponse.isRight)
-    }
-
-    "handle any non success status response from get Rti Employments" in {
-      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(rtiEmploymentResponse))))
-
-      val eitherResponse = await(testEmploymentHistoryService.getRtiEmployments(testNino, TaxYear(2016)))
-      assert(eitherResponse.isLeft)
-    }
-        
-    "return any non success status response from get Nps Employments api" in {
-      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(npsEmploymentResponse))))
-      val response =  await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
-      response.status mustBe BAD_REQUEST
+      val result = await(testEmploymentHistoryService.getRtiEmployments(testNino, TaxYear(2016)))
+      result mustBe rtiEmploymentResponse
     }
 
     "return not found status response from get Nps Employments api" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(JsArray(Seq.empty)))))
-      val response =  await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
-      response.status mustBe NOT_FOUND
+        .thenReturn(Future.successful(Nil))
+      intercept[Exception](await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))) must matchPattern {
+        case TaxHistoryException(NotFound(_, _), _) =>
+      }
     }
 
     "return success status despite failing response from get Rti Employments api when there are nps employments" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
+        .thenReturn(Future.successful(npsEmploymentResponse))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(rtiEmploymentResponse))))
+        .thenReturn(Future.failed(TaxHistoryException.badRequest))
       when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(iabdsJsonResponse))))
+        .thenReturn(Future.failed(TaxHistoryException.badRequest))
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST)))
-      val response =  await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
-      response.status mustBe OK
+        .thenReturn(Future.failed(TaxHistoryException.badRequest))
+
+      noException shouldBe thrownBy {
+        await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
+      }
     }
 
     "return success response from get Employments" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentResponse))))
+        .thenReturn(Future.successful(npsEmploymentResponse))
       when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
+        .thenReturn(Future.successful(iabdsResponse))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
+        .thenReturn(Future.successful(rtiEmploymentResponse))
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST)))
-      val response =  await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
-      response mustBe a[HttpResponse]
-      response.status mustBe OK
-      val payAsYouEarn = response.json.as[PayAsYouEarn]
-      val employments = payAsYouEarn.employments
+        .thenReturn(Future.failed(TaxHistoryException.badRequest))
+
+      val paye = await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
+
+      val employments = paye.employments
       employments.size mustBe 1
       employments.head.employerName mustBe "Aldi"
       employments.head.payeReference mustBe "531/J4816"
       employments.head.startDate mustBe startDate
       employments.head.endDate mustBe None
 
-      val payAndTax = payAsYouEarn.payAndTax.map(pMap => pMap(employments.head.employmentId.toString)).get
+      val payAndTax = paye.payAndTax.map(pMap => pMap(employments.head.employmentId.toString)).get
       payAndTax.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       payAndTax.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       payAndTax.earlierYearUpdates.size mustBe 1
@@ -268,7 +271,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       eyu.taxablePayEYU mustBe BigDecimal(-600.99)
       eyu.taxEYU mustBe BigDecimal(-10.99)
 
-      val benefits = payAsYouEarn.benefits.map(bMap => bMap.get(employments.head.employmentId.toString)).flatten
+      val benefits = paye.benefits.map(bMap => bMap.get(employments.head.employmentId.toString)).flatten
       benefits.get.size mustBe 2
       benefits.get.head.iabdType mustBe "CarFuelBenefit"
       benefits.get.head.amount mustBe BigDecimal(100)
@@ -280,15 +283,12 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     "successfully merge rti and nps employment1 data into employment1 list" in {
 
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(npsGetTaxAccount))))
+        .thenReturn(Future.successful(npsGetTaxAccount))
 
-      val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
+      val npsEmployments = npsEmploymentResponseJson.as[List[NpsEmployment]]
 
-      val response = await(testEmploymentHistoryService.mergeAndRetrieveEmployments(testNino, TaxYear.current.previous)(npsEmployments))
-      response mustBe a[HttpResponse]
+      val payAsYouEarn = await(testEmploymentHistoryService.mergeAndRetrieveEmployments(testNino, TaxYear.current.previous)(npsEmployments))
 
-      response.status mustBe OK
-      val payAsYouEarn = response.json.as[PayAsYouEarn]
       val employment = payAsYouEarn.employments.head
       val payAndTax = payAsYouEarn.payAndTax.map(pMap => pMap.get(employment.employmentId.toString)).flatten
       val benefits = payAsYouEarn.benefits.map(bMap => bMap.get(employment.employmentId.toString)).flatten
@@ -317,88 +317,89 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     "successfully exclude nps employment1 data" when {
       "nps receivingJobseekersAllowance is true from list of employments" in {
         when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-          .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithJobSeekerAllowance))))
+          .thenReturn(Future.successful(npsEmploymentWithJobSeekerAllowance))
         when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-          .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
+          .thenReturn(Future.successful(iabdsResponse))
         when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-          .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
-        val response = await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
-        response.status mustBe OK
-        val payAsYouEarn = response.json.as[PayAsYouEarn]
+          .thenReturn(Future.successful(rtiEmploymentResponse))
+        val payAsYouEarn = await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
+
         val employments = payAsYouEarn.employments
         employments.size mustBe 1
       }
 
       "nps receivingJobseekersAllowance and otherIncomeSourceIndicator is true from list of employments" in {
         when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-          .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithOtherIncomeSourceIndicator))))
+          .thenReturn(Future.successful(npsEmploymentWithOtherIncomeSourceIndicator))
         when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-          .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
+          .thenReturn(Future.successful(iabdsResponse))
         when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-          .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
-        val response = await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
-        response.status mustBe NOT_FOUND
+          .thenReturn(Future.successful(rtiEmploymentResponse))
+
+        intercept[Exception](await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))) must matchPattern {
+          case TaxHistoryException(NotFound(_, _), _) =>
+        }
       }
     }
 
     "throw not found error" when {
       "nps employments contain single element with receivingJobseekersAllowance attribute is true" in {
         when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-          .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithJustJobSeekerAllowance))))
+          .thenReturn(Future.successful(npsEmploymentWithJustJobSeekerAllowance))
         when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-          .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
+          .thenReturn(Future.successful(iabdsResponse))
         when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-          .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
-        val response = await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
-        response.status mustBe NOT_FOUND
+          .thenReturn(Future.successful(rtiEmploymentResponse))
+
+        intercept[Exception](await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))) must matchPattern {
+          case TaxHistoryException(NotFound(_, _), _) =>
+        }
       }
 
       "nps employments contain single element with npsEmploymentWithJustOtherIncomeSourceIndicator attribute is true" in {
         when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-          .thenReturn(Future.successful(HttpResponse(OK, Some(npsEmploymentWithJustOtherIncomeSourceIndicator))))
+          .thenReturn(Future.successful(npsEmploymentWithJustOtherIncomeSourceIndicator))
         when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-          .thenReturn(Future.successful(HttpResponse(OK, Some(iabdsJsonResponse))))
+          .thenReturn(Future.successful(iabdsResponse))
         when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-          .thenReturn(Future.successful(HttpResponse(OK, Some(rtiEmploymentResponse))))
-        val response = await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
-        response.status mustBe NOT_FOUND
+          .thenReturn(Future.successful(rtiEmploymentResponse))
+
+        intercept[Exception](await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))) must matchPattern {
+          case TaxHistoryException(NotFound(_, _), _) =>
+        }
       }
     }
 
     "return any non success status response from get Nps Iabds api" in {
       when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(failureResponseJson))))
-      val response =  await(testEmploymentHistoryService.getNpsIabds(testNino,TaxYear(2016)))
-      response.left.get.status mustBe BAD_REQUEST
+        .thenReturn(Future.failed(TaxHistoryException.badRequest))
 
-    }
-
-    "return not found status response from get Nps Iabds api" in {
-      when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(JsArray(Seq.empty)))))
-      val response =  await(testEmploymentHistoryService.getNpsIabds(testNino,TaxYear(2016)))
-      response.left.get.status mustBe NOT_FOUND
-
+      intercept[Exception](await(testEmploymentHistoryService.getNpsIabds(testNino,TaxYear(2016)))) must matchPattern {
+        case TaxHistoryException(BadRequest, _) =>
+      }
     }
 
     "return none where tax year is not cy-1" in {
       val response = await(testEmploymentHistoryService.getNpsTaxAccount(testNino, TaxYear(2015)))
-      response.right.get mustBe None
+      response mustBe None
     }
 
     "return any non success status response from get Nps Tax Account api" in {
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(failureResponseJson))))
-      val response =  await(testEmploymentHistoryService.getNpsTaxAccount(testNino,TaxYear(2016)))
-      response.left.get.status mustBe BAD_REQUEST
+        .thenReturn(Future.failed(TaxHistoryException.badRequest))
 
+      intercept[Exception](await(testEmploymentHistoryService.getNpsTaxAccount(testNino,TaxYear(2016)))) must matchPattern {
+        case TaxHistoryException(BadRequest, _) =>
+      }
     }
 
     "return not found status response from get Nps Tax Account api" in {
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(JsArray(Seq.empty)))))
-      val response =  await(testEmploymentHistoryService.getNpsTaxAccount(testNino,TaxYear(2016)))
-      response.left.get.status mustBe NOT_FOUND
+        .thenReturn(Future.failed(TaxHistoryException.notFound(classOf[NpsTaxAccount], "")))
+
+      intercept[Exception](await(testEmploymentHistoryService.getNpsTaxAccount(testNino,TaxYear(2016)))) must matchPattern {
+        case TaxHistoryException(NotFound(_, _), _) =>
+      }
     }
 
 
@@ -450,9 +451,9 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     }
 
     "fetch Employments successfully from cache" in {
-      lazy val payeJson = loadFile("/json/model/api/paye.json")
+      lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
 
-      val employmentsJson = Json.parse(
+      val testEmployments = Json.parse(
         """ [
           | {
           |      "employmentId": "01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
@@ -477,32 +478,31 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
           |      "receivingOccupationalPension": false,
           |      "employmentStatus":1
           |    }
-          |] """.stripMargin)
+          |] """.stripMargin).as[List[Employment]]
 
       when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
-              .thenReturn(Future.successful(Some(payeJson)))
+              .thenReturn(Future.successful(paye))
 
-      val result = await(testEmploymentHistoryService.getEmployments("AA000000A", 2014))
-      result.json must be (employmentsJson)
+      val employments = await(testEmploymentHistoryService.getEmployments(Nino("AA000000A"), TaxYear(2014)))
+      employments must be (testEmployments)
     }
 
     "return not found when no employment was returned from cache" in {
-      lazy val payeJson = Json.parse(
-        """ [
-          |] """.stripMargin)
+      val paye = PayAsYouEarn(employments = Nil)
 
       when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
-        .thenReturn(Future.successful(Some(payeJson)))
+        .thenReturn(Future.successful(paye))
 
-      val result = await(testEmploymentHistoryService.getEmployments("AA000000A", 2014))
-      result.status must be (NOT_FOUND)
+      intercept[Exception](await(testEmploymentHistoryService.getEmployments(Nino("AA000000A"), TaxYear(2014)))) must matchPattern {
+        case TaxHistoryException(NotFound(_, _), _) =>
+      }
     }
 
 
     "get Employment successfully" in {
-      lazy val payeJson = loadFile("/json/model/api/paye.json")
+      val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
 
-      val employmentJson = Json.parse(
+      val testEmployment = Json.parse(
         """| {
            |      "employmentId": "01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
            |      "startDate": "2016-01-21",
@@ -515,65 +515,56 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
            |      "receivingOccupationalPension": false,
            |      "employmentStatus":1
            |    }
-           """.stripMargin)
+           """.stripMargin).as[Employment]
 
       when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
-        .thenReturn(Future.successful(Some(payeJson)))
+        .thenReturn(Future.successful(paye))
 
-      val result = await(testEmploymentHistoryService.getEmployment("AA000000A", 2014,"01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
-      result.json must be (employmentJson)
-      result.status must be (OK)
+      val employment = await(testEmploymentHistoryService.getEmployment(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
+      employment must be (testEmployment)
     }
 
 
     "get Employment return none" in {
-      lazy val payeJson = loadFile("/json/model/api/paye.json")
-
-      val employmentJson = Json.parse(
-        """| {
-           |      "employmentId": "01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
-           |      "startDate": "2016-01-21",
-           |      "endDate": "2017-01-01",
-           |      "payeReference": "paye-1",
-           |      "employerName": "employer-1"
-           |    }
-        """.stripMargin)
+      lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
 
       when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
-        .thenReturn(Future.successful(Some(payeJson)))
+        .thenReturn(Future.successful(paye))
 
-      val result = await(testEmploymentHistoryService.getEmployment("AA000000A", 2014,"01318d7c-bcd9-47e2-8c38-551e7ccdfae6"))
-      result.status mustBe (NOT_FOUND)
-
+      intercept[Exception](await(testEmploymentHistoryService.getEmployment(Nino("AA000000A"), TaxYear(2014),"01318d7c-bcd9-47e2-8c38-551e7ccdfae6"))) must matchPattern {
+        case TaxHistoryException(NotFound(_, _), _) =>
+      }
     }
 
     "get company benefits from cache successfully" in {
-      lazy val payeJson = loadFile("/json/model/api/paye.json")
+      val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
 
-      val companyBenefitsJson = Json.parse(
+      val testCompanyBenefits = Json.parse(
         """| [{
            |      "companyBenefitId": "c9923a63-4208-4e03-926d-7c7c88adc7ee",
            |      "iabdType": "companyBenefitType",
            |      "amount": 12
            |    }]
-        """.stripMargin)
+        """.stripMargin).as[List[CompanyBenefit]]
 
       when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
-        .thenReturn(Future.successful(Some(payeJson)))
+        .thenReturn(Future.successful(paye))
 
-      val result = await(testEmploymentHistoryService.getCompanyBenefits("AA000000A", 2014, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
-      result.json must be (companyBenefitsJson)
-      result.status must be (OK)
+      val companyBenefits = await(testEmploymentHistoryService.getCompanyBenefits(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
+
+      companyBenefits must be (testCompanyBenefits)
     }
 
     "return not found when no company benefits returned from cache" in {
-      lazy val payeJson = loadFile("/json/model/api/payeNoCompanyBenefits.json")
+      lazy val payeNoBenefits = loadFile("/json/model/api/payeNoCompanyBenefits.json").as[PayAsYouEarn]
 
       when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
-        .thenReturn(Future.successful(Some(payeJson)))
+        .thenReturn(Future.successful(payeNoBenefits))
 
-      val result = await(testEmploymentHistoryService.getCompanyBenefits("AA000000A", 2014, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
-      result.status must be (NOT_FOUND)
+      intercept[Exception](await(testEmploymentHistoryService.getCompanyBenefits(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))) must matchPattern {
+        case TaxHistoryException(NotFound(_, _), _) =>
+      }
+
     }
   }
 }

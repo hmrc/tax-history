@@ -26,7 +26,9 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.taxhistory.TaxHistoryException
+import uk.gov.hmrc.taxhistory.model.api.Allowance
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 
@@ -36,10 +38,13 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
 
   private val mockEmploymentHistoryService = mock[EmploymentHistoryService]
   private val mockPlayAuthConnector = mock[PlayAuthConnector]
-  private val nino =randomNino.toString()
-  private lazy val successResponseJson = Json.parse( """{"test":"OK"}""")
-  private val failureResponseJson = Json.parse( """{"reason":"Resource not found"}""")
-  private val errorResponseJson = Json.parse( """{"reason":"Some error."}""")
+  private val nino = randomNino()
+  
+  val testAllowances = List(Allowance(iabdType = "CarBenefit", amount = BigDecimal(100.00)))
+  val testAllowancesJson = Json.toJson(testAllowances)
+
+  val failureResponseJson = Json.parse( """{"reason":"Resource not found"}""")
+  val errorResponseJson = Json.parse( """{"reason":"Some error."}""")
 
   val newEnrolments = Set(
     Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), state = "", delegatedAuthRule = None)
@@ -64,8 +69,9 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
-      val result = testAllowanceController.getAllowances(nino, 2016).apply(FakeRequest())
+        .thenReturn(Future.successful(testAllowances))
+
+      val result = testAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
       status(result) must be(OK)
     }
 
@@ -74,8 +80,8 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(failureResponseJson))))
-      val result = testAllowanceController.getAllowances(nino, 2016).apply(FakeRequest())
+        .thenReturn(Future.failed(TaxHistoryException.notFound(classOf[Allowance], "")))
+      val result = testAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
       status(result) must be(NOT_FOUND)
     }
 
@@ -84,8 +90,8 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(errorResponseJson))))
-      val result = testAllowanceController.getAllowances(nino, 2016).apply(FakeRequest())
+        .thenReturn(Future.failed(TaxHistoryException.badRequest))
+      val result = testAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
       status(result) must be(BAD_REQUEST)
     }
 
@@ -94,8 +100,8 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future. successful(HttpResponse(SERVICE_UNAVAILABLE, Some(errorResponseJson))))
-      val result = testAllowanceController.getAllowances(nino, 2016).apply(FakeRequest())
+        .thenReturn(Future.failed(TaxHistoryException.serviceUnavailable))
+      val result = testAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
       status(result) must be(SERVICE_UNAVAILABLE)
     }
 
@@ -104,8 +110,8 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
       (Matchers.any(),Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(errorResponseJson))))
-      val result = testAllowanceController.getAllowances(nino, 2016).apply(FakeRequest())
+        .thenReturn(Future.failed(TaxHistoryException.internalServerError))
+      val result = testAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
       status(result) must be(INTERNAL_SERVER_ERROR)
     }
 
@@ -115,8 +121,8 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(UnAuthorisedAgentEnrolments))))
 
       when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
-      val result = testAllowanceController.getAllowances(nino, 2016).apply(FakeRequest())
+        .thenReturn(Future.successful(testAllowances))
+      val result = testAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
 
@@ -126,8 +132,8 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](None, Enrolments(UnAuthorisedAgentEnrolments))))
 
       when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
-      val result = testAllowanceController.getAllowances(nino, 2016).apply(FakeRequest())
+        .thenReturn(Future.successful(testAllowances))
+      val result = testAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
   }

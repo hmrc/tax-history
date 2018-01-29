@@ -28,15 +28,24 @@ import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
+import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.{BadRequest, GenericHttpError, ServiceUnavailable, TaxHistoryException}
 
 import scala.concurrent.Future
 
 
 class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
-  lazy val employmentsSuccessfulResponse = loadFile("/json/nps/response/employments.json")
-  lazy val iabdsSuccessfulResponse = loadFile("/json/nps/response/iabds.json")
+  lazy val employmentsSuccessfulResponseJson = loadFile("/json/nps/response/employments.json")
+  lazy val employmentsSuccessfulResponse = employmentsSuccessfulResponseJson.as[List[NpsEmployment]]
+
+  lazy val iabdsSuccessfulResponseJson = loadFile("/json/nps/response/iabds.json")
+  lazy val iabdsSuccessfulResponse = iabdsSuccessfulResponseJson.as[List[Iabd]]
+
+  lazy val taxAccountResponseJson = loadFile("/json/nps/response/GetTaxAccount.json")
+  lazy val taxAccountResponse = taxAccountResponseJson.as[NpsTaxAccount]
+
 
   val mockServicesConfig = mock[ServicesConfig]
   when(mockServicesConfig.baseUrl(any[String])).thenReturn("/test")
@@ -61,20 +70,18 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       "given a valid Nino and TaxYear" in {
         implicit val hc = HeaderCarrier()
         val testemploymentsConnector = testNpsConnector
-        val fakeResponse: HttpResponse = HttpResponse(OK, Some(employmentsSuccessfulResponse))
+        val fakeResponse: HttpResponse = HttpResponse(OK, Some(employmentsSuccessfulResponseJson))
 
         when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any())).thenReturn(Future.successful(fakeResponse))
 
         val result = testemploymentsConnector.getEmployments(testNino, testYear)
-        val rtiDataResponse = await(result)
 
-        rtiDataResponse.status mustBe OK
-        rtiDataResponse.json mustBe employmentsSuccessfulResponse
+        await(result) mustBe employmentsSuccessfulResponse
       }
 
-      "return and handle a bad request response " in {
+      "return and handle an error response" in {
         val expectedResponse = Json.parse( """{"reason": "Some thing went wrong"}""")
         implicit val hc = HeaderCarrier()
         val testemploymentsConnector = testNpsConnector
@@ -84,51 +91,10 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
           .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(expectedResponse))))
 
         val result = testemploymentsConnector.getEmployments(testNino, testYear)
-        val response = await(result)
-        response.status must be(BAD_REQUEST)
-        response.json must be(expectedResponse)
-      }
-      "return and handle a not found response " in {
-        val expectedResponse = Json.parse( """{"reason": "Resource not found"}""")
-        implicit val hc = HeaderCarrier()
-        val testemploymentsConnector = testNpsConnector
-        when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(expectedResponse))))
-
-        val result = testemploymentsConnector.getEmployments(testNino, testYear)
-        val response = await(result)
-        response.status mustBe NOT_FOUND
-        response.json mustBe expectedResponse
-      }
-      "return and handle an internal server error response " in {
-        val expectedResponse = Json.parse( """{"reason": "Internal Server Error"}""")
-        implicit val hc = HeaderCarrier()
-        val testemploymentsConnector = testNpsConnector
-        when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
-
-        when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(expectedResponse))))
-
-        val result = testemploymentsConnector.getEmployments(testNino, testYear)
-        val response = await(result)
-        response.status mustBe INTERNAL_SERVER_ERROR
-        response.json mustBe expectedResponse
-      }
-      "return and handle an service unavailable error response " in {
-        val expectedResponse = Json.parse( """{"reason": "Service Unavailable Error"}""")
-        implicit val hc = HeaderCarrier()
-        val testemploymentsConnector = testNpsConnector
-        when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
-
-        when(testemploymentsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(SERVICE_UNAVAILABLE, Some(expectedResponse))))
-
-        val result = testemploymentsConnector.getEmployments(testNino, testYear)
-        val response = await(result)
-        response.status mustBe SERVICE_UNAVAILABLE
-        response.json mustBe expectedResponse
+        intercept[Exception] (await(result)) must matchPattern {
+          case TaxHistoryException(BadRequest, _) =>
+        }
       }
     }
 
@@ -138,61 +104,17 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       "given a valid Nino and TaxYear" in {
         implicit val hc = HeaderCarrier()
         val testIabdsConnector = testNpsConnector
-        val fakeResponse: HttpResponse = HttpResponse(OK, Some(iabdsSuccessfulResponse))
+        val fakeResponse: HttpResponse = HttpResponse(OK, Some(iabdsSuccessfulResponseJson))
 
         when(testIabdsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testIabdsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any())).thenReturn(Future.successful(fakeResponse))
 
         val result = testIabdsConnector.getIabds(testNino, testYear)
-        val rtiDataResponse = await(result)
 
-        rtiDataResponse.status mustBe OK
-        rtiDataResponse.json mustBe iabdsSuccessfulResponse
+        await(result) mustBe iabdsSuccessfulResponse
       }
 
-      "return and handle a bad request response " in {
-        val expectedResponse = Json.parse( """{"reason": "Some thing went wrong"}""")
-        implicit val hc = HeaderCarrier()
-        val testIabdsConnector = testNpsConnector
-        when(testIabdsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
-
-        when(testIabdsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(expectedResponse))))
-
-        val result = testIabdsConnector.getIabds(testNino, testYear)
-        val response = await(result)
-        response.status must be(BAD_REQUEST)
-        response.json must be(expectedResponse)
-      }
-      "return and handle a not found response " in {
-        val expectedResponse = Json.parse( """{"reason": "Resource not found"}""")
-        implicit val hc = HeaderCarrier()
-        val testIabdsConnector = testNpsConnector
-        when(testIabdsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
-
-        when(testIabdsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(expectedResponse))))
-
-        val result = testIabdsConnector.getIabds(testNino, testYear)
-        val response = await(result)
-        response.status mustBe NOT_FOUND
-        response.json mustBe expectedResponse
-      }
-      "return and handle an internal server error response " in {
-        val expectedResponse = Json.parse( """{"reason": "Internal Server Error"}""")
-        implicit val hc = HeaderCarrier()
-        val testIabdsConnector = testNpsConnector
-        when(testIabdsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
-
-        when(testIabdsConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(expectedResponse))))
-
-        val result = testIabdsConnector.getIabds(testNino, testYear)
-        val response = await(result)
-        response.status mustBe INTERNAL_SERVER_ERROR
-        response.json mustBe expectedResponse
-      }
       "return and handle an service unavailable error response " in {
         val expectedResponse = Json.parse( """{"reason": "Service Unavailable Error"}""")
         implicit val hc = HeaderCarrier()
@@ -203,9 +125,10 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
           .thenReturn(Future.successful(HttpResponse(SERVICE_UNAVAILABLE, Some(expectedResponse))))
 
         val result = testIabdsConnector.getIabds(testNino, testYear)
-        val response = await(result)
-        response.status mustBe SERVICE_UNAVAILABLE
-        response.json mustBe expectedResponse
+
+        intercept[Exception](await(result)) must matchPattern {
+          case TaxHistoryException(ServiceUnavailable, _) =>
+        }
       }
     }
 
@@ -213,74 +136,31 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       "given a valid Nino and TaxYear" in {
         implicit val hc = HeaderCarrier()
         val testTaxAccountConnector = testNpsConnector
-        val fakeResponse: HttpResponse = HttpResponse(OK, Some(iabdsSuccessfulResponse))
+        val fakeResponse: HttpResponse = HttpResponse(OK, Some(taxAccountResponseJson))
 
         when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testTaxAccountConnector.httpGet.GET[HttpResponse](any())(any(), any(), any())).thenReturn(Future.successful(fakeResponse))
 
         val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
-        val rtiDataResponse = await(result)
 
-        rtiDataResponse.status mustBe OK
-        rtiDataResponse.json mustBe iabdsSuccessfulResponse
+        await(result) mustBe taxAccountResponse
       }
 
-      "return and handle a bad request response " in {
+      "return and handle an error response" in {
         val expectedResponse = Json.parse( """{"reason": "Some thing went wrong"}""")
         implicit val hc = HeaderCarrier()
         val testTaxAccountConnector = testNpsConnector
         when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testTaxAccountConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(expectedResponse))))
+          .thenReturn(Future.failed(TaxHistoryException.badRequest))
 
         val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
-        val response = await(result)
-        response.status must be(BAD_REQUEST)
-        response.json must be(expectedResponse)
-      }
-      "return and handle a not found response " in {
-        val expectedResponse = Json.parse( """{"reason": "Resource not found"}""")
-        implicit val hc = HeaderCarrier()
-        val testTaxAccountConnector = testNpsConnector
-        when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testTaxAccountConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(expectedResponse))))
-
-        val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
-        val response = await(result)
-        response.status mustBe NOT_FOUND
-        response.json mustBe expectedResponse
-      }
-      "return and handle an internal server error response " in {
-        val expectedResponse = Json.parse( """{"reason": "Internal Server Error"}""")
-        implicit val hc = HeaderCarrier()
-        val testTaxAccountConnector = testNpsConnector
-        when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
-
-        when(testTaxAccountConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(expectedResponse))))
-
-        val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
-        val response = await(result)
-        response.status mustBe INTERNAL_SERVER_ERROR
-        response.json mustBe expectedResponse
-      }
-      "return and handle an service unavailable error response " in {
-        val expectedResponse = Json.parse( """{"reason": "Service Unavailable Error"}""")
-        implicit val hc = HeaderCarrier()
-        val testTaxAccountConnector = testNpsConnector
-        when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
-
-        when(testTaxAccountConnector.httpGet.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.successful(HttpResponse(SERVICE_UNAVAILABLE, Some(expectedResponse))))
-
-        val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
-        val response = await(result)
-        response.status mustBe SERVICE_UNAVAILABLE
-        response.json mustBe expectedResponse
+        intercept[Exception](await(result)) must matchPattern {
+          case TaxHistoryException(BadRequest, _) =>
+        }
       }
     }
 

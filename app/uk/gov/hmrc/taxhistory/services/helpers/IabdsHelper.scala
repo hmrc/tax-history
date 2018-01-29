@@ -20,31 +20,18 @@ import uk.gov.hmrc.taxhistory.model.api.{Allowance, CompanyBenefit}
 import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
-class IabdsHelper(val iabds:List[Iabd]) extends TaxHistoryHelper with TaxHistoryLogger{
+class IabdsHelper(val iabds: List[Iabd]) extends TaxHistoryHelper with TaxHistoryLogger{
 
+  def getRawCompanyBenefits(): List[Iabd] = iabds.filter(_.`type`.isInstanceOf[CompanyBenefits])
 
-
-  def getRawCompanyBenefits(): List[Iabd] = {
-    iabds.filter {
-      iabd => {
-        iabd.`type`.isInstanceOf[CompanyBenefits]
-      }
-    }
-  }
-
-  def getMatchedCompanyBenefits(npsEmployment: NpsEmployment):List[Iabd] = {
-    getRawCompanyBenefits().filter {
-      (iabd) => {
-        iabd.employmentSequenceNumber.contains(npsEmployment.sequenceNumber)
-      }
-    }
-  }
+  def getMatchedCompanyBenefits(npsEmployment: NpsEmployment):List[Iabd] =
+    getRawCompanyBenefits().filter(_.employmentSequenceNumber.contains(npsEmployment.sequenceNumber))
 
 
   def getCompanyBenefits():List[CompanyBenefit] = {
     if (isTotalBenefitInKind()) {
       convertToCompanyBenefits(this.iabds)
-    }else{
+    } else {
       convertToCompanyBenefits(iabds.filter {
         iabd => {
           !iabd.`type`.isInstanceOf[TotalBenefitInKind.type]
@@ -55,41 +42,25 @@ class IabdsHelper(val iabds:List[Iabd]) extends TaxHistoryHelper with TaxHistory
   }
 
   private def convertToCompanyBenefits(iabds:List[Iabd]):List[CompanyBenefit]= {
-    iabds.map {
-      iabd =>
-        CompanyBenefit(
-          amount = iabd.grossAmount.fold {
-            logger.warn("Iabds grossAmount is blank")
-            BigDecimal(0)
-          }(x => x),
-          iabdType = iabd.`type`.toString,
-          source = iabd.source
-        )
+    iabds.map { iabd =>
+      CompanyBenefit(
+        amount = iabd.grossAmount.fold {
+          logger.warn("Iabds grossAmount is blank")
+          BigDecimal(0)
+        }(x => x),
+        iabdType = iabd.`type`.toString,
+        source = iabd.source
+      )
     }
   }
 
-  def isTotalBenefitInKind():Boolean = {
-    iabds.exists {
-      iabd => {
-        iabd.`type`.isInstanceOf[TotalBenefitInKind.type]
-      }
-    } &&
-      iabds.count {
-        iabd => {
-          iabd.`type`.isInstanceOf[uk.gov.hmrc.taxhistory.model.nps.BenefitInKind]
-        }
-      } == 1
+  def isTotalBenefitInKind(): Boolean = {
+    iabds.exists(_.`type`.isInstanceOf[TotalBenefitInKind.type]) &&
+      iabds.count(_.`type`.isInstanceOf[uk.gov.hmrc.taxhistory.model.nps.BenefitInKind]) == 1
   }
 
 
-  def getRawAllowances():List[Iabd] = {
-
-    iabds.filter {
-      iabd => {
-        iabd.`type`.isInstanceOf[Allowances]
-      }
-    }
-  }
+  def getRawAllowances():List[Iabd] = iabds.filter(_.`type`.isInstanceOf[Allowances])
 
 
   def getAllowances():List[Allowance] = {

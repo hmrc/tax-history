@@ -19,9 +19,9 @@ package uk.gov.hmrc.taxhistory.services.helpers
 
 import scala.util.{Failure, Success, Try}
 
-trait TaxHistoryHelper  {
+trait TaxHistoryHelper {
 
-  def formatString(a: String):String = {
+  def formatString(a: String): String = {
     Try(a.toInt) match {
       case Success(x) => x.toString
       case Failure(y) => a

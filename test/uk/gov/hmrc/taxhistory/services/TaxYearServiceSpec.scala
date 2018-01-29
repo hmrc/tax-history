@@ -20,7 +20,6 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxhistory.model.api.IndividualTaxYear
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
@@ -29,15 +28,14 @@ import uk.gov.hmrc.time.TaxYear
 class TaxYearServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   implicit val hc = HeaderCarrier()
-  val testNino = randomNino().toString()
+  val testNino = randomNino()
 
-  val testEmploymentHistoryService = TestEmploymentHistoryService.createNew
+  val testEmploymentHistoryService = TestEmploymentHistoryService.createNew()
 
   "get Individual Tax Years " should {
     "successfully return list of four tax years" in {
-      val response = await(testEmploymentHistoryService.getTaxYears(testNino))
-      response.status mustBe OK
-      val taxYears = response.json.as[List[IndividualTaxYear]]
+      val taxYears = await(testEmploymentHistoryService.getTaxYears(testNino))
+
       taxYears.size mustBe 4
 
       val cyMinus1 = TaxYear.current.previous

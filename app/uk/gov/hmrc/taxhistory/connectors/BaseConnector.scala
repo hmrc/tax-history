@@ -19,6 +19,7 @@ package uk.gov.hmrc.taxhistory.connectors
 import play.api.http.Status
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.play.config.{AppName, ServicesConfig}
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.taxhistory.auditable.Auditable
@@ -54,38 +55,4 @@ trait BaseConnector extends AnyRef with TaxHistoryLogger {
     nino.value.take(BASIC_NINO_LENGTH)
   }
 
-  def getFromRTI(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    val timerContext = metrics.startTimer(MetricsEnum.RTI_GET_EMPLOYMENTS)
-
-    val futureResponse = httpGet.GET[HttpResponse](url)
-    futureResponse.flatMap {
-      timerContext.stop()
-      res =>
-        res.status match {
-          case Status.OK =>
-            metrics.incrementSuccessCounter(MetricsEnum.RTI_GET_EMPLOYMENTS)
-            Future.successful(res)
-          case Status.BAD_REQUEST =>
-            metrics.incrementFailedCounter(MetricsEnum.RTI_GET_EMPLOYMENTS)
-            val errorMessage = s"RTIAPI - Bad Request error returned from RTI HODS"
-            logger.warn(errorMessage)
-            Future.successful(res)
-          case Status.NOT_FOUND =>
-            metrics.incrementFailedCounter(MetricsEnum.RTI_GET_EMPLOYMENTS)
-            val errorMessage = s"RTIAPI - No DATA Found error returned from RTI HODS"
-            logger.warn(errorMessage)
-            Future.successful(res)
-          case Status.INTERNAL_SERVER_ERROR =>
-            metrics.incrementFailedCounter(MetricsEnum.RTI_GET_EMPLOYMENTS)
-            val errorMessage = s"RTIAPI - Internal Server error returned from RTI HODS"
-            logger.warn(errorMessage)
-            Future.successful(res)
-          case status =>
-            metrics.incrementFailedCounter(MetricsEnum.RTI_GET_EMPLOYMENTS)
-            val errorMessage = s"RTIAPI - An error returned from RTI HODS with status $status"
-            logger.warn(errorMessage)
-            Future.successful(res)
-        }
-    }
-  }
 }

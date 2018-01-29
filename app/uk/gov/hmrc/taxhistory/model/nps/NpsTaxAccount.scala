@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxhistory.model.nps
 
 
 import play.api.libs.json._
+import uk.gov.hmrc.taxhistory.model.api.TaxAccount
 
 
 
@@ -56,7 +57,12 @@ case class NpsTaxAccount(incomeSources: List[IncomeSource]){
     incomeSources.find(_.employmentType==PrimaryEmployment).flatMap(_.actualPUPCodedInCYPlusOneTaxYear)
   }
 
-
+  def toTaxAccount: TaxAccount =
+    TaxAccount(
+      outstandingDebtRestriction = getOutStandingDebt,
+      underpaymentAmount = getUnderPayment,
+      actualPUPCodedInCYPlusOneTaxYear = getActualPupCodedInCYPlusOne
+    )
 }
 
 object NpsTaxAccount {

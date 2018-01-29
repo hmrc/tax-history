@@ -28,7 +28,9 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.taxhistory.TaxHistoryException
+import uk.gov.hmrc.taxhistory.model.api.PayAndTax
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 
@@ -36,14 +38,17 @@ import scala.concurrent.Future
 
 class PayAndTaxControllerSpec extends PlaySpec with OneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
 
-  private val mockEmploymentHistoryService = mock[EmploymentHistoryService]
-  private val mockPlayAuthConnector = mock[PlayAuthConnector]
-  private val nino =randomNino.toString()
-  private val taxYear=2016
-  private val employmentId=UUID.randomUUID().toString
-  private lazy val successResponseJson = Json.parse( """{"test":"OK"}""")
-  private val failureResponseJson = Json.parse( """{"reason":"Resource not found"}""")
-  private val errorResponseJson = Json.parse( """{"reason":"Some error."}""")
+  val mockEmploymentHistoryService = mock[EmploymentHistoryService]
+  val mockPlayAuthConnector = mock[PlayAuthConnector]
+  val nino = randomNino()
+  val taxYear = 2016
+  val employmentId=UUID.randomUUID().toString
+
+  val testPayAndTax = PayAndTax(earlierYearUpdates = Nil)
+
+  lazy val successResponseJson = Json.parse( """{"test":"OK"}""")
+  val failureResponseJson = Json.parse( """{"reason":"Resource not found"}""")
+  val errorResponseJson = Json.parse( """{"reason":"Some error."}""")
 
   val newEnrolments = Set(
     Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), state="",delegatedAuthRule = None)
@@ -67,8 +72,8 @@ class PayAndTaxControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getPayAndTax(Matchers.any(),Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
-      val result = testPayAndTaxController.getPayAndTax(nino, taxYear, employmentId).apply(FakeRequest())
+        .thenReturn(Future.successful(testPayAndTax))
+      val result = testPayAndTaxController.getPayAndTax(nino.nino, taxYear, employmentId).apply(FakeRequest())
       status(result) must be(OK)
     }
 
@@ -77,8 +82,8 @@ class PayAndTaxControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getPayAndTax(Matchers.any(),Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(NOT_FOUND, Some(failureResponseJson))))
-      val result = testPayAndTaxController.getPayAndTax(nino, taxYear, employmentId).apply(FakeRequest())
+        .thenReturn(Future.failed(TaxHistoryException.notFound(classOf[PayAndTax], "")))
+      val result = testPayAndTaxController.getPayAndTax(nino.nino, taxYear, employmentId).apply(FakeRequest())
       status(result) must be(NOT_FOUND)
     }
 
@@ -87,8 +92,8 @@ class PayAndTaxControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getPayAndTax(Matchers.any(),Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(BAD_REQUEST, Some(errorResponseJson))))
-      val result = testPayAndTaxController.getPayAndTax(nino, taxYear, employmentId).apply(FakeRequest())
+        .thenReturn(Future.failed(TaxHistoryException.badRequest))
+      val result = testPayAndTaxController.getPayAndTax(nino.nino, taxYear, employmentId).apply(FakeRequest())
       status(result) must be(BAD_REQUEST)
     }
 
@@ -97,8 +102,8 @@ class PayAndTaxControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
       (Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getPayAndTax(Matchers.any(),Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future. successful(HttpResponse(SERVICE_UNAVAILABLE, Some(errorResponseJson))))
-      val result = testPayAndTaxController.getPayAndTax(nino, taxYear, employmentId).apply(FakeRequest())
+        .thenReturn(Future.failed(TaxHistoryException.serviceUnavailable))
+      val result = testPayAndTaxController.getPayAndTax(nino.nino, taxYear, employmentId).apply(FakeRequest())
       status(result) must be(SERVICE_UNAVAILABLE)
     }
 
@@ -107,8 +112,8 @@ class PayAndTaxControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
       (Matchers.any(),Matchers.any()))
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getPayAndTax(Matchers.any(),Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, Some(errorResponseJson))))
-      val result = testPayAndTaxController.getPayAndTax(nino, taxYear, employmentId).apply(FakeRequest())
+        .thenReturn(Future.failed(TaxHistoryException.internalServerError))
+      val result = testPayAndTaxController.getPayAndTax(nino.nino, taxYear, employmentId).apply(FakeRequest())
       status(result) must be(INTERNAL_SERVER_ERROR)
     }
 
@@ -118,8 +123,8 @@ class PayAndTaxControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(UnAuthorisedAgentEnrolments))))
 
       when(mockEmploymentHistoryService.getPayAndTax(Matchers.any(),Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
-      val result = testPayAndTaxController.getPayAndTax(nino, taxYear, employmentId).apply(FakeRequest())
+        .thenReturn(Future.successful(testPayAndTax))
+      val result = testPayAndTaxController.getPayAndTax(nino.nino, taxYear, employmentId).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
 
@@ -129,8 +134,8 @@ class PayAndTaxControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
         .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](None, Enrolments(UnAuthorisedAgentEnrolments))))
 
       when(mockEmploymentHistoryService.getPayAndTax(Matchers.any(),Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(OK, Some(successResponseJson))))
-      val result = testPayAndTaxController.getPayAndTax(nino, taxYear, employmentId).apply(FakeRequest())
+        .thenReturn(Future.successful(testPayAndTax))
+      val result = testPayAndTaxController.getPayAndTax(nino.nino, taxYear, employmentId).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
   }

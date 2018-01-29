@@ -24,7 +24,7 @@ import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, 
 import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, TaxHistoryCacheService}
 
 object TestEmploymentHistoryService extends AnyRef with MockitoSugar {
-  def createNew: EmploymentHistoryService =
+  def createNew(): EmploymentHistoryService =
     new EmploymentHistoryService(
       npsConnector = mock[NpsConnector],
       rtiConnector = mock[RtiConnector],

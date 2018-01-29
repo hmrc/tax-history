@@ -18,7 +18,9 @@ package uk.gov.hmrc.taxhistory.model.nps
 
 import org.joda.time.LocalDate
 import play.api.libs.json._
+import uk.gov.hmrc.taxhistory.model.api.Employment
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
+import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
 
 case class NpsEmployment(nino:String,
                       sequenceNumber:Int,
@@ -32,7 +34,21 @@ case class NpsEmployment(nino:String,
                       endDate: Option[LocalDate] = None,
                       receivingOccupationalPension:Boolean = false,
                       employmentStatus: EmploymentStatus
-                    )
+                    ) {
+
+  def payeRef: String = taxDistrictNumber + "/" + payeNumber
+
+  def toEmployment: Employment =
+    Employment(
+      employerName = employerName,
+      payeReference = payeRef,
+      startDate = startDate,
+      endDate = endDate,
+      receivingOccupationalPension = receivingOccupationalPension,
+      employmentStatus = employmentStatus
+    )
+
+}
 
 object NpsEmployment {
   implicit val reader = new Reads[NpsEmployment] {

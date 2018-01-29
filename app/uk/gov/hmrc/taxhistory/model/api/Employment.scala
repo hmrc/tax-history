@@ -24,18 +24,18 @@ import play.api.libs.json.Reads._
 import play.api.libs.json.{JsPath, Reads, Writes}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 
-case class Employment(employmentId:UUID = UUID.randomUUID(),
-                      startDate:LocalDate,
-                      endDate:Option[LocalDate] = None,
-                      payeReference:String,
-                      employerName:String,
-                      companyBenefitsURI:Option[String] = None,
-                      payAndTaxURI:Option[String] = None,
-                      employmentURI:Option[String] = None,
+case class Employment(employmentId: UUID = UUID.randomUUID(),
+                      startDate: LocalDate,
+                      endDate: Option[LocalDate] = None,
+                      payeReference: String,
+                      employerName: String,
+                      companyBenefitsURI: Option[String] = None,
+                      payAndTaxURI: Option[String] = None,
+                      employmentURI: Option[String] = None,
                       receivingOccupationalPension: Boolean = false,
                       employmentStatus: EmploymentStatus){
 
-  def enrichWithURIs(taxYear:Int):Employment = {
+  def enrichWithURIs(taxYear: Int): Employment = {
     val baseURI = s"/$taxYear/employments/${employmentId.toString}"
     this.copy(employmentURI = Some(baseURI),
               companyBenefitsURI = Some(baseURI + "/company-benefits"),
