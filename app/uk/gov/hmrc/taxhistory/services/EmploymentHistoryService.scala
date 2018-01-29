@@ -27,13 +27,12 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.{GenericHttpError, NotFound, TaxHistoryException}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.connectors.des.RtiConnector
-import uk.gov.hmrc.taxhistory.connectors.nps.NpsConnector
 import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import uk.gov.hmrc.taxhistory.connectors.{NpsConnector, RtiConnector}
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
