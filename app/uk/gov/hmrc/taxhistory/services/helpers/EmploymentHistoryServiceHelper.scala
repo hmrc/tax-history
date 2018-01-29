@@ -17,12 +17,9 @@
 package uk.gov.hmrc.taxhistory.services.helpers
 
 import com.google.inject.Inject
-import play.api.http.Status
-import play.api.libs.json.{JsValue, Json}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
-import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.model.api.{Allowance, Employment, PayAsYouEarn, TaxAccount}
+import uk.gov.hmrc.taxhistory.model.api.{Allowance, PayAsYouEarn, TaxAccount}
 import uk.gov.hmrc.taxhistory.model.nps._
 
 class EmploymentHistoryServiceHelper @Inject()(val rtiDataHelper: RtiDataHelper) extends TaxHistoryHelper {

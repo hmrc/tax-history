@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxhistory.services
 
 import javax.inject.{Inject, Named}
 
-import play.api.libs.json.{Format, JsValue, Json}
+import play.api.libs.json.{JsValue, Json}
 import play.modules.reactivemongo.MongoDbConnection
 import reactivemongo.api.DB
 import uk.gov.hmrc.cache.model.{Cache, Id}

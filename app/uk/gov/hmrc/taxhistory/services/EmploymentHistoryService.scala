@@ -19,19 +19,15 @@ package uk.gov.hmrc.taxhistory.services
 
 import javax.inject.Inject
 
-import play.api.http.Status
-import play.api.http.Status._
-import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException}
+import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.tai.model.rti.RtiData
-import uk.gov.hmrc.taxhistory.auditable.Auditable
+import uk.gov.hmrc.taxhistory.connectors.{NpsConnector, RtiConnector}
 import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
-import uk.gov.hmrc.taxhistory.connectors.{NpsConnector, RtiConnector}
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future

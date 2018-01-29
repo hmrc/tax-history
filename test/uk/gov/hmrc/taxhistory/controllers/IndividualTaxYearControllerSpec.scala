@@ -27,10 +27,8 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.http.{HeaderCarrier, Upstream5xxResponse}
-import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.{Audit, DataEvent}
-import uk.gov.hmrc.taxhistory.model.api.IndividualTaxYear
 import uk.gov.hmrc.taxhistory.auditable.Auditable
+import uk.gov.hmrc.taxhistory.model.api.IndividualTaxYear
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 

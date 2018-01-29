@@ -17,7 +17,6 @@
 package uk.gov.hmrc.taxhistory.connectors
 
 import com.codahale.metrics.Timer
-import com.typesafe.config.Config
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
@@ -25,7 +24,6 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics

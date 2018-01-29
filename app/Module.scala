@@ -21,7 +21,7 @@ import com.google.inject.name.Names
 import play.api.{Configuration, Environment}
 import play.modules.reactivemongo.MongoDbConnection
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.http.{CoreGet, CorePost}
+import uk.gov.hmrc.http.{CoreGet, CorePost, HttpGet, HttpPost}
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.Audit
@@ -34,12 +34,12 @@ class Module(val environment: Environment, val configuration: Configuration) ext
 
   def configure() = {
 
-    bind(classOf[CoreGet]).to(classOf[WSHttpImpl])
-    bind(classOf[CorePost]).to(classOf[WSHttpImpl])
+    bind(classOf[HttpGet]).to(classOf[WSHttpImpl])
+    bind(classOf[HttpPost]).to(classOf[WSHttpImpl])
     bind(classOf[AuditingConfig]).toProvider(new AuditingConfigProvider("auditing"))
     bind(classOf[AuditConnector]).to(classOf[MicroserviceAuditConnector])
     bind(classOf[AuthConnector]).to(classOf[TaxHistoryAuthConnector])
-    bind(classOf[TaxHistoryMetrics]).toInstance(TaxHistoryMetrics)
+    bind(classOf[TaxHistoryMetrics]).toProvider(provide(TaxHistoryMetrics))
 
     bind(classOf[ServicesConfig]).toInstance(new ServicesConfig {})
 
