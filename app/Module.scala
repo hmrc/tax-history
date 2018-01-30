@@ -18,6 +18,8 @@ import javax.inject.Provider
 
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names
+import com.kenshoo.play.metrics.{Metrics, MetricsImpl}
+import play.api.Mode.Mode
 import play.api.{Configuration, Environment}
 import play.modules.reactivemongo.MongoDbConnection
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -25,23 +27,24 @@ import uk.gov.hmrc.http.{CoreGet, CorePost, HttpGet, HttpPost}
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.Audit
+import uk.gov.hmrc.play.bootstrap.config.LoadAuditingConfig
 import uk.gov.hmrc.play.config.{AppName, ServicesConfig}
-import uk.gov.hmrc.play.microservice.config.LoadAuditingConfig
 import uk.gov.hmrc.taxhistory._
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 
 class Module(val environment: Environment, val configuration: Configuration) extends AbstractModule with ServicesConfig {
+
+  override protected def mode: Mode = environment.mode
+  override protected def runModeConfiguration: Configuration = configuration
 
   def configure() = {
 
     bind(classOf[HttpGet]).to(classOf[WSHttpImpl])
     bind(classOf[HttpPost]).to(classOf[WSHttpImpl])
     bind(classOf[AuditingConfig]).toProvider(new AuditingConfigProvider("auditing"))
-    bind(classOf[AuditConnector]).to(classOf[MicroserviceAuditConnector])
-    bind(classOf[AuthConnector]).to(classOf[TaxHistoryAuthConnector])
-    bind(classOf[TaxHistoryMetrics]).toProvider(provide(TaxHistoryMetrics))
-
-    bind(classOf[ServicesConfig]).toInstance(new ServicesConfig {})
+//    bind(classOf[AuditConnector]).to(classOf[MicroserviceAuditConnector])
+//    bind(classOf[AuthConnector]).to(classOf[TaxHistoryAuthConnector])
+//    bind(classOf[TaxHistoryMetrics]).to(classOf[TaxHistoryMetrics])
 
     bindConfigInt("mongodb.cache.expire.seconds", default = Some(60 * 30))
     bindConfigString("mongodb.name")
@@ -51,11 +54,14 @@ class Module(val environment: Environment, val configuration: Configuration) ext
     bindConfigString("microservice.services.rti-hod.env",                default = Some("local"))
     bindConfigString("microservice.services.rti-hod.authorizationToken", default = Some("local"))
 
+    bind(classOf[String]).annotatedWith(Names.named("rti-hod-service-url")).toProvider(provide(baseUrl("rti-hod")))
+    bind(classOf[String]).annotatedWith(Names.named("nps-hod-service-url")).toProvider(provide(baseUrl("nps-hod")))
+
     bind(classOf[MongoDbConnection]).toProvider(provide(new MongoDbConnection {}))
 
     bind(classOf[String]).annotatedWith(Names.named("appName")).toProvider(AppNameProvider)
 
-    bind(classOf[Audit]).to(classOf[MicroserviceAudit])
+//    bind(classOf[Metrics]).to(classOf[MetricsImpl])
 
   }
 
@@ -64,11 +70,11 @@ class Module(val environment: Environment, val configuration: Configuration) ext
   }
 
   private object AppNameProvider extends Provider[String] {
-    def get(): String = AppName.appName
+    def get(): String = AppName(configuration).appName
   }
 
   private class AuditingConfigProvider(key: String) extends Provider[AuditingConfig] {
-    def get(): AuditingConfig = LoadAuditingConfig(key)
+    def get(): AuditingConfig = LoadAuditingConfig(configuration, environment.mode, key)
   }
 
   private def bindConfigString(propertyName: String, default: Option[String] = None) =
