@@ -18,16 +18,12 @@ package uk.gov.hmrc.taxhistory
 
 import javax.inject.{Inject, Named}
 
-import play.api.Configuration
-import play.api.Mode.Mode
-import uk.gov.hmrc.auth.core.PlayAuthConnector
-import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.hooks.HttpHooks
 import uk.gov.hmrc.play.audit.http.HttpAuditing
-import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.Audit
-import uk.gov.hmrc.play.config.{AppName, RunMode, ServicesConfig}
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.play.config.AppName
 import uk.gov.hmrc.play.http.ws._
 
 
@@ -35,30 +31,19 @@ trait Hooks extends HttpHooks with HttpAuditing {
   val hooks = Seq(AuditingHook)
 }
 
-trait WSHttp extends HttpGet with WSGet
-  with HttpPut with WSPut
-  with HttpPost with WSPost
-  with HttpDelete with WSDelete
-  with HttpPatch with WSPatch
+trait WSHttp extends HttpClient with WSGet
+  with WSPut
+  with WSPost
+  with WSDelete
+  with WSPatch
   with Hooks with AppName
 
-class WSHttpImpl @Inject()(@Named("appName") val appName: String, val auditConnector: AuditConnector) extends HttpGet with WSGet
-  with HttpPut with WSPut
-  with HttpPost with WSPost
-  with HttpDelete with WSDelete
-  with HttpPatch with WSPatch
+class WSHttpImpl @Inject()(@Named("appName") val appName: String, val auditConnector: AuditConnector) extends HttpClient with WSGet
+  with WSPut
+  with WSPost
+  with WSDelete
+  with WSPatch
   with Hooks
 
-//class MicroserviceAudit @Inject()(@Named("appName") val applicationName: String,
-//                                  val auditConnector: AuditConnector) extends Audit(applicationName, auditConnector)
-//
-//class MicroserviceAuditConnector @Inject()( val auditingConfig: AuditingConfig,
-//                                            val mode: Mode,
-//                                            val runModeConfiguration: Configuration
-//                                          ) extends AuditConnector with RunMode
-//
-//class TaxHistoryAuthConnector @Inject()(val http: HttpPost,
-//                                        val mode: Mode,
-//                                        val runModeConfiguration: Configuration) extends PlayAuthConnector with ServicesConfig {
-//  override val serviceUrl = baseUrl("auth")
-//}
+class MicroserviceAudit @Inject()(@Named("appName") val applicationName: String,
+                                  val auditConnector: AuditConnector) extends Audit(applicationName, auditConnector)

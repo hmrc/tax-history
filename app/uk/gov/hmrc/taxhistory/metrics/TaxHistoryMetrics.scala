@@ -18,8 +18,8 @@ package uk.gov.hmrc.taxhistory.metrics
 
 import javax.inject.Inject
 
+import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.Timer.Context
-import com.codahale.metrics.{MetricRegistry, Timer}
 import com.kenshoo.play.metrics.Metrics
 import uk.gov.hmrc.taxhistory.metrics.MetricsEnum.MetricsEnum
 

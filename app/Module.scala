@@ -27,7 +27,9 @@ import uk.gov.hmrc.http.{CoreGet, CorePost, HttpGet, HttpPost}
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.Audit
+import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
 import uk.gov.hmrc.play.bootstrap.config.LoadAuditingConfig
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.config.{AppName, ServicesConfig}
 import uk.gov.hmrc.taxhistory._
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
@@ -41,10 +43,10 @@ class Module(val environment: Environment, val configuration: Configuration) ext
 
     bind(classOf[HttpGet]).to(classOf[WSHttpImpl])
     bind(classOf[HttpPost]).to(classOf[WSHttpImpl])
+    bind(classOf[HttpClient]).to(classOf[WSHttpImpl])
     bind(classOf[AuditingConfig]).toProvider(new AuditingConfigProvider("auditing"))
-//    bind(classOf[AuditConnector]).to(classOf[MicroserviceAuditConnector])
-//    bind(classOf[AuthConnector]).to(classOf[TaxHistoryAuthConnector])
-//    bind(classOf[TaxHistoryMetrics]).to(classOf[TaxHistoryMetrics])
+    bind(classOf[AuthConnector]).to(classOf[DefaultAuthConnector])
+    bind(classOf[Audit]).to(classOf[MicroserviceAudit])
 
     bindConfigInt("mongodb.cache.expire.seconds", default = Some(60 * 30))
     bindConfigString("mongodb.name")
@@ -60,9 +62,6 @@ class Module(val environment: Environment, val configuration: Configuration) ext
     bind(classOf[MongoDbConnection]).toProvider(provide(new MongoDbConnection {}))
 
     bind(classOf[String]).annotatedWith(Names.named("appName")).toProvider(AppNameProvider)
-
-//    bind(classOf[Metrics]).to(classOf[MetricsImpl])
-
   }
 
   private def provide[A](value: => A): Provider[A] = new Provider[A] {
