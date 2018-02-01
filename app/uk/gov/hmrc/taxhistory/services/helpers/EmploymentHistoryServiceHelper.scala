@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxhistory.services.helpers
 import com.google.inject.Inject
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
-import uk.gov.hmrc.taxhistory.model.api.{Allowance, PayAndTax, PayAsYouEarn, TaxAccount}
+import uk.gov.hmrc.taxhistory.model.api.{Allowance, PayAsYouEarn, TaxAccount}
 import uk.gov.hmrc.taxhistory.model.nps._
 
 class EmploymentHistoryServiceHelper @Inject()(val rtiDataHelper: RtiDataHelper) extends TaxHistoryHelper {
@@ -32,7 +32,7 @@ class EmploymentHistoryServiceHelper @Inject()(val rtiDataHelper: RtiDataHelper)
 
     val payAsYouEarnList = npsEmployments.map { npsEmployment =>
       val companyBenefits = iabdsOption.map { iabds =>
-        new IabdsHelper(iabds).getMatchedCompanyBenefits(npsEmployment)
+        new IabdsHelper(iabds).matchedCompanyBenefits(npsEmployment)
       }
       val rtiEmployments = rtiOption.map { rtiData =>
         rtiDataHelper.auditOnlyInRTI(rtiData.nino, npsEmployments, rtiData.employments)
@@ -44,7 +44,7 @@ class EmploymentHistoryServiceHelper @Inject()(val rtiDataHelper: RtiDataHelper)
 
     val allowances = iabdsOption match {
       case None => Nil
-      case Some(x) => new IabdsHelper(x).getAllowances()
+      case Some(x) => new IabdsHelper(x).allowances
     }
     val taxAccount = taxAccOption.flatten.map(_.toTaxAccount)
     val payAsYouEarn = combinePAYEs(payAsYouEarnList).copy(allowances = allowances, taxAccount = taxAccount)
@@ -62,7 +62,9 @@ class EmploymentHistoryServiceHelper @Inject()(val rtiDataHelper: RtiDataHelper)
     })
   }
 
-  def buildPAYE(rtiEmploymentsOption: Option[List[RtiEmployment]], iabdsOption: Option[List[Iabd]], npsEmployment: NpsEmployment): PayAsYouEarn = {
+  def buildPAYE(rtiEmploymentsOption: Option[List[RtiEmployment]],
+                iabdsOption: Option[List[Iabd]],
+                npsEmployment: NpsEmployment): PayAsYouEarn = {
 
     val employment = npsEmployment.toEmployment
 
@@ -73,7 +75,7 @@ class EmploymentHistoryServiceHelper @Inject()(val rtiDataHelper: RtiDataHelper)
     }
 
     val benefits = if (iabdsOption.exists(_.nonEmpty)) {
-      iabdsOption.map(iabds => Map(employment.employmentId.toString -> new IabdsHelper(iabds).getCompanyBenefits()))
+      iabdsOption.map(iabds => Map(employment.employmentId.toString -> new IabdsHelper(iabds).companyBenefits))
     } else {
       None
     }

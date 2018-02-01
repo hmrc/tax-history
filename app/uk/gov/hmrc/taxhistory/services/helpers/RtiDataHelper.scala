@@ -92,11 +92,9 @@ object RtiDataHelper {
   }
 
   def convertRtiEYUToEYU(rtiEmployment: RtiEmployment): List[EarlierYearUpdate] = {
-    rtiEmployment.earlierYearUpdates.map(eyu => {
-      EarlierYearUpdate(
-        taxablePayEYU = eyu.taxablePayDelta,
-        taxEYU = eyu.totalTaxDelta,
-        receivedDate = eyu.receivedDate)
-    }).filter(x => x.taxablePayEYU != 0 && x.taxEYU != 0)
+    rtiEmployment.earlierYearUpdates
+      .map(_.toEarlierYearUpdate)
+      .filter(x => x.taxablePayEYU != 0 && x.taxEYU != 0)
   }
+
 }

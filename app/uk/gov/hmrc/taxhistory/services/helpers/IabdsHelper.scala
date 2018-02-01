@@ -20,15 +20,18 @@ import uk.gov.hmrc.taxhistory.model.api.{Allowance, CompanyBenefit}
 import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
-class IabdsHelper(val iabds: List[Iabd]) extends TaxHistoryHelper with TaxHistoryLogger{
+class IabdsHelper(val iabds: List[Iabd]) extends TaxHistoryHelper with TaxHistoryLogger {
 
-  def getRawCompanyBenefits(): List[Iabd] = iabds.filter(_.`type`.isInstanceOf[CompanyBenefits])
+  def rawCompanyBenefits: List[Iabd] = iabds.filter {
+    case _: CompanyBenefits => true
+    case _                  => false
+  }
 
-  def getMatchedCompanyBenefits(npsEmployment: NpsEmployment):List[Iabd] =
-    getRawCompanyBenefits().filter(_.employmentSequenceNumber.contains(npsEmployment.sequenceNumber))
+  def matchedCompanyBenefits(npsEmployment: NpsEmployment):List[Iabd] =
+    rawCompanyBenefits.filter(_.employmentSequenceNumber.contains(npsEmployment.sequenceNumber))
 
 
-  def getCompanyBenefits():List[CompanyBenefit] = {
+  def companyBenefits: List[CompanyBenefit] = {
     if (isTotalBenefitInKind()) {
       convertToCompanyBenefits(this.iabds)
     } else {
@@ -41,13 +44,13 @@ class IabdsHelper(val iabds: List[Iabd]) extends TaxHistoryHelper with TaxHistor
     }
   }
 
-  private def convertToCompanyBenefits(iabds:List[Iabd]):List[CompanyBenefit]= {
+  private def convertToCompanyBenefits(iabds:List[Iabd]): List[CompanyBenefit] = {
     iabds.map { iabd =>
       CompanyBenefit(
-        amount = iabd.grossAmount.fold {
+        amount = iabd.grossAmount.getOrElse {
           logger.warn("Iabds grossAmount is blank")
           BigDecimal(0)
-        }(x => x),
+        },
         iabdType = iabd.`type`.toString,
         source = iabd.source
       )
@@ -60,17 +63,21 @@ class IabdsHelper(val iabds: List[Iabd]) extends TaxHistoryHelper with TaxHistor
   }
 
 
-  def getRawAllowances():List[Iabd] = iabds.filter(_.`type`.isInstanceOf[Allowances])
+  def rawAllowances: List[Iabd] = iabds.filter {
+    case _: Allowances => true
+    case _             => false
+  }
 
 
-  def getAllowances():List[Allowance] = {
-    getRawAllowances() map {
-      iabd => Allowance(
-        amount = iabd.grossAmount.fold{
+  def allowances: List[Allowance] = {
+    rawAllowances map { iabd =>
+      Allowance(
+        amount = iabd.grossAmount.getOrElse {
           logger.warn("Iabds grossAmount is blank")
           BigDecimal(0)
-        }(x=>x),
-        iabdType = iabd.`type`.toString)
+        },
+        iabdType = iabd.`type`.toString
+      )
     }
   }
 

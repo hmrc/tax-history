@@ -77,13 +77,13 @@ class IabdsHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
   "Iabds Helper" should {
     "correctly convert an iabd to an allowance model" in {
       val iabdsHelper = new IabdsHelper(iabdList)
-      val allowances =  iabdsHelper.getAllowances()
+      val allowances =  iabdsHelper.allowances
       allowances.size mustBe 1
     }
     "Return an empty list of allowances when only iabd is present" in {
       val iabdsHelper = new IabdsHelper(onlyIabdList)
 
-      val allowances =  iabdsHelper.getAllowances()
+      val allowances =  iabdsHelper.allowances
       allowances.size mustBe 0
     }
 
@@ -92,7 +92,7 @@ class IabdsHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
       val iabds = iabdsJsonResponse.as[List[Iabd]]
       val iabdsHelper = new IabdsHelper(iabds)
 
-      val iabdsFiltered = iabdsHelper.getRawCompanyBenefits()
+      val iabdsFiltered = iabdsHelper.rawCompanyBenefits
       iabdsFiltered.size mustBe 4
       iabdsFiltered.toString() contains  ("FlatRateJobExpenses") mustBe false
       iabdsFiltered.toString() contains  ("VanBenefit")  mustBe true
@@ -105,7 +105,7 @@ class IabdsHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
 
       val employments = npsEmploymentResponse.as[List[NpsEmployment]]
 
-      val matchedIabds = iabdsHelper.getMatchedCompanyBenefits(employments.head)
+      val matchedIabds = iabdsHelper.matchedCompanyBenefits(employments.head)
       matchedIabds.size mustBe 2
       matchedIabds.toString() contains  ("VanBenefit") mustBe true
       matchedIabds.toString() contains  ("CarFuelBenefit") mustBe true
@@ -116,7 +116,7 @@ class IabdsHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
       val iabds = iabdsBenfitInKindJsonResponse.as[List[Iabd]]
       val iabdsHelper = new IabdsHelper(iabds)
 
-      val companyBenefits=iabdsHelper.getCompanyBenefits()
+      val companyBenefits=iabdsHelper.companyBenefits
       companyBenefits.size mustBe  7
       val companyBenefit1 = companyBenefits.head
       companyBenefit1.source mustBe Some(26)
@@ -129,7 +129,7 @@ class IabdsHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
       val iabds = iabdsTotalBenfitInKindJsonResponse.as[List[Iabd]]
       val iabdsHelper = new IabdsHelper(iabds)
 
-      val companyBenefits=iabdsHelper.getCompanyBenefits()
+      val companyBenefits=iabdsHelper.companyBenefits
       companyBenefits.size mustBe  2
     }
 
@@ -153,7 +153,7 @@ class IabdsHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
       val iabds = iabdsJsonResponse.as[List[Iabd]]
       val iabdsHelper = new IabdsHelper(iabds)
 
-      val iabdsFiltered = iabdsHelper.getRawAllowances()
+      val iabdsFiltered = iabdsHelper.rawAllowances
       iabdsFiltered.size mustBe 1
       iabdsFiltered.toString() contains  ("FlatRateJobExpenses") mustBe true
     }
