@@ -77,7 +77,7 @@ class IabdsHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
   "Iabds Helper" should {
     "correctly convert an iabd to an allowance model" in {
       val iabdsHelper = new IabdsHelper(iabdList)
-      val allowances =  iabdsHelper.allowances
+      val allowances = iabdsHelper.allowances
       allowances.size mustBe 1
     }
     "Return an empty list of allowances when only iabd is present" in {
@@ -85,18 +85,6 @@ class IabdsHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
 
       val allowances =  iabdsHelper.allowances
       allowances.size mustBe 0
-    }
-
-    "Return a filtered Iabds from  List of Nps Iabds" in {
-
-      val iabds = iabdsJsonResponse.as[List[Iabd]]
-      val iabdsHelper = new IabdsHelper(iabds)
-
-      val iabdsFiltered = iabdsHelper.rawCompanyBenefits
-      iabdsFiltered.size mustBe 4
-      iabdsFiltered.toString() contains  ("FlatRateJobExpenses") mustBe false
-      iabdsFiltered.toString() contains  ("VanBenefit")  mustBe true
-      iabdsFiltered.toString() contains  ("CarFuelBenefit")  mustBe true
     }
 
     "Return a matched iabds  from  List of employments" in {
@@ -137,7 +125,7 @@ class IabdsHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
       val iabds = iabdsTotalBenfitInKindJsonResponse.as[List[Iabd]]
       val iabdsHelper = new IabdsHelper(iabds)
 
-      val bik=iabdsHelper.isTotalBenefitInKind()
+      val bik = iabdsHelper.isTotalBenefitInKind
       bik  mustBe  true
     }
 
@@ -145,17 +133,17 @@ class IabdsHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
       val iabds = iabdsBenfitInKindJsonResponse.as[List[Iabd]]
       val iabdsHelper = new IabdsHelper(iabds)
 
-      val bik=iabdsHelper.isTotalBenefitInKind()
-      bik  mustBe  false
+      val bik = iabdsHelper.isTotalBenefitInKind
+      bik mustBe false
     }
 
     "Return only Allowances from  List of Nps Iabds" in {
       val iabds = iabdsJsonResponse.as[List[Iabd]]
       val iabdsHelper = new IabdsHelper(iabds)
 
-      val iabdsFiltered = iabdsHelper.rawAllowances
-      iabdsFiltered.size mustBe 1
-      iabdsFiltered.toString() contains  ("FlatRateJobExpenses") mustBe true
+      val allowances = iabdsHelper.allowances
+      allowances.size mustBe 1
+      allowances.toString() contains  ("FlatRateJobExpenses") mustBe true
     }
 
   }

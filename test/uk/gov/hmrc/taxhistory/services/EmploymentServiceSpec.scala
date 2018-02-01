@@ -264,12 +264,12 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       eyu.taxablePayEYU mustBe BigDecimal(-600.99)
       eyu.taxEYU mustBe BigDecimal(-10.99)
 
-      val benefits = paye.benefits.map(bMap => bMap.get(employments.head.employmentId.toString)).flatten
-      benefits.get.size mustBe 2
-      benefits.get.head.iabdType mustBe "CarFuelBenefit"
-      benefits.get.head.amount mustBe BigDecimal(100)
-      benefits.get.last.iabdType mustBe "VanBenefit"
-      benefits.get.last.amount mustBe BigDecimal(100)
+      val Some(benefits) = paye.benefits.map(bMap => bMap.get(employments.head.employmentId.toString)).flatten
+      benefits.size mustBe 2
+      benefits.head.iabdType mustBe "CarFuelBenefit"
+      benefits.head.amount mustBe BigDecimal(100)
+      benefits.last.iabdType mustBe "VanBenefit"
+      benefits.last.amount mustBe BigDecimal(100)
 
     }
 
@@ -283,26 +283,26 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val payAsYouEarn = await(testEmploymentHistoryService.mergeAndRetrieveEmployments(testNino, TaxYear.current.previous)(npsEmployments))
 
       val employment = payAsYouEarn.employments.head
-      val payAndTax = payAsYouEarn.payAndTax.map(pMap => pMap.get(employment.employmentId.toString)).flatten
-      val benefits = payAsYouEarn.benefits.map(bMap => bMap.get(employment.employmentId.toString)).flatten
+      val Some(payAndTax) = payAsYouEarn.payAndTax.map(pMap => pMap.get(employment.employmentId.toString)).flatten
+      val Some(benefits) = payAsYouEarn.benefits.map(bMap => bMap.get(employment.employmentId.toString)).flatten
 
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "531/J4816"
       employment.startDate mustBe startDate
       employment.endDate mustBe None
       employment.receivingOccupationalPension mustBe true
-      payAndTax.get.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
-      payAndTax.get.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
-      payAndTax.get.earlierYearUpdates.size mustBe 1
-      val eyu = payAndTax.get.earlierYearUpdates.head
+      payAndTax.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
+      payAndTax.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
+      payAndTax.earlierYearUpdates.size mustBe 1
+      val eyu = payAndTax.earlierYearUpdates.head
       eyu.taxablePayEYU mustBe BigDecimal(-600.99)
       eyu.taxEYU mustBe BigDecimal(-10.99)
       eyu.receivedDate mustBe new LocalDate("2016-06-01")
-      benefits.get.size mustBe 2
-      benefits.get.head.iabdType mustBe "CarFuelBenefit"
-      benefits.get.head.amount mustBe BigDecimal(100)
-      benefits.get.last.iabdType mustBe "VanBenefit"
-      benefits.get.last.amount mustBe BigDecimal(100)
+      benefits.size mustBe 2
+      benefits.head.iabdType mustBe "CarFuelBenefit"
+      benefits.head.amount mustBe BigDecimal(100)
+      benefits.last.iabdType mustBe "VanBenefit"
+      benefits.last.amount mustBe BigDecimal(100)
 
     }
 

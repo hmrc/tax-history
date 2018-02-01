@@ -22,55 +22,49 @@ import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
 class IabdsHelper(val iabds: List[Iabd]) extends TaxHistoryHelper with TaxHistoryLogger {
 
-  def rawCompanyBenefits: List[Iabd] = iabds.filter {
-    case _: CompanyBenefits => true
-    case _                  => false
+  def matchedCompanyBenefits(npsEmployment: NpsEmployment):List[Iabd] = iabds.filter { iabd =>
+    iabd.`type`.isInstanceOf[CompanyBenefits] &&
+      iabd.employmentSequenceNumber.contains(npsEmployment.sequenceNumber)
   }
-
-  def matchedCompanyBenefits(npsEmployment: NpsEmployment):List[Iabd] =
-    rawCompanyBenefits.filter(_.employmentSequenceNumber.contains(npsEmployment.sequenceNumber))
-
 
   def companyBenefits: List[CompanyBenefit] = {
-    if (isTotalBenefitInKind()) {
+
+    def convertToCompanyBenefits(iabds: List[Iabd]): List[CompanyBenefit] = {
+      iabds.map { iabd =>
+        CompanyBenefit(
+          amount = iabd.grossAmount.getOrElse {
+            logger.warn("Iabds grossAmount is blank")
+            BigDecimal(0)
+          },
+          iabdType = iabd.`type`.toString,
+          source = iabd.source
+        )
+      }
+    }
+
+    if (isTotalBenefitInKind) {
       convertToCompanyBenefits(this.iabds)
     } else {
-      convertToCompanyBenefits(iabds.filter {
-        iabd => {
-          !iabd.`type`.isInstanceOf[TotalBenefitInKind.type]
-        }
-      }
-      )
+      convertToCompanyBenefits(iabds.filter { iabd =>
+        !iabd.`type`.isInstanceOf[TotalBenefitInKind.type]
+      })
     }
   }
 
-  private def convertToCompanyBenefits(iabds:List[Iabd]): List[CompanyBenefit] = {
-    iabds.map { iabd =>
-      CompanyBenefit(
-        amount = iabd.grossAmount.getOrElse {
-          logger.warn("Iabds grossAmount is blank")
-          BigDecimal(0)
-        },
-        iabdType = iabd.`type`.toString,
-        source = iabd.source
-      )
+
+  /**
+    * Returns true if there is one single benefit in kind and its type is [[TotalBenefitInKind]].
+    */
+  def isTotalBenefitInKind: Boolean = {
+    val benefitsInKind = iabds.map(_.`type`).filter {
+      case _: BenefitInKind => true
+      case _ => false
     }
+    benefitsInKind == TotalBenefitInKind :: Nil
   }
 
-  def isTotalBenefitInKind(): Boolean = {
-    iabds.exists(_.`type`.isInstanceOf[TotalBenefitInKind.type]) &&
-      iabds.count(_.`type`.isInstanceOf[uk.gov.hmrc.taxhistory.model.nps.BenefitInKind]) == 1
-  }
-
-
-  def rawAllowances: List[Iabd] = iabds.filter {
-    case _: Allowances => true
-    case _             => false
-  }
-
-
-  def allowances: List[Allowance] = {
-    rawAllowances map { iabd =>
+  def allowances: List[Allowance] = iabds.collect {
+    case iabd if iabd.`type`.isInstanceOf[Allowances] =>
       Allowance(
         amount = iabd.grossAmount.getOrElse {
           logger.warn("Iabds grossAmount is blank")
@@ -78,8 +72,5 @@ class IabdsHelper(val iabds: List[Iabd]) extends TaxHistoryHelper with TaxHistor
         },
         iabdType = iabd.`type`.toString
       )
-    }
   }
-
-
 }
