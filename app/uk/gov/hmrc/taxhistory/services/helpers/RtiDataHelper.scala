@@ -41,25 +41,29 @@ class RtiDataHelper @Inject()(val auditable: Auditable) extends TaxHistoryHelper
     (formatString(rtiEmployment.officeNumber) == formatString(npsEmployment.taxDistrictNumber)) &&
       (rtiEmployment.payeRef == npsEmployment.payeNumber)
 
-  private def isSubMatch(npsEmployment: NpsEmployment, rtiEmployment: RtiEmployment) =
-    rtiEmployment.currentPayId.isDefined &&
-      npsEmployment.worksNumber.isDefined &&
-      rtiEmployment.currentPayId == npsEmployment.worksNumber
+  private def isSubMatch(npsEmployment: NpsEmployment, rtiEmployment: RtiEmployment) = {
+    (for {
+      currentPayId <- rtiEmployment.currentPayId
+      worksNumber  <- npsEmployment.worksNumber
+    } yield {
+      currentPayId == worksNumber
+    }).getOrElse(false)
+  }
 
   def getMatchedRtiEmployments(nino: String, npsEmployment: NpsEmployment, rtiEmployments: List[RtiEmployment])
                               (implicit headerCarrier: HeaderCarrier): List[RtiEmployment] = {
 
     rtiEmployments.filter(rtiEmployment => isMatch(npsEmployment, rtiEmployment)) match {
       case matchingEmp :: Nil => List(matchingEmp)
-      case start :: end =>
+      case head :: tail =>
         logger.warn("Multiple matching rti employments found.")
-        (start :: end).filter(rtiEmployment => isSubMatch(npsEmployment, rtiEmployment)) match {
+        (head :: tail).filter(rtiEmployment => isSubMatch(npsEmployment, rtiEmployment)) match {
           case matchingEmp :: Nil => List(matchingEmp)
           case mismatchedEmployments =>
             auditable.sendDataEvents(transactionName = PAYEForAgents, details = buildEmploymentDataEventDetails(nino, mismatchedEmployments), eventType = NpsRtiMismatch)
             Nil
         }
-      case Nil => Nil //Auditing will happen in the function onlyInRTI for this case
+      case Nil => Nil // Auditing will happen in the function onlyInRTI for this case
     }
   }
 
