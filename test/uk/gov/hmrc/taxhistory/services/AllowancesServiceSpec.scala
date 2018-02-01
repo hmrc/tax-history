@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.taxhistory.services
 
+import java.util.UUID
+
+import org.joda.time.LocalDate
 import org.mockito.Matchers
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
@@ -25,6 +28,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.taxhistory.model.api.{Allowance, PayAsYouEarn}
+import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
@@ -42,22 +46,10 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   val failureResponseJson = Json.parse("""{"reason":"Bad Request"}""")
 
-  val npsEmploymentResponseJson =  Json.parse(""" [{
-                                     |    "nino": "AA000000",
-                                     |    "sequenceNumber": 1,
-                                     |    "worksNumber": "6044041000000",
-                                     |    "taxDistrictNumber": "531",
-                                     |    "payeNumber": "J4816",
-                                     |    "employerName": "Aldi",
-                                     |    "receivingJobseekersAllowance" : false,
-                                     |    "otherIncomeSourceIndicator" : false,
-                                     |    "receivingOccupationalPension": true,
-                                     |    "employmentStatus": 1,
-                                     |    "startDate": "21/01/2015"
-                                     |    }]
-                                   """.stripMargin)
-
-  val npsEmploymentResponse = npsEmploymentResponseJson.as[List[NpsEmployment]]
+  val npsEmploymentResponse :List[NpsEmployment] = List(
+    NpsEmployment(
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), false, false,
+      new LocalDate("2015-01-21"), None, true, Live))
 
   lazy val iabdsResponseJson = loadFile("/json/nps/response/iabds.json")
   lazy val iabdsResponse = iabdsResponseJson.as[List[Iabd]]
@@ -83,14 +75,9 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
     "successfully retrieve allowance from cache" in {
       lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
 
-      val allowance = Json.parse(
-        """ [
-           {
-               "allowanceId": "c9923a63-4208-4e03-926d-7c7c88adc7ee",
-               "iabdType": "payeType",
-               "amount": 12
-          }
-          ] """.stripMargin).as[List[Allowance]]
+      val allowance:List[Allowance] = List (Allowance(UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"), "payeType", 12))
+
+
       when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(paye))
 

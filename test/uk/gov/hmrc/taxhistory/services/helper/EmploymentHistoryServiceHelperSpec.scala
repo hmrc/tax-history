@@ -23,6 +23,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.api._
+import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, RtiDataHelper}
@@ -33,20 +34,11 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
 
   private val helper = new EmploymentHistoryServiceHelper(new RtiDataHelper(mockAuditable))
 
-  lazy val npsEmploymentResponseWithTaxDistrictNumber =  Json.parse(""" [{
-                                                                 |    "nino": "AA000000",
-                                                                 |    "sequenceNumber": 6,
-                                                                 |    "worksNumber": "6044041000000",
-                                                                 |    "taxDistrictNumber": "0531",
-                                                                 |    "payeNumber": "J4816",
-                                                                 |    "employerName": "Aldi",
-                                                                 |    "receivingJobseekersAllowance" : false,
-                                                                 |    "otherIncomeSourceIndicator": false,
-                                                                 |    "receivingOccupationalPension": false,
-                                                                 |    "startDate": "21/01/2015",
-                                                                 |    "employmentStatus":1
-                                                                 |    }]
-                                                               """.stripMargin)
+  val npsEmploymentResponseWithTaxDistrictNumber :List[NpsEmployment] = List(
+    NpsEmployment(
+      "AA000000", 6, "0531", "J4816", "Aldi", Some("6044041000000"), false, false,
+      new LocalDate("2015-01-21"), None, false, Live))
+
   lazy val rtiEmploymentResponse = loadFile("/json/rti/response/dummyRti.json")
   lazy val iabdsJsonResponse = loadFile("/json/nps/response/iabds.json")
   lazy val taxAccountJsonResponse = loadFile("/json/nps/response/GetTaxAccount.json")
@@ -139,7 +131,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
 
     "Build pay as you earn using empty tax account" in {
       val taxAccount = NpsTaxAccount(Nil)
-      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
+      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
       val payAsYouEarn=helper.buildPayAsYouEarnList(None,None, npsEmployments.head)
       payAsYouEarn.taxAccount mustBe None
     }
@@ -147,7 +139,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
 
     "Build employment1 from rti, nps employment1 and Iabd data" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
-      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
+      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
       val iabds = iabdsJsonResponse.as[List[Iabd]]
       val taxAccount = taxAccountJsonResponse.as[NpsTaxAccount]
 
@@ -167,7 +159,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
 
     "Build employment1 when there is no  data for rti and Iabd" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
-      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
+      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
       val iabds = iabdsJsonResponse.as[List[Iabd]]
       val taxAccount = taxAccountJsonResponse.as[NpsTaxAccount]
 
@@ -185,7 +177,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     }
     "Build employment1 when there is data for rti is Nil" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
-      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
+      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
       val iabds = iabdsJsonResponse.as[List[Iabd]]
       val taxAccount = taxAccountJsonResponse.as[NpsTaxAccount]
 
@@ -204,7 +196,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
 
     "Build employment1 when there is data for Iabd is None or Null" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
-      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
+      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
       val iabds = iabdsJsonResponse.as[List[Iabd]]
       val taxAccount = taxAccountJsonResponse.as[NpsTaxAccount]
 
@@ -224,7 +216,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     }
     "Build employment1 when there is no  data for Iabd" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
-      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber.as[List[NpsEmployment]]
+      val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
       val iabds = iabdsJsonResponse.as[List[Iabd]]
       val taxAccount = taxAccountJsonResponse.as[NpsTaxAccount]
 
