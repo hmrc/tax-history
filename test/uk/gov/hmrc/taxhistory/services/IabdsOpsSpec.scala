@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.taxhistory.services
 
+import org.joda.time.LocalDate
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
+import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
+import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, VanBenefit}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil {
@@ -30,46 +31,16 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil {
   implicit val hc = HeaderCarrier()
   val testNino = randomNino()
 
-  val onlyIabdJson = """[{
-                       |    "nino": "QQ000003",
-                       |    "sequenceNumber": 201700055,
-                       |    "taxYear": 2017,
-                       |    "type": 35,
-                       |    "source": 26,
-                       |    "grossAmount": 100,
-                       |    "receiptDate": null,
-                       |    "captureDate": null,
-                       |    "typeDescription": "Van Benefit",
-                       |    "netAmount": null,
-                       |    "employmentSequenceNumber": 1,
-                       |    "costAmount": null,
-                       |    "amountMadeGood": null,
-                       |    "cashEquivalent": null,
-                       |    "expensesIncurred": null,
-                       |    "amountOfRelief": null
-                       |  }]""".stripMargin
+  val onlyIabdList:List[Iabd]= List(Iabd("QQ000003", Some(201700055), VanBenefit, Some(100), Some("Van Benefit"),Some(26)))
 
-
-  val npsEmploymentResponse =  Json.parse(""" [{
-                                            |    "nino": "AA000000",
-                                            |    "sequenceNumber": 1,
-                                            |    "worksNumber": "6044041000000",
-                                            |    "taxDistrictNumber": "531",
-                                            |    "payeNumber": "J4816",
-                                            |    "employerName": "Aldi",
-                                            |    "receivingJobseekersAllowance" : false,
-                                            |    "otherIncomeSourceIndicator" : false,
-                                            |    "receivingOccupationalPension": false,
-                                            |    "startDate": "21/01/2015",
-                                            |    "employmentStatus":1
-                                            |    }]
-                                          """.stripMargin)
+  val npsEmploymentResponse :List[NpsEmployment] = List(
+    NpsEmployment(
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), false, false,
+      new LocalDate("2015-01-21"), None, false, Live))
 
 
   lazy val iabdsJsonResponse = loadFile("/json/nps/response/iabds.json")
   lazy val iabdList = iabdsJsonResponse.as[List[Iabd]]
-  lazy val onlyIabdList = Json.parse(onlyIabdJson).as[List[Iabd]]
-
   lazy val iabdsTotalBenfitInKindJsonResponse = loadFile("/json/nps/response/iabdsTotalBIK.json")
   lazy val iabdsBenfitInKindJsonResponse = loadFile("/json/nps/response/iabdsBIK.json")
 
@@ -87,9 +58,8 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil {
     "Return a matched iabds  from  List of employments" in {
       val iabds = iabdsJsonResponse.as[List[Iabd]]
 
-      val employments = npsEmploymentResponse.as[List[NpsEmployment]]
 
-      val matchedIabds = iabds.matchedCompanyBenefits(employments.head)
+      val matchedIabds = iabds.matchedCompanyBenefits(npsEmploymentResponse.head)
       matchedIabds.size mustBe 2
       matchedIabds.toString contains ("VanBenefit") mustBe true
       matchedIabds.toString contains ("CarFuelBenefit") mustBe true

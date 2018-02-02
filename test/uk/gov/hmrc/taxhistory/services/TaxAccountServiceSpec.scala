@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.taxhistory.services
 
+import java.util.UUID
+
+import org.joda.time.LocalDate
 import org.mockito.Matchers
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
@@ -24,6 +27,7 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.taxhistory.model.api.{PayAsYouEarn, TaxAccount}
+import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
@@ -40,23 +44,13 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   val failureResponseJson = Json.parse("""{"reason":"Bad Request"}""")
 
-  val npsEmploymentResponseJson = Json.parse(
-    """ [{
-      |    "nino": "AA000000",
-      |    "sequenceNumber": 12,
-      |    "worksNumber": "6044041000000",
-      |    "taxDistrictNumber": "531",
-      |    "payeNumber": "J4816",
-      |    "employerName": "Aldi",
-      |    "receivingJobseekersAllowance" : false,
-      |    "otherIncomeSourceIndicator" : false,
-      |    "receivingOccupationalPension": true,
-      |    "employmentStatus": 1,
-      |    "startDate": "21/01/2015"
-      |    }]
-    """.stripMargin)
 
-  val npsEmploymentResponse = npsEmploymentResponseJson.as[List[NpsEmployment]]
+  val npsEmploymentResponse :List[NpsEmployment] = List(
+    NpsEmployment(
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), false, false,
+      new LocalDate("2015-01-21"), None, true, Live))
+
+
 
   lazy val taxAccountResponseJson = loadFile("/json/nps/response/GetTaxAccount.json")
   lazy val taxAccountResponse = taxAccountResponseJson.as[NpsTaxAccount]
@@ -82,15 +76,8 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
     "successfully retrieve tax account from cache" in {
       lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
+      val testTaxAccount = TaxAccount(UUID.fromString("3923afda-41ee-4226-bda5-e39cc4c82934"), Some(22.22), Some(11.11),Some(33.33))
 
-      val testTaxAccount = Json.parse(
-        """  {
-          |    "taxAccountId": "3923afda-41ee-4226-bda5-e39cc4c82934",
-          |    "outstandingDebtRestriction": 22.22,
-          |    "underpaymentAmount": 11.11,
-          |    "actualPUPCodedInCYPlusOneTaxYear": 33.33
-          |  }
-          |  """.stripMargin).as[TaxAccount]
       when(testEmploymentHistoryService.getFromCache(Matchers.any(), Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(paye))
 

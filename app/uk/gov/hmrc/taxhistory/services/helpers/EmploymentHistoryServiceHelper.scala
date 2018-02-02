@@ -25,7 +25,7 @@ import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 object EmploymentHistoryServiceHelper extends TaxHistoryHelper with TaxHistoryLogger {
 
   def combinePAYEs(payAsYouEarnList: List[PayAsYouEarn]): PayAsYouEarn = {
-    // TODO `reduce` will cause an exception if the list of PayAsYouEarn is empty.
+    // `reduce` will cause an exception if the list of PayAsYouEarn is empty.
     payAsYouEarnList.reduce((p1, p2) => {
       PayAsYouEarn(
         employments = p1.employments ::: p2.employments,

@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.taxhistory.services
 
+import java.util.UUID
+
 import org.joda.time.LocalDate
 import org.mockito.Matchers
 import org.mockito.Mockito.when
@@ -28,6 +30,8 @@ import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment, PayAsYouEarn}
+import uk.gov.hmrc.taxhistory.model.audit.{DataEventAuditType, DataEventDetail, DataEventTransaction}
+import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
@@ -46,131 +50,40 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
   val failureResponseJson = Json.parse("""{"reason":"Bad Request"}""")
 
-  val npsEmploymentResponseJson =  Json.parse(""" [{
-                             |    "nino": "AA000000",
-                             |    "sequenceNumber": 1,
-                             |    "worksNumber": "6044041000000",
-                             |    "taxDistrictNumber": "531",
-                             |    "payeNumber": "J4816",
-                             |    "employerName": "Aldi",
-                             |    "receivingJobseekersAllowance" : false,
-                             |    "otherIncomeSourceIndicator" : false,
-                             |    "receivingOccupationalPension": true,
-                             |    "startDate": "21/01/2015",
-                             |    "employmentStatus":1
-                             |    }]
-                           """.stripMargin)
 
-  val npsEmploymentResponse = npsEmploymentResponseJson.as[List[NpsEmployment]]
+  val npsEmploymentResponse:List[NpsEmployment] = List(
+    NpsEmployment(
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), false, false,
+      new LocalDate("2015-01-21"), None, true, Live))
 
-  private val npsEmploymentWithJobSeekerAllowanceJson =  Json.parse(""" [{
-                                            |    "nino": "AA000000",
-                                            |    "sequenceNumber": 1,
-                                            |    "worksNumber": "6044041000000",
-                                            |    "taxDistrictNumber": "531",
-                                            |    "payeNumber": "J4816",
-                                            |    "employerName": "Aldi",
-                                            |    "receivingJobseekersAllowance" : true,
-                                            |    "otherIncomeSourceIndicator" : false,
-                                            |    "receivingOccupationalPension": false,
-                                            |    "startDate": "21/01/2015",
-                                            |    "employmentStatus":1
-                                            |    },
-                                            |    {
-                                            |    "nino": "AA000000",
-                                            |    "sequenceNumber": 1,
-                                            |    "worksNumber": "6044041000000",
-                                            |    "taxDistrictNumber": "531",
-                                            |    "payeNumber": "J4816",
-                                            |    "employerName": "Aldi",
-                                            |    "receivingJobseekersAllowance" : false,
-                                            |    "otherIncomeSourceIndicator" : false,
-                                            |    "receivingOccupationalPension": false,
-                                            |    "startDate": "21/01/2015",
-                                            |    "employmentStatus":1
-                                            |    }]
-                                          """.stripMargin)
+  val npsEmploymentWithJobSeekerAllowance:List[NpsEmployment] = List(
+    NpsEmployment(
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), true, false,
+      new LocalDate("2015-01-21"), None, false, Live),
+    NpsEmployment(
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), false, false,
+      new LocalDate("2015-01-21"), None, false, Live))
 
-  val npsEmploymentWithJobSeekerAllowance = npsEmploymentWithJobSeekerAllowanceJson.as[List[NpsEmployment]]
 
-  private val npsEmploymentWithOtherIncomeSourceIndicatorJson =  Json.parse(""" [{
-                                                                  |    "nino": "AA000000",
-                                                                  |    "sequenceNumber": 1,
-                                                                  |    "worksNumber": "6044041000000",
-                                                                  |    "taxDistrictNumber": "531",
-                                                                  |    "payeNumber": "J4816",
-                                                                  |    "employerName": "Aldi",
-                                                                  |    "receivingJobseekersAllowance" : true,
-                                                                  |    "otherIncomeSourceIndicator": false,
-                                                                  |    "receivingOccupationalPension": false,
-                                                                  |    "startDate": "21/01/2015",
-                                                                  |    "employmentStatus":1
-                                                                  |    },
-                                                                  |    {
-                                                                  |    "nino": "AA000000",
-                                                                  |    "sequenceNumber": 1,
-                                                                  |    "worksNumber": "6044041000000",
-                                                                  |    "taxDistrictNumber": "531",
-                                                                  |    "payeNumber": "J4816",
-                                                                  |    "employerName": "Aldi",
-                                                                  |    "receivingJobseekersAllowance" : false,
-                                                                  |    "otherIncomeSourceIndicator": true,
-                                                                  |    "receivingOccupationalPension": false,
-                                                                  |    "startDate": "21/01/2015",
-                                                                  |    "employmentStatus":1
-                                                                  |    }]
-                                                                """.stripMargin)
+  val npsEmploymentWithOtherIncomeSourceIndicator :List[NpsEmployment] = List(
+    NpsEmployment(
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), true, false,
+      new LocalDate("2015-01-21"), None, false, Live),
+    NpsEmployment(
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), false, true,
+      new LocalDate("2015-01-21"), None, false, Live))
 
-  val npsEmploymentWithOtherIncomeSourceIndicator = npsEmploymentWithOtherIncomeSourceIndicatorJson.as[List[NpsEmployment]]
 
-  private val npsEmploymentWithJustJobSeekerAllowanceJson =  Json.parse(""" [{
-                                                                          |    "nino": "AA000000",
-                                                                          |    "sequenceNumber": 1,
-                                                                          |    "worksNumber": "6044041000000",
-                                                                          |    "taxDistrictNumber": "531",
-                                                                          |    "payeNumber": "J4816",
-                                                                          |    "employerName": "Aldi",
-                                                                          |    "receivingJobseekersAllowance" : true,
-                                                                          |    "otherIncomeSourceIndicator": false,
-                                                                          |    "receivingOccupationalPension": false,
-                                                                          |    "startDate": "21/01/2015",
-                                                                          |    "employmentStatus":1
-                                                                          |    }]
-                                                                        """.stripMargin)
+  val npsEmploymentWithJustJobSeekerAllowance :List[NpsEmployment] = List(
+    NpsEmployment(
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), true, false,
+      new LocalDate("2015-01-21"), None, false, Live))
 
-  val npsEmploymentWithJustJobSeekerAllowance = npsEmploymentWithJustJobSeekerAllowanceJson.as[List[NpsEmployment]]
+  val npsEmploymentWithJustOtherIncomeSourceIndicator :List[NpsEmployment] = List(
+    NpsEmployment(
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), false, true,
+      new LocalDate("2015-01-21"), None, false, Live))
 
-  private val npsEmploymentWithJustOtherIncomeSourceIndicatorJson =  Json.parse(""" [{
-                                                                      |    "nino": "AA000000",
-                                                                      |    "sequenceNumber": 1,
-                                                                      |    "worksNumber": "6044041000000",
-                                                                      |    "taxDistrictNumber": "531",
-                                                                      |    "payeNumber": "J4816",
-                                                                      |    "employerName": "Aldi",
-                                                                      |    "receivingJobseekersAllowance" : false,
-                                                                      |     "otherIncomeSourceIndicator": true,
-                                                                      |     "receivingOccupationalPension": false,
-                                                                      |    "startDate": "21/01/2015",
-                                                                      |    "employmentStatus":1
-                                                                      |    }]
-                                                                    """.stripMargin)
-
-  val npsEmploymentWithJustOtherIncomeSourceIndicator = npsEmploymentWithJustOtherIncomeSourceIndicatorJson.as[List[NpsEmployment]]
-
-  val npsEmploymentResponseWithTaxDistrictNumber =  Json.parse(""" [{
-                                            |    "nino": "AA000000",
-                                            |    "sequenceNumber": 6,
-                                            |    "worksNumber": "6044041000000",
-                                            |    "taxDistrictNumber": "0531",
-                                            |    "payeNumber": "J4816",
-                                            |    "employerName": "Aldi",
-                                            |    "receivingJobseekersAllowance" : false,
-                                            |    "otherIncomeSourceIndicator": false,
-                                            |    "receivingOccupationalPension": false,
-                                            |    "startDate": "21/01/2015",
-                                            |    "employmentStatus":1
-                                            |    }]
-                                          """.stripMargin)
 
   lazy val rtiEmploymentResponseJson = loadFile("/json/rti/response/dummyRti.json")
   lazy val rtiEmploymentResponse = rtiEmploymentResponseJson.as[RtiData]
@@ -276,7 +189,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(npsGetTaxAccount))
 
-      val npsEmployments = npsEmploymentResponseJson.as[List[NpsEmployment]]
+      val npsEmployments = npsEmploymentResponse
 
       val payAsYouEarn = await(testEmploymentHistoryService.retrieveAndMergeEmployments(testNino, TaxYear.current.previous)(npsEmployments))
 
@@ -424,32 +337,21 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     "fetch Employments successfully from cache" in {
       lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
 
-      val testEmployments = Json.parse(
-        """ [
-          | {
-          |      "employmentId": "01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
-          |      "startDate": "2016-01-21",
-          |      "endDate": "2017-01-01",
-          |      "payeReference": "paye-1",
-          |      "employerName": "employer-1",
-          |      "companyBenefitsURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits",
-          |      "payAndTaxURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax",
-          |      "employmentURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
-          |      "receivingOccupationalPension": false,
-          |      "employmentStatus":1
-          |    },
-          |    {
-          |      "employmentId": "019f5fee-d5e4-4f3e-9569-139b8ad81a87",
-          |      "startDate": "2016-02-22",
-          |      "payeReference": "paye-2",
-          |      "employerName": "employer-2",
-          |      "companyBenefitsURI": "/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/company-benefits",
-          |      "payAndTaxURI": "/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/pay-and-tax",
-          |      "employmentURI": "/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87",
-          |      "receivingOccupationalPension": false,
-          |      "employmentStatus":1
-          |    }
-          |] """.stripMargin).as[List[Employment]]
+
+      val testEmployments:List[Employment]=List(
+        Employment(UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
+          new LocalDate("2016-01-21"), Some(new LocalDate("2017-01-01")), "paye-1", "employer-1",
+          Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),
+          Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax"),
+          Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"), false, Live),
+
+        Employment(UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
+          new LocalDate("2016-02-22"), None, "paye-2", "employer-2",
+          Some("/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/company-benefits"),
+          Some("/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/pay-and-tax"),
+          Some("/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87"), false, Live
+        )
+      )
 
       when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
               .thenReturn(Future.successful(paye))
@@ -471,20 +373,12 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     "get Employment successfully" in {
       val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
 
-      val testEmployment = Json.parse(
-        """| {
-           |      "employmentId": "01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
-           |      "startDate": "2016-01-21",
-           |      "endDate": "2017-01-01",
-           |      "payeReference": "paye-1",
-           |      "employerName": "employer-1",
-           |      "companyBenefitsURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits",
-           |      "payAndTaxURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax",
-           |      "employmentURI": "/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
-           |      "receivingOccupationalPension": false,
-           |      "employmentStatus":1
-           |    }
-           """.stripMargin).as[Employment]
+      val testEmployment = Employment(UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
+        new LocalDate("2016-01-21"), Some(new LocalDate("2017-01-01")), "paye-1", "employer-1",
+        Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),
+        Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax"),
+        Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"), false, Live
+      )
 
       when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(paye))
@@ -506,13 +400,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     "get company benefits from cache successfully" in {
       val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
 
-      val testCompanyBenefits = Json.parse(
-        """| [{
-           |      "companyBenefitId": "c9923a63-4208-4e03-926d-7c7c88adc7ee",
-           |      "iabdType": "companyBenefitType",
-           |      "amount": 12
-           |    }]
-        """.stripMargin).as[List[CompanyBenefit]]
+      val testCompanyBenefits:List[CompanyBenefit] = List(CompanyBenefit(UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),"companyBenefitType", 12))
+
 
       when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
         .thenReturn(Future.successful(paye))

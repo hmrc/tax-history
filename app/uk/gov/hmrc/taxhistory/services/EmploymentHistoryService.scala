@@ -222,6 +222,10 @@ class EmploymentHistoryService @Inject()(
   def getNpsIabds(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[Iabd]] =
     npsConnector.getIabds(nino, taxYear.currentYear)
 
+  /**
+    * If the tax year requested is not the previous tax year, return None.
+    * TODO is this the correct behaviour?
+    */
   def getNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[NpsTaxAccount]] = {
 
     if (taxYear.startYear != TaxYear.current.previous.startYear) {
