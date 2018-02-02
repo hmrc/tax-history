@@ -29,6 +29,7 @@ import uk.gov.hmrc.taxhistory.model.audit.{DataEventAuditType, DataEventDetail, 
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
+import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 
 class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil with BeforeAndAfterEach with NpsEmployments with RtiEmployments {
 
@@ -39,9 +40,8 @@ class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil with Be
     "successfully merge if there are multiple matching rti employments for a single nps employment1 but single match on currentPayId" in {
       val rtiData = rtiPartialDuplicateEmploymentsResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
-      val mockAuditable = mock[Auditable]
-      val rtiDataHelper = new RtiDataHelper(mockAuditable)
-      val rtiEmployments = rtiDataHelper.getMatchedRtiEmployments(testNino.toString, npsEmployments.head, rtiData.employments)
+      val testEmploymentHistoryService = TestEmploymentHistoryService.createNew()
+      val rtiEmployments = RtiDataHelper.getMatchedRtiEmployments(testNino.toString, npsEmployments.head, rtiData.employments)
       rtiEmployments.size mustBe 1
       verifyZeroInteractions(mockAuditable)
     }

@@ -280,7 +280,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
       val npsEmployments = npsEmploymentResponseJson.as[List[NpsEmployment]]
 
-      val payAsYouEarn = await(testEmploymentHistoryService.mergeAndRetrieveEmployments(testNino, TaxYear.current.previous)(npsEmployments))
+      val payAsYouEarn = await(testEmploymentHistoryService.retrieveAndMergeEmployments(testNino, TaxYear.current.previous)(npsEmployments))
 
       val employment = payAsYouEarn.employments.head
       val Some(payAndTax) = payAsYouEarn.payAndTax.map(pMap => pMap.get(employment.employmentId.toString)).flatten
@@ -398,7 +398,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
       val rtiData = RtiData("QQ0000002", rtiEmployments)
       val mockAuditable = mock[Auditable]
-      val rtiDataHelper = new RtiDataHelper(mockAuditable)
 
       rtiDataHelper.auditOnlyInRTI(testNino.toString, npsEmployments, rtiEmployments)
       verify (

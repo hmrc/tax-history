@@ -22,13 +22,16 @@ import javax.inject.Inject
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
-import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
+import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.{NpsConnector, RtiConnector}
 import uk.gov.hmrc.taxhistory.model.api._
+import uk.gov.hmrc.taxhistory.model.audit.{NpsRtiMismatch, OnlyInRti, PAYEForAgents}
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
-import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
+import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, RtiDataHelper}
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 import uk.gov.hmrc.time.TaxYear
+import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 
 import scala.concurrent.Future
 
@@ -36,7 +39,7 @@ class EmploymentHistoryService @Inject()(
                               val npsConnector: NpsConnector,
                               val rtiConnector: RtiConnector,
                               val cacheService : TaxHistoryCacheService,
-                              val helper: EmploymentHistoryServiceHelper
+                              val auditable: Auditable
                               ) extends TaxHistoryLogger {
 
   def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] = {
@@ -151,19 +154,57 @@ class EmploymentHistoryService @Inject()(
           Future.failed(new NotFoundException(s"PayAsYouEarn not found for NINO ${nino.nino} and tax year ${taxYear.toString}"))
           // TODO this is to preserve existing logic. To review
         } else {
-          mergeAndRetrieveEmployments(nino, taxYear)(employments)
+          retrieveAndMergeEmployments(nino, taxYear)(employments)
         }
     } yield result
   }
 
-  def mergeAndRetrieveEmployments(nino: Nino, taxYear: TaxYear)(npsEmployments: List[NpsEmployment])
+  def retrieveAndMergeEmployments(nino: Nino, taxYear: TaxYear)(npsEmployments: List[NpsEmployment])
                                  (implicit headerCarrier: HeaderCarrier): Future[PayAsYouEarn] = {
+
     for {
-      iabdsF  <- getNpsIabds(nino,taxYear).map(Some(_)).recover { case _ => None } // TODO this is done to preserve existing logic. Logic of 'combineResult' to be reviewed!
-      rtiF    <- getRtiEmployments(nino,taxYear).map(Some(_)).recover { case _ => None } // TODO this is done to preserve existing logic. Logic of 'combineResult' to be reviewed!
-      taxAccF <- getNpsTaxAccount(nino,taxYear).map(Some(_)).recover { case _ => None } // TODO this is done to preserve existing logic. Logic of 'combineResult' to be reviewed!
+      iabdsOption   <- getNpsIabds(nino,taxYear).map(Some(_)).recover { case _ => None }       // TODO this is done to preserve existing logic. To be reviewed!
+      rtiDataOption <- getRtiEmployments(nino,taxYear).map(Some(_)).recover { case _ => None } // TODO this is done to preserve existing logic. To be reviewed!
+      taxAccOption  <- getNpsTaxAccount(nino,taxYear).map(Some(_)).recover { case _ => None }  // TODO this is done to preserve existing logic. To be reviewed!
     } yield {
-      helper.combineResult(iabdsF,rtiF,taxAccF)(npsEmployments)
+
+      val allRtiEmployments = rtiDataOption.map(_.employments).getOrElse(Nil)
+
+      val employmentMatches = RtiDataHelper.normalisedEmploymentMatches(npsEmployments, allRtiEmployments)
+
+      // Check for any RTI employment which doesn't match any NPS employment, and send an audit event if this is the case.
+      val onlyInRti = RtiDataHelper.employmentsOnlyInRTI(npsEmployments, allRtiEmployments)
+      if (onlyInRti.nonEmpty) {
+        auditable.sendDataEvents(
+          transactionName = PAYEForAgents,
+          details = RtiDataHelper.buildEmploymentDataEventDetails(nino.nino, onlyInRti),
+          eventType = OnlyInRti)
+      }
+
+      // Send an audit event for each employment that we weren't able to match conclusively.
+      RtiDataHelper.ambiguousEmploymentMatches(npsEmployments, allRtiEmployments).foreach { case (nps, rti) =>
+        logger.warn(s"Some NPS employments have multiple matching RTI employments.")
+        auditable.sendDataEvents(
+          transactionName = PAYEForAgents,
+          details = RtiDataHelper.buildEmploymentDataEventDetails(nino.nino, rti),
+          eventType = NpsRtiMismatch
+        )
+      }
+
+      // One [[PayAsYouEarn]] instance will be produced for each npsEmployment.
+      val payes: List[PayAsYouEarn] = npsEmployments.map { npsEmployment =>
+
+        val companyBenefits = iabdsOption.map(_.matchedCompanyBenefits(npsEmployment))
+        val rtiEmploymentsOption = employmentMatches.get(npsEmployment).map(List(_))
+
+        EmploymentHistoryServiceHelper.buildPAYE(rtiEmploymentsOption = rtiEmploymentsOption, iabdsOption = companyBenefits, npsEmployment = npsEmployment)
+      }
+
+      val allowances = iabdsOption.map(_.allowances).getOrElse(Nil)
+      val taxAccount = taxAccOption.flatten.map(_.toTaxAccount)
+      val payAsYouEarn = EmploymentHistoryServiceHelper.combinePAYEs(payes).copy(allowances = allowances, taxAccount = taxAccount)
+
+      payAsYouEarn
     }
   }
 

@@ -16,41 +16,13 @@
 
 package uk.gov.hmrc.taxhistory.services.helpers
 
-import com.google.inject.Inject
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
-import uk.gov.hmrc.taxhistory.model.api.{Allowance, PayAsYouEarn, TaxAccount}
+import uk.gov.hmrc.tai.model.rti.RtiEmployment
+import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
 import uk.gov.hmrc.taxhistory.model.nps._
+import IabdsOps._
+import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
-class EmploymentHistoryServiceHelper @Inject()(val rtiDataHelper: RtiDataHelper) extends TaxHistoryHelper {
-
-  def combineResult(iabdsOption: Option[List[Iabd]],
-                    rtiOption: Option[RtiData],
-                    taxAccOption: Option[Option[NpsTaxAccount]])
-                   (npsEmployments: List[NpsEmployment])
-                   (implicit headerCarrier: HeaderCarrier): PayAsYouEarn = {
-
-    val payAsYouEarnList = npsEmployments.map { npsEmployment =>
-      val companyBenefits = iabdsOption.map { iabds =>
-        new IabdsHelper(iabds).matchedCompanyBenefits(npsEmployment)
-      }
-      val rtiEmployments = rtiOption.map { rtiData =>
-        rtiDataHelper.auditOnlyInRTI(rtiData.nino, npsEmployments, rtiData.employments)
-        rtiDataHelper.getMatchedRtiEmployments(rtiData.nino, npsEmployment, rtiData.employments)
-      }
-
-      buildPAYE(rtiEmploymentsOption = rtiEmployments, iabdsOption = companyBenefits, npsEmployment = npsEmployment)
-    }
-
-    val allowances = iabdsOption match {
-      case None => Nil
-      case Some(x) => new IabdsHelper(x).allowances
-    }
-    val taxAccount = taxAccOption.flatten.map(_.toTaxAccount)
-    val payAsYouEarn = combinePAYEs(payAsYouEarnList).copy(allowances = allowances, taxAccount = taxAccount)
-
-    payAsYouEarn
-  }
+object EmploymentHistoryServiceHelper extends TaxHistoryHelper with TaxHistoryLogger {
 
   def combinePAYEs(payAsYouEarnList: List[PayAsYouEarn]): PayAsYouEarn = {
     // TODO `reduce` will cause an exception if the list of PayAsYouEarn is empty.
@@ -75,7 +47,7 @@ class EmploymentHistoryServiceHelper @Inject()(val rtiDataHelper: RtiDataHelper)
     }
 
     val benefits = if (iabdsOption.exists(_.nonEmpty)) {
-      iabdsOption.map(iabds => Map(employment.employmentId.toString -> new IabdsHelper(iabds).companyBenefits))
+      iabdsOption.map(iabds => Map(employment.employmentId.toString -> iabds.companyBenefits))
     } else {
       None
     }

@@ -16,32 +16,20 @@
 
 package uk.gov.hmrc.taxhistory.services.helpers
 
-import com.google.inject.Inject
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.tai.model.rti.RtiEmployment
-import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, PayAndTax}
-import uk.gov.hmrc.taxhistory.model.audit.{DataEventDetail, NpsRtiMismatch, OnlyInRti, PAYEForAgents}
+import uk.gov.hmrc.taxhistory.model.api.PayAndTax
+import uk.gov.hmrc.taxhistory.model.audit.DataEventDetail
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
 
-class RtiDataHelper @Inject()(val auditable: Auditable) extends TaxHistoryHelper with TaxHistoryLogger{
+object RtiDataHelper extends TaxHistoryHelper with TaxHistoryLogger {
 
-  def auditOnlyInRTI(nino: String, npsEmployments: List[NpsEmployment], rtiEmployments: List[RtiEmployment])
-                    (implicit headerCarrier: HeaderCarrier): Unit = {
-    val employments = rtiEmployments.filter(rti => !npsEmployments.exists(nps => isMatch(nps, rti)))
-    auditable.sendDataEvents(
-      transactionName = PAYEForAgents,
-      details = buildEmploymentDataEventDetails(nino, employments),
-      eventType = OnlyInRti)
-  }
-
-  private def isMatch(npsEmployment: NpsEmployment, rtiEmployment: RtiEmployment): Boolean =
+  def isMatch(npsEmployment: NpsEmployment, rtiEmployment: RtiEmployment): Boolean =
     (formatString(rtiEmployment.officeNumber) == formatString(npsEmployment.taxDistrictNumber)) &&
       (rtiEmployment.payeRef == npsEmployment.payeNumber)
 
-  private def isSubMatch(npsEmployment: NpsEmployment, rtiEmployment: RtiEmployment) = {
+  def isSubMatch(npsEmployment: NpsEmployment, rtiEmployment: RtiEmployment) = {
     (for {
       currentPayId <- rtiEmployment.currentPayId
       worksNumber  <- npsEmployment.worksNumber
@@ -50,21 +38,51 @@ class RtiDataHelper @Inject()(val auditable: Auditable) extends TaxHistoryHelper
     }).getOrElse(false)
   }
 
-  def getMatchedRtiEmployments(nino: String, npsEmployment: NpsEmployment, rtiEmployments: List[RtiEmployment])
-                              (implicit headerCarrier: HeaderCarrier): List[RtiEmployment] = {
+  def matchEmployments(npsEmployments: List[NpsEmployment], rtiEmployments: List[RtiEmployment]): Map[NpsEmployment, List[RtiEmployment]] = {
+    npsEmployments.map { npsEmployment =>
+      val matchingRtiEmployments = rtiEmployments.filter(isMatch(npsEmployment, _))
+      (npsEmployment, matchingRtiEmployments)
+    }.toMap
+  }
 
-    rtiEmployments.filter(rtiEmployment => isMatch(npsEmployment, rtiEmployment)) match {
-      case matchingEmp :: Nil => List(matchingEmp)
-      case head :: tail =>
-        logger.warn("Multiple matching rti employments found.")
-        (head :: tail).filter(rtiEmployment => isSubMatch(npsEmployment, rtiEmployment)) match {
-          case matchingEmp :: Nil => List(matchingEmp)
-          case mismatchedEmployments =>
-            auditable.sendDataEvents(transactionName = PAYEForAgents, details = buildEmploymentDataEventDetails(nino, mismatchedEmployments), eventType = NpsRtiMismatch)
-            Nil
+  /**
+    * This function ensures that we have only one RTI employment matching each NPS employment,
+    * and filters out any NPS employment for which there is no RTI counterpart.
+    * It will send audit events as a side-effect if it finds and ambiguity which cannot be resolved.
+    */
+  def normalisedEmploymentMatches(npsEmployments: List[NpsEmployment], rtiEmployments: List[RtiEmployment]): Map[NpsEmployment, RtiEmployment] = {
+    matchEmployments(npsEmployments, rtiEmployments).collect {
+      case (nps, Nil)                   => nps -> None
+      case (nps, uniqueRti :: Nil)      => nps -> Some(uniqueRti)
+      case (nps, rti) if rti.length > 1 =>
+        logger.warn(s"Multiple matching NPS employments found.")
+        val subMatches = rti.filter(RtiDataHelper.isSubMatch(nps, _))
+        subMatches match {
+          case unique :: Nil => nps -> Some(unique)
+          case _             => nps -> None
         }
-      case Nil => Nil // Auditing will happen in the function onlyInRTI for this case
+    }.collect {
+      case (nps, Some(rti)) => nps -> rti
     }
+  }
+
+  /**
+    * Returns only those matches between NPS employments and RTI employments where there was ambiguity (non-unique match)
+    * and the ambiguity could not be resolved.
+    */
+  def ambiguousEmploymentMatches(npsEmployments: List[NpsEmployment], rtiEmployments: List[RtiEmployment]): Map[NpsEmployment, List[RtiEmployment]] = {
+    val rawMatches = matchEmployments(npsEmployments, rtiEmployments)
+    val normalisedMatches = normalisedEmploymentMatches(npsEmployments, rtiEmployments)
+    rawMatches.filter { case (k, v) =>
+      (v.length > 1) && !normalisedMatches.keys.toList.contains(k) // if the normalised map omits the given key, it means it could not resolve the ambiguity.
+    }
+  }
+
+  /**
+    * Returns only those RTI employments which couldn't be matched to any NPS employments.
+    */
+  def employmentsOnlyInRTI(npsEmployments: List[NpsEmployment], rtiEmployments: List[RtiEmployment]): List[RtiEmployment] = {
+    rtiEmployments.filter(rti => !npsEmployments.exists(RtiDataHelper.isMatch(_, rti)))
   }
 
   def buildEmploymentDataEventDetails(nino: String, rtiEmployments: List[RtiEmployment]): Seq[DataEventDetail] =
@@ -72,29 +90,21 @@ class RtiDataHelper @Inject()(val auditable: Auditable) extends TaxHistoryHelper
       DataEventDetail(
         Map("nino" -> nino, "payeRef" -> rE.payeRef, "officeNumber" -> rE.officeNumber, "currentPayId" -> rE.currentPayId.getOrElse("")))
     )
-}
-
-object RtiDataHelper {
 
   def convertToPayAndTax(rtiEmployments: List[RtiEmployment]): PayAndTax = {
     val employment = rtiEmployments.head
-    val eyuList = convertRtiEYUToEYU(employment)
+    val eyus = employment.earlierYearUpdates.map(_.toEarlierYearUpdate)
+    val nonEmptyEyus = eyus.filter(eyu => eyu.taxablePayEYU != 0 && eyu.taxEYU != 0)
+
     employment.payments match {
-      case Nil => PayAndTax(earlierYearUpdates = eyuList)
+      case Nil => PayAndTax(earlierYearUpdates = nonEmptyEyus)
       case matchingPayments => {
         val payment = matchingPayments.sorted.last
         PayAndTax(taxablePayTotal = Some(payment.taxablePayYTD),
           taxTotal = Some(payment.totalTaxYTD),
           paymentDate=Some(payment.paidOnDate),
-          earlierYearUpdates = eyuList)
+          earlierYearUpdates = nonEmptyEyus)
       }
     }
   }
-
-  def convertRtiEYUToEYU(rtiEmployment: RtiEmployment): List[EarlierYearUpdate] = {
-    rtiEmployment.earlierYearUpdates
-      .map(_.toEarlierYearUpdate)
-      .filter(x => x.taxablePayEYU != 0 && x.taxEYU != 0)
-  }
-
 }
