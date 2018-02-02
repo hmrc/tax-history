@@ -19,6 +19,7 @@ package uk.gov.hmrc.tai.model.rti
 import com.github.nscala_time.time.Imports._
 import org.joda.time.LocalDate
 import play.api.libs.json._
+import uk.gov.hmrc.taxhistory.model.api.EarlierYearUpdate
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
 
 case class RtiData(nino:String,
@@ -40,7 +41,16 @@ case class RtiPayment(
 
 case class RtiEarlierYearUpdate(taxablePayDelta:BigDecimal,
                                 totalTaxDelta:BigDecimal,
-                                receivedDate:LocalDate)
+                                receivedDate:LocalDate) {
+
+  def toEarlierYearUpdate: EarlierYearUpdate = {
+    EarlierYearUpdate(
+      taxablePayEYU = taxablePayDelta,
+      taxEYU = totalTaxDelta,
+      receivedDate = receivedDate
+    )
+  }
+}
 
 
 object RtiPayment {

@@ -23,10 +23,10 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, VanBenefit}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.services.helpers.IabdsHelper
 
+class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil {
 
-class IabdsHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
+  import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 
   implicit val hc = HeaderCarrier()
   val testNino = randomNino()
@@ -47,47 +47,30 @@ class IabdsHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   "Iabds Helper" should {
     "correctly convert an iabd to an allowance model" in {
-      val iabdsHelper = new IabdsHelper(iabdList)
-      val allowances =  iabdsHelper.getAllowances()
+      val allowances = iabdList.allowances
       allowances.size mustBe 1
     }
     "Return an empty list of allowances when only iabd is present" in {
-      val iabdsHelper = new IabdsHelper(onlyIabdList)
-
-      val allowances =  iabdsHelper.getAllowances()
+      val allowances =  onlyIabdList.allowances
       allowances.size mustBe 0
-    }
-
-    "Return a filtered Iabds from  List of Nps Iabds" in {
-
-      val iabds = iabdsJsonResponse.as[List[Iabd]]
-      val iabdsHelper = new IabdsHelper(iabds)
-
-      val iabdsFiltered = iabdsHelper.getRawCompanyBenefits()
-      iabdsFiltered.size mustBe 4
-      iabdsFiltered.toString() contains  ("FlatRateJobExpenses") mustBe false
-      iabdsFiltered.toString() contains  ("VanBenefit")  mustBe true
-      iabdsFiltered.toString() contains  ("CarFuelBenefit")  mustBe true
     }
 
     "Return a matched iabds  from  List of employments" in {
       val iabds = iabdsJsonResponse.as[List[Iabd]]
-      val iabdsHelper = new IabdsHelper(iabds)
 
 
-      val matchedIabds = iabdsHelper.getMatchedCompanyBenefits(npsEmploymentResponse.head)
+      val matchedIabds = iabds.matchedCompanyBenefits(npsEmploymentResponse.head)
       matchedIabds.size mustBe 2
-      matchedIabds.toString() contains  ("VanBenefit") mustBe true
-      matchedIabds.toString() contains  ("CarFuelBenefit") mustBe true
+      matchedIabds.toString contains ("VanBenefit") mustBe true
+      matchedIabds.toString contains ("CarFuelBenefit") mustBe true
     }
 
     "Get CompanyBenfits from Iabd data and ignore Benefit In Kind (type 28)" in {
 
       val iabds = iabdsBenfitInKindJsonResponse.as[List[Iabd]]
-      val iabdsHelper = new IabdsHelper(iabds)
 
-      val companyBenefits=iabdsHelper.getCompanyBenefits()
-      companyBenefits.size mustBe  7
+      val companyBenefits=iabds.companyBenefits
+      companyBenefits.size mustBe 7
       val companyBenefit1 = companyBenefits.head
       companyBenefit1.source mustBe Some(26)
       companyBenefit1.iabdType mustBe "UnKnown"
@@ -97,35 +80,31 @@ class IabdsHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
     "Get CompanyBenfits from Iabd data Benefit In Kind of type 28(Total Benefit In Kind)" in {
 
       val iabds = iabdsTotalBenfitInKindJsonResponse.as[List[Iabd]]
-      val iabdsHelper = new IabdsHelper(iabds)
 
-      val companyBenefits=iabdsHelper.getCompanyBenefits()
+      val companyBenefits = iabds.companyBenefits
       companyBenefits.size mustBe  2
     }
 
     "Total Benefit In Kind  from Iabds list should return true if There is only BIK which is type 28" in {
       val iabds = iabdsTotalBenfitInKindJsonResponse.as[List[Iabd]]
-      val iabdsHelper = new IabdsHelper(iabds)
 
-      val bik=iabdsHelper.isTotalBenefitInKind()
+      val bik = iabds.isTotalBenefitInKind
       bik  mustBe  true
     }
 
     "Total Benefit In Kind  from Iabds list should return false if There is any BIK which is not type 28" in {
       val iabds = iabdsBenfitInKindJsonResponse.as[List[Iabd]]
-      val iabdsHelper = new IabdsHelper(iabds)
 
-      val bik=iabdsHelper.isTotalBenefitInKind()
-      bik  mustBe  false
+      val bik = iabds.isTotalBenefitInKind
+      bik mustBe false
     }
 
     "Return only Allowances from  List of Nps Iabds" in {
       val iabds = iabdsJsonResponse.as[List[Iabd]]
-      val iabdsHelper = new IabdsHelper(iabds)
 
-      val iabdsFiltered = iabdsHelper.getRawAllowances()
-      iabdsFiltered.size mustBe 1
-      iabdsFiltered.toString() contains  ("FlatRateJobExpenses") mustBe true
+      val allowances = iabds.allowances
+      allowances.size mustBe 1
+      allowances.toString() contains  ("FlatRateJobExpenses") mustBe true
     }
 
   }
