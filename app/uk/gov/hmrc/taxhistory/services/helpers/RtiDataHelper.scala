@@ -82,7 +82,9 @@ object RtiDataHelper extends TaxHistoryHelper with TaxHistoryLogger {
     * Returns only those RTI employments which couldn't be matched to any NPS employments.
     */
   def employmentsOnlyInRTI(npsEmployments: List[NpsEmployment], rtiEmployments: List[RtiEmployment]): List[RtiEmployment] = {
-    rtiEmployments.filter(rti => !npsEmployments.exists(RtiDataHelper.isMatch(_, rti)))
+    val allEmployments: List[RtiEmployment]     = rtiEmployments
+    val matchedEmployments: List[RtiEmployment] = matchEmployments(npsEmployments, rtiEmployments).values.toList.flatten
+    (allEmployments.toSet -- matchedEmployments.toSet).toList
   }
 
   def buildEmploymentDataEventDetails(nino: String, rtiEmployments: List[RtiEmployment]): Seq[DataEventDetail] =

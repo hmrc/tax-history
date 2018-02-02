@@ -25,7 +25,7 @@ import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, RtiDataHelper}
+import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 
 class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with TestUtil{
 

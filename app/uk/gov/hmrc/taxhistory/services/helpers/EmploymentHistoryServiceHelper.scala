@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxhistory.services.helpers
 import uk.gov.hmrc.tai.model.rti.RtiEmployment
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
 import uk.gov.hmrc.taxhistory.model.nps._
-import IabdsOps._
+import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
 object EmploymentHistoryServiceHelper extends TaxHistoryHelper with TaxHistoryLogger {

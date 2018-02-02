@@ -22,16 +22,16 @@ import javax.inject.Inject
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
-import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
+import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.{NpsConnector, RtiConnector}
 import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.audit.{NpsRtiMismatch, OnlyInRti, PAYEForAgents}
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
+import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, RtiDataHelper}
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 import uk.gov.hmrc.time.TaxYear
-import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 
 import scala.concurrent.Future
 
@@ -116,7 +116,7 @@ class EmploymentHistoryService @Inject()(
     }
   }
 
-  def getTaxYears(nino: Nino)(implicit headerCarrier: HeaderCarrier): Future[List[IndividualTaxYear]] = {
+  def getTaxYears(nino: Nino): Future[List[IndividualTaxYear]] = {
 
     val taxYearList = List(TaxYear.current.back(1),
                            TaxYear.current.back(2),
