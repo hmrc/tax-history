@@ -25,10 +25,10 @@ import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.fixtures.{NpsEmployments, RtiEmployments}
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
+import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, EmploymentMatchingHelper}
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 
-class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil with BeforeAndAfterEach with NpsEmployments with RtiEmployments {
+class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestUtil with BeforeAndAfterEach with NpsEmployments with RtiEmployments {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   private val testNino = randomNino()
@@ -38,7 +38,7 @@ class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil with Be
       val rtiData = rtiPartialDuplicateEmploymentsResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
       val testEmploymentHistoryService = TestEmploymentHistoryService.createNew()
-      val matches = RtiDataHelper.normalisedEmploymentMatches(npsEmployments, rtiData.employments)
+      val matches = EmploymentMatchingHelper.matchedEmployments(npsEmployments, rtiData.employments)
 
       matches.get(npsEmployments.head) must be (defined)
     }
@@ -46,14 +46,14 @@ class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil with Be
     "return Nil constructed list if there are zero matching rti employments for a single nps employment1" in {
       val rtiData = rtiNonMatchingEmploymentsResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
-      val matches = RtiDataHelper.normalisedEmploymentMatches(npsEmployments, rtiData.employments)
+      val matches = EmploymentMatchingHelper.matchedEmployments(npsEmployments, rtiData.employments)
 
       matches.get(npsEmployments.head) must be (empty)
     }
 
     "get pay and tax from employment1 data" in {
       val rtiData = rtiEmploymentResponse.as[RtiData]
-      val payAndTax =RtiDataHelper.convertToPayAndTax(rtiData.employments)
+      val payAndTax = EmploymentHistoryServiceHelper.convertRtiEmploymentsToPayAndTax(rtiData.employments)
       payAndTax.taxablePayTotal mustBe Some(rtiERTaxablePayTotal)
       payAndTax.taxTotal mustBe Some(rtiERTaxTotal)
       payAndTax.earlierYearUpdates.size mustBe 1
@@ -63,7 +63,7 @@ class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil with Be
       val rtiEmployments = List(rtiEmployment1,rtiEmployment2,rtiEmployment3,rtiEmployment4)
       val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
 
-      val onlyInRti = RtiDataHelper.employmentsOnlyInRTI(npsEmployments, rtiEmployments)
+      val onlyInRti = EmploymentMatchingHelper.unmatchedRtiEmployments(npsEmployments, rtiEmployments)
 
       onlyInRti.length must be (1)
       onlyInRti.head must be (rtiEmployment4)
@@ -74,7 +74,7 @@ class RtiDataHelperSpec extends PlaySpec with MockitoSugar with TestUtil with Be
       val rtiEmployments = List(rtiEmployment1,rtiEmployment2,rtiEmployment3)
       val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
 
-      val onlyInRti = RtiDataHelper.employmentsOnlyInRTI(npsEmployments, rtiEmployments)
+      val onlyInRti = EmploymentMatchingHelper.unmatchedRtiEmployments(npsEmployments, rtiEmployments)
 
       onlyInRti must be (empty)
     }

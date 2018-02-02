@@ -22,14 +22,14 @@ import javax.inject.Inject
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
-import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.{NpsConnector, RtiConnector}
 import uk.gov.hmrc.taxhistory.model.api._
-import uk.gov.hmrc.taxhistory.model.audit.{NpsRtiMismatch, OnlyInRti, PAYEForAgents}
+import uk.gov.hmrc.taxhistory.model.audit.{DataEventDetail, NpsRtiMismatch, OnlyInRti, PAYEForAgents}
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
 import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
-import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, RtiDataHelper}
+import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, EmploymentMatchingHelper}
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 import uk.gov.hmrc.time.TaxYear
 
@@ -170,23 +170,23 @@ class EmploymentHistoryService @Inject()(
 
       val allRtiEmployments = rtiDataOption.map(_.employments).getOrElse(Nil)
 
-      val employmentMatches = RtiDataHelper.normalisedEmploymentMatches(npsEmployments, allRtiEmployments)
+      val employmentMatches = EmploymentMatchingHelper.matchedEmployments(npsEmployments, allRtiEmployments)
 
       // Check for any RTI employment which doesn't match any NPS employment, and send an audit event if this is the case.
-      val onlyInRti = RtiDataHelper.employmentsOnlyInRTI(npsEmployments, allRtiEmployments)
+      val onlyInRti = EmploymentMatchingHelper.unmatchedRtiEmployments(npsEmployments, allRtiEmployments)
       if (onlyInRti.nonEmpty) {
         auditable.sendDataEvents(
           transactionName = PAYEForAgents,
-          details = RtiDataHelper.buildEmploymentDataEventDetails(nino.nino, onlyInRti),
+          details = buildEmploymentDataEventDetails(nino.nino, onlyInRti),
           eventType = OnlyInRti)
       }
 
       // Send an audit event for each employment that we weren't able to match conclusively.
-      RtiDataHelper.ambiguousEmploymentMatches(npsEmployments, allRtiEmployments).foreach { case (nps, rti) =>
+      EmploymentMatchingHelper.ambiguousEmploymentMatches(npsEmployments, allRtiEmployments).foreach { case (nps, rti) =>
         logger.warn(s"Some NPS employments have multiple matching RTI employments.")
         auditable.sendDataEvents(
           transactionName = PAYEForAgents,
-          details = RtiDataHelper.buildEmploymentDataEventDetails(nino.nino, rti),
+          details = buildEmploymentDataEventDetails(nino.nino, rti),
           eventType = NpsRtiMismatch
         )
       }
@@ -234,4 +234,14 @@ class EmploymentHistoryService @Inject()(
       npsConnector.getTaxAccount(nino, taxYear.currentYear).map(Some(_))
     }
   }
+
+  /*
+  A convenience method used when auditing.
+   */
+  private def buildEmploymentDataEventDetails(nino: String, rtiEmployments: List[RtiEmployment]): Seq[DataEventDetail] =
+    rtiEmployments.map(rE =>
+      DataEventDetail(
+        Map("nino" -> nino, "payeRef" -> rE.payeRef, "officeNumber" -> rE.officeNumber, "currentPayId" -> rE.currentPayId.getOrElse("")))
+    )
+
 }

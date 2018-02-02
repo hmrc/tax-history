@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxhistory.services.helpers
 
 import uk.gov.hmrc.tai.model.rti.RtiEmployment
-import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
+import uk.gov.hmrc.taxhistory.model.api.{PayAndTax, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
@@ -41,7 +41,7 @@ object EmploymentHistoryServiceHelper extends TaxHistoryHelper with TaxHistoryLo
     val employment = npsEmployment.toEmployment
 
     val payAndTax = if (rtiEmploymentsOption.exists(_.nonEmpty)) {
-      rtiEmploymentsOption.map(emps => Map(employment.employmentId.toString -> RtiDataHelper.convertToPayAndTax(emps)))
+      rtiEmploymentsOption.map(emps => Map(employment.employmentId.toString -> convertRtiEmploymentsToPayAndTax(emps)))
     } else {
       None
     }
@@ -54,4 +54,22 @@ object EmploymentHistoryServiceHelper extends TaxHistoryHelper with TaxHistoryLo
 
     PayAsYouEarn(employments = List(employment), benefits = benefits, payAndTax = payAndTax)
   }
+
+  def convertRtiEmploymentsToPayAndTax(rtiEmployments: List[RtiEmployment]): PayAndTax = {
+    val employment = rtiEmployments.head
+    val eyus = employment.earlierYearUpdates.map(_.toEarlierYearUpdate)
+    val nonEmptyEyus = eyus.filter(eyu => eyu.taxablePayEYU != 0 && eyu.taxEYU != 0)
+
+    employment.payments match {
+      case Nil => PayAndTax(earlierYearUpdates = nonEmptyEyus)
+      case matchingPayments => {
+        val payment = matchingPayments.sorted.last
+        PayAndTax(taxablePayTotal = Some(payment.taxablePayYTD),
+          taxTotal = Some(payment.totalTaxYTD),
+          paymentDate=Some(payment.paidOnDate),
+          earlierYearUpdates = nonEmptyEyus)
+      }
+    }
+  }
+
 }

@@ -34,7 +34,7 @@ import uk.gov.hmrc.taxhistory.model.audit.{DataEventAuditType, DataEventDetail, 
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.services.helpers.RtiDataHelper
+import uk.gov.hmrc.taxhistory.services.helpers.EmploymentMatchingHelper
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 
@@ -310,7 +310,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val rtiData = RtiData("QQ0000002", rtiEmployments)
       val mockAuditable = mock[Auditable]
 
-      val onlyInRti = RtiDataHelper.employmentsOnlyInRTI(npsEmployments, rtiEmployments)
+      val onlyInRti = EmploymentMatchingHelper.unmatchedRtiEmployments(npsEmployments, rtiEmployments)
 
       onlyInRti must not be empty
     }
@@ -329,7 +329,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       val rtiData = RtiData("QQ0000002", rtiEmployments)
       val mockAuditable = mock[Auditable]
 
-      val onlyInRti = RtiDataHelper.employmentsOnlyInRTI(npsEmployments, rtiEmployments)
+      val onlyInRti = EmploymentMatchingHelper.unmatchedRtiEmployments(npsEmployments, rtiEmployments)
 
       onlyInRti must be (empty)
     }
