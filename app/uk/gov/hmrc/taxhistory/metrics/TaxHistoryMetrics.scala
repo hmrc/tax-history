@@ -16,20 +16,14 @@
 
 package uk.gov.hmrc.taxhistory.metrics
 
+import javax.inject.Inject
+
+import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.Timer.Context
-import com.codahale.metrics.{MetricRegistry, Timer}
-import uk.gov.hmrc.play.graphite.MicroserviceMetrics
+import com.kenshoo.play.metrics.Metrics
 import uk.gov.hmrc.taxhistory.metrics.MetricsEnum.MetricsEnum
 
-trait TaxHistoryMetrics {
-  def startTimer(api: MetricsEnum): Timer.Context
-
-  def incrementSuccessCounter(api: MetricsEnum): Unit
-
-  def incrementFailedCounter(api: MetricsEnum): Unit
-}
-
-object TaxHistoryMetrics extends TaxHistoryMetrics with MicroserviceMetrics {
+class TaxHistoryMetrics @Inject() (val metrics: Metrics) {
   val registry: MetricRegistry = metrics.defaultRegistry
   val timers = Map(
     MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.timer("nps-get-employments-response-timer"),
@@ -50,9 +44,9 @@ object TaxHistoryMetrics extends TaxHistoryMetrics with MicroserviceMetrics {
     MetricsEnum.NPS_GET_TAX_ACCOUNT -> registry.counter("nps-get-tax-account-failed-counter")
   )
 
-  override def startTimer(api: MetricsEnum): Context = timers(api).time()
+  def startTimer(api: MetricsEnum): Context = timers(api).time()
 
-  override def incrementSuccessCounter(api: MetricsEnum): Unit = successCounters(api).inc()
+  def incrementSuccessCounter(api: MetricsEnum): Unit = successCounters(api).inc()
 
-  override def incrementFailedCounter(api: MetricsEnum): Unit = failedCounters(api).inc()
+  def incrementFailedCounter(api: MetricsEnum): Unit = failedCounters(api).inc()
 }

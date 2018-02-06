@@ -38,7 +38,6 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
   implicit val hc = HeaderCarrier()
 
   val mockServicesConfig = mock[ServicesConfig]
-  when(mockServicesConfig.baseUrl(any[String])).thenReturn("/test")
 
   val testNino = randomNino()
   val testNinoWithoutSuffix=testNino.value.take(8)
@@ -94,7 +93,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
   lazy val testRtiConnector = new RtiConnector(
     http = mock[HttpGet],
     audit = mock[Audit],
-    servicesConfig = mockServicesConfig,
+    serviceUrl = "/test",
     metrics = mock[TaxHistoryMetrics],
     authorizationToken = "auth",
     environment = "env",

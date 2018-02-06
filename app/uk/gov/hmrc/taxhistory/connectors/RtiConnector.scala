@@ -21,7 +21,6 @@ import javax.inject.{Inject, Named}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.audit.model.Audit
-import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
@@ -32,14 +31,12 @@ import scala.concurrent.Future
 
 class RtiConnector @Inject()(val http: HttpGet,
                              val audit: Audit,
-                             val servicesConfig: ServicesConfig,
                              val metrics: TaxHistoryMetrics,
+                             @Named("rti-hod-service-url") val serviceUrl: String,
                              @Named("microservice.services.rti-hod.authorizationToken") val authorizationToken: String,
                              @Named("microservice.services.rti-hod.env") val environment: String,
                              @Named("microservice.services.rti-hod.originatorId") val originatorId: String
                             ) extends AnyRef with TaxHistoryLogger {
-
-  lazy val serviceUrl: String = s"${servicesConfig.baseUrl("rti-hod")}"
 
   lazy val authorization: String = s"Bearer $authorizationToken"
 

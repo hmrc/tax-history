@@ -156,7 +156,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
   lazy val testNpsConnector = new NpsConnector(
     http = mock[HttpGet],
     audit = mock[Audit],
-    servicesConfig = mockServicesConfig,
+    serviceUrl = "/fake",
     metrics = mock[TaxHistoryMetrics],
     originatorId = "orgId",
     path = "/path"
