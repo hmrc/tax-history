@@ -24,7 +24,7 @@ import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
-import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
+import uk.gov.hmrc.taxhistory.utils.Logging
 
 import scala.concurrent.Future
 
@@ -32,7 +32,7 @@ class NpsConnector @Inject()(val http: HttpGet,
                              val metrics: TaxHistoryMetrics,
                              @Named("nps-hod-service-url") val serviceUrl: String,
                              @Named("microservice.services.nps-hod.path") val path: String,
-                             @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends AnyRef with TaxHistoryLogger {
+                             @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends AnyRef with Logging {
 
   def employmentUrl(nino: Nino, year: Int) = s"$serviceUrl/person/${nino.nino}/employment/$year"
   def iabdsUrl(nino: Nino, year: Int)      = s"$serviceUrl/person/${nino.nino}/iabds/$year"

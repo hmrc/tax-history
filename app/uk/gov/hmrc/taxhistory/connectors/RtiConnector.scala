@@ -24,7 +24,7 @@ import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
-import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
+import uk.gov.hmrc.taxhistory.utils.Logging
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
@@ -35,7 +35,7 @@ class RtiConnector @Inject()(val http: HttpGet,
                              @Named("microservice.services.rti-hod.authorizationToken") val authorizationToken: String,
                              @Named("microservice.services.rti-hod.env") val environment: String,
                              @Named("microservice.services.rti-hod.originatorId") val originatorId: String
-                            ) extends AnyRef with TaxHistoryLogger {
+                            ) extends AnyRef with Logging {
 
   lazy val authorization: String = s"Bearer $authorizationToken"
 

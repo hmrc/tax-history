@@ -25,7 +25,7 @@ import uk.gov.hmrc.cache.model.{Cache, Id}
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
-import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
+import uk.gov.hmrc.taxhistory.utils.Logging
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -37,7 +37,7 @@ import scala.concurrent.Future
 class TaxHistoryCacheService @Inject()(
                               val mongoDbConnection: MongoDbConnection,
                               @Named("mongodb.cache.expire.seconds") expireAfterSeconds: Int,
-                              @Named("mongodb.name") mongoSource: String) extends AnyRef with TaxHistoryLogger {
+                              @Named("mongodb.name") mongoSource: String) extends AnyRef with Logging {
 
   implicit val mongo: () => DB = mongoDbConnection.db
 

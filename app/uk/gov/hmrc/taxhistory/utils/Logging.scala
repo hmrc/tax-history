@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxhistory.utils
 
 import play.api.Logger
 
-trait TaxHistoryLogger {
+trait Logging {
 
   def logger: Logger = Logger(this.getClass)
 

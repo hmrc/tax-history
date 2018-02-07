@@ -30,7 +30,7 @@ import uk.gov.hmrc.taxhistory.model.audit.{DataEventDetail, NpsRtiMismatch, Only
 import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
 import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, EmploymentMatchingHelper}
-import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
+import uk.gov.hmrc.taxhistory.utils.Logging
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
@@ -40,7 +40,7 @@ class EmploymentHistoryService @Inject()(
                               val rtiConnector: RtiConnector,
                               val cacheService : TaxHistoryCacheService,
                               val auditable: Auditable
-                              ) extends TaxHistoryLogger {
+                              ) extends Logging {
 
   def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] = {
     getFromCache(nino, taxYear).flatMap { paye =>

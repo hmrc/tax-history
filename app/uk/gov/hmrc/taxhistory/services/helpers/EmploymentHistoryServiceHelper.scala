@@ -20,9 +20,9 @@ import uk.gov.hmrc.tai.model.rti.RtiEmployment
 import uk.gov.hmrc.taxhistory.model.api.{PayAndTax, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
-import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
+import uk.gov.hmrc.taxhistory.utils.Logging
 
-object EmploymentHistoryServiceHelper extends TaxHistoryHelper with TaxHistoryLogger {
+object EmploymentHistoryServiceHelper extends TaxHistoryHelper with Logging {
 
   def combinePAYEs(payAsYouEarnList: List[PayAsYouEarn]): PayAsYouEarn = {
     // `reduce` will cause an exception if the list of PayAsYouEarn is empty.

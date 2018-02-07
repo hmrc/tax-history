@@ -32,11 +32,15 @@ class EmploymentController @Inject()(val employmentHistoryService: EmploymentHis
                                      val authConnector: AuthConnector) extends TaxHistoryController {
 
   def getEmployments(nino: String, taxYear: Int): Action[AnyContent] = Action.async { implicit request =>
-    authorisedRelationship(nino, _ => retrieveEmployments(Nino(nino), TaxYear(taxYear)))
+    withAuthorisedRelationship(nino) { _ =>
+      retrieveEmployments(Nino(nino), TaxYear(taxYear))
+    }
   }
 
   def getEmployment(nino: String, taxYear: Int, employmentId: String): Action[AnyContent] = Action.async { implicit request =>
-    authorisedRelationship(nino, _ => retrieveEmployment(Nino(nino), TaxYear(taxYear), employmentId))
+    withAuthorisedRelationship(nino) { _ =>
+      retrieveEmployment(Nino(nino), TaxYear(taxYear), employmentId)
+    }
   }
 
   private def retrieveEmployment(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit hc: HeaderCarrier): Future[Result] = toResult {

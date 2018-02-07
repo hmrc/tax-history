@@ -31,7 +31,9 @@ import scala.concurrent.Future
 class AllowanceController @Inject()(val employmentHistoryService: EmploymentHistoryService, val authConnector: AuthConnector) extends TaxHistoryController {
 
   def getAllowances(nino: String, taxYear: Int): Action[AnyContent] = Action.async { implicit request =>
-    authorisedRelationship(nino, _ => retrieveAllowances(nino, taxYear))
+    withAuthorisedRelationship(nino) { _ =>
+      retrieveAllowances(nino, taxYear)
+    }
   }
 
   private def retrieveAllowances(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[Result] = toResult {

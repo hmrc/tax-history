@@ -18,14 +18,14 @@ package uk.gov.hmrc.taxhistory.services.helpers
 
 import uk.gov.hmrc.taxhistory.model.api.{Allowance, CompanyBenefit}
 import uk.gov.hmrc.taxhistory.model.nps._
-import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
+import uk.gov.hmrc.taxhistory.utils.Logging
 
 /**
   * Enriches a `List[Iabd]` with various convenience methods.
   */
 object IabdsOps {
 
-  implicit class IabdListOps(val iabds: List[Iabd]) extends TaxHistoryHelper with TaxHistoryLogger {
+  implicit class IabdListOps(val iabds: List[Iabd]) extends TaxHistoryHelper with Logging {
 
     def matchedCompanyBenefits(npsEmployment: NpsEmployment):List[Iabd] = iabds.filter { iabd =>
       iabd.`type`.isInstanceOf[CompanyBenefits] &&

@@ -18,10 +18,10 @@ package uk.gov.hmrc.taxhistory.services.helpers
 
 import uk.gov.hmrc.tai.model.rti.RtiEmployment
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
-import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
+import uk.gov.hmrc.taxhistory.utils.Logging
 
 
-object EmploymentMatchingHelper extends TaxHistoryHelper with TaxHistoryLogger {
+object EmploymentMatchingHelper extends TaxHistoryHelper with Logging {
 
   def isMatch(npsEmployment: NpsEmployment, rtiEmployment: RtiEmployment): Boolean =
     (formatString(rtiEmployment.officeNumber) == formatString(npsEmployment.taxDistrictNumber)) &&
