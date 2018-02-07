@@ -24,12 +24,14 @@ import org.scalatestplus.play.{OneServerPerSuite, PlaySpec}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.agentmtdidentifiers.model.Arn
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException, Upstream5xxResponse}
 import uk.gov.hmrc.taxhistory.model.api.Allowance
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
+import uk.gov.hmrc.taxhistory.utils.HttpErrors
 
 import scala.concurrent.Future
 
@@ -41,12 +43,6 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
   
   val testAllowances = List(Allowance(iabdType = "CarBenefit", amount = BigDecimal(100.00)))
 
-  val newEnrolments = Set(
-    Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), state = "", delegatedAuthRule = None)
-  )
-  val UnAuthorisedAgentEnrolments = Set(
-    Enrolment("HMRC-AS-UNAUTHORISED-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), state = "", delegatedAuthRule = None)
-  )
   override def beforeEach = {
     reset(mockEmploymentHistoryService)
     reset(mockPlayAuthConnector)
@@ -55,14 +51,22 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
   val testAllowanceController = new AllowanceController(
     employmentHistoryService = mockEmploymentHistoryService,
     authConnector = mockPlayAuthConnector
-  )
+  ) {
+    // This takes care of the authentication and the verification of the existing NINO-Agent relationship
+    override def retrieveArnFor(nino: String)(implicit hc: HeaderCarrier): Future[Option[Arn]] = Future.successful(Some(Arn("TestArn")))
+  }
+
+  val noArnAllowanceController = new AllowanceController(
+    employmentHistoryService = mockEmploymentHistoryService,
+    authConnector = mockPlayAuthConnector
+  ) {
+    // This always returns no ARN for the given NINO, which means that there is no existing NINO-Agent relationship
+    override def retrieveArnFor(nino: String)(implicit hc: HeaderCarrier): Future[Option[Arn]] = Future.successful(None)
+  }
 
   "getAllowances" must {
 
     "respond with OK for successful get" in {
-      when(mockPlayAuthConnector.authorise(Matchers.any(),Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
-      (Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(testAllowances))
 
@@ -70,65 +74,19 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
       status(result) must be(OK)
     }
 
-    "respond with NOT_FOUND, for unsuccessful GET" in {
-      when(mockPlayAuthConnector.authorise(Matchers.any(),Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
-      (Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
-      when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(new NotFoundException("")))
-      val result = testAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
-      status(result) must be(NOT_FOUND)
-    }
-
-    "respond with BAD_REQUEST, if HODS/Downstream sends BadRequest status" in {
-      when(mockPlayAuthConnector.authorise(Matchers.any(),Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
-      (Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
-      when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(new BadRequestException("")))
-      val result = testAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
-      status(result) must be(BAD_REQUEST)
-    }
-
-    "respond with SERVICE_UNAVAILABLE, if HODS/Downstream is unavailable" in {
-      when(mockPlayAuthConnector.authorise(Matchers.any(),Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
-      (Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
-      when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(new Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
-      val result = testAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
-      status(result) must be(SERVICE_UNAVAILABLE)
-    }
-
-    "respond with InternalServerError, if HODS/Downstream  sends some server error response" in {
-      when(mockPlayAuthConnector.authorise(Matchers.any(),Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
-      (Matchers.any(),Matchers.any()))
-        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
-      when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.failed(new Upstream5xxResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
-      val result = testAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
-      status(result) must be(INTERNAL_SERVER_ERROR)
+    "propagate error responses from upstream microservices" in {
+      HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
+        when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+          .thenReturn(Future.failed(httpException))
+        val result = testAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
+        status(result) must be(expectedStatus)
+      }
     }
 
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
-      when(mockPlayAuthConnector.authorise(Matchers.any(), Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
-      (Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(UnAuthorisedAgentEnrolments))))
-
       when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(testAllowances))
-      val result = testAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
-      status(result) must be(UNAUTHORIZED)
-    }
-
-    "respond with Unauthorised Status where affinity group is not retrieved" in {
-      when(mockPlayAuthConnector.authorise(Matchers.any(), Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
-      (Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](None, Enrolments(UnAuthorisedAgentEnrolments))))
-
-      when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(testAllowances))
-      val result = testAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
+      val result = noArnAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
   }
