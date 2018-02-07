@@ -32,7 +32,7 @@ import scala.concurrent.Future
 class RtiConnector @Inject()(val http: HttpGet,
                              val audit: Audit,
                              val metrics: TaxHistoryMetrics,
-                             @Named("rti-hod-service-url") val baseUrl: String,
+                             @Named("rti-hod-base-url") val baseUrl: String,
                              @Named("microservice.services.rti-hod.authorizationToken") val authorizationToken: String,
                              @Named("microservice.services.rti-hod.env") val environment: String,
                              @Named("microservice.services.rti-hod.originatorId") val originatorId: String

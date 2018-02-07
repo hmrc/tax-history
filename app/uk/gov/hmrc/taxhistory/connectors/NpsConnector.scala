@@ -31,7 +31,7 @@ import scala.concurrent.Future
 class NpsConnector @Inject()(val http: HttpGet,
                              val audit: Audit,
                              val metrics: TaxHistoryMetrics,
-                             @Named("nps-hod-service-url") val baseUrl: String,
+                             @Named("nps-hod-base-url") val baseUrl: String,
                              @Named("microservice.services.nps-hod.path") val path: String,
                              @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends AnyRef with TaxHistoryLogger {
 
