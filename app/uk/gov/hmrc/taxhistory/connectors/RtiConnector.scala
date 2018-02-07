@@ -30,7 +30,6 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.Future
 
 class RtiConnector @Inject()(val http: HttpGet,
-                             val audit: Audit,
                              val metrics: TaxHistoryMetrics,
                              @Named("rti-hod-service-url") val serviceUrl: String,
                              @Named("microservice.services.rti-hod.authorizationToken") val authorizationToken: String,
@@ -50,7 +49,7 @@ class RtiConnector @Inject()(val http: HttpGet,
       "Authorization" -> authorizationToken,
       "Gov-Uk-Originator-Id" -> originatorId))
 
-  def getRTIEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[RtiData] = {
+  def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[RtiData] = {
     implicit val hc: HeaderCarrier = createHeader
 
     val timerContext = metrics.startTimer(MetricsEnum.RTI_GET_EMPLOYMENTS)

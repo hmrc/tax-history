@@ -61,13 +61,13 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   "PayAndTax " should {
     "successfully populated from rti" in {
-      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
-      when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(iabdsResponse))
-      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(rtiEmploymentResponse))
-      when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new BadRequestException("")))
       val payAsYouEarn = await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
 

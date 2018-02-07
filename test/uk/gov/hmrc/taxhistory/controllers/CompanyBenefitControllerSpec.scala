@@ -41,10 +41,7 @@ class CompanyBenefitControllerSpec extends PlaySpec with OneServerPerSuite with 
   val nino = randomNino()
 
   val testCompanyBenefits = List(CompanyBenefit(iabdType = "CarBenefit", amount = BigDecimal(100.00)))
-  val testCompanyBenefitsJson = Json.toJson(testCompanyBenefits)
 
-  val failureResponseJson = Json.parse( """{"reason":"Resource not found"}""")
-  val errorResponseJson = Json.parse( """{"reason":"Some error."}""")
   val employmentId = UUID.randomUUID().toString
 
   val newEnrolments = Set(

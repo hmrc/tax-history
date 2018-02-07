@@ -31,10 +31,8 @@ import scala.concurrent.Future
 class CompanyBenefitController @Inject()(val authConnector: AuthConnector,
                                          val employmentHistoryService: EmploymentHistoryService) extends TaxHistoryController {
 
-  def getCompanyBenefits(nino: String, taxYear: Int, employmentId: String): Action[AnyContent] = Action.async {
-    implicit request => {
-      authorisedRelationship(nino, _ => retrieveCompanyBenefits(Nino(nino), TaxYear(taxYear), employmentId))
-    }
+  def getCompanyBenefits(nino: String, taxYear: Int, employmentId: String): Action[AnyContent] = Action.async { implicit request =>
+    authorisedRelationship(nino, _ => retrieveCompanyBenefits(Nino(nino), TaxYear(taxYear), employmentId))
   }
 
   private def retrieveCompanyBenefits(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit hc: HeaderCarrier): Future[Result] = toResult {

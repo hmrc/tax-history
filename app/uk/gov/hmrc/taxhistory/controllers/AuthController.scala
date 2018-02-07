@@ -29,7 +29,7 @@ import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
 
 import scala.concurrent.Future
 
-trait AuthController extends BaseController with AuthorisedFunctions with TaxHistoryLogger{
+trait AuthController extends BaseController with AuthorisedFunctions with TaxHistoryLogger {
 
   lazy val affinityGroupAllEnrolls: Retrieval[~[Option[AffinityGroup], Enrolments]] = affinityGroup and allEnrolments
 

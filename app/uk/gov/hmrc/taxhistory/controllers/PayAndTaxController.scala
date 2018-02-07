@@ -31,10 +31,8 @@ import scala.concurrent.Future
 class PayAndTaxController @Inject()(val authConnector: AuthConnector,
                                     val employmentHistoryService: EmploymentHistoryService) extends TaxHistoryController {
 
-  def getPayAndTax(nino: String, taxYear: Int, employmentId: String): Action[AnyContent] = Action.async {
-    implicit request => {
-      authorisedRelationship(nino, _ => retrievePayAndTax(Nino(nino), TaxYear(taxYear), employmentId))
-    }
+  def getPayAndTax(nino: String, taxYear: Int, employmentId: String): Action[AnyContent] = Action.async { implicit request =>
+    authorisedRelationship(nino, _ => retrievePayAndTax(Nino(nino), TaxYear(taxYear), employmentId))
   }
 
   private def retrievePayAndTax(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit hc:HeaderCarrier): Future[Result] = toResult {

@@ -40,10 +40,6 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
   private val nino = randomNino()
   
   val testAllowances = List(Allowance(iabdType = "CarBenefit", amount = BigDecimal(100.00)))
-  val testAllowancesJson = Json.toJson(testAllowances)
-
-  val failureResponseJson = Json.parse( """{"reason":"Resource not found"}""")
-  val errorResponseJson = Json.parse( """{"reason":"Some error."}""")
 
   val newEnrolments = Set(
     Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), state = "", delegatedAuthRule = None)

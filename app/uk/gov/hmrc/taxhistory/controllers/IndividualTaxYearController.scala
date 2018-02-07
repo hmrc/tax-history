@@ -34,10 +34,8 @@ class IndividualTaxYearController @Inject()(val authConnector: AuthConnector,
                                             val employmentHistoryService: EmploymentHistoryService,
                                             val auditable: Auditable) extends TaxHistoryController with TaxHistoryLogger {
 
-  def getTaxYears(nino: String): Action[AnyContent] = Action.async {
-    implicit request => {
-      authorisedRelationship(nino, data => retrieveTaxYears(Nino(nino), data.getOrElse("")))
-    }
+  def getTaxYears(nino: String): Action[AnyContent] = Action.async { implicit request =>
+    authorisedRelationship(nino, data => retrieveTaxYears(Nino(nino), data.getOrElse("")))
   }
 
   private def retrieveTaxYears(nino: Nino, arn: String)(implicit hc: HeaderCarrier): Future[Result] = {
