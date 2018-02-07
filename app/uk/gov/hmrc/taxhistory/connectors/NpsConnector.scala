@@ -31,13 +31,14 @@ import scala.concurrent.Future
 class NpsConnector @Inject()(val http: HttpGet,
                              val audit: Audit,
                              val metrics: TaxHistoryMetrics,
-                             @Named("nps-hod-service-url") val serviceUrl: String,
+                             @Named("nps-hod-service-url") val baseUrl: String,
                              @Named("microservice.services.nps-hod.path") val path: String,
                              @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends AnyRef with TaxHistoryLogger {
 
-  def employmentUrl(nino: Nino, year: Int) = s"$serviceUrl/person/${nino.nino}/employment/$year"
-  def iabdsUrl(nino: Nino, year: Int)      = s"$serviceUrl/person/${nino.nino}/iabds/$year"
-  def taxAccountUrl(nino: Nino, year: Int) = s"$serviceUrl/person/${nino.nino}/tax-account/$year"
+  private val servicePrefix = "nps-hod-service/services/nps"
+  def employmentUrl(nino: Nino, year: Int) = s"$baseUrl/$servicePrefix/person/${nino.nino}/employment/$year"
+  def iabdsUrl(nino: Nino, year: Int)      = s"$baseUrl/$servicePrefix/person/${nino.nino}/iabds/$year"
+  def taxAccountUrl(nino: Nino, year: Int) = s"$baseUrl/$servicePrefix/person/${nino.nino}/tax-account/$year"
 
   def basicNpsHeaders(hc: HeaderCarrier): HeaderCarrier = {
     hc.withExtraHeaders("Gov-Uk-Originator-Id" -> originatorId)

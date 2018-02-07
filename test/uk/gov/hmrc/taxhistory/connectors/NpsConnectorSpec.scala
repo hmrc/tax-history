@@ -64,6 +64,18 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       headers.extraHeaders mustBe List(("Gov-Uk-Originator-Id", "orgId"))
     }
 
+    "create the correct url for employment" in {
+      testNpsConnector.employmentUrl(testNino, testYear) must be (s"/fake/nps-hod-service/services/nps/person/$testNino/employment/$testYear")
+    }
+
+    "create the correct url for iabds" in {
+      testNpsConnector.iabdsUrl(testNino, testYear) must be (s"/fake/nps-hod-service/services/nps/person/$testNino/iabds/$testYear")
+    }
+
+    "create the correct url for taxAccount" in {
+      testNpsConnector.taxAccountUrl(testNino, testYear) must be (s"/fake/nps-hod-service/services/nps/person/$testNino/tax-account/$testYear")
+    }
+
     "get EmploymentData data" when {
       "given a valid Nino and TaxYear" in {
         implicit val hc = HeaderCarrier()
@@ -156,7 +168,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
   lazy val testNpsConnector = new NpsConnector(
     http = mock[HttpGet],
     audit = mock[Audit],
-    serviceUrl = "/fake",
+    baseUrl = "/fake",
     metrics = mock[TaxHistoryMetrics],
     originatorId = "orgId",
     path = "/path"
