@@ -32,7 +32,7 @@ import scala.concurrent.Future
 class RtiConnector @Inject()(val http: HttpGet,
                              val audit: Audit,
                              val metrics: TaxHistoryMetrics,
-                             @Named("rti-hod-service-url") val serviceUrl: String,
+                             @Named("rti-hod-base-url") val baseUrl: String,
                              @Named("microservice.services.rti-hod.authorizationToken") val authorizationToken: String,
                              @Named("microservice.services.rti-hod.env") val environment: String,
                              @Named("microservice.services.rti-hod.originatorId") val originatorId: String
@@ -42,7 +42,7 @@ class RtiConnector @Inject()(val http: HttpGet,
 
   def rtiEmploymentsUrl(nino: Nino, taxYear: TaxYear): String = {
     val formattedTaxYear = s"${taxYear.startYear % 100}-${taxYear.finishYear % 100}"
-    s"$serviceUrl/rti/individual/payments/nino/${nino.withoutSuffix}/tax-year/$formattedTaxYear"
+    s"$baseUrl/rti/individual/payments/nino/${nino.withoutSuffix}/tax-year/$formattedTaxYear"
   }
 
   def createHeader: HeaderCarrier = HeaderCarrier(extraHeaders =
