@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.taxhistory.utils
 
-import uk.gov.hmrc.http.{BadRequestException, NotFoundException, Upstream5xxResponse}
 import play.api.http.Status._
+import uk.gov.hmrc.http.{BadRequestException, NotFoundException, Upstream5xxResponse}
 
 object HttpErrors {
   val toCheck: List[(Exception, Int)] = List(

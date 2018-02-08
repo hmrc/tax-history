@@ -24,8 +24,6 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.audit.model.Audit
-import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -54,6 +52,18 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     "create the correct headers" in {
       val headers = testNpsConnector.basicNpsHeaders(HeaderCarrier())
       headers.extraHeaders mustBe List(("Gov-Uk-Originator-Id", "orgId"))
+    }
+
+    "create the correct url for employment" in {
+      testNpsConnector.employmentUrl(testNino, testYear) must be (s"/fake/nps-hod-service/services/nps/person/$testNino/employment/$testYear")
+    }
+
+    "create the correct url for iabds" in {
+      testNpsConnector.iabdsUrl(testNino, testYear) must be (s"/fake/nps-hod-service/services/nps/person/$testNino/iabds/$testYear")
+    }
+
+    "create the correct url for taxAccount" in {
+      testNpsConnector.taxAccountUrl(testNino, testYear) must be (s"/fake/nps-hod-service/services/nps/person/$testNino/tax-account/$testYear")
     }
 
     "get EmploymentData data" when {
@@ -147,7 +157,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   lazy val testNpsConnector = new NpsConnector(
     http = mock[HttpGet],
-    serviceUrl = "/fake",
+    baseUrl = "/fake",
     metrics = mock[TaxHistoryMetrics],
     originatorId = "orgId",
     path = "/path"

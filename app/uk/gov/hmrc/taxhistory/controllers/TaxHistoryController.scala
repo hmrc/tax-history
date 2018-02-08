@@ -18,7 +18,6 @@ package uk.gov.hmrc.taxhistory.controllers
 
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.Result
-import uk.gov.hmrc.auth.core.AuthorisedFunctions
 import uk.gov.hmrc.http.{BadRequestException, NotFoundException, Upstream4xxResponse, Upstream5xxResponse}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.taxhistory.utils.Logging

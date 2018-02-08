@@ -20,7 +20,6 @@ import javax.inject.{Inject, Named}
 
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
@@ -30,13 +29,14 @@ import scala.concurrent.Future
 
 class NpsConnector @Inject()(val http: HttpGet,
                              val metrics: TaxHistoryMetrics,
-                             @Named("nps-hod-service-url") val serviceUrl: String,
+                             @Named("nps-hod-base-url") val baseUrl: String,
                              @Named("microservice.services.nps-hod.path") val path: String,
                              @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends AnyRef with Logging {
 
-  def employmentUrl(nino: Nino, year: Int) = s"$serviceUrl/person/${nino.nino}/employment/$year"
-  def iabdsUrl(nino: Nino, year: Int)      = s"$serviceUrl/person/${nino.nino}/iabds/$year"
-  def taxAccountUrl(nino: Nino, year: Int) = s"$serviceUrl/person/${nino.nino}/tax-account/$year"
+  private val servicePrefix = "nps-hod-service/services/nps"
+  def employmentUrl(nino: Nino, year: Int) = s"$baseUrl/$servicePrefix/person/${nino.nino}/employment/$year"
+  def iabdsUrl(nino: Nino, year: Int)      = s"$baseUrl/$servicePrefix/person/${nino.nino}/iabds/$year"
+  def taxAccountUrl(nino: Nino, year: Int) = s"$baseUrl/$servicePrefix/person/${nino.nino}/tax-account/$year"
 
   def basicNpsHeaders(hc: HeaderCarrier): HeaderCarrier = {
     hc.withExtraHeaders("Gov-Uk-Originator-Id" -> originatorId)
