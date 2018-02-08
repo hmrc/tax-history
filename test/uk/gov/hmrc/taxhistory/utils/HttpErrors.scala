@@ -16,17 +16,14 @@
 
 package uk.gov.hmrc.taxhistory.utils
 
-import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.connectors.{NpsConnector, RtiConnector}
-import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, TaxHistoryCacheService}
+import play.api.http.Status._
+import uk.gov.hmrc.http.{BadRequestException, NotFoundException, Upstream5xxResponse}
 
-object TestEmploymentHistoryService extends AnyRef with MockitoSugar {
-  def createNew(): EmploymentHistoryService =
-    new EmploymentHistoryService(
-      npsConnector = mock[NpsConnector],
-      rtiConnector = mock[RtiConnector],
-      cacheService = mock[TaxHistoryCacheService],
-      auditable = mock[Auditable]
-    )
+object HttpErrors {
+  val toCheck: List[(Exception, Int)] = List(
+    (new NotFoundException(""), NOT_FOUND),
+    (new BadRequestException(""), BAD_REQUEST),
+    (new Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE), SERVICE_UNAVAILABLE),
+    (new Upstream5xxResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR), INTERNAL_SERVER_ERROR)
+  )
 }

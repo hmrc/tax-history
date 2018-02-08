@@ -24,8 +24,6 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.audit.model.Audit
-import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -35,18 +33,10 @@ import scala.concurrent.Future
 
 class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
-  lazy val employmentsSuccessfulResponseJson = loadFile("/json/nps/response/employments.json")
-  lazy val employmentsSuccessfulResponse = employmentsSuccessfulResponseJson.as[List[NpsEmployment]]
+  lazy val testNpsEmployment = loadFile("/json/nps/response/employments.json").as[List[NpsEmployment]]
+  lazy val testIabds = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
+  lazy val testNpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
 
-  lazy val iabdsSuccessfulResponseJson = loadFile("/json/nps/response/iabds.json")
-  lazy val iabdsSuccessfulResponse = iabdsSuccessfulResponseJson.as[List[Iabd]]
-
-  lazy val taxAccountResponseJson = loadFile("/json/nps/response/GetTaxAccount.json")
-  lazy val taxAccountResponse = taxAccountResponseJson.as[NpsTaxAccount]
-
-
-  val mockServicesConfig = mock[ServicesConfig]
-  when(mockServicesConfig.baseUrl(any[String])).thenReturn("/test")
 
   val testNino = randomNino()
   val testYear = 2016
@@ -83,11 +73,11 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testemploymentsConnector.http.GET[List[NpsEmployment]](any())(any(), any(), any())).thenReturn(Future.successful(employmentsSuccessfulResponse))
+        when(testemploymentsConnector.http.GET[List[NpsEmployment]](any())(any(), any(), any())).thenReturn(Future.successful(testNpsEmployment))
 
         val result = testemploymentsConnector.getEmployments(testNino, testYear)
 
-        await(result) mustBe employmentsSuccessfulResponse
+        await(result) mustBe testNpsEmployment
       }
 
       "return and handle an error response" in {
@@ -112,11 +102,11 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         when(testIabdsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testIabdsConnector.http.GET[List[Iabd]](any())(any(), any(), any())).thenReturn(Future.successful(iabdsSuccessfulResponse))
+        when(testIabdsConnector.http.GET[List[Iabd]](any())(any(), any(), any())).thenReturn(Future.successful(testIabds))
 
         val result = testIabdsConnector.getIabds(testNino, testYear)
 
-        await(result) mustBe iabdsSuccessfulResponse
+        await(result) mustBe testIabds
       }
 
       "return and handle an service unavailable error response " in {
@@ -141,11 +131,11 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testTaxAccountConnector.http.GET[NpsTaxAccount](any())(any(), any(), any())).thenReturn(Future.successful(taxAccountResponse))
+        when(testTaxAccountConnector.http.GET[NpsTaxAccount](any())(any(), any(), any())).thenReturn(Future.successful(testNpsTaxAccount))
 
         val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
 
-        await(result) mustBe taxAccountResponse
+        await(result) mustBe testNpsTaxAccount
       }
 
       "return and handle an error response" in {
@@ -167,7 +157,6 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   lazy val testNpsConnector = new NpsConnector(
     http = mock[HttpGet],
-    audit = mock[Audit],
     baseUrl = "/fake",
     metrics = mock[TaxHistoryMetrics],
     originatorId = "orgId",

@@ -19,11 +19,12 @@ package uk.gov.hmrc.taxhistory.controllers
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.Result
 import uk.gov.hmrc.http.{BadRequestException, NotFoundException, Upstream4xxResponse, Upstream5xxResponse}
-import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.taxhistory.utils.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait TaxHistoryController extends AuthController with TaxHistoryLogger {
+trait TaxHistoryController extends BaseController with Logging {
   def toResult[A : Writes](fa: Future[A])(implicit ec: ExecutionContext): Future[Result] = {
     fa.map(value => Ok(Json.toJson(value))).recover {
       case e400: BadRequestException =>

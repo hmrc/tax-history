@@ -19,33 +19,33 @@ package uk.gov.hmrc.taxhistory.controllers
 import javax.inject.Inject
 
 import play.api.mvc.{Action, AnyContent, Result}
-import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.agentmtdidentifiers.model.Arn
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.audit.{AgentViewedClient, AgentViewedClientEvent, DataEventDetail}
-import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
-import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
+import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, RelationshipAuthService}
+import uk.gov.hmrc.taxhistory.utils.Logging
 
 import scala.concurrent.Future
 
-class IndividualTaxYearController @Inject()(val authConnector: AuthConnector,
-                                            val employmentHistoryService: EmploymentHistoryService,
-                                            val auditable: Auditable) extends TaxHistoryController with TaxHistoryLogger {
+class IndividualTaxYearController @Inject()(val employmentHistoryService: EmploymentHistoryService,
+                                            val relationshipAuthService: RelationshipAuthService,
+                                            val auditable: Auditable) extends TaxHistoryController with Logging {
 
-  def getTaxYears(nino: String): Action[AnyContent] = Action.async {
-    implicit request => {
-      authorisedRelationship(nino, data => retrieveTaxYears(Nino(nino), data.getOrElse("")))
+  def getTaxYears(nino: String): Action[AnyContent] = Action.async { implicit request =>
+    relationshipAuthService.withAuthorisedRelationship(Nino(nino)) { arn =>
+      retrieveTaxYears(Nino(nino), arn)
     }
   }
 
-  private def retrieveTaxYears(nino: Nino, arn: String)(implicit hc: HeaderCarrier): Future[Result] = {
+  private def retrieveTaxYears(nino: Nino, arn: Arn)(implicit hc: HeaderCarrier): Future[Result] = {
     val taxYears = employmentHistoryService.getTaxYears(nino)
     taxYears.onSuccess { case _ =>
       auditable.sendDataEvent(transactionName = AgentViewedClient,
         path = "/tax-history/select-tax-year",
-        detail = DataEventDetail(Map("agentReferenceNumber" -> arn, "nino" -> nino.nino)),
+        detail = DataEventDetail(Map("agentReferenceNumber" -> arn.value, "nino" -> nino.nino)),
         eventType = AgentViewedClientEvent
       )
     }

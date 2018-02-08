@@ -19,21 +19,20 @@ package uk.gov.hmrc.taxhistory.controllers
 import javax.inject.Inject
 
 import play.api.mvc.{Action, AnyContent, Result}
-import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
-import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
+import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, RelationshipAuthService}
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
-class CompanyBenefitController @Inject()(val authConnector: AuthConnector,
-                                         val employmentHistoryService: EmploymentHistoryService) extends TaxHistoryController {
+class CompanyBenefitController @Inject()(val employmentHistoryService: EmploymentHistoryService,
+                                         val relationshipAuthService: RelationshipAuthService) extends TaxHistoryController {
 
-  def getCompanyBenefits(nino: String, taxYear: Int, employmentId: String): Action[AnyContent] = Action.async {
-    implicit request => {
-      authorisedRelationship(nino, _ => retrieveCompanyBenefits(Nino(nino), TaxYear(taxYear), employmentId))
+  def getCompanyBenefits(nino: String, taxYear: Int, employmentId: String): Action[AnyContent] = Action.async { implicit request =>
+    relationshipAuthService.withAuthorisedRelationship(Nino(nino)) { _ =>
+      retrieveCompanyBenefits(Nino(nino), TaxYear(taxYear), employmentId)
     }
   }
 

@@ -20,23 +20,21 @@ import javax.inject.{Inject, Named}
 
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
-import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
+import uk.gov.hmrc.taxhistory.utils.Logging
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
 class RtiConnector @Inject()(val http: HttpGet,
-                             val audit: Audit,
                              val metrics: TaxHistoryMetrics,
                              @Named("rti-hod-base-url") val baseUrl: String,
                              @Named("microservice.services.rti-hod.authorizationToken") val authorizationToken: String,
                              @Named("microservice.services.rti-hod.env") val environment: String,
                              @Named("microservice.services.rti-hod.originatorId") val originatorId: String
-                            ) extends AnyRef with TaxHistoryLogger {
+                            ) extends AnyRef with Logging {
 
   lazy val authorization: String = s"Bearer $authorizationToken"
 
@@ -50,7 +48,7 @@ class RtiConnector @Inject()(val http: HttpGet,
       "Authorization" -> authorizationToken,
       "Gov-Uk-Originator-Id" -> originatorId))
 
-  def getRTIEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[RtiData] = {
+  def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[RtiData] = {
     implicit val hc: HeaderCarrier = createHeader
 
     val timerContext = metrics.startTimer(MetricsEnum.RTI_GET_EMPLOYMENTS)

@@ -23,7 +23,6 @@ import org.mockito.Matchers
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
@@ -44,27 +43,23 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   val testEmploymentHistoryService = TestEmploymentHistoryService.createNew()
 
-  val failureResponseJson = Json.parse("""{"reason":"Bad Request"}""")
-
   val npsEmploymentResponse :List[NpsEmployment] = List(
     NpsEmployment(
       "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), false, false,
       new LocalDate("2015-01-21"), None, true, Live))
 
-  lazy val iabdsResponseJson = loadFile("/json/nps/response/iabds.json")
-  lazy val iabdsResponse = iabdsResponseJson.as[List[Iabd]]
-
+  lazy val iabdsResponse = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
 
 
   "Allowances" should {
     "successfully populated from iabds" in {
-      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
-      when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(iabdsResponse))
-      when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new NotFoundException("")))
-      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new NotFoundException("")))
       val response =  await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
 

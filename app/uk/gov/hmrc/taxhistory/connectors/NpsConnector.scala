@@ -20,20 +20,18 @@ import javax.inject.{Inject, Named}
 
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
-import uk.gov.hmrc.taxhistory.utils.TaxHistoryLogger
+import uk.gov.hmrc.taxhistory.utils.Logging
 
 import scala.concurrent.Future
 
 class NpsConnector @Inject()(val http: HttpGet,
-                             val audit: Audit,
                              val metrics: TaxHistoryMetrics,
                              @Named("nps-hod-base-url") val baseUrl: String,
                              @Named("microservice.services.nps-hod.path") val path: String,
-                             @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends AnyRef with TaxHistoryLogger {
+                             @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends AnyRef with Logging {
 
   private val servicePrefix = "nps-hod-service/services/nps"
   def employmentUrl(nino: Nino, year: Int) = s"$baseUrl/$servicePrefix/person/${nino.nino}/employment/$year"
@@ -44,7 +42,7 @@ class NpsConnector @Inject()(val http: HttpGet,
     hc.withExtraHeaders("Gov-Uk-Originator-Id" -> originatorId)
   }
 
-  def getEmployments(nino: Nino, year: Int)(implicit hc: HeaderCarrier): Future[List[NpsEmployment]] = {
+  def getEmployments(nino: Nino, year: Int): Future[List[NpsEmployment]] = {
     implicit val hc = basicNpsHeaders(HeaderCarrier())
 
     val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_EMPLOYMENTS)
@@ -62,7 +60,7 @@ class NpsConnector @Inject()(val http: HttpGet,
     result
   }
 
-  def getIabds(nino: Nino, year: Int)(implicit hc: HeaderCarrier): Future[List[Iabd]] = {
+  def getIabds(nino: Nino, year: Int): Future[List[Iabd]] = {
     implicit val hc = basicNpsHeaders(HeaderCarrier())
 
     val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_IABDS)
@@ -80,7 +78,7 @@ class NpsConnector @Inject()(val http: HttpGet,
     result
   }
 
-  def getTaxAccount(nino: Nino, year: Int)(implicit hc: HeaderCarrier): Future[NpsTaxAccount] = {
+  def getTaxAccount(nino: Nino, year: Int): Future[NpsTaxAccount] = {
     implicit val hc = basicNpsHeaders(HeaderCarrier())
 
     val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_TAX_ACCOUNT)

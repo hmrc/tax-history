@@ -24,8 +24,6 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.audit.model.Audit
-import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -37,12 +35,9 @@ import scala.concurrent.Future
 class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
   implicit val hc = HeaderCarrier()
 
-  val mockServicesConfig = mock[ServicesConfig]
-
   val testNino = randomNino()
-  val testNinoWithoutSuffix=testNino.value.take(8)
-  lazy val rtiSuccessfulResponseJson = loadFile("/json/rti/response/dummyRti.json")
-  lazy val rtiSuccessfulResponse = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
+  val testNinoWithoutSuffix = testNino.withoutSuffix
+  lazy val testRtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
 
   "RtiConnector" should {
     "have the correct RTI employments url" when {
@@ -68,11 +63,11 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         implicit val hc = HeaderCarrier()
         when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testRtiConnector.http.GET[RtiData](any())(any(), any(), any())).thenReturn(Future.successful(rtiSuccessfulResponse))
+        when(testRtiConnector.http.GET[RtiData](any())(any(), any(), any())).thenReturn(Future.successful(testRtiData))
 
         val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
 
-        await(result) mustBe rtiSuccessfulResponse
+        await(result) mustBe testRtiData
       }
 
       "return and handle an error response" in {
@@ -92,7 +87,6 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   lazy val testRtiConnector = new RtiConnector(
     http = mock[HttpGet],
-    audit = mock[Audit],
     baseUrl = "/test",
     metrics = mock[TaxHistoryMetrics],
     authorizationToken = "auth",
