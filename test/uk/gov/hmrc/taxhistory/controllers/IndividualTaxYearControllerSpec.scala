@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxhistory.controllers
 
 import org.mockito.Matchers
+import org.mockito.Matchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
@@ -24,85 +25,60 @@ import org.scalatestplus.play.{OneServerPerSuite, PlaySpec}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.agentmtdidentifiers.model.Arn
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, Upstream5xxResponse}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.api.IndividualTaxYear
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
+import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, RelationshipAuthService}
+import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestRelationshipAuthService}
 
 import scala.concurrent.Future
 
 class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
 
   val mockEmploymentHistoryService = mock[EmploymentHistoryService]
-  val mockPlayAuthConnector = mock[PlayAuthConnector]
 
-  lazy val successResponseJson = Json.parse( """{"test":"OK"}""")
-  val failureResponseJson = Json.parse( """{"reason":"Resource not found"}""")
-  val errorResponseJson = Json.parse( """{"reason":"Some error."}""")
-  val nino = randomNino()
+  val ninoWithAgent = randomNino()
+  val ninoWithoutAgent = randomNino()
+
   private val mockAuditable = mock[Auditable]
   val testTaxYears = List(IndividualTaxYear(2018, "fakeUri", "fakeUri", "fakeUri"))
 
-  val newEnrolments = Set(
-    Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), state = "", delegatedAuthRule = None)
-  )
-  val UnAuthorisedAgentEnrolments = Set(
-    Enrolment("HMRC-AS-UNAUTHORISED-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), state = "", delegatedAuthRule = None)
-  )
   override def beforeEach = {
     reset(mockEmploymentHistoryService)
-    reset(mockPlayAuthConnector)
   }
 
   val testIndividualTaxYearController = new IndividualTaxYearController (
     employmentHistoryService = mockEmploymentHistoryService,
-    authConnector = mockPlayAuthConnector,
+    relationshipAuthService = TestRelationshipAuthService(Map(ninoWithAgent -> Arn("TestArn"))),
     auditable = mockAuditable
   )
 
   "getTaxYears" must {
     "respond with OK for successful get" in {
-      when(mockPlayAuthConnector.authorise(Matchers.any(),Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
-      (Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
       when(mockEmploymentHistoryService.getTaxYears(Matchers.any()))
         .thenReturn(Future.successful(testTaxYears))
-      val result = testIndividualTaxYearController.getTaxYears(nino.nino).apply(FakeRequest())
+      val result = testIndividualTaxYearController.getTaxYears(ninoWithAgent.nino).apply(FakeRequest())
       status(result) must be(OK)
     }
 
-    "respond with InternalServerError, if service sends some error response" in {
-      when(mockPlayAuthConnector.authorise(Matchers.any(),Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
-      (Matchers.any(),Matchers.any()))
-        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent) , Enrolments(newEnrolments))))
-      when(mockEmploymentHistoryService.getTaxYears(Matchers.any()))
-        .thenReturn(Future.failed(new Upstream5xxResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
-      val result = testIndividualTaxYearController.getTaxYears(nino.nino).apply(FakeRequest())
-      status(result) must be(INTERNAL_SERVER_ERROR)
+    "propagate error responses from upstream microservices" in {
+      HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
+        when(mockEmploymentHistoryService.getTaxYears(Matchers.any()))
+          .thenReturn(Future.failed(httpException))
+        val result = testIndividualTaxYearController.getTaxYears(ninoWithAgent.nino).apply(FakeRequest())
+        status(result) must be(expectedStatus)
+      }
     }
 
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
-      when(mockPlayAuthConnector.authorise(Matchers.any(), Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
-      (Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(UnAuthorisedAgentEnrolments))))
-
       when(mockEmploymentHistoryService.getTaxYears(Matchers.any()))
         .thenReturn(Future.successful(testTaxYears))
-      val result = testIndividualTaxYearController.getTaxYears(nino.nino).apply(FakeRequest())
-      status(result) must be(UNAUTHORIZED)
-    }
-
-    "respond with Unauthorised Status where affinity group is not retrieved" in {
-      when(mockPlayAuthConnector.authorise(Matchers.any(), Matchers.any[Retrieval[~[Option[AffinityGroup], Enrolments]]]())
-      (Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](None, Enrolments(UnAuthorisedAgentEnrolments))))
-
-      when(mockEmploymentHistoryService.getTaxYears(Matchers.any()))
-        .thenReturn(Future.successful(testTaxYears))
-      val result = testIndividualTaxYearController.getTaxYears(nino.nino).apply(FakeRequest())
+      val result = testIndividualTaxYearController.getTaxYears(ninoWithoutAgent.nino).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
   }

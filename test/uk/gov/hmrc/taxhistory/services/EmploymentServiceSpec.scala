@@ -48,9 +48,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
   
   val testEmploymentHistoryService = TestEmploymentHistoryService.createNew()
 
-  val failureResponseJson = Json.parse("""{"reason":"Bad Request"}""")
-
-
   val npsEmploymentResponse:List[NpsEmployment] = List(
     NpsEmployment(
       "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), false, false,

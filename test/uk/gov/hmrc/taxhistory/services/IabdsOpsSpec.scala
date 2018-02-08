@@ -39,8 +39,7 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil {
       new LocalDate("2015-01-21"), None, false, Live))
 
 
-  lazy val iabdsJsonResponse = loadFile("/json/nps/response/iabds.json")
-  lazy val iabdList = iabdsJsonResponse.as[List[Iabd]]
+  lazy val iabdList = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
   lazy val iabdsTotalBenfitInKindJsonResponse = loadFile("/json/nps/response/iabdsTotalBIK.json")
   lazy val iabdsBenfitInKindJsonResponse = loadFile("/json/nps/response/iabdsBIK.json")
 
@@ -56,10 +55,8 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil {
     }
 
     "Return a matched iabds  from  List of employments" in {
-      val iabds = iabdsJsonResponse.as[List[Iabd]]
 
-
-      val matchedIabds = iabds.matchedCompanyBenefits(npsEmploymentResponse.head)
+      val matchedIabds = iabdList.matchedCompanyBenefits(npsEmploymentResponse.head)
       matchedIabds.size mustBe 2
       matchedIabds.toString contains ("VanBenefit") mustBe true
       matchedIabds.toString contains ("CarFuelBenefit") mustBe true
@@ -100,9 +97,7 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil {
     }
 
     "Return only Allowances from  List of Nps Iabds" in {
-      val iabds = iabdsJsonResponse.as[List[Iabd]]
-
-      val allowances = iabds.allowances
+      val allowances = iabdList.allowances
       allowances.size mustBe 1
       allowances.toString() contains  ("FlatRateJobExpenses") mustBe true
     }

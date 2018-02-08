@@ -23,22 +23,22 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
-import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
+import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, RelationshipAuthService}
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
 class EmploymentController @Inject()(val employmentHistoryService: EmploymentHistoryService,
-                                     val authConnector: AuthConnector) extends TaxHistoryController {
+                                     val relationshipAuthService: RelationshipAuthService) extends TaxHistoryController {
 
   def getEmployments(nino: String, taxYear: Int): Action[AnyContent] = Action.async { implicit request =>
-    withAuthorisedRelationship(nino) { _ =>
+    relationshipAuthService.withAuthorisedRelationship(Nino(nino)) { _ =>
       retrieveEmployments(Nino(nino), TaxYear(taxYear))
     }
   }
 
   def getEmployment(nino: String, taxYear: Int, employmentId: String): Action[AnyContent] = Action.async { implicit request =>
-    withAuthorisedRelationship(nino) { _ =>
+    relationshipAuthService.withAuthorisedRelationship(Nino(nino)) { _ =>
       retrieveEmployment(Nino(nino), TaxYear(taxYear), employmentId)
     }
   }

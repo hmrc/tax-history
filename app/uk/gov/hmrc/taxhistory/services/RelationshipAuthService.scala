@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxhistory.controllers
+package uk.gov.hmrc.taxhistory.services
+
+import javax.inject.Inject
 
 import play.api.mvc.{Result, Results}
 import uk.gov.hmrc.agentmtdidentifiers.model.Arn
@@ -23,6 +25,7 @@ import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, UnauthorizedException}
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.utils.Logging
@@ -30,10 +33,10 @@ import uk.gov.hmrc.taxhistory.utils.Logging
 import scala.concurrent.Future
 
 /**
-  * This mix-in trait provides a method to check whether an authorised relationship exists between a NINO and an Agent
+  * This service provides a method to check whether an authorised relationship exists between a NINO and an Agent
   * before proceeding with a given code block.
   */
-trait RelationshipAuth { self: AnyRef with AuthorisedFunctions with Results with Logging =>
+class RelationshipAuthService @Inject() (val authConnector: AuthConnector) extends AnyRef with AuthorisedFunctions with Results with Logging {
 
   lazy val affinityGroupAllEnrolls: Retrieval[Option[AffinityGroup] ~ Enrolments] = affinityGroup and allEnrolments
 
@@ -45,8 +48,8 @@ trait RelationshipAuth { self: AnyRef with AuthorisedFunctions with Results with
     arn        <- agentEnrol.getIdentifier("AgentReferenceNumber")
   } yield Arn(arn.value)
 
-  def retrieveArnFor(nino: String)(implicit hc: HeaderCarrier): Future[Option[Arn]] = {
-    authorised(AgentEnrolmentForPAYE.withIdentifier("MTDITID", nino) and AuthProviders(GovernmentGateway)).retrieve(affinityGroupAllEnrolls) {
+  def retrieveArnFor(nino: Nino)(implicit hc: HeaderCarrier): Future[Option[Arn]] = {
+    authorised(AgentEnrolmentForPAYE.withIdentifier("MTDITID", nino.nino) and AuthProviders(GovernmentGateway)).retrieve(affinityGroupAllEnrolls) {
       case affinityG ~ allEnrols =>
         (affinityG, extractArn(allEnrols)) match {
           case (Some(Agent), Some(arn)) => Future.successful(Some(arn))
@@ -62,7 +65,7 @@ trait RelationshipAuth { self: AnyRef with AuthorisedFunctions with Results with
     * A code block wrapped in this function will only be executed if there exists an authorised relationship
     * between the given NINO and an Agent.
     */
-  def withAuthorisedRelationship(nino: String)(action: Arn => Future[Result])(implicit hc: HeaderCarrier): Future[Result] = {
+  def withAuthorisedRelationship(nino: Nino)(action: Arn => Future[Result])(implicit hc: HeaderCarrier): Future[Result] = {
     retrieveArnFor(nino).flatMap {
       case Some(arn) => action(arn)
       case None      =>

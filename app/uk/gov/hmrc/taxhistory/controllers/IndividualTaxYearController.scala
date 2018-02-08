@@ -26,17 +26,17 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.audit.{AgentViewedClient, AgentViewedClientEvent, DataEventDetail}
-import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
+import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, RelationshipAuthService}
 import uk.gov.hmrc.taxhistory.utils.Logging
 
 import scala.concurrent.Future
 
-class IndividualTaxYearController @Inject()(val authConnector: AuthConnector,
-                                            val employmentHistoryService: EmploymentHistoryService,
+class IndividualTaxYearController @Inject()(val employmentHistoryService: EmploymentHistoryService,
+                                            val relationshipAuthService: RelationshipAuthService,
                                             val auditable: Auditable) extends TaxHistoryController with Logging {
 
   def getTaxYears(nino: String): Action[AnyContent] = Action.async { implicit request =>
-    withAuthorisedRelationship(nino) { arn =>
+    relationshipAuthService.withAuthorisedRelationship(Nino(nino)) { arn =>
       retrieveTaxYears(Nino(nino), arn)
     }
   }

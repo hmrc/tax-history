@@ -44,16 +44,12 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   val testEmploymentHistoryService = TestEmploymentHistoryService.createNew()
 
-  val failureResponseJson = Json.parse("""{"reason":"Bad Request"}""")
-
   val npsEmploymentResponse :List[NpsEmployment] = List(
     NpsEmployment(
       "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), false, false,
       new LocalDate("2015-01-21"), None, true, Live))
 
-  lazy val iabdsResponseJson = loadFile("/json/nps/response/iabds.json")
-  lazy val iabdsResponse = iabdsResponseJson.as[List[Iabd]]
-
+  lazy val iabdsResponse = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
 
 
   "Allowances" should {

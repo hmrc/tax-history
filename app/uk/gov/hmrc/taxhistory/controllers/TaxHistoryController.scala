@@ -25,7 +25,7 @@ import uk.gov.hmrc.taxhistory.utils.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait TaxHistoryController extends BaseController with AuthorisedFunctions with RelationshipAuth with Logging {
+trait TaxHistoryController extends BaseController with Logging {
   def toResult[A : Writes](fa: Future[A])(implicit ec: ExecutionContext): Future[Result] = {
     fa.map(value => Ok(Json.toJson(value))).recover {
       case e400: BadRequestException =>

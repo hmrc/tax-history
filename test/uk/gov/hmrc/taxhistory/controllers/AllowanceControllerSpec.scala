@@ -18,51 +18,45 @@ package uk.gov.hmrc.taxhistory.controllers
 
 import org.mockito.Matchers
 import org.mockito.Mockito._
+import org.mockito.stubbing.Answer
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.{OneServerPerSuite, PlaySpec}
 import play.api.libs.json.Json
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.agentmtdidentifiers.model.Arn
-import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
-import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException, Upstream5xxResponse}
+import uk.gov.hmrc.auth.core.AffinityGroup.Agent
+import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
+import uk.gov.hmrc.auth.core.AuthProviders
+import uk.gov.hmrc.auth.core.retrieve.~
+import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.http.{HeaderCarrier, UnauthorizedException}
 import uk.gov.hmrc.taxhistory.model.api.Allowance
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
-import uk.gov.hmrc.taxhistory.utils.HttpErrors
+import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, RelationshipAuthService}
+import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestRelationshipAuthService}
 
 import scala.concurrent.Future
 
 class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
 
-  private val mockEmploymentHistoryService = mock[EmploymentHistoryService]
-  private val mockPlayAuthConnector = mock[PlayAuthConnector]
-  private val nino = randomNino()
-  
+  val mockEmploymentHistoryService = mock[EmploymentHistoryService]
+
+  val ninoWithAgent = randomNino()
+  val ninoWithoutAgent = randomNino()
+
   val testAllowances = List(Allowance(iabdType = "CarBenefit", amount = BigDecimal(100.00)))
 
   override def beforeEach = {
     reset(mockEmploymentHistoryService)
-    reset(mockPlayAuthConnector)
   }
 
   val testAllowanceController = new AllowanceController(
     employmentHistoryService = mockEmploymentHistoryService,
-    authConnector = mockPlayAuthConnector
-  ) {
-    // This takes care of the authentication and the verification of the existing NINO-Agent relationship
-    override def retrieveArnFor(nino: String)(implicit hc: HeaderCarrier): Future[Option[Arn]] = Future.successful(Some(Arn("TestArn")))
-  }
-
-  val noArnAllowanceController = new AllowanceController(
-    employmentHistoryService = mockEmploymentHistoryService,
-    authConnector = mockPlayAuthConnector
-  ) {
-    // This always returns no ARN for the given NINO, which means that there is no existing NINO-Agent relationship
-    override def retrieveArnFor(nino: String)(implicit hc: HeaderCarrier): Future[Option[Arn]] = Future.successful(None)
-  }
+    relationshipAuthService = TestRelationshipAuthService(Map(ninoWithAgent -> Arn("TestArn")))
+  )
 
   "getAllowances" must {
 
@@ -70,7 +64,7 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
       when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(testAllowances))
 
-      val result = testAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
+      val result = testAllowanceController.getAllowances(ninoWithAgent.nino, 2016).apply(FakeRequest())
       status(result) must be(OK)
     }
 
@@ -78,7 +72,7 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
         when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
-        val result = testAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
+        val result = testAllowanceController.getAllowances(ninoWithAgent.nino, 2016).apply(FakeRequest())
         status(result) must be(expectedStatus)
       }
     }
@@ -86,7 +80,7 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
       when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
         .thenReturn(Future.successful(testAllowances))
-      val result = noArnAllowanceController.getAllowances(nino.nino, 2016).apply(FakeRequest())
+      val result = testAllowanceController.getAllowances(ninoWithoutAgent.nino, 2016).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
   }
