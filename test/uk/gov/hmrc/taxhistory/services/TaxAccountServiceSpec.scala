@@ -60,7 +60,7 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new NotFoundException("")))
 
-      val payAsYouEarn = await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino, TaxYear(2016)))
+      val payAsYouEarn = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)))
 
       val taxAccount = payAsYouEarn.taxAccount.get
       taxAccount.outstandingDebtRestriction mustBe Some(145.75)
@@ -72,8 +72,7 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
       val testTaxAccount = TaxAccount(UUID.fromString("3923afda-41ee-4226-bda5-e39cc4c82934"), Some(22.22), Some(11.11),Some(33.33))
 
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(), Matchers.any())(Matchers.any()))
-        .thenReturn(Future.successful(paye))
+      testEmploymentHistoryService.cacheService.insertOrUpdate((testNino, TaxYear.current.previous), paye)
 
       val taxAccount = await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear.current.previous))
       taxAccount must be(testTaxAccount)

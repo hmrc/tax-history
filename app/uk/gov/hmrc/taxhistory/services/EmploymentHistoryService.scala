@@ -36,15 +36,15 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.Future
 
 class EmploymentHistoryService @Inject()(
-                              val npsConnector: NpsConnector,
-                              val rtiConnector: RtiConnector,
-                              val cacheService : TaxHistoryCacheService,
-                              val auditable: Auditable
+                                          val npsConnector: NpsConnector,
+                                          val rtiConnector: RtiConnector,
+                                          val cacheService : PayeCacheService,
+                                          val auditable: Auditable
                               ) extends Logging {
 
   def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] = {
     getFromCache(nino, taxYear).flatMap { paye =>
-      logger.warn("Returning js result from getEmployments")
+      logger.warn("Returning result from getEmployments")
 
       if (paye.employments.isEmpty) {
         // If no employments, return a not found error. This preserves the existing logic for now. TODO Review logic
@@ -57,7 +57,7 @@ class EmploymentHistoryService @Inject()(
 
   def getEmployment(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Employment] = {
     getFromCache(nino, taxYear).flatMap { paye =>
-      logger.warn("Returning js result of a getEmployment")
+      logger.warn("Returning result of a getEmployment")
       paye.employments.find(_.employmentId.toString == employmentId) match {
         case Some(employment) =>
           Future.successful(employment.enrichWithURIs(taxYear.startYear))
@@ -71,7 +71,7 @@ class EmploymentHistoryService @Inject()(
 
   def getFromCache(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[PayAsYouEarn] = {
     cacheService.getOrElseInsert(nino, taxYear) {
-      retrieveEmploymentsDirectFromSource(nino, taxYear).map { h =>
+      retrieveAndBuildPaye(nino, taxYear).map { h =>
         logger.warn(s"Refreshing cached data for $nino $taxYear")
         h
       }
@@ -80,7 +80,7 @@ class EmploymentHistoryService @Inject()(
 
   def getAllowances(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Allowance]] = {
     getFromCache(nino, taxYear).flatMap(paye => {
-      logger.warn("Returning js result from getAllowances")
+      logger.warn("Returning result from getAllowances")
 
       if (paye.allowances.isEmpty) {
         Future.failed(new NotFoundException(s"Allowance not found for NINO ${nino.nino} and tax year ${taxYear.toString}"))
@@ -92,22 +92,13 @@ class EmploymentHistoryService @Inject()(
 
 
   def getPayAndTax(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[PayAndTax] = {
-    getFromCache(nino, taxYear).flatMap { paye =>
-      logger.warn("Returning js result from getEmployments")
-
-      paye.payAndTax match {
-        case None => Future.failed(new NotFoundException(s"PayAndTax not found for NINO ${nino.nino}, tax year ${taxYear.toString} and employmentId $employmentId"))
-        case Some(payAndTax) =>
-          payAndTax.get(employmentId)
-            .map(Future.successful(_))
-            .getOrElse(Future.failed(new NotFoundException(s"PayAndTax not found for NINO ${nino.nino}, tax year ${taxYear.toString} and employmentId $employmentId")))
-      }
-    }
+    getFromCache(nino, taxYear).map(_.payAndTax.get(employmentId))
+      .orNotFound(s"PayAndTax not found for NINO ${nino.nino}, tax year ${taxYear.toString} and employmentId $employmentId")
   }
 
   def getTaxAccount(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[TaxAccount] = {
     getFromCache(nino, taxYear).flatMap { paye =>
-      logger.warn("Returning js result from getTaxAccount")
+      logger.warn("Returning result from getTaxAccount")
 
       paye.taxAccount match {
         case Some(taxAccount) => Future.successful(taxAccount)
@@ -132,94 +123,95 @@ class EmploymentHistoryService @Inject()(
   }
 
   def getCompanyBenefits(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[List[CompanyBenefit]] = {
-    getFromCache(nino, taxYear).flatMap { paye =>
-      logger.warn("Returning js result from getCompanyBenefits")
-
-      paye.benefits match {
-        case None => Future.failed(new NotFoundException(s"CompanyBenefits not found for NINO ${nino.nino}, tax year ${taxYear.toString} and employmentId $employmentId"))
-        case Some(companyBenefits) =>
-          companyBenefits.get(employmentId)
-            .map(Future.successful(_))
-            .getOrElse(Future.failed(new NotFoundException(s"CompanyBenefits not found for NINO ${nino.nino}, tax year ${taxYear.toString} and employmentId $employmentId")))
-      }
-    }
+    getFromCache(nino, taxYear).map(_.benefits.get(employmentId))
+      .orNotFound(s"CompanyBenefits not found for NINO ${nino.nino}, tax year ${taxYear.toString} and employmentId $employmentId")
   }
 
-  def retrieveEmploymentsDirectFromSource(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[PayAsYouEarn] = {
+  /**
+    * Retrieves (from connected microservices) the data required to build instances of
+    * the tax year summary (`PayAsYouEarn`) and combines this data into a `PayAsYouEarn` instance.
+    */
+  def retrieveAndBuildPaye(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[PayAsYouEarn] = {
 
     for {
-      employments <- getNpsEmployments(nino, taxYear)
-      result      <-
-        if (employments.isEmpty) {
-          Future.failed(new NotFoundException(s"PayAsYouEarn not found for NINO ${nino.nino} and tax year ${taxYear.toString}"))
-          // TODO this is to preserve existing logic. To review
-        } else {
-          retrieveAndMergeEmployments(nino, taxYear)(employments)
-        }
-    } yield result
-  }
-
-  def retrieveAndMergeEmployments(nino: Nino, taxYear: TaxYear)(npsEmployments: List[NpsEmployment])
-                                 (implicit headerCarrier: HeaderCarrier): Future[PayAsYouEarn] = {
-
-    for {
-      iabdsOption   <- getNpsIabds(nino,taxYear).map(Some(_)).recover { case _ => None }       // TODO this is done to preserve existing logic. To be reviewed!
-      rtiDataOption <- getRtiEmployments(nino,taxYear).map(Some(_)).recover { case _ => None } // TODO this is done to preserve existing logic. To be reviewed!
-      taxAccOption  <- getNpsTaxAccount(nino,taxYear).map(Some(_)).recover { case _ => None }  // TODO this is done to preserve existing logic. To be reviewed!
+      npsEmployments <- retrieveNpsEmployments(nino, taxYear).orNotFound(s"No NPS employments found for $nino $taxYear")
+      rtiDataOpt     <- retrieveRtiData(nino,taxYear).map(Some(_)).recover { case _ => None } // TODO this is done to preserve existing logic. To be reviewed!
+      rtiEmployments  = rtiDataOpt.map(_.employments).getOrElse(Nil)
+      iabds          <- retrieveNpsIabds(nino,taxYear).recover { case _ => Nil } // TODO this is done to preserve existing logic. To be reviewed!
+      taxAccountOpt  <- getNpsTaxAccount(nino,taxYear).map(Some(_)).recover { case _ => None }  // TODO this is done to preserve existing logic. To be reviewed!
     } yield {
-
-      val allRtiEmployments = rtiDataOption.map(_.employments).getOrElse(Nil)
-
-      val employmentMatches = EmploymentMatchingHelper.matchedEmployments(npsEmployments, allRtiEmployments)
-
-      // Check for any RTI employment which doesn't match any NPS employment, and send an audit event if this is the case.
-      val onlyInRti = EmploymentMatchingHelper.unmatchedRtiEmployments(npsEmployments, allRtiEmployments)
-      if (onlyInRti.nonEmpty) {
-        auditable.sendDataEvents(
-          transactionName = PAYEForAgents,
-          details = buildEmploymentDataEventDetails(nino.nino, onlyInRti),
-          eventType = OnlyInRti)
-      }
-
-      // Send an audit event for each employment that we weren't able to match conclusively.
-      EmploymentMatchingHelper.ambiguousEmploymentMatches(npsEmployments, allRtiEmployments).foreach { case (nps, rti) =>
-        logger.warn(s"Some NPS employments have multiple matching RTI employments.")
-        auditable.sendDataEvents(
-          transactionName = PAYEForAgents,
-          details = buildEmploymentDataEventDetails(nino.nino, rti),
-          eventType = NpsRtiMismatch
-        )
-      }
-
-      // One [[PayAsYouEarn]] instance will be produced for each npsEmployment.
-      val payes: List[PayAsYouEarn] = npsEmployments.map { npsEmployment =>
-
-        val companyBenefits = iabdsOption.map(_.matchedCompanyBenefits(npsEmployment))
-        val rtiEmploymentsOption = employmentMatches.get(npsEmployment).map(List(_))
-
-        EmploymentHistoryServiceHelper.buildPAYE(rtiEmploymentsOption = rtiEmploymentsOption, iabdsOption = companyBenefits, npsEmployment = npsEmployment)
-      }
-
-      val allowances = iabdsOption.map(_.allowances).getOrElse(Nil)
-      val taxAccount = taxAccOption.flatten.map(_.toTaxAccount)
-      val payAsYouEarn = EmploymentHistoryServiceHelper.combinePAYEs(payes).copy(allowances = allowances, taxAccount = taxAccount)
-
-      payAsYouEarn
+      mergeEmployments(nino, taxYear, npsEmployments, rtiEmployments, taxAccountOpt.flatten, iabds)
     }
   }
 
-  def getNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[NpsEmployment]] = {
+  /**
+    * Given the data required, performs the necessary logic to combine this data from
+    * different sources into a `PayAsYouEarn` (tax year summary) instance.
+    */
+  def mergeEmployments(nino:             Nino,
+                       taxYear:          TaxYear,
+                       npsEmployments:   List[NpsEmployment],
+                       rtiEmployments:   List[RtiEmployment],
+                       taxAccountOption: Option[NpsTaxAccount],
+                       iabds:            List[Iabd]
+                      )(implicit hc: HeaderCarrier): PayAsYouEarn = {
+
+    val employmentMatches: Map[NpsEmployment, RtiEmployment] = EmploymentMatchingHelper.matchedEmployments(npsEmployments, rtiEmployments)
+
+    // Check for any RTI employment which doesn't match any NPS employment, and send an audit event if this is the case.
+    val onlyInRti = EmploymentMatchingHelper.unmatchedRtiEmployments(npsEmployments, rtiEmployments)
+    if (onlyInRti.nonEmpty) {
+      auditable.sendDataEvents(
+        transactionName = PAYEForAgents,
+        details = buildEmploymentDataEventDetails(nino.nino, onlyInRti),
+        eventType = OnlyInRti)
+    }
+
+    // Send an audit event for each employment that we weren't able to match conclusively.
+    EmploymentMatchingHelper.ambiguousEmploymentMatches(npsEmployments, rtiEmployments).foreach { case (nps, rti) =>
+      logger.warn(s"Some NPS employments have multiple matching RTI employments.")
+      auditable.sendDataEvents(
+        transactionName = PAYEForAgents,
+        details = buildEmploymentDataEventDetails(nino.nino, rti),
+        eventType = NpsRtiMismatch
+      )
+    }
+
+    // One [[PayAsYouEarn]] instance will be produced for each npsEmployment.
+    val payes: List[PayAsYouEarn] = npsEmployments.map { npsEmployment =>
+
+      val companyBenefits = iabds.matchedCompanyBenefits(npsEmployment)
+      val rtiEmployment = employmentMatches.get(npsEmployment)
+
+      EmploymentHistoryServiceHelper.buildPAYE(rtiEmployment = rtiEmployment, iabds = companyBenefits, npsEmployment = npsEmployment)
+    }
+
+    val allowances = iabds.allowances
+    val taxAccount = taxAccountOption.map(_.toTaxAccount)
+    val payAsYouEarn = EmploymentHistoryServiceHelper.combinePAYEs(payes).copy(allowances = allowances, taxAccount = taxAccount)
+
+    payAsYouEarn
+  }
+
+  /*
+    Retrieve NpsEmployments directly from the NPS microservice.
+   */
+  def retrieveNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[NpsEmployment]] = {
     npsConnector.getEmployments(nino, taxYear.currentYear).map { employments =>
       employments.filterNot(x => x.receivingJobSeekersAllowance || x.otherIncomeSourceIndicator)
-    }.recover {
-      case e: NotFoundException => Nil // In case of a 404 don't fail but instead return an empty list
     }
   }
 
-  def getRtiEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[RtiData] =
+  /*
+    Retrieve RtiData directly from the RTI microservice.
+   */
+  def retrieveRtiData(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[RtiData] =
     rtiConnector.getRTIEmployments(nino, taxYear)
 
-  def getNpsIabds(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[Iabd]] =
+  /*
+    Retrieve Iabds directly from the NPS microservice.
+   */
+  def retrieveNpsIabds(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[Iabd]] =
     npsConnector.getIabds(nino, taxYear.currentYear)
 
   /**

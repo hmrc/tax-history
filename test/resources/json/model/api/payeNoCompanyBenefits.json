@@ -18,6 +18,7 @@
       "employmentStatus":1
     }
   ],
-  "allowances":[]
-
+  "allowances":[],
+  "benefits":{},
+  "payAndTax":{}
 }
