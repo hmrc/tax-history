@@ -16,19 +16,17 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import org.mockito.Mockito.validateMockitoUsage
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.fixtures.{NpsEmployments, RtiEmployments}
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, EmploymentMatchingHelper}
+import uk.gov.hmrc.taxhistory.services.helpers.EmploymentMatchingHelper
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 
-class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestUtil with BeforeAndAfterEach with NpsEmployments with RtiEmployments {
+class EmploymentMatchingHelperSpec extends PlaySpec with TestUtil with BeforeAndAfterEach with NpsEmployments with RtiEmployments {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   private val testNino = randomNino()
@@ -51,14 +49,6 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
       matches.get(npsEmployments.head) must be (empty)
     }
 
-    "get pay and tax from employment1 data" in {
-      val rtiData = rtiEmploymentResponse.as[RtiData]
-      val payAndTax = EmploymentHistoryServiceHelper.convertRtiEmploymentsToPayAndTax(rtiData.employments)
-      payAndTax.taxablePayTotal mustBe Some(rtiERTaxablePayTotal)
-      payAndTax.taxTotal mustBe Some(rtiERTaxTotal)
-      payAndTax.earlierYearUpdates.size mustBe 1
-    }
-
     "get onlyRtiEmployments from List of Rti employments and List Nps Employments" in {
       val rtiEmployments = List(rtiEmployment1,rtiEmployment2,rtiEmployment3,rtiEmployment4)
       val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
@@ -79,6 +69,4 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
       onlyInRti must be (empty)
     }
   }
-
-    override protected def afterEach(): Unit = validateMockitoUsage()
-  }
+}

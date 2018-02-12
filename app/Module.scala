@@ -33,6 +33,7 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.config.{AppName, ServicesConfig}
 import uk.gov.hmrc.taxhistory._
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
+import uk.gov.hmrc.taxhistory.services.{PayeCacheService, TaxHistoryMongoCacheService}
 
 class Module(val environment: Environment, val configuration: Configuration) extends AbstractModule with ServicesConfig {
 
@@ -47,6 +48,7 @@ class Module(val environment: Environment, val configuration: Configuration) ext
     bind(classOf[AuditingConfig]).toProvider(new AuditingConfigProvider("auditing"))
     bind(classOf[AuthConnector]).to(classOf[DefaultAuthConnector])
     bind(classOf[Audit]).to(classOf[MicroserviceAudit])
+    bind(classOf[PayeCacheService]).to(classOf[TaxHistoryMongoCacheService])
 
     bindConfigInt("mongodb.cache.expire.seconds", default = Some(60 * 30))
     bindConfigString("mongodb.name")

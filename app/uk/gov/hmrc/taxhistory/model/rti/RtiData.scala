@@ -19,7 +19,7 @@ package uk.gov.hmrc.tai.model.rti
 import com.github.nscala_time.time.Imports._
 import org.joda.time.LocalDate
 import play.api.libs.json._
-import uk.gov.hmrc.taxhistory.model.api.EarlierYearUpdate
+import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, PayAndTax}
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
 
 case class RtiData(nino:String,
@@ -30,7 +30,25 @@ case class RtiEmployment(sequenceNo:Int,
                          payeRef:String,
                          currentPayId: Option[String]= None,
                          payments:List[RtiPayment],
-                         earlierYearUpdates:List[RtiEarlierYearUpdate])
+                         earlierYearUpdates:List[RtiEarlierYearUpdate]) {
+
+  def toPayAndTax: PayAndTax = {
+    val eyus = earlierYearUpdates.map(_.toEarlierYearUpdate)
+    val nonEmptyEyus = eyus.filter(eyu => eyu.taxablePayEYU != 0 && eyu.taxEYU != 0)
+
+    payments match {
+      case Nil => PayAndTax(earlierYearUpdates = nonEmptyEyus)
+      case matchingPayments => {
+        val payment = matchingPayments.sorted.last
+        PayAndTax(taxablePayTotal = Some(payment.taxablePayYTD),
+          taxTotal = Some(payment.totalTaxYTD),
+          paymentDate=Some(payment.paidOnDate),
+          earlierYearUpdates = nonEmptyEyus)
+      }
+    }
+  }
+
+}
 
 case class RtiPayment(
                       paidOnDate:LocalDate,

@@ -61,7 +61,7 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
         .thenReturn(Future.failed(new NotFoundException("")))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new NotFoundException("")))
-      val response =  await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
+      val response =  await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino,TaxYear(2016)))
 
       val allowances = response.allowances
       allowances.size mustBe 1
@@ -70,11 +70,9 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
     "successfully retrieve allowance from cache" in {
       lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
 
-      val allowance:List[Allowance] = List (Allowance(UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"), "payeType", 12))
+      val allowance:List[Allowance] = List(Allowance(UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"), "payeType", 12))
 
-
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
-        .thenReturn(Future.successful(paye))
+      testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye)
 
       val result = await(testEmploymentHistoryService.getAllowances(Nino("AA000000A"), TaxYear(2014)))
       result must be(allowance)

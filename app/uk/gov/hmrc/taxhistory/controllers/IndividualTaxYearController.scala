@@ -45,7 +45,7 @@ class IndividualTaxYearController @Inject()(val employmentHistoryService: Employ
     taxYears.onSuccess { case _ =>
       auditable.sendDataEvent(transactionName = AgentViewedClient,
         path = "/tax-history/select-tax-year",
-        detail = DataEventDetail(Map("agentReferenceNumber" -> arn.value, "nino" -> nino.nino)),
+        detail = DataEventDetail(Map("agentReferenceNumber" -> arn.value, "nino" -> nino.value)),
         eventType = AgentViewedClientEvent
       )
     }

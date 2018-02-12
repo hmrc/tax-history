@@ -34,9 +34,9 @@ class NpsConnector @Inject()(val http: HttpGet,
                              @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends AnyRef with Logging {
 
   private val servicePrefix = "nps-hod-service/services/nps"
-  def employmentUrl(nino: Nino, year: Int) = s"$baseUrl/$servicePrefix/person/${nino.nino}/employment/$year"
-  def iabdsUrl(nino: Nino, year: Int)      = s"$baseUrl/$servicePrefix/person/${nino.nino}/iabds/$year"
-  def taxAccountUrl(nino: Nino, year: Int) = s"$baseUrl/$servicePrefix/person/${nino.nino}/tax-account/$year"
+  def employmentUrl(nino: Nino, year: Int) = s"$baseUrl/$servicePrefix/person/${nino.value}/employment/$year"
+  def iabdsUrl(nino: Nino, year: Int)      = s"$baseUrl/$servicePrefix/person/${nino.value}/iabds/$year"
+  def taxAccountUrl(nino: Nino, year: Int) = s"$baseUrl/$servicePrefix/person/${nino.value}/tax-account/$year"
 
   def basicNpsHeaders(hc: HeaderCarrier): HeaderCarrier = {
     hc.withExtraHeaders("Gov-Uk-Originator-Id" -> originatorId)
