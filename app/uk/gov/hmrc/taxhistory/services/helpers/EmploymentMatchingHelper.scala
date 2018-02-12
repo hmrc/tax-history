@@ -27,7 +27,7 @@ object EmploymentMatchingHelper extends TaxHistoryHelper with Logging {
     (formatString(rtiEmployment.officeNumber) == formatString(npsEmployment.taxDistrictNumber)) &&
       (rtiEmployment.payeRef == npsEmployment.payeNumber)
 
-  def isSubMatch(npsEmployment: NpsEmployment, rtiEmployment: RtiEmployment) = {
+  def isSubMatch(npsEmployment: NpsEmployment, rtiEmployment: RtiEmployment): Boolean = {
     (for {
       currentPayId <- rtiEmployment.currentPayId
       worksNumber  <- npsEmployment.worksNumber
@@ -37,8 +37,8 @@ object EmploymentMatchingHelper extends TaxHistoryHelper with Logging {
   }
 
   /*
-  This function returns all matches between NPS employments and RTI employments, including ambiguous ones and empty ones.
-  It can be imagined as a simple 'left join' between NPS employments and RTI employments.
+   This function returns all matches between NPS employments and RTI employments, including ambiguous ones and empty ones.
+   It can be imagined as a simple 'left join' between NPS employments and RTI employments.
    */
   private def rawMatchedEmployments(npsEmployments: List[NpsEmployment], rtiEmployments: List[RtiEmployment]): Map[NpsEmployment, List[RtiEmployment]] = {
     npsEmployments.map { npsEmployment =>

@@ -17,9 +17,11 @@
 package uk.gov.hmrc.taxhistory.model.utils
 
 import org.joda.time.LocalDate
-import org.joda.time.format.DateTimeFormat
+import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
+
+import scala.util.matching.Regex
 
 object JsonUtils {
   def mapFormat[K, V](keyLabel: String, valueLabel: String)
@@ -36,16 +38,14 @@ object JsonUtils {
 
       def reads(jv: JsValue): JsResult[Map[K, V]] = jv match {
         case JsArray(b) => JsSuccess(
-          b.map(x => (
-            (x \ keyLabel).as[K] -> (x \ valueLabel).as[V]
-            )).toMap)
+          b.map(x => (x \ keyLabel).as[K] -> (x \ valueLabel).as[V]).toMap)
         case x => JsError(s"Expected JsArray(...), found $x")
       }
     }
 
   lazy val rtiDateFormat: Format[LocalDate] = Format(
     new Reads[LocalDate]{
-      val dateRegex = """^(\d\d\d\d)-(\d\d)-(\d\d)$""".r
+      val dateRegex: Regex = """^(\d\d\d\d)-(\d\d)-(\d\d)$""".r
       override def reads(json: JsValue): JsResult[LocalDate] = json match {
         case JsString(dateRegex(y, m, d)) =>
           JsSuccess(new LocalDate(y.toInt, m.toInt, d.toInt))
@@ -54,7 +54,7 @@ object JsonUtils {
       }
     },
     new Writes[LocalDate]{
-      val dateFormat = DateTimeFormat.forPattern("yyyy-MM-dd")
+      val dateFormat: DateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd")
       override def writes(date: LocalDate): JsValue =
         JsString(dateFormat.print(date))
     }
@@ -62,7 +62,7 @@ object JsonUtils {
 
   lazy val npsDateFormat: Format[LocalDate] = Format(
     new Reads[LocalDate]{
-      val dateRegex = """^(\d\d)/(\d\d)/(\d\d\d\d)$""".r
+      val dateRegex: Regex = """^(\d\d)/(\d\d)/(\d\d\d\d)$""".r
       override def reads(json: JsValue): JsResult[LocalDate] = json match {
         case JsString(dateRegex(d, m, y)) =>
           JsSuccess(new LocalDate(y.toInt, m.toInt, d.toInt))
@@ -71,7 +71,7 @@ object JsonUtils {
       }
     },
     new Writes[LocalDate]{
-      val dateFormat = DateTimeFormat.forPattern("yyyy-MM-dd")
+      val dateFormat: DateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd")
       override def writes(date: LocalDate): JsValue =
         JsString(dateFormat.print(date))
     }

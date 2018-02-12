@@ -37,10 +37,7 @@ object IabdsOps {
       def convertToCompanyBenefits(iabds: List[Iabd]): List[CompanyBenefit] = {
         iabds.map { iabd =>
           CompanyBenefit(
-            amount = iabd.grossAmount.getOrElse {
-              logger.warn("Iabds grossAmount is blank")
-              BigDecimal(0)
-            },
+            amount = iabd.grossAmount.getOrElse(BigDecimal(0)),
             iabdType = iabd.`type`.toString,
             source = iabd.source
           )
@@ -71,10 +68,7 @@ object IabdsOps {
     def allowances: List[Allowance] = iabds.collect {
       case iabd if iabd.`type`.isInstanceOf[Allowances] =>
         Allowance(
-          amount = iabd.grossAmount.getOrElse {
-            logger.warn("Iabds grossAmount is blank")
-            BigDecimal(0)
-          },
+          amount = iabd.grossAmount.getOrElse(BigDecimal(0)),
           iabdType = iabd.`type`.toString
         )
     }

@@ -43,7 +43,7 @@ object EmploymentHistoryServiceHelper extends TaxHistoryHelper with Logging {
 
     val payAndTax: Map[String, PayAndTax] = rtiEmployment match {
       case None                => Map.empty
-      case Some(rtiEmployment) => Map(employment.employmentId.toString -> rtiEmployment.toPayAndTax)
+      case Some(rtiEmp) => Map(employment.employmentId.toString -> rtiEmp.toPayAndTax)
     }
 
     val benefits: Map[String, List[CompanyBenefit]] = if (iabds.nonEmpty) {
