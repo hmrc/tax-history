@@ -36,10 +36,10 @@ object EmploymentMatchingHelper extends TaxHistoryHelper with Logging {
     }).getOrElse(false)
   }
 
-  /**
-    * This function returns all matches between NPS employments and RTI employments, including ambiguous ones and empty ones.
-    * It can be imagined as a simple 'left join' between NPS employments and RTI employments.
-    */
+  /*
+   This function returns all matches between NPS employments and RTI employments, including ambiguous ones and empty ones.
+   It can be imagined as a simple 'left join' between NPS employments and RTI employments.
+   */
   private def rawMatchedEmployments(npsEmployments: List[NpsEmployment], rtiEmployments: List[RtiEmployment]): Map[NpsEmployment, List[RtiEmployment]] = {
     npsEmployments.map { npsEmployment =>
       val matchingRtiEmployments = rtiEmployments.filter(isMatch(npsEmployment, _))

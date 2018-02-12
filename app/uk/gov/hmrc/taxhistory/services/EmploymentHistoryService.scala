@@ -44,7 +44,7 @@ class EmploymentHistoryService @Inject()(
 
   def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] = {
     getFromCache(nino, taxYear).flatMap { paye =>
-      logger.info("Returning result from getEmployments")
+      logger.debug("Returning result from getEmployments")
 
       if (paye.employments.isEmpty) {
         // If no employments, return a not found error. This preserves the existing logic for now. TODO Review logic
@@ -57,7 +57,7 @@ class EmploymentHistoryService @Inject()(
 
   def getEmployment(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Employment] = {
     getFromCache(nino, taxYear).flatMap { paye =>
-      logger.info("Returning result of a getEmployment")
+      logger.debug("Returning result of a getEmployment")
       paye.employments.find(_.employmentId.toString == employmentId) match {
         case Some(employment) =>
           Future.successful(employment.enrichWithURIs(taxYear.startYear))
@@ -72,7 +72,7 @@ class EmploymentHistoryService @Inject()(
   def getFromCache(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[PayAsYouEarn] = {
     cacheService.getOrElseInsert(nino, taxYear) {
       retrieveAndBuildPaye(nino, taxYear).map { h =>
-        logger.info(s"Refreshing cached data for $nino $taxYear")
+        logger.debug(s"Refreshing cached data for $nino $taxYear")
         h
       }
     }
@@ -80,7 +80,7 @@ class EmploymentHistoryService @Inject()(
 
   def getAllowances(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Allowance]] = {
     getFromCache(nino, taxYear).flatMap(paye => {
-      logger.info("Returning result from getAllowances")
+      logger.debug("Returning result from getAllowances")
 
       if (paye.allowances.isEmpty) {
         Future.failed(new NotFoundException(s"Allowance not found for NINO ${nino.value} and tax year ${taxYear.toString}"))
@@ -98,7 +98,7 @@ class EmploymentHistoryService @Inject()(
 
   def getTaxAccount(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[TaxAccount] = {
     getFromCache(nino, taxYear).flatMap { paye =>
-      logger.info("Returning result from getTaxAccount")
+      logger.debug("Returning result from getTaxAccount")
 
       paye.taxAccount match {
         case Some(taxAccount) => Future.successful(taxAccount)
@@ -227,9 +227,9 @@ class EmploymentHistoryService @Inject()(
     }
   }
 
-  /**
-    * A convenience method used when auditing.
-    */
+  /*
+   A convenience method used when auditing.
+   */
   private def buildEmploymentDataEventDetails(nino: String, rtiEmployments: List[RtiEmployment]): Seq[DataEventDetail] =
     rtiEmployments.map(rE =>
       DataEventDetail(
