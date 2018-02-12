@@ -44,7 +44,7 @@ class TaxHistoryMongoCacheService @Inject()(
 
   def insertOrUpdate(key: (Nino, TaxYear), value: PayAsYouEarn): Future[Option[PayAsYouEarn]] = {
     val (nino, taxYear) = key
-    val mongoId = nino.nino
+    val mongoId = nino.value
     val mongoKey = taxYear.currentYear.toString
     cacheRepository
       .createOrUpdate(Id(mongoId), mongoKey, Json.toJson[PayAsYouEarn](value))
@@ -52,7 +52,7 @@ class TaxHistoryMongoCacheService @Inject()(
   }
 
   private def getFromRepository(nino: Nino, taxYear: TaxYear): Future[Option[PayAsYouEarn]] = {
-    val mongoId = nino.nino
+    val mongoId = nino.value
     val mongoKey = taxYear.currentYear.toString
     cacheRepository
       .findById(Id(mongoId))

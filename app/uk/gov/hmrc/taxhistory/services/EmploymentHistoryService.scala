@@ -48,7 +48,7 @@ class EmploymentHistoryService @Inject()(
 
       if (paye.employments.isEmpty) {
         // If no employments, return a not found error. This preserves the existing logic for now. TODO Review logic
-        Future.failed(new NotFoundException(s"Employments not found for NINO ${nino.nino} and tax year ${taxYear.toString}"))
+        Future.failed(new NotFoundException(s"Employments not found for NINO ${nino.value} and tax year ${taxYear.toString}"))
       } else {
         Future.successful(paye.employments.map(_.enrichWithURIs(taxYear.startYear)))
       }
@@ -63,7 +63,7 @@ class EmploymentHistoryService @Inject()(
           Future.successful(employment.enrichWithURIs(taxYear.startYear))
         case None =>
           logger.warn("Cache has expired from mongo")
-          Future.failed(new NotFoundException(s"Employment not found for NINO ${nino.nino} and tax year ${taxYear.toString}"))
+          Future.failed(new NotFoundException(s"Employment not found for NINO ${nino.value} and tax year ${taxYear.toString}"))
       }
     }
   }
@@ -83,7 +83,7 @@ class EmploymentHistoryService @Inject()(
       logger.warn("Returning result from getAllowances")
 
       if (paye.allowances.isEmpty) {
-        Future.failed(new NotFoundException(s"Allowance not found for NINO ${nino.nino} and tax year ${taxYear.toString}"))
+        Future.failed(new NotFoundException(s"Allowance not found for NINO ${nino.value} and tax year ${taxYear.toString}"))
       } else {
         Future.successful(paye.allowances)
       }
@@ -93,7 +93,7 @@ class EmploymentHistoryService @Inject()(
 
   def getPayAndTax(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[PayAndTax] = {
     getFromCache(nino, taxYear).map(_.payAndTax.get(employmentId))
-      .orNotFound(s"PayAndTax not found for NINO ${nino.nino}, tax year ${taxYear.toString} and employmentId $employmentId")
+      .orNotFound(s"PayAndTax not found for NINO ${nino.value}, tax year ${taxYear.toString} and employmentId $employmentId")
   }
 
   def getTaxAccount(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[TaxAccount] = {
@@ -102,7 +102,7 @@ class EmploymentHistoryService @Inject()(
 
       paye.taxAccount match {
         case Some(taxAccount) => Future.successful(taxAccount)
-        case None => Future.failed(new NotFoundException(s"TaxAccount not found for NINO ${nino.nino} and tax year ${taxYear.toString}"))
+        case None => Future.failed(new NotFoundException(s"TaxAccount not found for NINO ${nino.value} and tax year ${taxYear.toString}"))
       }
     }
   }
@@ -124,7 +124,7 @@ class EmploymentHistoryService @Inject()(
 
   def getCompanyBenefits(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[List[CompanyBenefit]] = {
     getFromCache(nino, taxYear).map(_.benefits.get(employmentId))
-      .orNotFound(s"CompanyBenefits not found for NINO ${nino.nino}, tax year ${taxYear.toString} and employmentId $employmentId")
+      .orNotFound(s"CompanyBenefits not found for NINO ${nino.value}, tax year ${taxYear.toString} and employmentId $employmentId")
   }
 
   /**
@@ -163,7 +163,7 @@ class EmploymentHistoryService @Inject()(
     if (onlyInRti.nonEmpty) {
       auditable.sendDataEvents(
         transactionName = PAYEForAgents,
-        details = buildEmploymentDataEventDetails(nino.nino, onlyInRti),
+        details = buildEmploymentDataEventDetails(nino.value, onlyInRti),
         eventType = OnlyInRti)
     }
 
@@ -172,7 +172,7 @@ class EmploymentHistoryService @Inject()(
       logger.warn(s"Some NPS employments have multiple matching RTI employments.")
       auditable.sendDataEvents(
         transactionName = PAYEForAgents,
-        details = buildEmploymentDataEventDetails(nino.nino, rti),
+        details = buildEmploymentDataEventDetails(nino.value, rti),
         eventType = NpsRtiMismatch
       )
     }
