@@ -44,7 +44,7 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
     override lazy val mongoConnector: MongoConnector = mongoConnectorForTest // this value comes from the trait MongoSpecSupport
   }
 
-  val testTaxHistoryCacheService = new TaxHistoryCacheService(
+  val testTaxHistoryCacheService = new TaxHistoryMongoCacheService(
     mongoDbConnection = testMongoDbConnection,
     expireAfterSeconds = 10,
     mongoSource = "tax-history-test"
@@ -53,19 +53,7 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
   val testPaye = PayAsYouEarn()
 
   val nino = randomNino()
-
-  val someJson = Json.parse(""" [{
-                              |    "nino": "AA000000",
-                              |    "sequenceNumber": 1,
-                              |    "worksNumber": "6044041000000",
-                              |    "taxDistrictNumber": "531",
-                              |    "payeNumber": "J4816",
-                              |    "employerName": "Aldi",
-                              |    "receivingJobseekersAllowance" : false,
-                              |    "otherIncomeSourceIndicator" : false,
-                              |    "startDate": "21/01/2015"
-                              |    }]
-                            """.stripMargin)
+  val taxYear = TaxYear(2015)
 
   override def beforeEach() = {
     testMongoDbConnection.mongoConnector.db().drop()
@@ -74,16 +62,16 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
   "TaxHistoryCacheService" should {
 
     "successfully add the Data in cache" in {
-       val cacheData = await(testTaxHistoryCacheService.createOrUpdate(nino.nino,"2015",someJson))
-        cacheData shouldBe Some(someJson)
+      val cacheData = await(testTaxHistoryCacheService.insertOrUpdate((nino, taxYear), testPaye))
+      cacheData shouldBe Some(testPaye)
     }
 
     "fetch from the cache by ID" in {
       await(for {
-        _ <- testTaxHistoryCacheService.createOrUpdate(nino.nino,"2015",someJson)
-        readbackValue <- testTaxHistoryCacheService.findById(nino.nino, 2015)
+        _ <- testTaxHistoryCacheService.insertOrUpdate((nino, taxYear), testPaye)
+        readbackValue <- testTaxHistoryCacheService.get((nino, taxYear))
       } yield {
-        readbackValue shouldBe Some(someJson)
+        readbackValue shouldBe Some(testPaye)
       })
     }
 
@@ -91,12 +79,12 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
       val nino = randomNino()
       val taxYear = TaxYear(2014)
 
-      val cacheResult0 = await(testTaxHistoryCacheService.get(nino, taxYear))
+      val cacheResult0 = await(testTaxHistoryCacheService.get((nino, taxYear)))
       cacheResult0 shouldBe None
-      val cacheResult1 = await(testTaxHistoryCacheService.getOrElseInsert(nino, taxYear)(testPaye))
+      val cacheResult1 = await(testTaxHistoryCacheService.getOrElseInsert((nino, taxYear))(testPaye))
       cacheResult1 shouldBe (testPaye)
       // The cache should now contain the value.
-      val cacheResult2 = await(testTaxHistoryCacheService.get(nino, taxYear))
+      val cacheResult2 = await(testTaxHistoryCacheService.get((nino, taxYear)))
       cacheResult2 shouldBe Some(testPaye)
     }
   }

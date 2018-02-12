@@ -49,7 +49,7 @@ class RelationshipAuthService @Inject() (val authConnector: AuthConnector) exten
   } yield Arn(arn.value)
 
   def retrieveArnFor(nino: Nino)(implicit hc: HeaderCarrier): Future[Option[Arn]] = {
-    authorised(AgentEnrolmentForPAYE.withIdentifier("MTDITID", nino.nino) and AuthProviders(GovernmentGateway)).retrieve(affinityGroupAllEnrolls) {
+    authorised(AgentEnrolmentForPAYE.withIdentifier("MTDITID", nino.value) and AuthProviders(GovernmentGateway)).retrieve(affinityGroupAllEnrolls) {
       case affinityG ~ allEnrols =>
         (affinityG, extractArn(allEnrols)) match {
           case (Some(Agent), Some(arn)) => Future.successful(Some(arn))

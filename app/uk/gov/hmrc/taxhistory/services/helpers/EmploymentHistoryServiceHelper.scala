@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxhistory.services.helpers
 
 import uk.gov.hmrc.tai.model.rti.RtiEmployment
-import uk.gov.hmrc.taxhistory.model.api.{PayAndTax, PayAsYouEarn}
+import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, PayAndTax, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 import uk.gov.hmrc.taxhistory.utils.Logging
@@ -29,47 +29,30 @@ object EmploymentHistoryServiceHelper extends TaxHistoryHelper with Logging {
     payAsYouEarnList.reduce((p1, p2) => {
       PayAsYouEarn(
         employments = p1.employments ::: p2.employments,
-        benefits =  (p1.benefits ++ p2.benefits).reduceLeftOption((a,b)=>a++b),
-        payAndTax = (p1.payAndTax ++ p2.payAndTax).reduceLeftOption((a,b)=>a++b))
+        benefits    = p1.benefits ++ p2.benefits,
+        payAndTax   = p1.payAndTax ++ p2.payAndTax
+      )
     })
   }
 
-  def buildPAYE(rtiEmploymentsOption: Option[List[RtiEmployment]],
-                iabdsOption: Option[List[Iabd]],
+  def buildPAYE(rtiEmployment: Option[RtiEmployment],
+                iabds: List[Iabd],
                 npsEmployment: NpsEmployment): PayAsYouEarn = {
 
     val employment = npsEmployment.toEmployment
 
-    val payAndTax = if (rtiEmploymentsOption.exists(_.nonEmpty)) {
-      rtiEmploymentsOption.map(emps => Map(employment.employmentId.toString -> convertRtiEmploymentsToPayAndTax(emps)))
-    } else {
-      None
+    val payAndTax: Map[String, PayAndTax] = rtiEmployment match {
+      case None                => Map.empty
+      case Some(rtiEmployment) => Map(employment.employmentId.toString -> rtiEmployment.toPayAndTax)
     }
 
-    val benefits = if (iabdsOption.exists(_.nonEmpty)) {
-      iabdsOption.map(iabds => Map(employment.employmentId.toString -> iabds.companyBenefits))
+    val benefits: Map[String, List[CompanyBenefit]] = if (iabds.nonEmpty) {
+      Map(employment.employmentId.toString -> iabds.companyBenefits)
     } else {
-      None
+      Map.empty
     }
 
     PayAsYouEarn(employments = List(employment), benefits = benefits, payAndTax = payAndTax)
-  }
-
-  def convertRtiEmploymentsToPayAndTax(rtiEmployments: List[RtiEmployment]): PayAndTax = {
-    val employment = rtiEmployments.head
-    val eyus = employment.earlierYearUpdates.map(_.toEarlierYearUpdate)
-    val nonEmptyEyus = eyus.filter(eyu => eyu.taxablePayEYU != 0 && eyu.taxEYU != 0)
-
-    employment.payments match {
-      case Nil => PayAndTax(earlierYearUpdates = nonEmptyEyus)
-      case matchingPayments => {
-        val payment = matchingPayments.sorted.last
-        PayAndTax(taxablePayTotal = Some(payment.taxablePayYTD),
-          taxTotal = Some(payment.totalTaxYTD),
-          paymentDate=Some(payment.paidOnDate),
-          earlierYearUpdates = nonEmptyEyus)
-      }
-    }
   }
 
 }

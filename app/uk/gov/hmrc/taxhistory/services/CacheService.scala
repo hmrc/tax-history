@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxhistory.model.api
+package uk.gov.hmrc.taxhistory.services
 
-import java.util.UUID
+import scala.concurrent.Future
 
-import play.api.libs.json.Json
+trait CacheService[K, V] {
 
-case class Allowance(allowanceId:UUID = UUID.randomUUID(),
-                     iabdType: String,
-                     amount: BigDecimal)
+  def insertOrUpdate(key: K, value: V): Future[Option[V]]
 
-object Allowance {
-  implicit val formats = Json.format[Allowance]
+  def get(key: K): Future[Option[V]]
+
+  def getOrElseInsert(key: K)(defaultToInsert: => Future[V]): Future[V]
+
 }

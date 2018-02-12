@@ -14,16 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxhistory.model.api
+package uk.gov.hmrc.taxhistory.services
 
-import java.util.UUID
+import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
+import uk.gov.hmrc.time.TaxYear
 
-import play.api.libs.json.Json
-
-case class Allowance(allowanceId:UUID = UUID.randomUUID(),
-                     iabdType: String,
-                     amount: BigDecimal)
-
-object Allowance {
-  implicit val formats = Json.format[Allowance]
-}
+trait PayeCacheService extends CacheService[(Nino, TaxYear), PayAsYouEarn]

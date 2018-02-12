@@ -63,7 +63,7 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
         .thenReturn(Future.successful(rtiEmploymentResponse))
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new BadRequestException("")))
-      val payAsYouEarn = await(testEmploymentHistoryService.retrieveEmploymentsDirectFromSource(testNino,TaxYear(2016)))
+      val payAsYouEarn = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino,TaxYear(2016)))
 
       val payAndTax = payAsYouEarn.payAndTax
       payAndTax.size mustBe 1
@@ -74,8 +74,7 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       val testPayAndTax = PayAndTax(UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"), Some(2222.22),Some(111.11),
         Some(new LocalDate("2016-02-20")), List())
 
-      when(testEmploymentHistoryService.getFromCache(Matchers.any(),Matchers.any())(Matchers.any()))
-        .thenReturn(Future.successful(paye))
+      testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye)
 
       val payAndTax = await(testEmploymentHistoryService.getPayAndTax(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
       payAndTax must be(testPayAndTax)
