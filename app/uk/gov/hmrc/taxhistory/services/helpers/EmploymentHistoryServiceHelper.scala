@@ -29,7 +29,7 @@ object EmploymentHistoryServiceHelper extends TaxHistoryHelper with Logging {
     payAsYouEarnList.reduce((p1, p2) => {
       PayAsYouEarn(
         employments = p1.employments ::: p2.employments,
-        benefits =  (p1.benefits ++ p2.benefits).reduceLeftOption((a,b)=>a++b),
+        benefits  = (p1.benefits ++ p2.benefits).reduceLeftOption((a,b)=>a++b),
         payAndTax = (p1.payAndTax ++ p2.payAndTax).reduceLeftOption((a,b)=>a++b))
     })
   }
@@ -62,14 +62,12 @@ object EmploymentHistoryServiceHelper extends TaxHistoryHelper with Logging {
 
     employment.payments match {
       case Nil => PayAndTax(earlierYearUpdates = nonEmptyEyus)
-      case matchingPayments => {
-        val payment = matchingPayments.sorted.last
+      case matchingPayments =>
+        val payment = matchingPayments.max
         PayAndTax(taxablePayTotal = Some(payment.taxablePayYTD),
           taxTotal = Some(payment.totalTaxYTD),
-          paymentDate=Some(payment.paidOnDate),
+          paymentDate = Some(payment.paidOnDate),
           earlierYearUpdates = nonEmptyEyus)
-      }
     }
   }
-
 }

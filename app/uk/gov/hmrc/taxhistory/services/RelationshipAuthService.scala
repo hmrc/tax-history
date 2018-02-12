@@ -69,17 +69,17 @@ class RelationshipAuthService @Inject() (val authConnector: AuthConnector) exten
     retrieveArnFor(nino).flatMap {
       case Some(arn) => action(arn)
       case None      =>
-        logger.error(s"No ARN found for $nino")
+        logger.info(s"No ARN found for $nino")
         Future.successful(Unauthorized)
     }.recoverWith {
       case e: UnauthorizedException =>
-        logger.error("Unauthorized: " + e.getMessage)
+        logger.info("Unauthorized: " + e.getMessage)
         Future.successful(Unauthorized(e.getMessage))
       case e: InsufficientEnrolments =>
-        logger.error("InsufficientEnrolments: " + e.getMessage)
+        logger.info("InsufficientEnrolments: " + e.getMessage)
         Future.successful(Unauthorized(e.getMessage))
       case e =>
-        logger.error("Error thrown :" + e.getMessage)
+        logger.info("Error thrown :" + e.getMessage)
         Future.successful(InternalServerError(e.getMessage))
     }
   }

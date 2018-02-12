@@ -38,7 +38,7 @@ object IabdsOps {
         iabds.map { iabd =>
           CompanyBenefit(
             amount = iabd.grossAmount.getOrElse {
-              logger.warn("Iabds grossAmount is blank")
+              logger.info("Iabds grossAmount is blank")
               BigDecimal(0)
             },
             iabdType = iabd.`type`.toString,
@@ -72,7 +72,7 @@ object IabdsOps {
       case iabd if iabd.`type`.isInstanceOf[Allowances] =>
         Allowance(
           amount = iabd.grossAmount.getOrElse {
-            logger.warn("Iabds grossAmount is blank")
+            logger.info("Iabds grossAmount is blank")
             BigDecimal(0)
           },
           iabdType = iabd.`type`.toString
