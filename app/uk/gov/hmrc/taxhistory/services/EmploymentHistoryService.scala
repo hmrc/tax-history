@@ -43,16 +43,8 @@ class EmploymentHistoryService @Inject()(
                               ) extends Logging {
 
   def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] = {
-    getFromCache(nino, taxYear).flatMap { paye =>
-      logger.debug("Returning result from getEmployments")
-
-      if (paye.employments.isEmpty) {
-        // If no employments, return a not found error. This preserves the existing logic for now. TODO Review logic
-        Future.failed(new NotFoundException(s"Employments not found for NINO ${nino.value} and tax year ${taxYear.toString}"))
-      } else {
-        Future.successful(paye.employments.map(_.enrichWithURIs(taxYear.startYear)))
-      }
-    }
+    getFromCache(nino, taxYear).map(_.employments.map(_.enrichWithURIs(taxYear.startYear)))
+      .orNotFound(s"Employments not found for NINO ${nino.value} and tax year ${taxYear.toString}")
   }
 
   def getEmployment(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Employment] = {
@@ -135,10 +127,10 @@ class EmploymentHistoryService @Inject()(
 
     for {
       npsEmployments <- retrieveNpsEmployments(nino, taxYear).orNotFound(s"No NPS employments found for $nino $taxYear")
-      rtiDataOpt     <- retrieveRtiData(nino,taxYear).map(Some(_)).recover { case _ => None } // TODO this is done to preserve existing logic. To be reviewed!
+      rtiDataOpt     <- retrieveRtiData(nino,taxYear).map(Some(_)).recover { case _ => None } // We want to present some information even if the retrieval from RTI failed.
       rtiEmployments  = rtiDataOpt.map(_.employments).getOrElse(Nil)
-      iabds          <- retrieveNpsIabds(nino,taxYear).recover { case _ => Nil } // TODO this is done to preserve existing logic. To be reviewed!
-      taxAccountOpt  <- getNpsTaxAccount(nino,taxYear).map(Some(_)).recover { case _ => None }  // TODO this is done to preserve existing logic. To be reviewed!
+      iabds          <- retrieveNpsIabds(nino,taxYear).recover { case _ => Nil } // We want to present some information even if the retrieval of IABDs failed.
+      taxAccountOpt  <- getNpsTaxAccount(nino,taxYear).map(Some(_)).recover { case _ => None }  // We want to present some information even if the retrieval of the tax account failed.
     } yield {
       mergeEmployments(nino, taxYear, npsEmployments, rtiEmployments, taxAccountOpt.flatten, iabds)
     }

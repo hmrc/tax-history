@@ -27,5 +27,4 @@ case object PAYEForAgents extends DataEventTransaction
 case object AgentViewedClient extends DataEventTransaction
 
 
-// todo : look at the naming of this, in use we end up with detail.detail
-case class DataEventDetail (detail: Map[String, String])
+case class DataEventDetail(detail: Map[String, String])
