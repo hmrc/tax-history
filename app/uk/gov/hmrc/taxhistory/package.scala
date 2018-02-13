@@ -23,6 +23,9 @@ import scala.concurrent.{ExecutionContext, Future}
 package object taxhistory {
 
   implicit class FutureListOps[A](fl: Future[List[A]])(implicit ec: ExecutionContext) {
+    /**
+      * Converts a future containing an empty collection into a failure with NotFoundException
+      */
     def orNotFound(message: String): Future[List[A]] = fl.flatMap {
       case Nil      => Future.failed(new NotFoundException(message))
       case list @ _ => Future.successful(list)
@@ -30,6 +33,9 @@ package object taxhistory {
   }
 
   implicit class FutureOptionOps[A](fl: Future[Option[A]])(implicit ec: ExecutionContext) {
+    /**
+      * Converts a future containing an empty option into a failure with NotFoundException
+      */
     def orNotFound(message: String): Future[A] = fl.flatMap {
       case None    => Future.failed(new NotFoundException(message))
       case Some(a) => Future.successful(a)
