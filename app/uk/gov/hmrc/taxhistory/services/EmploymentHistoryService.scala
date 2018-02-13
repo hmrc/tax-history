@@ -101,7 +101,8 @@ class EmploymentHistoryService @Inject()(
 
   def getTaxYears(nino: Nino): Future[List[IndividualTaxYear]] = {
 
-    val taxYearList = List(TaxYear.current.back(1),
+    val taxYearList = List(TaxYear.current,
+                           TaxYear.current.back(1),
                            TaxYear.current.back(2),
                            TaxYear.current.back(3),
                            TaxYear.current.back(4))
