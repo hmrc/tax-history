@@ -33,19 +33,20 @@ case class Employment(employmentId: UUID = UUID.randomUUID(),
                       payAndTaxURI: Option[String] = None,
                       employmentURI: Option[String] = None,
                       receivingOccupationalPension: Boolean = false,
-                      employmentStatus: EmploymentStatus){
+                      employmentStatus: EmploymentStatus,
+                      worksNumber: String) {
 
   def enrichWithURIs(taxYear: Int): Employment = {
     val baseURI = s"/$taxYear/employments/${employmentId.toString}"
     this.copy(employmentURI = Some(baseURI),
-              companyBenefitsURI = Some(baseURI + "/company-benefits"),
-              payAndTaxURI=Some(baseURI + "/pay-and-tax"))
+      companyBenefitsURI = Some(baseURI + "/company-benefits"),
+      payAndTaxURI = Some(baseURI + "/pay-and-tax"))
   }
 }
 
 object Employment {
 
-  implicit val jsonReads :Reads[Employment]= (
+  implicit val jsonReads: Reads[Employment] = (
     (JsPath \ "employmentId").read[UUID] and
       (JsPath \ "startDate").read[LocalDate] and
       (JsPath \ "endDate").readNullable[LocalDate] and
@@ -55,7 +56,8 @@ object Employment {
       (JsPath \ "payAndTaxURI").readNullable[String] and
       (JsPath \ "employmentURI").readNullable[String] and
       (JsPath \ "receivingOccupationalPension").read[Boolean] and
-      JsPath.read[EmploymentStatus]
+      JsPath.read[EmploymentStatus] and
+      (JsPath \ "worksNumber").read[String]
     ) (Employment.apply _)
 
 
@@ -69,7 +71,8 @@ object Employment {
       (JsPath \ "payAndTaxURI").writeNullable[String] and
       (JsPath \ "employmentURI").writeNullable[String] and
       (JsPath \ "receivingOccupationalPension").write[Boolean] and
-      JsPath.write[EmploymentStatus]
-    )(unlift(Employment.unapply))
+      JsPath.write[EmploymentStatus] and
+      (JsPath \ "worksNumber").write[String]
+    ) (unlift(Employment.unapply))
 
 }
