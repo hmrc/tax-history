@@ -428,4 +428,52 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
         Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3")))
     }
   }
+
+  "withEmploymentGaps" should {
+
+    // todo : move these out to a test fixture
+    val liveOngoingEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts, None, "Nothing", "An Employer",
+      None, None, None, false, EmploymentStatus.Live)
+
+    val liveStartYearEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts, Some(TaxYear.current.starts.plusDays(10)), "Nothing", "An Employer",
+      None, None, None, false, EmploymentStatus.Live)
+
+    val liveMidYearEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts.plusDays(10) , Some(TaxYear.current.finishes.minusDays(10)), "Nothing", "An Employer",
+      None, None, None, false, EmploymentStatus.Live)
+
+    val liveEndYearEmployment = Employment(UUID.randomUUID(), TaxYear.current.finishes.minusDays(10) , Some(TaxYear.current.finishes), "Nothing", "An Employer",
+      None, None, None, false, EmploymentStatus.Live)
+
+    def isNoRecordEmnployment(employment: Employment): Boolean = employment.employerName == "No record"
+
+    "return the original list when no employment gaps exist" in {
+      val employments = List(liveOngoingEmployment)
+      testEmploymentHistoryService.withEmployemtGaps(employments, TaxYear.current) must be(employments)
+    }
+
+    "return a list with one entry when no employments exist" in {
+      val employments = List.empty[Employment]
+      testEmploymentHistoryService.withEmployemtGaps(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(true))
+    }
+
+    "return a list with no gaps, when original employment has a gap at the start" in {
+      val employments = List(liveMidYearEmployment, liveEndYearEmployment)
+      testEmploymentHistoryService.withEmployemtGaps(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(true, false, false))
+    }
+
+    "return a list with no gaps, when original employment has a gap in the middle" in {
+      val employments = List(liveStartYearEmployment, liveEndYearEmployment)
+      testEmploymentHistoryService.withEmployemtGaps(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(false, true, false))
+    }
+
+    "return a list with no gaps, when original employment has a gap at the end" in {
+      val employments = List(liveStartYearEmployment, liveMidYearEmployment)
+      testEmploymentHistoryService.withEmployemtGaps(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(false, false, true))
+    }
+
+    "return a list with no gaps, when original employment has a gap at the start and end" in {
+      val employments = List(liveMidYearEmployment)
+      testEmploymentHistoryService.withEmployemtGaps(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(true, false, true))
+    }
+  }
 }

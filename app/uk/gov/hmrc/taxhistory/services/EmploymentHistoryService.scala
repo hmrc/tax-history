@@ -17,8 +17,10 @@
 package uk.gov.hmrc.taxhistory.services
 
 
+import java.util.UUID
 import javax.inject.Inject
 
+import org.joda.time.LocalDate
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
@@ -33,18 +35,45 @@ import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, 
 import uk.gov.hmrc.taxhistory.utils.Logging
 import uk.gov.hmrc.time.TaxYear
 
+import scala.collection.immutable
 import scala.concurrent.Future
+import scala.tools.nsc.GlobalSymbolLoaders
 
 class EmploymentHistoryService @Inject()(
                                           val npsConnector: NpsConnector,
                                           val rtiConnector: RtiConnector,
-                                          val cacheService : PayeCacheService,
+                                          val cacheService: PayeCacheService,
                                           val auditable: Auditable
-                              ) extends Logging {
+                                        ) extends Logging {
 
   def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] = {
     getFromCache(nino, taxYear).map(_.employments.map(_.enrichWithURIs(taxYear.startYear)))
       .orNotFound(s"Employments not found for NINO ${nino.value} and tax year ${taxYear.toString}")
+  }
+
+
+  def dummy(startDate: LocalDate, endDate: Option[LocalDate]): Employment =
+    Employment(UUID.randomUUID(), startDate, endDate, "No record", "No record", None, None, None, false, EmploymentStatus.Unknown)
+
+  // get a list of next employment and a filler if needed
+  def eG(previous: Option[Employment], nextE: Employment, taxYear: TaxYear): List[Employment] = {
+    previous match {
+      case Some(prevE) if prevE.endDate.getOrElse(taxYear.finishes).plusDays(1).isBefore(nextE.startDate) =>
+        List(dummy(prevE.endDate.getOrElse(taxYear.finishes).plusDays(1), Some(nextE.startDate.minusDays(1))), nextE) // gap
+      case _ => List(nextE) // no gap
+    }
+  }
+
+  // todo : rename this
+  // todo : use a type to distinguish prev/next year and to remove the unused elements
+  def withEmployemtGaps(employments: List[Employment], taxYear: TaxYear): List[Employment] = {
+    val previousYearEnd = dummy(taxYear.starts.minusDays(1), Some(taxYear.starts.minusDays(1)))
+    val nextYearStart = dummy(taxYear.finishes.plusDays(1), Some(taxYear.finishes.plusDays(1)))
+
+    (previousYearEnd +: employments :+ nextYearStart)
+      .foldLeft(List[Employment]()) { (acc, e) =>
+        acc ++ eG(acc.reverse.headOption, e, taxYear) }
+      .drop(1).dropRight(1) // remove the previous and next year elements
   }
 
   def getEmployment(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Employment] = {
@@ -103,14 +132,14 @@ class EmploymentHistoryService @Inject()(
 
     val taxYearList = List(TaxYear.current,
                            TaxYear.current.back(1),
-                           TaxYear.current.back(2),
-                           TaxYear.current.back(3),
-                           TaxYear.current.back(4))
+      TaxYear.current.back(2),
+      TaxYear.current.back(3),
+      TaxYear.current.back(4))
 
     val taxYears = taxYearList.map(year => IndividualTaxYear(year = year.startYear,
-                                                             allowancesURI = s"/${year.startYear}/allowances",
-                                                             employmentsURI = s"/${year.startYear}/employments",
-                                                             taxAccountURI = s"/${year.startYear}/tax-account"))
+      allowancesURI = s"/${year.startYear}/allowances",
+      employmentsURI = s"/${year.startYear}/employments",
+      taxAccountURI = s"/${year.startYear}/tax-account"))
 
     Future.successful(taxYears)
   }
@@ -128,10 +157,10 @@ class EmploymentHistoryService @Inject()(
 
     for {
       npsEmployments <- retrieveNpsEmployments(nino, taxYear).orNotFound(s"No NPS employments found for $nino $taxYear")
-      rtiDataOpt     <- retrieveRtiData(nino,taxYear).map(Some(_)).recover { case _ => None } // We want to present some information even if the retrieval from RTI failed.
-      rtiEmployments  = rtiDataOpt.map(_.employments).getOrElse(Nil)
-      iabds          <- retrieveNpsIabds(nino,taxYear).recover { case _ => Nil } // We want to present some information even if the retrieval of IABDs failed.
-      taxAccountOpt  <- getNpsTaxAccount(nino,taxYear).map(Some(_)).recover { case _ => None }  // We want to present some information even if the retrieval of the tax account failed.
+      rtiDataOpt <- retrieveRtiData(nino, taxYear).map(Some(_)).recover { case _ => None } // We want to present some information even if the retrieval from RTI failed.
+      rtiEmployments = rtiDataOpt.map(_.employments).getOrElse(Nil)
+      iabds <- retrieveNpsIabds(nino, taxYear).recover { case _ => Nil } // We want to present some information even if the retrieval of IABDs failed.
+      taxAccountOpt <- getNpsTaxAccount(nino, taxYear).map(Some(_)).recover { case _ => None } // We want to present some information even if the retrieval of the tax account failed.
     } yield {
       mergeEmployments(nino, taxYear, npsEmployments, rtiEmployments, taxAccountOpt.flatten, iabds)
     }
@@ -141,12 +170,12 @@ class EmploymentHistoryService @Inject()(
     * Given the data required, performs the necessary logic to combine this data from
     * different sources into a `PayAsYouEarn` (tax year summary) instance.
     */
-  def mergeEmployments(nino:             Nino,
-                       taxYear:          TaxYear,
-                       npsEmployments:   List[NpsEmployment],
-                       rtiEmployments:   List[RtiEmployment],
+  def mergeEmployments(nino: Nino,
+                       taxYear: TaxYear,
+                       npsEmployments: List[NpsEmployment],
+                       rtiEmployments: List[RtiEmployment],
                        taxAccountOption: Option[NpsTaxAccount],
-                       iabds:            List[Iabd]
+                       iabds: List[Iabd]
                       )(implicit hc: HeaderCarrier): PayAsYouEarn = {
 
     val employmentMatches: Map[NpsEmployment, RtiEmployment] = EmploymentMatchingHelper.matchedEmployments(npsEmployments, rtiEmployments)

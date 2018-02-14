@@ -26,6 +26,7 @@ object EmploymentStatus {
   case object Live extends EmploymentStatus
   case object PotentiallyCeased extends EmploymentStatus
   case object Ceased extends EmploymentStatus
+  case object Unknown extends EmploymentStatus
 
   private val LiveCode = 1
   private val PotentiallyCeasedCode = 2
