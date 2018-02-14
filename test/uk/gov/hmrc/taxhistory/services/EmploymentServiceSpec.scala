@@ -346,7 +346,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
     "fetch Employments successfully from cache" in {
       lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
 
-
       val testEmployments: List[Employment] = List(
         Employment(UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
           new LocalDate("2016-01-21"), Some(new LocalDate("2017-01-01")), "paye-1", "employer-1",
@@ -444,7 +443,10 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
     val liveEndYearEmployment = Employment(UUID.randomUUID(), TaxYear.current.finishes.minusDays(10) , Some(TaxYear.current.finishes), "Nothing", "An Employer",
       None, None, None, false, EmploymentStatus.Live)
 
-    def isNoRecordEmnployment(employment: Employment): Boolean = employment.employerName == "No record"
+
+    // todo : add date check into here
+    def isNoRecordEmnployment(employment: Employment): Boolean =
+      employment.employerName == "No record" && employment.employmentStatus == EmploymentStatus.Unknown
 
     "return the original list when no employment gaps exist" in {
       val employments = List(liveOngoingEmployment)

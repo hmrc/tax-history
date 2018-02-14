@@ -31,12 +31,14 @@ object EmploymentStatus {
   private val LiveCode = 1
   private val PotentiallyCeasedCode = 2
   private val CeasedCode = 3
+  private val UnknownCode = 99 // Code 99, Unknown, is internal to tax-history, and is not an wider HMRC employment status
 
   implicit val jsonReads = {
     (__ \ "employmentStatus").read[Int].flatMap[EmploymentStatus] {
       case LiveCode              => Reads(_ => JsSuccess(Live))
       case PotentiallyCeasedCode => Reads(_ => JsSuccess(PotentiallyCeased))
       case CeasedCode            => Reads(_ => JsSuccess(Ceased))
+      case UnknownCode           => Reads(_ => JsSuccess(Unknown))
       case _                     => Reads(_ => JsError(JsPath \ "employmentStatus", ValidationError("Invalid EmploymentStatus")))
     }
   }
@@ -45,5 +47,6 @@ object EmploymentStatus {
       case Live              => Json.obj("employmentStatus" -> LiveCode)
       case PotentiallyCeased => Json.obj("employmentStatus" -> PotentiallyCeasedCode)
       case Ceased            => Json.obj("employmentStatus" -> CeasedCode)
+      case Unknown           => Json.obj("employmentStatus" -> UnknownCode)
     }
 }

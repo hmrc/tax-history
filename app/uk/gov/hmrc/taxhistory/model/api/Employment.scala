@@ -46,8 +46,10 @@ case class Employment(employmentId: UUID = UUID.randomUUID(),
 
 object Employment {
 
+  private val noRecord = "No record"
+
   def noRecord(startDate: LocalDate, endDate: Option[LocalDate]): Employment =
-    Employment(UUID.randomUUID(), startDate, endDate, "No record", "No record", None, None, None, false, EmploymentStatus.Unknown)
+    Employment(UUID.randomUUID(), startDate, endDate, noRecord, noRecord, None, None, None, false, EmploymentStatus.Unknown)
 
   implicit val jsonReads: Reads[Employment] = (
     (JsPath \ "employmentId").read[UUID] and
