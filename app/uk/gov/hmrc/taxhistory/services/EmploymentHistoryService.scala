@@ -51,28 +51,22 @@ class EmploymentHistoryService @Inject()(
       .orNotFound(s"Employments not found for NINO ${nino.value} and tax year ${taxYear.toString}")
   }
 
-
-  def dummy(startDate: LocalDate, endDate: Option[LocalDate]): Employment =
-    Employment(UUID.randomUUID(), startDate, endDate, "No record", "No record", None, None, None, false, EmploymentStatus.Unknown)
-
-  // get a list of next employment and a filler if needed
-  def eG(previous: Option[Employment], nextE: Employment, taxYear: TaxYear): List[Employment] = {
+  def getFiller(previous: Option[Employment], nextE: Employment, taxYear: TaxYear): List[Employment] = {
     previous match {
       case Some(prevE) if prevE.endDate.getOrElse(taxYear.finishes).plusDays(1).isBefore(nextE.startDate) =>
-        List(dummy(prevE.endDate.getOrElse(taxYear.finishes).plusDays(1), Some(nextE.startDate.minusDays(1))), nextE) // gap
+        List(Employment.noRecord(prevE.endDate.getOrElse(taxYear.finishes).plusDays(1), Some(nextE.startDate.minusDays(1))), nextE) // gap
       case _ => List(nextE) // no gap
     }
   }
 
-  // todo : rename this
-  // todo : use a type to distinguish prev/next year and to remove the unused elements
-  def withEmployemtGaps(employments: List[Employment], taxYear: TaxYear): List[Employment] = {
-    val previousYearEnd = dummy(taxYear.starts.minusDays(1), Some(taxYear.starts.minusDays(1)))
-    val nextYearStart = dummy(taxYear.finishes.plusDays(1), Some(taxYear.finishes.plusDays(1)))
+  def withFillers(employments: List[Employment], taxYear: TaxYear): List[Employment] = {
+    // todo : use a type to distinguish prev/next year and to remove the unused elements
+    val previousYearEnd = Employment.noRecord(taxYear.starts.minusDays(1), Some(taxYear.starts.minusDays(1)))
+    val nextYearStart = Employment.noRecord(taxYear.finishes.plusDays(1), Some(taxYear.finishes.plusDays(1)))
 
     (previousYearEnd +: employments :+ nextYearStart)
       .foldLeft(List[Employment]()) { (acc, e) =>
-        acc ++ eG(acc.reverse.headOption, e, taxYear) }
+        acc ++ getFiller(acc.reverse.headOption, e, taxYear) }
       .drop(1).dropRight(1) // remove the previous and next year elements
   }
 
