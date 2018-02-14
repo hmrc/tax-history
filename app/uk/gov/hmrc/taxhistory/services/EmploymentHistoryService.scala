@@ -17,10 +17,8 @@
 package uk.gov.hmrc.taxhistory.services
 
 
-import java.util.UUID
 import javax.inject.Inject
 
-import org.joda.time.LocalDate
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
@@ -35,9 +33,7 @@ import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, 
 import uk.gov.hmrc.taxhistory.utils.Logging
 import uk.gov.hmrc.time.TaxYear
 
-import scala.collection.immutable
 import scala.concurrent.Future
-import scala.tools.nsc.GlobalSymbolLoaders
 
 class EmploymentHistoryService @Inject()(
                                           val npsConnector: NpsConnector,
@@ -47,19 +43,10 @@ class EmploymentHistoryService @Inject()(
                                         ) extends Logging {
 
   def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] = {
-    getFromCache(nino, taxYear).map(_.employments.map(_.enrichWithURIs(taxYear.startYear)))
-      .orNotFound(s"Employments not found for NINO ${nino.value} and tax year ${taxYear.toString}")
+    getFromCache(nino, taxYear).map (es => addFillers(es.employments.map(_.enrichWithURIs(taxYear.startYear)), taxYear))
   }
 
-  def getFiller(previous: Option[Employment], nextE: Employment, taxYear: TaxYear): List[Employment] = {
-    previous match {
-      case Some(prevE) if prevE.endDate.getOrElse(taxYear.finishes).plusDays(1).isBefore(nextE.startDate) =>
-        List(Employment.noRecord(prevE.endDate.getOrElse(taxYear.finishes).plusDays(1), Some(nextE.startDate.minusDays(1))), nextE) // gap
-      case _ => List(nextE) // no gap
-    }
-  }
-
-  def withFillers(employments: List[Employment], taxYear: TaxYear): List[Employment] = {
+  def addFillers(employments: List[Employment], taxYear: TaxYear): List[Employment] = {
     // todo : use a type to distinguish prev/next year and to remove the unused elements
     val previousYearEnd = Employment.noRecord(taxYear.starts.minusDays(1), Some(taxYear.starts.minusDays(1)))
     val nextYearStart = Employment.noRecord(taxYear.finishes.plusDays(1), Some(taxYear.finishes.plusDays(1)))
@@ -251,5 +238,13 @@ class EmploymentHistoryService @Inject()(
       DataEventDetail(
         Map("nino" -> nino, "payeRef" -> rE.payeRef, "officeNumber" -> rE.officeNumber, "currentPayId" -> rE.currentPayId.getOrElse("")))
     )
+
+  private def getFiller(previous: Option[Employment], nextE: Employment, taxYear: TaxYear): List[Employment] = {
+    previous match {
+      case Some(prevE) if prevE.endDate.getOrElse(taxYear.finishes).plusDays(1).isBefore(nextE.startDate) =>
+        List(Employment.noRecord(prevE.endDate.getOrElse(taxYear.finishes).plusDays(1), Some(nextE.startDate.minusDays(1))), nextE) // gap
+      case _ => List(nextE) // no gap
+    }
+  }
 
 }
