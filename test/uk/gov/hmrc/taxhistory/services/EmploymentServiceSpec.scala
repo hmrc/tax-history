@@ -346,35 +346,41 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
     "fetch Employments successfully from cache" in {
       lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
 
-      val testEmployments: List[Employment] = List(
+      val testEmployment2 =
         Employment(UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
           new LocalDate("2016-01-21"), Some(new LocalDate("2017-01-01")), "paye-1", "employer-1",
           Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),
           Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax"),
           Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
-          receivingOccupationalPension = false, Live, "00191048716"),
-
-        Employment(UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
-          new LocalDate("2016-02-22"), None, "paye-2", "employer-2",
-          Some("/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/company-benefits"),
-          Some("/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/pay-and-tax"),
-          Some("/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
           receivingOccupationalPension = false, Live, "00191048716")
-      )
+
+      val testEmployment3 = Employment(UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
+        new LocalDate("2016-02-22"), None, "paye-2", "employer-2",
+        Some("/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/company-benefits"),
+        Some("/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/pay-and-tax"),
+        Some("/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
+        receivingOccupationalPension = false, Live, "00191048716")
 
       // Set up the test data in the cache
       await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye))
 
       val employments = await(testEmploymentHistoryService.getEmployments(Nino("AA000000A"), TaxYear(2014)))
-      employments must be(testEmployments)
+      employments.head.startDate must be (new LocalDate("2014-04-06"))
+      employments.head.endDate must be (Some(new LocalDate("2016-01-20")))
+      employments.head.employmentStatus must be(EmploymentStatus.Unknown)
+      employments must contain (testEmployment2)
+      employments must contain (testEmployment3)
     }
 
-    "return not found when no employment was returned from cache" in {
+    "return a single filler when no employment was returned from cache" in {
       val paye = PayAsYouEarn(employments = Nil)
 
       await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye))
 
-      intercept[NotFoundException](await(testEmploymentHistoryService.getEmployments(Nino("AA000000A"), TaxYear(2014))))
+      val employments = await(testEmploymentHistoryService.getEmployments(Nino("AA000000A"), TaxYear(2014)))
+      employments.head.startDate must be (new LocalDate("2014-04-06"))
+      employments.head.endDate must be (Some(new LocalDate("2015-04-05")))
+      employments.head.employmentStatus must be (EmploymentStatus.Unknown)
     }
 
 
