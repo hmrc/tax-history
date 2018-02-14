@@ -21,19 +21,19 @@ import play.api.libs.json._
 import uk.gov.hmrc.taxhistory.model.api.Employment
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
 
-case class NpsEmployment(nino:String,
-                      sequenceNumber:Int,
-                      taxDistrictNumber:String,
-                      payeNumber:String,
-                      employerName:String,
-                      worksNumber: Option[String]= None,
-                      receivingJobSeekersAllowance: Boolean = false,
-                      otherIncomeSourceIndicator: Boolean = false,
-                      startDate: LocalDate,
-                      endDate: Option[LocalDate] = None,
-                      receivingOccupationalPension:Boolean = false,
-                      employmentStatus: EmploymentStatus
-                    ) {
+case class NpsEmployment(nino: String,
+                         sequenceNumber: Int,
+                         taxDistrictNumber: String,
+                         payeNumber: String,
+                         employerName: String,
+                         worksNumber: Option[String] = None,
+                         receivingJobSeekersAllowance: Boolean = false,
+                         otherIncomeSourceIndicator: Boolean = false,
+                         startDate: LocalDate,
+                         endDate: Option[LocalDate] = None,
+                         receivingOccupationalPension: Boolean = false,
+                         employmentStatus: EmploymentStatus
+                        ) {
 
   def payeRef: String = taxDistrictNumber + "/" + payeNumber
 
@@ -44,7 +44,8 @@ case class NpsEmployment(nino:String,
       startDate = startDate,
       endDate = endDate,
       receivingOccupationalPension = receivingOccupationalPension,
-      employmentStatus = employmentStatus
+      employmentStatus = employmentStatus,
+      worksNumber = worksNumber.getOrElse("")
     )
 
 }
@@ -56,7 +57,7 @@ object NpsEmployment {
       val endDate = (js \ "endDate").asOpt[LocalDate](JsonUtils.npsDateFormat)
       for {
         nino <- (js \ "nino").validate[String]
-        sequenceNumber <- (js \ "sequenceNumber" ).validate[Int]
+        sequenceNumber <- (js \ "sequenceNumber").validate[Int]
         taxDistrictNumber <- (js \ "taxDistrictNumber").validate[String]
         payeNumber <- (js \ "payeNumber").validate[String]
         employerName <- (js \ "employerName").validate[String]
@@ -67,21 +68,21 @@ object NpsEmployment {
         employmentStatus <- js.validate[EmploymentStatus]
       } yield {
         NpsEmployment(
-        nino = nino,
-        sequenceNumber = sequenceNumber,
-        taxDistrictNumber = taxDistrictNumber,
-        payeNumber = payeNumber,
-        employerName = employerName,
-        worksNumber = worksNumber,
-        receivingJobSeekersAllowance = receivingJobSeekersAllowance,
-        otherIncomeSourceIndicator  = otherIncomeSourceIndicator,
-        startDate = startDate,
-        endDate = endDate,
-        receivingOccupationalPension = receivingOccupationalPension,
-        employmentStatus = employmentStatus
+          nino = nino,
+          sequenceNumber = sequenceNumber,
+          taxDistrictNumber = taxDistrictNumber,
+          payeNumber = payeNumber,
+          employerName = employerName,
+          worksNumber = worksNumber,
+          receivingJobSeekersAllowance = receivingJobSeekersAllowance,
+          otherIncomeSourceIndicator = otherIncomeSourceIndicator,
+          startDate = startDate,
+          endDate = endDate,
+          receivingOccupationalPension = receivingOccupationalPension,
+          employmentStatus = employmentStatus
         )
       }
     }
   }
-  implicit val writer = Json.writes[NpsEmployment]
+  implicit val writer: OWrites[NpsEmployment] = Json.writes[NpsEmployment]
 }

@@ -7,7 +7,8 @@
       "payeReference": "paye-1",
       "employerName": "employer-1",
       "receivingOccupationalPension": false,
-      "employmentStatus": 1
+      "employmentStatus": 1,
+      "worksNumber": "00191048716"
     },
     {
       "employmentId": "019f5fee-d5e4-4f3e-9569-139b8ad81a87",
@@ -15,7 +16,8 @@
       "payeReference": "paye-2",
       "employerName": "employer-2",
       "receivingOccupationalPension": false,
-      "employmentStatus": 1
+      "employmentStatus": 1,
+      "worksNumber": "00191048716"
     }
   ],
   "allowances": [

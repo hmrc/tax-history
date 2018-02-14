@@ -5,5 +5,6 @@
   "startDate": "2016-01-21",
   "endDate": "2017-01-01",
   "receivingOccupationalPension": false,
-  "employmentStatus":1
+  "employmentStatus":1,
+  "worksNumber": "00191048716"
 }

@@ -23,6 +23,7 @@ import org.mockito.Matchers
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
+import play.api.libs.json.JsValue
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException}
@@ -39,53 +40,53 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.Future
 
 
-class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
+class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
   val testNino = randomNino()
-  
-  val testEmploymentHistoryService = TestEmploymentHistoryService.createNew()
 
-  val npsEmploymentResponse:List[NpsEmployment] = List(
+  val testEmploymentHistoryService: EmploymentHistoryService = TestEmploymentHistoryService.createNew()
+
+  val npsEmploymentResponse: List[NpsEmployment] = List(
     NpsEmployment(
-      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), false, false,
-      new LocalDate("2015-01-21"), None, true, Live))
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false,
+      otherIncomeSourceIndicator = false, new LocalDate("2015-01-21"), None, receivingOccupationalPension = true, Live))
 
-  val npsEmploymentWithJobSeekerAllowance:List[NpsEmployment] = List(
+  val npsEmploymentWithJobSeekerAllowance: List[NpsEmployment] = List(
     NpsEmployment(
-      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), true, false,
-      new LocalDate("2015-01-21"), None, false, Live),
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = true, otherIncomeSourceIndicator = false,
+      new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live),
     NpsEmployment(
-      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), false, false,
-      new LocalDate("2015-01-21"), None, false, Live))
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false,
+      new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live))
 
 
-  val npsEmploymentWithOtherIncomeSourceIndicator :List[NpsEmployment] = List(
+  val npsEmploymentWithOtherIncomeSourceIndicator: List[NpsEmployment] = List(
     NpsEmployment(
-      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), true, false,
-      new LocalDate("2015-01-21"), None, false, Live),
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = true, otherIncomeSourceIndicator = false,
+      new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live),
     NpsEmployment(
-      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), false, true,
-      new LocalDate("2015-01-21"), None, false, Live))
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = true,
+      new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live))
 
 
-  val npsEmploymentWithJustJobSeekerAllowance :List[NpsEmployment] = List(
+  val npsEmploymentWithJustJobSeekerAllowance: List[NpsEmployment] = List(
     NpsEmployment(
-      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), true, false,
-      new LocalDate("2015-01-21"), None, false, Live))
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = true, otherIncomeSourceIndicator = false,
+      new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live))
 
-  val npsEmploymentWithJustOtherIncomeSourceIndicator :List[NpsEmployment] = List(
+  val npsEmploymentWithJustOtherIncomeSourceIndicator: List[NpsEmployment] = List(
     NpsEmployment(
-      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), false, true,
-      new LocalDate("2015-01-21"), None, false, Live))
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = true,
+      new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live))
 
 
-  lazy val testRtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
-  lazy val rtiDuplicateEmploymentsResponse = loadFile("/json/rti/response/dummyRtiDuplicateEmployments.json")
-  lazy val rtiPartialDuplicateEmploymentsResponse = loadFile("/json/rti/response/dummyRtiPartialDuplicateEmployments.json")
-  lazy val rtiNonMatchingEmploymentsResponse = loadFile("/json/rti/response/dummyRtiNonMatchingEmployment.json")
-  lazy val testNpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
-  lazy val testIabds = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
+  lazy val testRtiData: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
+  lazy val rtiDuplicateEmploymentsResponse: JsValue = loadFile("/json/rti/response/dummyRtiDuplicateEmployments.json")
+  lazy val rtiPartialDuplicateEmploymentsResponse: JsValue = loadFile("/json/rti/response/dummyRtiPartialDuplicateEmployments.json")
+  lazy val rtiNonMatchingEmploymentsResponse: JsValue = loadFile("/json/rti/response/dummyRtiNonMatchingEmployment.json")
+  lazy val testNpsTaxAccount: NpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
+  lazy val testIabds: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
 
   val startDate = new LocalDate("2015-01-21")
 
@@ -115,7 +116,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     "return not found status response from get Nps Employments api" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(Nil))
-      intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino,TaxYear(2016))))
+      intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
     }
 
     "return success status despite failing response from get Rti Employments api when there are nps employments" in {
@@ -129,7 +130,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         .thenReturn(Future.failed(new BadRequestException("")))
 
       noException shouldBe thrownBy {
-        await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino,TaxYear(2016)))
+        await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)))
       }
     }
 
@@ -143,7 +144,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
-      val paye = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino,TaxYear(2016)))
+      val paye = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)))
 
       val employments = paye.employments
       employments.size mustBe 1
@@ -221,7 +222,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
           .thenReturn(Future.successful(testIabds))
         when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
           .thenReturn(Future.successful(testRtiData))
-        val payAsYouEarn = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino,TaxYear(2016)))
+
+        val payAsYouEarn = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)))
 
         val employments = payAsYouEarn.employments
         employments.size mustBe 1
@@ -235,7 +237,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
           .thenReturn(Future.successful(testRtiData))
 
-        intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino,TaxYear(2016))))
+        intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
       }
     }
 
@@ -248,7 +250,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
           .thenReturn(Future.successful(testRtiData))
 
-        intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino,TaxYear(2016))))
+        intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
       }
 
       "nps employments contain single element with npsEmploymentWithJustOtherIncomeSourceIndicator attribute is true" in {
@@ -259,7 +261,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
           .thenReturn(Future.successful(testRtiData))
 
-        intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino,TaxYear(2016))))
+        intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
       }
     }
 
@@ -267,7 +269,7 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
-      intercept[BadRequestException](await(testEmploymentHistoryService.retrieveNpsIabds(testNino,TaxYear(2016))))
+      intercept[BadRequestException](await(testEmploymentHistoryService.retrieveNpsIabds(testNino, TaxYear(2016))))
     }
 
     "return none where tax year is not cy-1" in {
@@ -279,29 +281,36 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
-      intercept[BadRequestException](await(testEmploymentHistoryService.getNpsTaxAccount(testNino,TaxYear(2016))))
+      intercept[BadRequestException](await(testEmploymentHistoryService.getNpsTaxAccount(testNino, TaxYear(2016))))
     }
 
     "return not found status response from get Nps Tax Account api" in {
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new NotFoundException("")))
 
-      intercept[NotFoundException](await(testEmploymentHistoryService.getNpsTaxAccount(testNino,TaxYear(2016))))
+      intercept[NotFoundException](await(testEmploymentHistoryService.getNpsTaxAccount(testNino, TaxYear(2016))))
     }
 
 
     "get onlyRtiEmployments  from List of Rti employments and List Nps Employments" in {
-      val rtiEmployment1 = RtiEmployment(1,"offNo1","ref1",None,Nil,Nil)
-      val rtiEmployment2 = RtiEmployment(5,"offNo5","ref5",None,Nil,Nil)
-      val rtiEmployment3 = RtiEmployment(3,"offNo3","ref3",None,Nil,Nil)
-      val rtiEmployment4 = RtiEmployment(4,"offNo4","ref4",None,Nil,Nil)
+      val rtiEmployment1 = RtiEmployment(1, "offNo1", "ref1", None, Nil, Nil)
+      val rtiEmployment2 = RtiEmployment(5, "offNo5", "ref5", None, Nil, Nil)
+      val rtiEmployment3 = RtiEmployment(3, "offNo3", "ref3", None, Nil, Nil)
+      val rtiEmployment4 = RtiEmployment(4, "offNo4", "ref4", None, Nil, Nil)
 
-      val rtiEmployments = List(rtiEmployment1,rtiEmployment2,rtiEmployment3,rtiEmployment4)
+      val rtiEmployments = List(rtiEmployment1, rtiEmployment2, rtiEmployment3, rtiEmployment4)
 
-      val npsEmployment1 = NpsEmployment(randomNino.toString(),1,"offNo1","ref1","empname1",None,false,false,LocalDate.now(),None, false, EmploymentStatus.Live)
-      val npsEmployment2 = NpsEmployment(randomNino.toString(),2,"offNo2","ref2","empname2",None,false,false,LocalDate.now(),None, false, EmploymentStatus.Live)
-      val npsEmployment3 = NpsEmployment(randomNino.toString(),3,"offNo3","ref3","empname3",None,false,false,LocalDate.now(),None, false, EmploymentStatus.Live)
-      val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
+      val npsEmployment1 = NpsEmployment(randomNino.toString(), 1, "offNo1", "ref1", "empname1", None,
+        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, LocalDate.now(), None,
+        receivingOccupationalPension = false, EmploymentStatus.Live)
+      val npsEmployment2 = NpsEmployment(randomNino.toString(), 2, "offNo2", "ref2", "empname2", None,
+        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, LocalDate.now(), None,
+        receivingOccupationalPension = false, EmploymentStatus.Live)
+      val npsEmployment3 = NpsEmployment(randomNino.toString(), 3, "offNo3", "ref3", "empname3", None,
+        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, LocalDate.now(), None,
+        receivingOccupationalPension = false, EmploymentStatus.Live)
+
+      val npsEmployments = List(npsEmployment1, npsEmployment2, npsEmployment3)
       val rtiData = RtiData("QQ0000002", rtiEmployments)
       val mockAuditable = mock[Auditable]
 
@@ -311,48 +320,54 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
     }
 
     "get onlyRtiEmployments must be size 0 when all the Rti employments are matched to the Nps Employments" in {
-      val rtiEmployment1 = RtiEmployment(1,"offNo1","ref1",None,Nil,Nil)
-      val rtiEmployment2 = RtiEmployment(2,"offNo2","ref2",None,Nil,Nil)
-      val rtiEmployment3 = RtiEmployment(3,"offNo3","ref3",None,Nil,Nil)
+      val rtiEmployment1 = RtiEmployment(1, "offNo1", "ref1", None, Nil, Nil)
+      val rtiEmployment2 = RtiEmployment(2, "offNo2", "ref2", None, Nil, Nil)
+      val rtiEmployment3 = RtiEmployment(3, "offNo3", "ref3", None, Nil, Nil)
 
-      val rtiEmployments = List(rtiEmployment1,rtiEmployment2,rtiEmployment3)
+      val rtiEmployments = List(rtiEmployment1, rtiEmployment2, rtiEmployment3)
 
-      val npsEmployment1 = NpsEmployment(randomNino.toString(),1,"offNo1","ref1","empname1",None,false,false,LocalDate.now(),None, false, EmploymentStatus.Live)
-      val npsEmployment2 = NpsEmployment(randomNino.toString(),2,"offNo2","ref2","empname2",None,false,false,LocalDate.now(),None, false, EmploymentStatus.Live)
-      val npsEmployment3 = NpsEmployment(randomNino.toString(),3,"offNo3","ref3","empname3",None,false,false,LocalDate.now(),None, false, EmploymentStatus.Live)
-      val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
-      val rtiData = RtiData("QQ0000002", rtiEmployments)
-      val mockAuditable = mock[Auditable]
+      val npsEmployment1 = NpsEmployment(randomNino.toString(), 1, "offNo1", "ref1", "empname1", None,
+        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, LocalDate.now(), None,
+        receivingOccupationalPension = false, EmploymentStatus.Live)
+      val npsEmployment2 = NpsEmployment(randomNino.toString(), 2, "offNo2", "ref2", "empname2", None,
+        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, LocalDate.now(), None,
+        receivingOccupationalPension = false, EmploymentStatus.Live)
+      val npsEmployment3 = NpsEmployment(randomNino.toString(), 3, "offNo3", "ref3", "empname3", None,
+        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, LocalDate.now(), None,
+        receivingOccupationalPension = false, EmploymentStatus.Live)
+
+      val npsEmployments = List(npsEmployment1, npsEmployment2, npsEmployment3)
 
       val onlyInRti = EmploymentMatchingHelper.unmatchedRtiEmployments(npsEmployments, rtiEmployments)
 
-      onlyInRti must be (empty)
+      onlyInRti must be(empty)
     }
 
     "fetch Employments successfully from cache" in {
       lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
 
 
-      val testEmployments:List[Employment]=List(
+      val testEmployments: List[Employment] = List(
         Employment(UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
           new LocalDate("2016-01-21"), Some(new LocalDate("2017-01-01")), "paye-1", "employer-1",
           Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),
           Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax"),
-          Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"), false, Live),
+          Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
+          receivingOccupationalPension = false, Live, "00191048716"),
 
         Employment(UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
           new LocalDate("2016-02-22"), None, "paye-2", "employer-2",
           Some("/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/company-benefits"),
           Some("/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/pay-and-tax"),
-          Some("/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87"), false, Live
-        )
+          Some("/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
+          receivingOccupationalPension = false, Live, "00191048716")
       )
 
       // Set up the test data in the cache
       await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye))
 
       val employments = await(testEmploymentHistoryService.getEmployments(Nino("AA000000A"), TaxYear(2014)))
-      employments must be (testEmployments)
+      employments must be(testEmployments)
     }
 
     "return not found when no employment was returned from cache" in {
@@ -371,13 +386,13 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
         new LocalDate("2016-01-21"), Some(new LocalDate("2017-01-01")), "paye-1", "employer-1",
         Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),
         Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax"),
-        Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"), false, Live
-      )
+        Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
+        receivingOccupationalPension = false, Live, "00191048716")
 
       await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye))
 
       val employment = await(testEmploymentHistoryService.getEmployment(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
-      employment must be (testEmployment)
+      employment must be(testEmployment)
     }
 
 
@@ -386,19 +401,22 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
       await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye))
 
-      intercept[NotFoundException](await(testEmploymentHistoryService.getEmployment(Nino("AA000000A"), TaxYear(2014),"01318d7c-bcd9-47e2-8c38-551e7ccdfae6")))
+      intercept[NotFoundException](await(testEmploymentHistoryService.getEmployment(
+        Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae6")))
     }
 
     "get company benefits from cache successfully" in {
       val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
 
-      val testCompanyBenefits:List[CompanyBenefit] = List(CompanyBenefit(UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),"companyBenefitType", 12))
+      val testCompanyBenefits: List[CompanyBenefit] = List(CompanyBenefit(
+        UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"), "companyBenefitType", 12))
 
       await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye))
 
-      val companyBenefits = await(testEmploymentHistoryService.getCompanyBenefits(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
+      val companyBenefits = await(testEmploymentHistoryService.getCompanyBenefits(
+        Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
 
-      companyBenefits must be (testCompanyBenefits)
+      companyBenefits must be(testCompanyBenefits)
     }
 
     "return not found when no company benefits returned from cache" in {
@@ -406,7 +424,8 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil{
 
       await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), payeNoBenefits))
 
-      intercept[NotFoundException](await(testEmploymentHistoryService.getCompanyBenefits(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3")))
+      intercept[NotFoundException](await(testEmploymentHistoryService.getCompanyBenefits(
+        Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3")))
     }
   }
 }

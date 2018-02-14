@@ -4,5 +4,6 @@
   "employerName": "employer-2",
   "startDate": "2016-02-22",
   "receivingOccupationalPension": false,
-  "employmentStatus":1
+  "employmentStatus":1,
+  "worksNumber": "00191048716"
 }
