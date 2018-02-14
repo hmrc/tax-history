@@ -36,12 +36,14 @@ import scala.concurrent.Future
 
 class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
 
-  val mockEmploymentHistoryService = mock[EmploymentHistoryService]
+  val mockEmploymentHistoryService: EmploymentHistoryService = mock[EmploymentHistoryService]
 
   val ninoWithAgent = randomNino()
   val ninoWithoutAgent = randomNino()
 
-  val testEmployment = Employment(startDate = LocalDate.now(), payeReference = "SOME_PAYE", employerName = "Megacorp Plc", employmentStatus = EmploymentStatus.Live)
+  val testEmployment = Employment(startDate = LocalDate.now(),
+    payeReference = "SOME_PAYE", employerName = "Megacorp Plc",
+    employmentStatus = EmploymentStatus.Live, worksNumber = "00191048716")
   val testEmployments = List(testEmployment)
 
   override def beforeEach = {

@@ -35,16 +35,16 @@ package uk.gov.hmrc.taxhistory.model.api
 import java.util.UUID
 
 import org.joda.time.LocalDate
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 class EmploymentSpec extends TestUtil with UnitSpec {
 
-  lazy val employmentJson = loadFile("/json/model/api/employment.json")
-  lazy val employmentNoEndDateJson = loadFile("/json/model/api/employmentNoEndDate.json")
-  lazy val employmentListJson = loadFile("/json/model/api/employments.json")
+  lazy val employmentJson: JsValue = loadFile("/json/model/api/employment.json")
+  lazy val employmentNoEndDateJson: JsValue = loadFile("/json/model/api/employmentNoEndDate.json")
+  lazy val employmentListJson: JsValue = loadFile("/json/model/api/employments.json")
 
   lazy val employment1 = Employment(
     employmentId = UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
@@ -52,7 +52,8 @@ class EmploymentSpec extends TestUtil with UnitSpec {
     endDate = Some(new LocalDate("2017-01-01")),
     payeReference = "paye-1",
     employerName = "employer-1",
-    employmentStatus = EmploymentStatus.Live
+    employmentStatus = EmploymentStatus.Live,
+    worksNumber = "00191048716"
   )
 
   lazy val employment2 = Employment(
@@ -60,10 +61,11 @@ class EmploymentSpec extends TestUtil with UnitSpec {
     payeReference = "paye-2",
     employerName = "employer-2",
     startDate = new LocalDate("2016-02-22"),
-    employmentStatus = EmploymentStatus.Live
+    employmentStatus = EmploymentStatus.Live,
+    worksNumber = "00191048716"
   )
 
-  lazy val employmentList = List(employment1,employment2)
+  lazy val employmentList = List(employment1, employment2)
 
   "Employment" should {
 
@@ -78,7 +80,8 @@ class EmploymentSpec extends TestUtil with UnitSpec {
         employerName = "employer-1",
         startDate = new LocalDate("2016-01-21"),
         endDate = Some(new LocalDate("2017-01-01")),
-        employmentStatus = EmploymentStatus.Live
+        employmentStatus = EmploymentStatus.Live,
+        worksNumber = "00191048716"
       )
       emp.employmentId.toString.nonEmpty shouldBe true
       emp.employmentId shouldNot be(employment1.employmentId)
@@ -94,7 +97,7 @@ class EmploymentSpec extends TestUtil with UnitSpec {
     }
     "enrich employment with URIs" in {
       val taxYear = 2016
-      val enrichedEmployment = employment1.enrichWithURIs(taxYear=taxYear)
+      val enrichedEmployment = employment1.enrichWithURIs(taxYear = taxYear)
       employment1.companyBenefitsURI shouldBe None
       employment1.employmentURI shouldBe None
       employment1.payAndTaxURI shouldBe None

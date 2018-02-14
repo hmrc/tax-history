@@ -34,14 +34,14 @@ package uk.gov.hmrc.taxhistory.model.api
 
 import java.util.UUID
 
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 class AllowanceSpec extends TestUtil with UnitSpec {
 
-  lazy val allowanceJson = loadFile("/json/model/api/allowance.json")
-  lazy val allowanceListJson = loadFile("/json/model/api/allowances.json")
+  lazy val allowanceJson: JsValue = loadFile("/json/model/api/allowance.json")
+  lazy val allowanceListJson: JsValue = loadFile("/json/model/api/allowances.json")
 
   lazy val allowance1 = Allowance(allowanceId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
                                   iabdType = "allowanceType",
