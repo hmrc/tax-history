@@ -49,7 +49,8 @@ object Employment {
   private val noRecord = "No record"
 
   def noRecord(startDate: LocalDate, endDate: Option[LocalDate]): Employment =
-    Employment(UUID.randomUUID(), startDate, endDate, noRecord, noRecord, None, None, None, false, EmploymentStatus.Unknown)
+    Employment(startDate = startDate, endDate = endDate, payeReference = noRecord, employerName = noRecord,
+      employmentStatus = EmploymentStatus.Unknown, worksNumber = noRecord)
 
   implicit val jsonReads: Reads[Employment] = (
     (JsPath \ "employmentId").read[UUID] and
