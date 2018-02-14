@@ -242,7 +242,9 @@ class EmploymentHistoryService @Inject()(
   private def getFiller(previous: Option[Employment], nextE: Employment, taxYear: TaxYear): List[Employment] = {
     previous match {
       case Some(prevE) if prevE.endDate.getOrElse(taxYear.finishes).plusDays(1).isBefore(nextE.startDate) =>
-        List(Employment.noRecord(prevE.endDate.getOrElse(taxYear.finishes).plusDays(1), Some(nextE.startDate.minusDays(1))), nextE) // gap
+        val fillerStartDate = prevE.endDate.getOrElse(taxYear.finishes).plusDays(1)
+        val fillerEndDate = if (nextE.startDate.minusDays(1) == taxYear.finishes && taxYear == TaxYear.current) None else Some(nextE.startDate.minusDays(1))
+        List(Employment.noRecord(fillerStartDate, fillerEndDate), nextE) // gap
       case _ => List(nextE) // no gap
     }
   }
