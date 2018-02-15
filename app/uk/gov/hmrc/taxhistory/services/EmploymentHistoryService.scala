@@ -38,13 +38,23 @@ import scala.concurrent.Future
 class EmploymentHistoryService @Inject()(
                                           val npsConnector: NpsConnector,
                                           val rtiConnector: RtiConnector,
-                                          val cacheService : PayeCacheService,
+                                          val cacheService: PayeCacheService,
                                           val auditable: Auditable
-                              ) extends Logging {
+                                        ) extends Logging {
 
   def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] = {
-    getFromCache(nino, taxYear).map(_.employments.map(_.enrichWithURIs(taxYear.startYear)))
-      .orNotFound(s"Employments not found for NINO ${nino.value} and tax year ${taxYear.toString}")
+    getFromCache(nino, taxYear).map (es => addFillers(es.employments.map(_.enrichWithURIs(taxYear.startYear)), taxYear))
+  }
+
+  def addFillers(employments: List[Employment], taxYear: TaxYear): List[Employment] = {
+    // previous and next year objects are added to handle missing employments at either end of the list
+    val previousYearEnd = Employment.noRecord(taxYear.starts.minusDays(1), Some(taxYear.starts.minusDays(1)))
+    val nextYearStart = Employment.noRecord(taxYear.finishes.plusDays(1), Some(taxYear.finishes.plusDays(1)))
+
+    (previousYearEnd +: employments :+ nextYearStart)
+      .foldLeft(List[Employment]()) { (acc, e) =>
+        acc ++ getFiller(acc.reverse.headOption, e, taxYear) }
+      .drop(1).dropRight(1) // remove the previous and next year elements as we no longer need them
   }
 
   def getEmployment(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Employment] = {
@@ -103,14 +113,14 @@ class EmploymentHistoryService @Inject()(
 
     val taxYearList = List(TaxYear.current,
                            TaxYear.current.back(1),
-                           TaxYear.current.back(2),
-                           TaxYear.current.back(3),
-                           TaxYear.current.back(4))
+      TaxYear.current.back(2),
+      TaxYear.current.back(3),
+      TaxYear.current.back(4))
 
     val taxYears = taxYearList.map(year => IndividualTaxYear(year = year.startYear,
-                                                             allowancesURI = s"/${year.startYear}/allowances",
-                                                             employmentsURI = s"/${year.startYear}/employments",
-                                                             taxAccountURI = s"/${year.startYear}/tax-account"))
+      allowancesURI = s"/${year.startYear}/allowances",
+      employmentsURI = s"/${year.startYear}/employments",
+      taxAccountURI = s"/${year.startYear}/tax-account"))
 
     Future.successful(taxYears)
   }
@@ -128,10 +138,10 @@ class EmploymentHistoryService @Inject()(
 
     for {
       npsEmployments <- retrieveNpsEmployments(nino, taxYear).orNotFound(s"No NPS employments found for $nino $taxYear")
-      rtiDataOpt     <- retrieveRtiData(nino,taxYear).map(Some(_)).recover { case _ => None } // We want to present some information even if the retrieval from RTI failed.
-      rtiEmployments  = rtiDataOpt.map(_.employments).getOrElse(Nil)
-      iabds          <- retrieveNpsIabds(nino,taxYear).recover { case _ => Nil } // We want to present some information even if the retrieval of IABDs failed.
-      taxAccountOpt  <- getNpsTaxAccount(nino,taxYear).map(Some(_)).recover { case _ => None }  // We want to present some information even if the retrieval of the tax account failed.
+      rtiDataOpt <- retrieveRtiData(nino, taxYear).map(Some(_)).recover { case _ => None } // We want to present some information even if the retrieval from RTI failed.
+      rtiEmployments = rtiDataOpt.map(_.employments).getOrElse(Nil)
+      iabds <- retrieveNpsIabds(nino, taxYear).recover { case _ => Nil } // We want to present some information even if the retrieval of IABDs failed.
+      taxAccountOpt <- getNpsTaxAccount(nino, taxYear).map(Some(_)).recover { case _ => None } // We want to present some information even if the retrieval of the tax account failed.
     } yield {
       mergeEmployments(nino, taxYear, npsEmployments, rtiEmployments, taxAccountOpt.flatten, iabds)
     }
@@ -141,12 +151,12 @@ class EmploymentHistoryService @Inject()(
     * Given the data required, performs the necessary logic to combine this data from
     * different sources into a `PayAsYouEarn` (tax year summary) instance.
     */
-  def mergeEmployments(nino:             Nino,
-                       taxYear:          TaxYear,
-                       npsEmployments:   List[NpsEmployment],
-                       rtiEmployments:   List[RtiEmployment],
+  def mergeEmployments(nino: Nino,
+                       taxYear: TaxYear,
+                       npsEmployments: List[NpsEmployment],
+                       rtiEmployments: List[RtiEmployment],
                        taxAccountOption: Option[NpsTaxAccount],
-                       iabds:            List[Iabd]
+                       iabds: List[Iabd]
                       )(implicit hc: HeaderCarrier): PayAsYouEarn = {
 
     val employmentMatches: Map[NpsEmployment, RtiEmployment] = EmploymentMatchingHelper.matchedEmployments(npsEmployments, rtiEmployments)
@@ -228,5 +238,15 @@ class EmploymentHistoryService @Inject()(
       DataEventDetail(
         Map("nino" -> nino, "payeRef" -> rE.payeRef, "officeNumber" -> rE.officeNumber, "currentPayId" -> rE.currentPayId.getOrElse("")))
     )
+
+  private def getFiller(previous: Option[Employment], nextE: Employment, taxYear: TaxYear): List[Employment] = {
+    previous match {
+      case Some(prevE) if prevE.endDate.getOrElse(taxYear.finishes).plusDays(1).isBefore(nextE.startDate) =>
+        val fillerStartDate = prevE.endDate.getOrElse(taxYear.finishes).plusDays(1)
+        val fillerEndDate = if (nextE.startDate.minusDays(1) == taxYear.finishes && taxYear == TaxYear.current) None else Some(nextE.startDate.minusDays(1))
+        List(Employment.noRecord(fillerStartDate, fillerEndDate), nextE) // gap
+      case _ => List(nextE) // no gap
+    }
+  }
 
 }
