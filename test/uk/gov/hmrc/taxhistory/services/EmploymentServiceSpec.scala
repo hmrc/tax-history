@@ -29,6 +29,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
+import uk.gov.hmrc.taxhistory.fixtures.Employments
 import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
@@ -40,7 +41,7 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.Future
 
 
-class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
+class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil with Employments {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val testNino = randomNino()
@@ -436,23 +437,6 @@ class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   "withEmploymentGaps" should {
 
-    // todo : move these out to a test fixture
-    val testWorksNumber = "00191048716"
-
-    val liveOngoingEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts, None, "Nothing", "An Employer",
-      None, None, None, false, EmploymentStatus.Live, testWorksNumber)
-
-    val liveStartYearEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts, Some(TaxYear.current.starts.plusDays(10)), "Nothing", "An Employer",
-      None, None, None, false, EmploymentStatus.Live, testWorksNumber)
-
-    val liveMidYearEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts.plusDays(10) , Some(TaxYear.current.finishes.minusDays(10)), "Nothing", "An Employer",
-      None, None, None, false, EmploymentStatus.Live, testWorksNumber)
-
-    val liveEndYearEmployment = Employment(UUID.randomUUID(), TaxYear.current.finishes.minusDays(10) , Some(TaxYear.current.finishes), "Nothing", "An Employer",
-      None, None, None, false, EmploymentStatus.Live, testWorksNumber)
-
-
-    // todo : add date check into here
     def isNoRecordEmnployment(employment: Employment): Boolean =
       employment.employerName == "No record" && employment.employmentStatus == EmploymentStatus.Unknown
 
