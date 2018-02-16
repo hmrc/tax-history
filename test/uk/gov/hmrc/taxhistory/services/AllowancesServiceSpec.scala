@@ -78,5 +78,10 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       result must be(allowance)
     }
 
+    "return no allowance from cache for current year" in {
+      val result = await(testEmploymentHistoryService.getAllowances(Nino("AA000000A"), TaxYear.current))
+      result must be(List.empty)
+    }
+
   }
 }

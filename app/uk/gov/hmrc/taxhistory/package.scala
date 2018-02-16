@@ -36,9 +36,9 @@ package object taxhistory {
     /**
       * Converts a future containing an empty option into a failure with NotFoundException
       */
-    def orNotFound(message: String): Future[A] = fl.flatMap {
+    def orNotFound(message: String): Future[Option[A]] = fl.flatMap {
       case None    => Future.failed(new NotFoundException(message))
-      case Some(a) => Future.successful(a)
+      case Some(a) => Future.successful(Some(a))
     }
   }
 }

@@ -60,7 +60,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
 
     "respond with OK for successful get" in {
       when(mockEmploymentHistoryService.getTaxAccount(any[Nino], any[TaxYear])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(testTaxAccount))
+        .thenReturn(Future.successful(Some(testTaxAccount)))
 
       val result = testTaxAccountController.getTaxAccount(ninoWithAgent.nino, testTaxYear).apply(FakeRequest())
       status(result) shouldBe OK
@@ -71,13 +71,13 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
         when(mockEmploymentHistoryService.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
         val result = testTaxAccountController.getTaxAccount(ninoWithAgent.nino, testTaxYear).apply(FakeRequest())
-        status(result) shouldBe (expectedStatus)
+        status(result) shouldBe expectedStatus
       }
     }
 
     "respond with UNAUTHORIZED Status for enrolments which is not HMRC Agent" in {
       when(mockEmploymentHistoryService.getTaxAccount(any[Nino], any[TaxYear])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(testTaxAccount))
+        .thenReturn(Future.successful(Some(testTaxAccount)))
 
       val result = testTaxAccountController.getTaxAccount(ninoWithoutAgent.nino, testTaxYear).apply(FakeRequest())
       status(result) shouldBe UNAUTHORIZED

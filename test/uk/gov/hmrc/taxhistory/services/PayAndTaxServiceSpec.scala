@@ -71,13 +71,18 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
     "successfully retrieve payAndTaxURI from cache" in {
       lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
-      val testPayAndTax = PayAndTax(UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"), Some(2222.22),Some(111.11),
-        Some(new LocalDate("2016-02-20")), List())
+      val testPayAndTax = Some(PayAndTax(UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"), Some(2222.22),Some(111.11),
+        Some(new LocalDate("2016-02-20")), List()))
 
       testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye)
 
       val payAndTax = await(testEmploymentHistoryService.getPayAndTax(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
       payAndTax must be(testPayAndTax)
+    }
+
+    "return no payAndTaxURI from cache for current year" in {
+      val result = await(testEmploymentHistoryService.getPayAndTax(Nino("AA000000A"), TaxYear.current, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
+      result must be(None)
     }
 
   }
