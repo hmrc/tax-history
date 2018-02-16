@@ -70,12 +70,18 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
     "successfully retrieve tax account from cache" in {
       lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
-      val testTaxAccount = TaxAccount(UUID.fromString("3923afda-41ee-4226-bda5-e39cc4c82934"), Some(22.22), Some(11.11),Some(33.33))
+      val testTaxAccount = Some(TaxAccount(UUID.fromString("3923afda-41ee-4226-bda5-e39cc4c82934"), Some(22.22), Some(11.11),Some(33.33)))
 
       testEmploymentHistoryService.cacheService.insertOrUpdate((testNino, TaxYear.current.previous), paye)
 
       val taxAccount = await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear.current.previous))
       taxAccount must be(testTaxAccount)
     }
+
+    "return no tax account from cache for current year" in {
+      val taxAccount = await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear.current))
+      taxAccount must be(None)
+    }
+
   }
 }

@@ -41,7 +41,7 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.Future
 
 
-class EmploymentServiceSpec extends PlaySpec with MockitoSugar with TestUtil with Employments {
+class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestUtil with Employments {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val testNino = randomNino()

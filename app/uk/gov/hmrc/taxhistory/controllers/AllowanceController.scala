@@ -32,11 +32,11 @@ class AllowanceController @Inject()(val employmentHistoryService: EmploymentHist
 
   def getAllowances(nino: String, taxYear: Int): Action[AnyContent] = Action.async { implicit request =>
     relationshipAuthService.withAuthorisedRelationship(Nino(nino)) { _ =>
-      retrieveAllowances(nino, taxYear)
+      retrieveAllowances(Nino(nino), TaxYear(taxYear))
     }
   }
 
-  private def retrieveAllowances(nino: String, taxYear: Int)(implicit hc: HeaderCarrier): Future[Result] = toResult {
-    employmentHistoryService.getAllowances(Nino(nino), TaxYear(taxYear))
+  private def retrieveAllowances(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Result] = toResult {
+    employmentHistoryService.getAllowances(nino, taxYear)
   }
 }

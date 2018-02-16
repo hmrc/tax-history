@@ -58,7 +58,7 @@ class PayAndTaxControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
   "getPayAndTax" must {
     "respond with OK for successful get" in {
       when(mockEmploymentHistoryService.getPayAndTax(Matchers.any(),Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(testPayAndTax))
+        .thenReturn(Future.successful(Some(testPayAndTax)))
       val result = testPayAndTaxController.getPayAndTax(ninoWithAgent.nino, taxYear, employmentId).apply(FakeRequest())
       status(result) must be(OK)
     }
@@ -74,7 +74,7 @@ class PayAndTaxControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
 
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
       when(mockEmploymentHistoryService.getPayAndTax(Matchers.any(),Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
-        .thenReturn(Future.successful(testPayAndTax))
+        .thenReturn(Future.successful(Some(testPayAndTax)))
       val result = testPayAndTaxController.getPayAndTax(ninoWithoutAgent.nino, taxYear, employmentId).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }

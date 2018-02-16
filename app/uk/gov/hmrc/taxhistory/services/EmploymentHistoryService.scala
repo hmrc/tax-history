@@ -81,30 +81,43 @@ class EmploymentHistoryService @Inject()(
   }
 
   def getAllowances(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Allowance]] = {
-    getFromCache(nino, taxYear).flatMap(paye => {
-      logger.debug("Returning result from getAllowances")
+    if (taxYear == TaxYear.current) {
+      Future(List.empty[Allowance])
+    }
+    else {
+      getFromCache(nino, taxYear).flatMap(paye => {
+        logger.debug("Returning result from getAllowances")
 
-      if (paye.allowances.isEmpty) {
-        Future.failed(new NotFoundException(s"Allowance not found for NINO ${nino.value} and tax year ${taxYear.toString}"))
-      } else {
-        Future.successful(paye.allowances)
-      }
-    })
+        if (paye.allowances.isEmpty) {
+          Future.failed(new NotFoundException(s"Allowance not found for NINO ${nino.value} and tax year ${taxYear.toString}"))
+        } else {
+          Future.successful(paye.allowances)
+        }
+      })
+    }
   }
 
 
-  def getPayAndTax(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[PayAndTax] = {
-    getFromCache(nino, taxYear).map(_.payAndTax.get(employmentId))
-      .orNotFound(s"PayAndTax not found for NINO ${nino.value}, tax year ${taxYear.toString} and employmentId $employmentId")
+  def getPayAndTax(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Option[PayAndTax]] = {
+    if (taxYear == TaxYear.current) {
+      Future(None)
+    } else {
+      getFromCache(nino, taxYear).map(_.payAndTax.get(employmentId))
+        .orNotFound(s"PayAndTax not found for NINO ${nino.value}, tax year ${taxYear.toString} and employmentId $employmentId")
+    }
   }
 
-  def getTaxAccount(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[TaxAccount] = {
-    getFromCache(nino, taxYear).flatMap { paye =>
-      logger.debug("Returning result from getTaxAccount")
+  def getTaxAccount(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[Option[TaxAccount]] = {
+    if (taxYear == TaxYear.current) {
+      Future(None)
+    } else {
+      getFromCache(nino, taxYear).flatMap { paye =>
+        logger.debug("Returning result from getTaxAccount")
 
-      paye.taxAccount match {
-        case Some(taxAccount) => Future.successful(taxAccount)
-        case None => Future.failed(new NotFoundException(s"TaxAccount not found for NINO ${nino.value} and tax year ${taxYear.toString}"))
+        paye.taxAccount match {
+          case Some(taxAccount) => Future.successful(Some(taxAccount))
+          case None => Future.failed(new NotFoundException(s"TaxAccount not found for NINO ${nino.value} and tax year ${taxYear.toString}"))
+        }
       }
     }
   }
@@ -126,8 +139,13 @@ class EmploymentHistoryService @Inject()(
   }
 
   def getCompanyBenefits(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[List[CompanyBenefit]] = {
-    getFromCache(nino, taxYear).map(_.benefits.get(employmentId))
-      .orNotFound(s"CompanyBenefits not found for NINO ${nino.value}, tax year ${taxYear.toString} and employmentId $employmentId")
+    if (taxYear == TaxYear.current) {
+      Future(List.empty[CompanyBenefit])
+    }
+    else {
+      getFromCache(nino, taxYear).map(_.benefits.getOrElse(employmentId, List.empty))
+        .orNotFound(s"CompanyBenefits not found for NINO ${nino.value}, tax year ${taxYear.toString} and employmentId $employmentId")
+    }
   }
 
   /**
