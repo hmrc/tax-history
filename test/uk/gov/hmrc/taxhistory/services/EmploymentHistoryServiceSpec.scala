@@ -433,6 +433,12 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
       intercept[NotFoundException](await(testEmploymentHistoryService.getCompanyBenefits(
         Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3")))
     }
+
+    "return no company benefits from cache for current year" in {
+      val taxAccount = await(testEmploymentHistoryService.getCompanyBenefits(
+        Nino("AA000000A"), TaxYear.current, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
+      taxAccount must be(List.empty)
+    }
   }
 
   "withEmploymentGaps" should {
