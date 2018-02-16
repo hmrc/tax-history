@@ -80,10 +80,5 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       payAndTax must be(testPayAndTax)
     }
 
-    "return no payAndTaxURI from cache for current year" in {
-      val result = await(testEmploymentHistoryService.getPayAndTax(Nino("AA000000A"), TaxYear.current, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
-      result must be(None)
-    }
-
   }
 }

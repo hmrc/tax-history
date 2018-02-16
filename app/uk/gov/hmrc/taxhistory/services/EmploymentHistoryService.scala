@@ -99,12 +99,8 @@ class EmploymentHistoryService @Inject()(
 
 
   def getPayAndTax(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Option[PayAndTax]] = {
-    if (taxYear == TaxYear.current) {
-      Future(None)
-    } else {
       getFromCache(nino, taxYear).map(_.payAndTax.get(employmentId))
         .orNotFound(s"PayAndTax not found for NINO ${nino.value}, tax year ${taxYear.toString} and employmentId $employmentId")
-    }
   }
 
   def getTaxAccount(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[Option[TaxAccount]] = {
