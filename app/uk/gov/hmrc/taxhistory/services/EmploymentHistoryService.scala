@@ -205,9 +205,8 @@ class EmploymentHistoryService @Inject()(
 
     val allowances = iabds.allowances
     val taxAccount = taxAccountOption.map(_.toTaxAccount)
-    val payAsYouEarn = EmploymentHistoryServiceHelper.combinePAYEs(payes).copy(allowances = allowances, taxAccount = taxAccount)
 
-    payAsYouEarn
+    EmploymentHistoryServiceHelper.combinePAYEs(payes).copy(allowances = allowances, taxAccount = taxAccount)
   }
 
   /*
@@ -231,18 +230,8 @@ class EmploymentHistoryService @Inject()(
   def retrieveNpsIabds(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[Iabd]] =
     npsConnector.getIabds(nino, taxYear.currentYear)
 
-  /**
-    * If the tax year requested is not the previous tax year, return None.
-    * TODO is this the correct behaviour?
-    */
-  def getNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[NpsTaxAccount]] = {
-
-    if (taxYear.startYear != TaxYear.current.previous.startYear) {
-      Future.successful(None)
-    } else {
+  def getNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[NpsTaxAccount]] =
       npsConnector.getTaxAccount(nino, taxYear.currentYear).map(Some(_))
-    }
-  }
 
   /*
    A convenience method used when auditing.

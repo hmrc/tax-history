@@ -17,19 +17,28 @@
 package uk.gov.hmrc.taxhistory.model.nps
 
 
+import java.util.UUID
+
 import play.api.libs.json._
-import uk.gov.hmrc.taxhistory.model.api.TaxAccount
+import uk.gov.hmrc.taxhistory.model.api.{Allowance, TaxAccount}
 
-
-
-case class Deduction(`type`:Int,sourceAmount:Option[BigDecimal])
+case class Deduction(`type`:Int,
+                     npsDescription: String,
+                     amount: BigDecimal,
+                     sourceAmount: Option[BigDecimal])
 
 object Deduction {
   implicit val formats = Json.format[Deduction]
 }
+
+// todo : turn the tax code into a TaxCode rather than a string, and provide JSON format for TaxCode
 case class IncomeSource(employmentId:Int,
-                        employmentType:Int,actualPUPCodedInCYPlusOneTaxYear:Option[BigDecimal],
-                        deductions: List[Deduction])
+                        employmentType:Int,
+                        actualPUPCodedInCYPlusOneTaxYear:Option[BigDecimal],
+                        deductions: List[Deduction],
+                        allowances: List[Allowance],
+                        taxCode: String,
+                        basisOperation: Int)
 
 object IncomeSource {
   implicit val formats = Json.format[IncomeSource]

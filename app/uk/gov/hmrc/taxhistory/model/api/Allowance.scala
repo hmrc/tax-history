@@ -21,8 +21,10 @@ import java.util.UUID
 import play.api.libs.json.Json
 
 case class Allowance(allowanceId:UUID = UUID.randomUUID(),
+                     npsDescription: String,
                      iabdType: String,
-                     amount: BigDecimal)
+                     amount: BigDecimal,
+                     sourceAmount: Option[BigDecimal])
 
 object Allowance {
   implicit val formats = Json.format[Allowance]
