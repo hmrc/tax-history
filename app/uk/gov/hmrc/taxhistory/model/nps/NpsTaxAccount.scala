@@ -83,15 +83,12 @@ case class NpsTaxAccount(incomeSources: List[IncomeSource]){
       actualPUPCodedInCYPlusOneTaxYear = getActualPupCodedInCYPlusOne
     )
 
-  // todo : consider.  Not totally sold on this as the right place for this call
   def matchedIncomeSource(npsEmployment: NpsEmployment): Option[IncomeSource] = {
     incomeSources.find { iS =>
       iS.employmentTaxDistrictNumber.toString == npsEmployment.taxDistrictNumber &&
         iS.employmentPayeRef == npsEmployment.payeRef &&
         iS.employmentId == npsEmployment.sequenceNumber
     }
-
-    // todo : if we get no match here this is an error case, although we might still want to render the page
   }
 
 }

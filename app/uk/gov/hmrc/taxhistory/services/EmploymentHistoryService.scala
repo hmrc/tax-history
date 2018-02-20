@@ -203,15 +203,15 @@ class EmploymentHistoryService @Inject()(
       )
     }
 
-    // todo : should not take an option into this function, should probably error earlier
-    val taxAccount = taxAccountOption.get
-
     // One [[PayAsYouEarn]] instance will be produced for each npsEmployment.
     val payes: List[PayAsYouEarn] = npsEmployments.map { npsEmployment =>
+
+      val incomeSource = if (taxAccountOption.isDefined) taxAccountOption.get.matchedIncomeSource(npsEmployment) else None
+
       EmploymentHistoryServiceHelper.buildPAYE(
         rtiEmployment = employmentMatches.get(npsEmployment),
         iabds = iabds.matchedCompanyBenefits(npsEmployment),
-        incomeSource = taxAccount.matchedIncomeSource(npsEmployment),
+        incomeSource = incomeSource,
         npsEmployment = npsEmployment
       )
     }
