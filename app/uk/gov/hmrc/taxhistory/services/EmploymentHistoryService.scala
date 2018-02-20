@@ -105,9 +105,7 @@ class EmploymentHistoryService @Inject()(
   }
 
   def getTaxAccount(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[Option[TaxAccount]] = {
-    if (taxYear == TaxYear.current) {
-      Future(None)
-    } else {
+    if (taxYear == TaxYear.current.previous) {
       getFromCache(nino, taxYear).flatMap { paye =>
         logger.debug("Returning result from getTaxAccount")
 
@@ -116,6 +114,8 @@ class EmploymentHistoryService @Inject()(
           case None => Future.failed(new NotFoundException(s"TaxAccount not found for NINO ${nino.value} and tax year ${taxYear.toString}"))
         }
       }
+    } else {
+      Future(None)
     }
   }
 

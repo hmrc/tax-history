@@ -84,11 +84,12 @@ case class NpsTaxAccount(incomeSources: List[IncomeSource]){
     )
 
   def matchedIncomeSource(npsEmployment: NpsEmployment): Option[IncomeSource] = {
-    incomeSources.find { iS =>
+    val iSs = incomeSources.filter { iS =>
       iS.employmentTaxDistrictNumber.toString == npsEmployment.taxDistrictNumber &&
-        iS.employmentPayeRef == npsEmployment.payeNumber &&
-        iS.employmentId == npsEmployment.sequenceNumber
+        iS.employmentPayeRef == npsEmployment.payeNumber
     }
+
+    if (iSs.lengthCompare(1) > 0) iSs.find(iS => iS.employmentId == npsEmployment.sequenceNumber) else iSs.headOption
   }
 
 }

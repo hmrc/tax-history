@@ -274,7 +274,7 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
     }
 
     "return none where tax year is not cy-1" in {
-      val response = await(testEmploymentHistoryService.getNpsTaxAccount(testNino, TaxYear(2015)))
+      val response = await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear(2015)))
       response mustBe None
     }
 
