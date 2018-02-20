@@ -38,7 +38,7 @@ object EmploymentHistoryServiceHelper extends TaxHistoryHelper with Logging {
 
   def buildPAYE(rtiEmployment: Option[RtiEmployment],
                 iabds: List[Iabd],
-                incomeSource: IncomeSource,
+                incomeSource: Option[IncomeSource],
                 npsEmployment: NpsEmployment): PayAsYouEarn = {
 
     val employment = npsEmployment.toEmployment
@@ -54,7 +54,10 @@ object EmploymentHistoryServiceHelper extends TaxHistoryHelper with Logging {
       Map.empty
     }
 
-    val income = Map(employment.employmentId.toString -> incomeSource)
+    val income: Map[String, IncomeSource] = incomeSource match {
+      case None     => Map.empty
+      case Some(iS) => Map(employment.employmentId.toString -> iS)
+    }
 
     PayAsYouEarn(employments = List(employment), benefits = benefits, payAndTax = payAndTax, incomeSources = income)
   }
