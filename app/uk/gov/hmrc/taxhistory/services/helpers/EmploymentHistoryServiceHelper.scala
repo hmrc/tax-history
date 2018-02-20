@@ -30,13 +30,15 @@ object EmploymentHistoryServiceHelper extends TaxHistoryHelper with Logging {
       PayAsYouEarn(
         employments = p1.employments ::: p2.employments,
         benefits    = p1.benefits ++ p2.benefits,
-        payAndTax   = p1.payAndTax ++ p2.payAndTax
+        payAndTax   = p1.payAndTax ++ p2.payAndTax,
+        incomeSources = p1.incomeSources ++ p2.incomeSources
       )
     })
   }
 
   def buildPAYE(rtiEmployment: Option[RtiEmployment],
                 iabds: List[Iabd],
+                incomeSource: IncomeSource,
                 npsEmployment: NpsEmployment): PayAsYouEarn = {
 
     val employment = npsEmployment.toEmployment
@@ -52,7 +54,9 @@ object EmploymentHistoryServiceHelper extends TaxHistoryHelper with Logging {
       Map.empty
     }
 
-    PayAsYouEarn(employments = List(employment), benefits = benefits, payAndTax = payAndTax)
+    val income = Map(employment.employmentId.toString -> incomeSource)
+
+    PayAsYouEarn(employments = List(employment), benefits = benefits, payAndTax = payAndTax, incomeSources = income)
   }
 
 }

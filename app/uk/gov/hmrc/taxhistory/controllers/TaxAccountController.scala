@@ -39,4 +39,14 @@ class TaxAccountController @Inject()(val employmentHistoryService: EmploymentHis
   private def retrieveTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Result] = toResult {
     employmentHistoryService.getTaxAccount(nino, taxYear)
   }
+
+  def getIncomeSource(nino: String, taxYear: Int, employmentId: String): Action[AnyContent] = Action.async { implicit request =>
+    relationshipAuthService.withAuthorisedRelationship(Nino(nino)) { _ =>
+      retrieveIncomeSource(Nino(nino), TaxYear(taxYear), employmentId)
+    }
+  }
+
+  private def retrieveIncomeSource(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit hc: HeaderCarrier): Future[Result] = toResult {
+    employmentHistoryService.getIncomeSource(nino, taxYear, employmentId)
+  }
 }

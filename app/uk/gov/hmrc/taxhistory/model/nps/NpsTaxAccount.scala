@@ -16,29 +16,39 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
-
-import java.util.UUID
-
 import play.api.libs.json._
-import uk.gov.hmrc.taxhistory.model.api.{Allowance, TaxAccount}
+import uk.gov.hmrc.domain.TaxCode
+import uk.gov.hmrc.domain.TaxCodeFormats._
+import uk.gov.hmrc.taxhistory.model.api.TaxAccount
 
-case class Deduction(`type`:Int,
-                     npsDescription: String,
-                     amount: BigDecimal,
-                     sourceAmount: Option[BigDecimal])
+case class TaDeduction(`type`:Int,
+                       npsDescription: String,
+                       amount: BigDecimal,
+                       sourceAmount: Option[BigDecimal])
 
-object Deduction {
-  implicit val formats = Json.format[Deduction]
+object TaDeduction {
+  implicit val formats = Json.format[TaDeduction]
 }
 
-// todo : turn the tax code into a TaxCode rather than a string, and provide JSON format for TaxCode
+case class TaAllowance(`type`:Int,
+                       npsDescription: String,
+                       amount: BigDecimal,
+                       sourceAmount: Option[BigDecimal])
+
+object TaAllowance {
+  implicit val formats = Json.format[TaAllowance]
+}
+
 case class IncomeSource(employmentId:Int,
                         employmentType:Int,
                         actualPUPCodedInCYPlusOneTaxYear:Option[BigDecimal],
-                        deductions: List[Deduction],
-                        allowances: List[Allowance],
-                        taxCode: String,
-                        basisOperation: Int)
+                        deductions: List[TaDeduction],
+                        allowances: List[TaAllowance],
+                        taxCode: TaxCode,
+                        basisOperation: Option[Int],
+                        employmentTaxDistrictNumber: Int,
+                        employmentPayeRef: String
+                       )
 
 object IncomeSource {
   implicit val formats = Json.format[IncomeSource]
@@ -72,6 +82,18 @@ case class NpsTaxAccount(incomeSources: List[IncomeSource]){
       underpaymentAmount = getUnderPayment,
       actualPUPCodedInCYPlusOneTaxYear = getActualPupCodedInCYPlusOne
     )
+
+  // todo : consider.  Not totally sold on this as the right place for this call
+  def matchedIncomeSource(npsEmployment: NpsEmployment): IncomeSource = {
+    incomeSources.filter { iS =>
+      iS.employmentTaxDistrictNumber.toString == npsEmployment.taxDistrictNumber &&
+        iS.employmentPayeRef == npsEmployment.payeRef &&
+        iS.employmentId == npsEmployment.sequenceNumber
+    }.head
+
+    // todo : if we get no match here this is an error case, although we might still want to render the page
+  }
+
 }
 
 object NpsTaxAccount {

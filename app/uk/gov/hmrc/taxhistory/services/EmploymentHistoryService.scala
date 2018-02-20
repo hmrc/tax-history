@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxhistory.services
 
 
+import java.io
 import javax.inject.Inject
 
 import uk.gov.hmrc.domain.Nino
@@ -27,7 +28,7 @@ import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.{NpsConnector, RtiConnector}
 import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.audit.{DataEventDetail, NpsRtiMismatch, OnlyInRti, PAYEForAgents}
-import uk.gov.hmrc.taxhistory.model.nps._
+import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
 import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, EmploymentMatchingHelper}
 import uk.gov.hmrc.taxhistory.utils.Logging
@@ -118,6 +119,14 @@ class EmploymentHistoryService @Inject()(
     }
   }
 
+  def getIncomeSource(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Option[IncomeSource]] = {
+    if (taxYear == TaxYear.current) {
+      getFromCache(nino, taxYear).map(_.incomeSources.get(employmentId))
+    } else {
+      Future(None)
+    }
+  }
+
   def getTaxYears(nino: Nino): Future[List[IndividualTaxYear]] = {
 
     val taxYearList = List(TaxYear.current,
@@ -194,19 +203,23 @@ class EmploymentHistoryService @Inject()(
       )
     }
 
+    // todo : should not take an option into this function, should probably error earlier
+    val taxAccount = taxAccountOption.get
+
     // One [[PayAsYouEarn]] instance will be produced for each npsEmployment.
     val payes: List[PayAsYouEarn] = npsEmployments.map { npsEmployment =>
-
-      val companyBenefits = iabds.matchedCompanyBenefits(npsEmployment)
-      val rtiEmployment = employmentMatches.get(npsEmployment)
-
-      EmploymentHistoryServiceHelper.buildPAYE(rtiEmployment = rtiEmployment, iabds = companyBenefits, npsEmployment = npsEmployment)
+      EmploymentHistoryServiceHelper.buildPAYE(
+        rtiEmployment = employmentMatches.get(npsEmployment),
+        iabds = iabds.matchedCompanyBenefits(npsEmployment),
+        incomeSource = taxAccount.matchedIncomeSource(npsEmployment),
+        npsEmployment = npsEmployment
+      )
     }
 
-    val allowances = iabds.allowances
-    val taxAccount = taxAccountOption.map(_.toTaxAccount)
-
-    EmploymentHistoryServiceHelper.combinePAYEs(payes).copy(allowances = allowances, taxAccount = taxAccount)
+    EmploymentHistoryServiceHelper.combinePAYEs(payes).copy(
+      allowances = iabds.allowances,
+      taxAccount = taxAccountOption.map(_.toTaxAccount)
+    )
   }
 
   /*

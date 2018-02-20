@@ -22,7 +22,7 @@ import org.scalatestplus.play.PlaySpec
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
-import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 
@@ -35,6 +35,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
 
   lazy val testRtiData: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
   lazy val testIabds: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
+  lazy val testIncomeSource = IncomeSource(1, 1, None, Nil, Nil, "", None, 1, "")
   lazy val testNpsTaxAccount: NpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
 
   val startDate = new LocalDate("2015-01-21")
@@ -126,14 +127,14 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
 
     "Build pay as you earn using empty tax account" in {
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
-      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(None, Nil, npsEmployments.head)
+      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(None, Nil, testIncomeSource, npsEmployments.head)
       payAsYouEarn.taxAccount mustBe None
     }
 
     "Build employment1 from rti, nps employment1 and Iabd data" in {
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
 
-      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, testIabds, npsEmployments.head)
+      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, testIabds, testIncomeSource, npsEmployments.head)
       val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
@@ -150,7 +151,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     "Build employment1 when there is no  data for rti and Iabd" in {
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
 
-      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(None, Nil, npsEmployments.head)
+      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(None, Nil, testIncomeSource, npsEmployments.head)
       val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
@@ -165,7 +166,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     "Build employment1 when there is data for rti is Nil" in {
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
 
-      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(None, testIabds, npsEmployments.head)
+      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(None, testIabds, testIncomeSource, npsEmployments.head)
       val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
@@ -180,7 +181,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     "Build employment1 when there is data for Iabd is None or Null" in {
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
 
-      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, Nil, npsEmployments.head)
+      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, Nil, testIncomeSource, npsEmployments.head)
       val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
@@ -197,7 +198,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     "Build employment1 when there is no data for Iabd" in {
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
 
-      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, Nil, npsEmployments.head)
+      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, Nil, testIncomeSource, npsEmployments.head)
       val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
