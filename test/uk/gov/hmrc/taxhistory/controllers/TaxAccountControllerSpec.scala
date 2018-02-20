@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
+import java.util.UUID
+
 import org.mockito.Matchers
 import org.mockito.Matchers._
 import org.mockito.Mockito._
@@ -25,10 +27,11 @@ import org.scalatestplus.play.OneServerPerSuite
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.agentmtdidentifiers.model.Arn
-import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.domain.{Nino, TaxCode}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.api.TaxAccount
+import uk.gov.hmrc.taxhistory.model.nps.IncomeSource
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestRelationshipAuthService}
@@ -38,14 +41,14 @@ import scala.concurrent.Future
 
 class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
 
-  val mockEmploymentHistoryService = mock[EmploymentHistoryService]
+  private val mockEmploymentHistoryService = mock[EmploymentHistoryService]
 
-  val ninoWithAgent = randomNino()
-  val ninoWithoutAgent = randomNino()
+  private val ninoWithAgent = randomNino()
+  private val ninoWithoutAgent = randomNino()
 
-  val testTaxAccount = TaxAccount()
-
-  val testTaxYear = TaxYear.current.previous.currentYear
+  private val testTaxAccount = TaxAccount()
+  private val testTaxYear = TaxYear.current.previous.currentYear
+  private val testTaxCode = TaxCode("1150L")
 
   override def beforeEach: Unit = {
     reset(mockEmploymentHistoryService)
@@ -80,6 +83,37 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
         .thenReturn(Future.successful(Some(testTaxAccount)))
 
       val result = testTaxAccountController.getTaxAccount(ninoWithoutAgent.nino, testTaxYear).apply(FakeRequest())
+      status(result) shouldBe UNAUTHORIZED
+    }
+  }
+
+  "getIncomeSource" must {
+
+    val testEmnploymentId = UUID.randomUUID().toString
+    val testIncomeSource = IncomeSource(1, 1, None, List.empty, List.empty, testTaxCode, None, 1, "")
+
+    "respond with OK for successful get" in {
+      when(mockEmploymentHistoryService.getIncomeSource(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some(testIncomeSource)))
+
+      val result = testTaxAccountController.getIncomeSource(ninoWithAgent.nino, testTaxYear, testEmnploymentId).apply(FakeRequest())
+      status(result) shouldBe OK
+    }
+
+    "propagate error responses from upstream microservices" in {
+      HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
+        when(mockEmploymentHistoryService.getIncomeSource(Matchers.any(), Matchers.any(), any[String])(Matchers.any[HeaderCarrier]))
+          .thenReturn(Future.failed(httpException))
+        val result = testTaxAccountController.getIncomeSource(ninoWithAgent.nino, testTaxYear, testEmnploymentId).apply(FakeRequest())
+        status(result) shouldBe expectedStatus
+      }
+    }
+
+    "respond with UNAUTHORIZED Status for enrolments which is not HMRC Agent" in {
+      when(mockEmploymentHistoryService.getIncomeSource(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some(testIncomeSource)))
+
+      val result = testTaxAccountController.getIncomeSource(ninoWithoutAgent.nino, testTaxYear, testEmnploymentId).apply(FakeRequest())
       status(result) shouldBe UNAUTHORIZED
     }
   }

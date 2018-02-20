@@ -86,7 +86,7 @@ case class NpsTaxAccount(incomeSources: List[IncomeSource]){
   def matchedIncomeSource(npsEmployment: NpsEmployment): Option[IncomeSource] = {
     incomeSources.find { iS =>
       iS.employmentTaxDistrictNumber.toString == npsEmployment.taxDistrictNumber &&
-        iS.employmentPayeRef == npsEmployment.payeRef &&
+        iS.employmentPayeRef == npsEmployment.payeNumber &&
         iS.employmentId == npsEmployment.sequenceNumber
     }
   }
