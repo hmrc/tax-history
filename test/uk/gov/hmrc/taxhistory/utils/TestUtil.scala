@@ -16,17 +16,48 @@
 
 package uk.gov.hmrc.taxhistory.model.utils
 
+
+import org.joda.time.LocalDate
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.domain.{Generator, Nino}
+import uk.gov.hmrc.time.TaxYear
 
+import scala.annotation.tailrec
 import scala.io.Source
 import scala.util.Random
 
 trait TestUtil {
+
+  val randomNino = () => Nino(new Generator(new Random()).nextNino.value.replaceFirst("MA", "AA"))
+
   def loadFile(path:String): JsValue = {
     val jsonString = Source.fromURL(getClass.getResource(path)).mkString
     Json.parse(jsonString)
   }
 
-  val randomNino = () => Nino(new Generator(new Random()).nextNino.value.replaceFirst("MA", "AA"))
+  def loadFile(path:String, placeholders: Seq[PlaceHolder]): JsValue = {
+    val jsonStringWithPlaceholders = Source.fromURL(getClass.getResource(path)).mkString
+    val jsonString = replacePlaceholder(jsonStringWithPlaceholders, placeholders)
+    Json.parse(jsonString)
+  }
+
+  @tailrec
+  private def replacePlaceholder(string: String, pHs: Seq[PlaceHolder]): String =
+    if (pHs.nonEmpty) replacePlaceholder(string.replaceAllLiterally(pHs.head.regex, pHs.head.newValue), pHs.tail) else string
+
+  def locaDateCy (mm: String, dd: String): LocalDate = localDateInTaxYear(TaxYear.current, mm, dd)
+
+  def locaDateCyMinus1 (mm: String, dd: String): LocalDate = localDateInTaxYear(TaxYear.current.previous, mm, dd)
+
+  // todo : find a better way of checking which year we are in
+  def localDateInTaxYear (taxYear: TaxYear, mm: String, dd: String): LocalDate = {
+    if (s"$dd$mm".toInt < 604) {
+      new LocalDate(s"${taxYear.startYear}-$mm-$dd")
+    } else {
+      new LocalDate(s"${taxYear.finishYear}-$mm-$dd")
+    }
+  }
+
 }
+
+case class PlaceHolder(regex: String, newValue: String)

@@ -21,7 +21,7 @@ import java.util.UUID
 import org.joda.time.LocalDate
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
-import play.api.libs.json.{JsPath, Reads, Writes}
+import play.api.libs.json.{JsPath, Json, Reads, Writes}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 
 case class Employment(employmentId: UUID = UUID.randomUUID(),

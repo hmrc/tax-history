@@ -1,0 +1,132 @@
+{
+  "employments": [
+    {
+      "employmentId": "01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
+      "startDate": "%yearZero%-01-21",
+      "endDate": "%yearZero%-02-21",
+      "payeReference": "paye-1",
+      "employerName": "employer-1",
+      "receivingOccupationalPension": false,
+      "employmentStatus": 1,
+      "worksNumber": "00191048716"
+    },
+    {
+      "employmentId": "019f5fee-d5e4-4f3e-9569-139b8ad81a87",
+      "startDate": "%yearZero%-02-22",
+      "payeReference": "paye-2",
+      "employerName": "employer-2",
+      "receivingOccupationalPension": false,
+      "employmentStatus": 1,
+      "worksNumber": "00191048716"
+    }
+  ],
+  "allowances": [
+    {
+      "allowanceId": "c9923a63-4208-4e03-926d-7c7c88adc7ee",
+      "iabdType": "payeType",
+      "amount": 12
+    }
+  ],
+  "benefits": {
+    "01318d7c-bcd9-47e2-8c38-551e7ccdfae3": [
+      {
+        "companyBenefitId": "c9923a63-4208-4e03-926d-7c7c88adc7ee",
+        "iabdType": "companyBenefitType",
+        "amount": 12
+      }
+    ]
+  },
+  "payAndTax": {
+    "01318d7c-bcd9-47e2-8c38-551e7ccdfae3": {
+      "payAndTaxId": "2e2abe0a-8c4f-49fc-bdd2-cc13054e7172",
+      "taxablePayTotal": 2222.22,
+      "taxTotal": 111.11,
+      "paymentDate": "%yearMinusOne%-02-20",
+      "earlierYearUpdates": []
+    }
+  },
+  "taxAccount": {
+    "taxAccountId": "3923afda-41ee-4226-bda5-e39cc4c82934",
+    "outstandingDebtRestriction": 22.22,
+    "underpaymentAmount": 11.11,
+    "actualPUPCodedInCYPlusOneTaxYear": 33.33
+  },
+  "incomeSources":
+    {
+      "01318d7c-bcd9-47e2-8c38-551e7ccdfae3": {
+        "employmentId": 1,
+        "employmentType": 1,
+        "actualPUPCodedInCYPlusOneTaxYear": 0,
+        "taxCode": "227L",
+        "basisOperation": 2,
+        "employmentTaxDistrictNumber": 126,
+        "employmentPayeRef": "P32",
+        "allowances": [
+          {
+            "npsDescription": "personal allowance",
+            "amount": 11000,
+            "type": 11,
+            "iabdSummaries": [
+              {
+                "amount": 11000,
+                "type": 118,
+                "npsDescription": "Personal Allowance (PA)",
+                "employmentId": null
+              }
+            ],
+            "sourceAmount": 11000
+          }
+        ],
+        "deductions": [
+          {
+            "npsDescription": "employer benefits ",
+            "amount": 65,
+            "type": 7,
+            "iabdSummaries": [
+              {
+                "amount": 65,
+                "type": 28,
+                "npsDescription": "Benefit in Kind",
+                "employmentId": 1
+              },
+              {
+                "amount": 65,
+                "type": 47,
+                "npsDescription": "Other Items",
+                "employmentId": 1
+              }
+            ],
+            "sourceAmount": 65
+          },
+          {
+            "npsDescription": "car benefit",
+            "amount": 8026,
+            "type": 8,
+            "iabdSummaries": [
+              {
+                "amount": 8026,
+                "type": 31,
+                "npsDescription": "Car Benefit",
+                "employmentId": 1
+              }
+            ],
+            "sourceAmount": 8026
+          },
+          {
+            "npsDescription": "medical insurance",
+            "amount": 637,
+            "type": 13,
+            "iabdSummaries": [
+              {
+                "amount": 637,
+                "type": 30,
+                "npsDescription": "Medical Insurance",
+                "employmentId": 1
+              }
+            ],
+            "sourceAmount": 637
+          }
+        ]
+      }
+    }
+}

@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxhistory.services
 
 
 import java.io
+import java.time.LocalDate
 import javax.inject.Inject
 
 import uk.gov.hmrc.domain.Nino
@@ -34,6 +35,7 @@ import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, 
 import uk.gov.hmrc.taxhistory.utils.Logging
 import uk.gov.hmrc.time.TaxYear
 
+import scala.annotation.tailrec
 import scala.concurrent.Future
 
 class EmploymentHistoryService @Inject()(
@@ -43,20 +45,52 @@ class EmploymentHistoryService @Inject()(
                                           val auditable: Auditable
                                         ) extends Logging {
 
-  def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] = {
+  def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] =
     getFromCache(nino, taxYear).map (es => addFillers(es.employments.map(_.enrichWithURIs(taxYear.startYear)), taxYear))
+
+  // need to provide ordering for local date
+  def addFillers(employments: List[Employment], taxYear: TaxYear): List[Employment] =
+    (employments ++ getFillers(employments, List(Employment.noRecord(taxYear.starts, Some(taxYear.finishes))), taxYear)) sortBy(_.startDate.toDate)
+
+  @tailrec
+  private def getFillers(employments: List[Employment], fillers: List[Employment], taxYear: TaxYear): List[Employment] =
+    if (employments.nonEmpty) {
+      getFillers(employments.tail, fillers flatMap (filler => stuff(filler, employments.head, taxYear)), taxYear)
+    } else {
+      fillers
+    }
+
+  // todo : handle non-end dates and current year end dates
+  def stuff(filler: Employment, employment: Employment, taxYear: TaxYear): List[Employment] = {
+    (encompassed(filler, employment, taxYear),
+      overlapStart(filler, employment, taxYear),
+      overlapEnd(filler, employment, taxYear)) match {
+      case (true, _, _) =>
+        List.empty[Employment] // filter is totally encompassed by the employment so discard it
+      case (_, true, true) =>
+        List(
+          Employment.noRecord(filler.startDate, Some(employment.startDate.minusDays(1))),
+          Employment.noRecord(employment.endDate.getOrElse(taxYear.finishes.minusDays(1)).plusDays(1), filler.endDate)
+        ) // complete overlap, so split it
+      case (_, true, _) =>
+        List(Employment.noRecord(filler.startDate, Some(employment.startDate.minusDays(1)))) // overlaps start, so amend dates and return it
+      case (_, _, true) =>
+        List(Employment.noRecord(employment.endDate.getOrElse(taxYear.finishes.minusDays(1)).plusDays(1), filler.endDate)) // overlaps end, so amend dates and return it
+      case _ => List(filler)
+    }
   }
 
-  def addFillers(employments: List[Employment], taxYear: TaxYear): List[Employment] = {
-    // previous and next year objects are added to handle missing employments at either end of the list
-    val previousYearEnd = Employment.noRecord(taxYear.starts.minusDays(1), Some(taxYear.starts.minusDays(1)))
-    val nextYearStart = Employment.noRecord(taxYear.finishes.plusDays(1), Some(taxYear.finishes.plusDays(1)))
+  def encompassed(filler: Employment, employment: Employment, taxYear: TaxYear): Boolean =
+    (filler.startDate.isEqual(employment.startDate) || filler.startDate.isAfter(employment.startDate)) &&
+      (filler.endDate.getOrElse(taxYear.finishes).equals(employment.endDate.getOrElse(taxYear.finishes)) ||
+    filler.endDate.getOrElse(taxYear.finishes).isBefore(employment.endDate.getOrElse(taxYear.finishes)))
 
-    (previousYearEnd +: employments :+ nextYearStart)
-      .foldLeft(List[Employment]()) { (acc, e) =>
-        acc ++ getFiller(acc.reverse.headOption, e, taxYear) }
-      .drop(1).dropRight(1) // remove the previous and next year elements as we no longer need them
-  }
+  def overlapStart (filler: Employment, employment: Employment, taxYear: TaxYear): Boolean =
+    filler.startDate.isBefore(employment.startDate) && filler.endDate.getOrElse(taxYear.finishes).isAfter(employment.startDate)
+
+  def overlapEnd (filler: Employment, employment: Employment, taxYear: TaxYear): Boolean =
+    filler.startDate.isBefore(employment.endDate.getOrElse(taxYear.finishes)) &&
+      filler.endDate.getOrElse(taxYear.finishes).isAfter(employment.endDate.getOrElse(taxYear.finishes))
 
   def getEmployment(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Employment] = {
     getFromCache(nino, taxYear).flatMap { paye =>
