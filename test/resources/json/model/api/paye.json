@@ -50,5 +50,83 @@
     "outstandingDebtRestriction": 22.22,
     "underpaymentAmount": 11.11,
     "actualPUPCodedInCYPlusOneTaxYear": 33.33
-  }
+  },
+  "incomeSources":
+    {
+      "01318d7c-bcd9-47e2-8c38-551e7ccdfae3": {
+        "employmentId": 1,
+        "employmentType": 1,
+        "actualPUPCodedInCYPlusOneTaxYear": 0,
+        "taxCode": "227L",
+        "basisOperation": 2,
+        "employmentTaxDistrictNumber": 126,
+        "employmentPayeRef": "P32",
+        "allowances": [
+          {
+            "npsDescription": "personal allowance",
+            "amount": 11000,
+            "type": 11,
+            "iabdSummaries": [
+              {
+                "amount": 11000,
+                "type": 118,
+                "npsDescription": "Personal Allowance (PA)",
+                "employmentId": null
+              }
+            ],
+            "sourceAmount": 11000
+          }
+        ],
+        "deductions": [
+          {
+            "npsDescription": "employer benefits ",
+            "amount": 65,
+            "type": 7,
+            "iabdSummaries": [
+              {
+                "amount": 65,
+                "type": 28,
+                "npsDescription": "Benefit in Kind",
+                "employmentId": 1
+              },
+              {
+                "amount": 65,
+                "type": 47,
+                "npsDescription": "Other Items",
+                "employmentId": 1
+              }
+            ],
+            "sourceAmount": 65
+          },
+          {
+            "npsDescription": "car benefit",
+            "amount": 8026,
+            "type": 8,
+            "iabdSummaries": [
+              {
+                "amount": 8026,
+                "type": 31,
+                "npsDescription": "Car Benefit",
+                "employmentId": 1
+              }
+            ],
+            "sourceAmount": 8026
+          },
+          {
+            "npsDescription": "medical insurance",
+            "amount": 637,
+            "type": 13,
+            "iabdSummaries": [
+              {
+                "amount": 637,
+                "type": 30,
+                "npsDescription": "Medical Insurance",
+                "employmentId": 1
+              }
+            ],
+            "sourceAmount": 637
+          }
+        ]
+      }
+    }
 }

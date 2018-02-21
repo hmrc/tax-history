@@ -22,5 +22,6 @@
   ],
   "allowances":[],
   "benefits":{},
-  "payAndTax":{}
+  "payAndTax":{},
+  "incomeSources":{}
 }

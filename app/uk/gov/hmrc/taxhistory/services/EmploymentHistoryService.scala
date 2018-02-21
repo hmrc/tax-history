@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxhistory.services
 
 
+import java.io
 import javax.inject.Inject
 
 import uk.gov.hmrc.domain.Nino
@@ -99,18 +100,12 @@ class EmploymentHistoryService @Inject()(
 
 
   def getPayAndTax(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Option[PayAndTax]] = {
-    if (taxYear == TaxYear.current) {
-      Future(None)
-    } else {
       getFromCache(nino, taxYear).map(_.payAndTax.get(employmentId))
         .orNotFound(s"PayAndTax not found for NINO ${nino.value}, tax year ${taxYear.toString} and employmentId $employmentId")
-    }
   }
 
   def getTaxAccount(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[Option[TaxAccount]] = {
-    if (taxYear == TaxYear.current) {
-      Future(None)
-    } else {
+    if (taxYear == TaxYear.current.previous) {
       getFromCache(nino, taxYear).flatMap { paye =>
         logger.debug("Returning result from getTaxAccount")
 
@@ -119,6 +114,16 @@ class EmploymentHistoryService @Inject()(
           case None => Future.failed(new NotFoundException(s"TaxAccount not found for NINO ${nino.value} and tax year ${taxYear.toString}"))
         }
       }
+    } else {
+      Future(None)
+    }
+  }
+
+  def getIncomeSource(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Option[IncomeSource]] = {
+    if (taxYear == TaxYear.current) {
+      getFromCache(nino, taxYear).map(_.incomeSources.get(employmentId))
+    } else {
+      Future(None)
     }
   }
 
@@ -153,15 +158,14 @@ class EmploymentHistoryService @Inject()(
     * the tax year summary (`PayAsYouEarn`) and combines this data into a `PayAsYouEarn` instance.
     */
   def retrieveAndBuildPaye(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[PayAsYouEarn] = {
-
     for {
-      npsEmployments <- retrieveNpsEmployments(nino, taxYear).orNotFound(s"No NPS employments found for $nino $taxYear")
-      rtiDataOpt <- retrieveRtiData(nino, taxYear).map(Some(_)).recover { case _ => None } // We want to present some information even if the retrieval from RTI failed.
+      npsEmployments <- retrieveNpsEmployments(nino, taxYear)
+      rtiDataOpt <- retrieveRtiData(nino, taxYear)
       rtiEmployments = rtiDataOpt.map(_.employments).getOrElse(Nil)
-      iabds <- retrieveNpsIabds(nino, taxYear).recover { case _ => Nil } // We want to present some information even if the retrieval of IABDs failed.
-      taxAccountOpt <- getNpsTaxAccount(nino, taxYear).map(Some(_)).recover { case _ => None } // We want to present some information even if the retrieval of the tax account failed.
+      iabds <- retrieveNpsIabds(nino, taxYear)
+      taxAccountOpt <- retrieveNpsTaxAccount(nino, taxYear)
     } yield {
-      mergeEmployments(nino, taxYear, npsEmployments, rtiEmployments, taxAccountOpt.flatten, iabds)
+      mergeEmployments(nino, taxYear, npsEmployments, rtiEmployments, taxAccountOpt, iabds)
     }
   }
 
@@ -201,52 +205,51 @@ class EmploymentHistoryService @Inject()(
     // One [[PayAsYouEarn]] instance will be produced for each npsEmployment.
     val payes: List[PayAsYouEarn] = npsEmployments.map { npsEmployment =>
 
-      val companyBenefits = iabds.matchedCompanyBenefits(npsEmployment)
-      val rtiEmployment = employmentMatches.get(npsEmployment)
+      val incomeSource = if (taxAccountOption.isDefined) taxAccountOption.get.matchedIncomeSource(npsEmployment) else None
 
-      EmploymentHistoryServiceHelper.buildPAYE(rtiEmployment = rtiEmployment, iabds = companyBenefits, npsEmployment = npsEmployment)
+      EmploymentHistoryServiceHelper.buildPAYE(
+        rtiEmployment = employmentMatches.get(npsEmployment),
+        iabds = iabds.matchedCompanyBenefits(npsEmployment),
+        incomeSource = incomeSource,
+        npsEmployment = npsEmployment
+      )
     }
 
-    val allowances = iabds.allowances
-    val taxAccount = taxAccountOption.map(_.toTaxAccount)
-    val payAsYouEarn = EmploymentHistoryServiceHelper.combinePAYEs(payes).copy(allowances = allowances, taxAccount = taxAccount)
-
-    payAsYouEarn
+    EmploymentHistoryServiceHelper.combinePAYEs(payes).copy(
+      allowances = iabds.allowances,
+      taxAccount = taxAccountOption.map(_.toTaxAccount)
+    )
   }
 
   /*
     Retrieve NpsEmployments directly from the NPS microservice.
    */
-  def retrieveNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[NpsEmployment]] = {
+  def retrieveNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[NpsEmployment]] =
     npsConnector.getEmployments(nino, taxYear.currentYear).map { employments =>
       employments.filterNot(x => x.receivingJobSeekersAllowance || x.otherIncomeSourceIndicator)
-    }
-  }
+    }.orNotFound(s"No NPS employments found for $nino $taxYear")
+
 
   /*
     Retrieve RtiData directly from the RTI microservice.
    */
-  def retrieveRtiData(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[RtiData] =
-    rtiConnector.getRTIEmployments(nino, taxYear)
+  def retrieveRtiData(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[RtiData]] =
+    rtiConnector.getRTIEmployments(nino, taxYear).map(Some(_))
+      .recover { case _ => None } // We want to present some information even if the retrieval from RTI failed.
 
   /*
     Retrieve Iabds directly from the NPS microservice.
    */
   def retrieveNpsIabds(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[Iabd]] =
     npsConnector.getIabds(nino, taxYear.currentYear)
+      .recover { case _ => Nil } // We want to present some information even if the retrieval of IABDs failed.
 
-  /**
-    * If the tax year requested is not the previous tax year, return None.
-    * TODO is this the correct behaviour?
-    */
-  def getNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[NpsTaxAccount]] = {
-
-    if (taxYear.startYear != TaxYear.current.previous.startYear) {
-      Future.successful(None)
-    } else {
-      npsConnector.getTaxAccount(nino, taxYear.currentYear).map(Some(_))
-    }
-  }
+  /*
+    Retrieve TaxAccount directly from the NPS microservice.
+   */
+  def retrieveNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[NpsTaxAccount]] =
+    npsConnector.getTaxAccount(nino, taxYear.currentYear).map(Some(_))
+      .recover { case _ => None } // We want to present some information even if the retrieval of the tax account failed.
 
   /*
    A convenience method used when auditing.

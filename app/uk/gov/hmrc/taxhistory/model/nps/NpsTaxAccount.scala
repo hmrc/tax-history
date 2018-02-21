@@ -16,20 +16,39 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
-
 import play.api.libs.json._
+import uk.gov.hmrc.domain.TaxCode
+import uk.gov.hmrc.domain.TaxCodeFormats._
 import uk.gov.hmrc.taxhistory.model.api.TaxAccount
 
+case class TaDeduction(`type`:Int,
+                       npsDescription: String,
+                       amount: BigDecimal,
+                       sourceAmount: Option[BigDecimal])
 
-
-case class Deduction(`type`:Int,sourceAmount:Option[BigDecimal])
-
-object Deduction {
-  implicit val formats = Json.format[Deduction]
+object TaDeduction {
+  implicit val formats = Json.format[TaDeduction]
 }
+
+case class TaAllowance(`type`:Int,
+                       npsDescription: String,
+                       amount: BigDecimal,
+                       sourceAmount: Option[BigDecimal])
+
+object TaAllowance {
+  implicit val formats = Json.format[TaAllowance]
+}
+
 case class IncomeSource(employmentId:Int,
-                        employmentType:Int,actualPUPCodedInCYPlusOneTaxYear:Option[BigDecimal],
-                        deductions: List[Deduction])
+                        employmentType:Int,
+                        actualPUPCodedInCYPlusOneTaxYear:Option[BigDecimal],
+                        deductions: List[TaDeduction],
+                        allowances: List[TaAllowance],
+                        taxCode: TaxCode,
+                        basisOperation: Option[Int],
+                        employmentTaxDistrictNumber: Int,
+                        employmentPayeRef: String
+                       )
 
 object IncomeSource {
   implicit val formats = Json.format[IncomeSource]
@@ -63,6 +82,16 @@ case class NpsTaxAccount(incomeSources: List[IncomeSource]){
       underpaymentAmount = getUnderPayment,
       actualPUPCodedInCYPlusOneTaxYear = getActualPupCodedInCYPlusOne
     )
+
+  def matchedIncomeSource(npsEmployment: NpsEmployment): Option[IncomeSource] = {
+    val iSs = incomeSources.filter { iS =>
+      iS.employmentTaxDistrictNumber.toString == npsEmployment.taxDistrictNumber &&
+        iS.employmentPayeRef == npsEmployment.payeNumber
+    }
+
+    if (iSs.lengthCompare(1) > 0) iSs.find(iS => iS.employmentId == npsEmployment.sequenceNumber) else iSs.headOption
+  }
+
 }
 
 object NpsTaxAccount {
