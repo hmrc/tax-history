@@ -28,7 +28,7 @@ import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.{NpsConnector, RtiConnector}
 import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.audit.{DataEventDetail, NpsRtiMismatch, OnlyInRti, PAYEForAgents}
-import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, _}
+import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, EmploymentMatchingHelper}
 import uk.gov.hmrc.taxhistory.utils.Logging
@@ -158,15 +158,14 @@ class EmploymentHistoryService @Inject()(
     * the tax year summary (`PayAsYouEarn`) and combines this data into a `PayAsYouEarn` instance.
     */
   def retrieveAndBuildPaye(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[PayAsYouEarn] = {
-
     for {
-      npsEmployments <- retrieveNpsEmployments(nino, taxYear).orNotFound(s"No NPS employments found for $nino $taxYear")
-      rtiDataOpt <- retrieveRtiData(nino, taxYear).map(Some(_)).recover { case _ => None } // We want to present some information even if the retrieval from RTI failed.
+      npsEmployments <- retrieveNpsEmployments(nino, taxYear)
+      rtiDataOpt <- retrieveRtiData(nino, taxYear)
       rtiEmployments = rtiDataOpt.map(_.employments).getOrElse(Nil)
-      iabds <- retrieveNpsIabds(nino, taxYear).recover { case _ => Nil } // We want to present some information even if the retrieval of IABDs failed.
-      taxAccountOpt <- getNpsTaxAccount(nino, taxYear).map(Some(_)).recover { case _ => None } // We want to present some information even if the retrieval of the tax account failed.
+      iabds <- retrieveNpsIabds(nino, taxYear)
+      taxAccountOpt <- retrieveNpsTaxAccount(nino, taxYear)
     } yield {
-      mergeEmployments(nino, taxYear, npsEmployments, rtiEmployments, taxAccountOpt.flatten, iabds)
+      mergeEmployments(nino, taxYear, npsEmployments, rtiEmployments, taxAccountOpt, iabds)
     }
   }
 
@@ -225,26 +224,32 @@ class EmploymentHistoryService @Inject()(
   /*
     Retrieve NpsEmployments directly from the NPS microservice.
    */
-  def retrieveNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[NpsEmployment]] = {
+  def retrieveNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[NpsEmployment]] =
     npsConnector.getEmployments(nino, taxYear.currentYear).map { employments =>
       employments.filterNot(x => x.receivingJobSeekersAllowance || x.otherIncomeSourceIndicator)
-    }
-  }
+    }.orNotFound(s"No NPS employments found for $nino $taxYear")
+
 
   /*
     Retrieve RtiData directly from the RTI microservice.
    */
-  def retrieveRtiData(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[RtiData] =
-    rtiConnector.getRTIEmployments(nino, taxYear)
+  def retrieveRtiData(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[RtiData]] =
+    rtiConnector.getRTIEmployments(nino, taxYear).map(Some(_))
+      .recover { case _ => None } // We want to present some information even if the retrieval from RTI failed.
 
   /*
     Retrieve Iabds directly from the NPS microservice.
    */
   def retrieveNpsIabds(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[Iabd]] =
     npsConnector.getIabds(nino, taxYear.currentYear)
+      .recover { case _ => Nil } // We want to present some information even if the retrieval of IABDs failed.
 
-  def getNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[NpsTaxAccount]] =
-      npsConnector.getTaxAccount(nino, taxYear.currentYear).map(Some(_))
+  /*
+    Retrieve TaxAccount directly from the NPS microservice.
+   */
+  def retrieveNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[NpsTaxAccount]] =
+    npsConnector.getTaxAccount(nino, taxYear.currentYear).map(Some(_))
+      .recover { case _ => None } // We want to present some information even if the retrieval of the tax account failed.
 
   /*
    A convenience method used when auditing.

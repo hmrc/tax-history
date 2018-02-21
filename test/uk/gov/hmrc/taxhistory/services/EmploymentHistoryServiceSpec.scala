@@ -111,7 +111,7 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
         .thenReturn(Future.successful(testRtiData))
 
       val result = await(testEmploymentHistoryService.retrieveRtiData(testNino, TaxYear(2016)))
-      result mustBe testRtiData
+      result mustBe Some(testRtiData)
     }
 
     "return not found status response from get Nps Employments api" in {
@@ -266,30 +266,29 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
       }
     }
 
-    "return any non success status response from get Nps Iabds api" in {
+    "return an empty list from get Nps Iabds api for bad request response " in {
       when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
-      intercept[BadRequestException](await(testEmploymentHistoryService.retrieveNpsIabds(testNino, TaxYear(2016))))
+      await(testEmploymentHistoryService.retrieveNpsIabds(testNino, TaxYear(2016))) mustBe List.empty
     }
 
     "return none where tax year is not cy-1" in {
-      val response = await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear(2015)))
-      response mustBe None
+      await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear(2015))) mustBe None
     }
 
-    "return any non success status response from get Nps Tax Account api" in {
+    "return None from get Nps Tax Account api for bad request response " in {
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
-      intercept[BadRequestException](await(testEmploymentHistoryService.getNpsTaxAccount(testNino, TaxYear(2016))))
+      await(testEmploymentHistoryService.retrieveNpsTaxAccount(testNino, TaxYear(2016))) mustBe None
     }
 
-    "return not found status response from get Nps Tax Account api" in {
+    "return None from get Nps Tax Account api for not found response " in {
       when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new NotFoundException("")))
 
-      intercept[NotFoundException](await(testEmploymentHistoryService.getNpsTaxAccount(testNino, TaxYear(2016))))
+      await(testEmploymentHistoryService.retrieveNpsTaxAccount(testNino, TaxYear(2016))) mustBe None
     }
 
 
