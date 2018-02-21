@@ -29,6 +29,9 @@ trait Employments {
   val liveOngoingEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts, None, "Nothing", "An Employer",
     None, None, None, false, EmploymentStatus.Live, testWorksNumber)
 
+  val livePotentiallyCeasedEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts.plusDays(30), None, "Nothing", "An Employer",
+    None, None, None, false, EmploymentStatus.Live, testWorksNumber)
+
   val liveStartYearEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts, Some(TaxYear.current.starts.plusDays(10)), "Nothing", "An Employer",
     None, None, None, false, EmploymentStatus.Live, testWorksNumber)
 
@@ -37,7 +40,6 @@ trait Employments {
 
   val liveEndYearEmployment = Employment(UUID.randomUUID(), TaxYear.current.finishes.minusDays(10) , Some(TaxYear.current.finishes), "Nothing", "An Employer",
     None, None, None, false, EmploymentStatus.Live, testWorksNumber)
-
 
 
 }

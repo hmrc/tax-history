@@ -466,6 +466,13 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
       testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(true, false, false))
     }
 
+    "return a list with no gaps, when employments overlap and have gaps at the start" in {
+      val employments = List(livePotentiallyCeasedEmployment, liveMidYearEmployment)
+
+      println(s">>>>>> ${testEmploymentHistoryService.addFillers(employments, TaxYear.current)}")
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(true, false, false))
+    }
+
     "return a list with no gaps, when original employment has a gap in the middle" in {
       val employments = List(liveStartYearEmployment, liveEndYearEmployment)
       testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(false, true, false))
