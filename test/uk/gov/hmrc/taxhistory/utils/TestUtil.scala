@@ -49,13 +49,10 @@ trait TestUtil {
 
   def locaDateCyMinus1 (mm: String, dd: String): LocalDate = localDateInTaxYear(TaxYear.current.previous, mm, dd)
 
-  // todo : find a better way of checking which year we are in
-  def localDateInTaxYear (taxYear: TaxYear, mm: String, dd: String): LocalDate = {
-    if (s"$dd$mm".toInt < 604) {
-      new LocalDate(s"${taxYear.startYear}-$mm-$dd")
-    } else {
-      new LocalDate(s"${taxYear.finishYear}-$mm-$dd")
-    }
+  private def localDateInTaxYear (taxYear: TaxYear, mm: String, dd: String): LocalDate = {
+    val startYear = new LocalDate(s"${taxYear.startYear}-$mm-$dd")
+    val endYear = new LocalDate(s"${taxYear.finishYear}-$mm-$dd")
+    if (TaxYear.taxYearFor(startYear) == taxYear) startYear else endYear
   }
 
 }

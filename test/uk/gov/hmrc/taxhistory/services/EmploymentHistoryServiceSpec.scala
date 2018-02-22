@@ -343,12 +343,10 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
       onlyInRti must be(empty)
     }
 
-    // todo : look at naming of year placeholders
     "fetch Employments successfully from cache" in {
-
       val taxYear = TaxYear.current.previous
 
-      val placeHolders = Seq(PlaceHolder("%yearMinusOne%", taxYear.startYear.toString), PlaceHolder("%yearZero%", taxYear.finishYear.toString))
+      val placeHolders = Seq(PlaceHolder("%taxYearStartYear%", taxYear.startYear.toString), PlaceHolder("%taxYearFinishYear%", taxYear.finishYear.toString))
       lazy val paye = loadFile("/json/withPlaceholders/model/api/paye.json", placeHolders).as[PayAsYouEarn]
 
       val testEmployment2 =
@@ -477,7 +475,6 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
 
     "return a list with no gaps, when potentially ceased employments overlap and have gaps" in {
       val employments = List(ceasedBeforeStartEmployment, liveMidYearEmployment, potentiallyCeasedEmployment)
-      println(s">>>>>> ${testEmploymentHistoryService.addFillers(employments, TaxYear.current)}")
       testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(false, true, false, false))
     }
 
@@ -488,12 +485,12 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
 
     "return a list with no gaps, when original employment has a gap at the end" in {
       val employments = List(liveStartYearEmployment, liveMidYearEmployment)
-      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(false, false, true))
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(false, true, false, true))
     }
 
     "return a list with no gaps, when original employment has a gap at the start and end" in {
       val employments = List(liveMidYearEmployment)
-      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(true, true, false, true))
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(true, false, true))
     }
   }
 }

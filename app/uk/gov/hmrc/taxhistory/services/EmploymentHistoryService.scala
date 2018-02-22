@@ -28,6 +28,8 @@ import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.{NpsConnector, RtiConnector}
 import uk.gov.hmrc.taxhistory.model.api._
+import uk.gov.hmrc.taxhistory.model.api.Employment._
+import uk.gov.hmrc.taxhistory.model.api.FillerState._
 import uk.gov.hmrc.taxhistory.model.audit.{DataEventDetail, NpsRtiMismatch, OnlyInRti, PAYEForAgents}
 import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
@@ -46,51 +48,29 @@ class EmploymentHistoryService @Inject()(
                                         ) extends Logging {
 
   def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] =
-    getFromCache(nino, taxYear).map (es => addFillers(es.employments.map(_.enrichWithURIs(taxYear.startYear)), taxYear))
+    getFromCache(nino, taxYear).map(es => addFillers(es.employments.map(_.enrichWithURIs(taxYear.startYear)), taxYear))
 
-  // need to provide ordering for local date
   def addFillers(employments: List[Employment], taxYear: TaxYear): List[Employment] =
-    (employments ++ getFillers(employments, List(Employment.noRecord(taxYear.starts, Some(taxYear.finishes))), taxYear)) sortBy(_.startDate.toDate)
+    (employments ++ getFillers(employments, List(Employment.noRecord(taxYear.starts, Some(taxYear.finishes))), taxYear)) sortBy (_.startDate.toDate)
 
   @tailrec
   private def getFillers(employments: List[Employment], fillers: List[Employment], taxYear: TaxYear): List[Employment] =
     if (employments.nonEmpty) {
-      getFillers(employments.tail, fillers flatMap (filler => stuff(filler, employments.head, taxYear)), taxYear)
+      getFillers(employments.tail, fillers flatMap (filler => alignFillerDates(filler, employments.head, taxYear)), taxYear)
     } else {
       fillers
     }
 
-  // todo : handle non-end dates and current year end dates
-  def stuff(filler: Employment, employment: Employment, taxYear: TaxYear): List[Employment] = {
-    (encompassed(filler, employment, taxYear),
-      overlapStart(filler, employment, taxYear),
-      overlapEnd(filler, employment, taxYear)) match {
-      case (true, _, _) =>
-        List.empty[Employment] // filter is totally encompassed by the employment so discard it
-      case (_, true, true) =>
-        List(
-          Employment.noRecord(filler.startDate, Some(employment.startDate.minusDays(1))),
-          Employment.noRecord(employment.endDate.getOrElse(taxYear.finishes.minusDays(1)).plusDays(1), filler.endDate)
-        ) // complete overlap, so split it
-      case (_, true, _) =>
-        List(Employment.noRecord(filler.startDate, Some(employment.startDate.minusDays(1)))) // overlaps start, so amend dates and return it
-      case (_, _, true) =>
-        List(Employment.noRecord(employment.endDate.getOrElse(taxYear.finishes.minusDays(1)).plusDays(1), filler.endDate)) // overlaps end, so amend dates and return it
-      case _ => List(filler)
+  private def alignFillerDates(filler: Employment, employment: Employment, taxYear: TaxYear): List[Employment] = {
+    fillerState(filler, employment, taxYear) match {
+      case EncompassedByEmployment => List.empty // Discard
+      case OverlapEmployment => List(noRecord(filler.startDate, Some(employment.startDate.minusDays(1))),
+        noRecord(employment.endDate.getOrElse(taxYear.finishes.minusDays(1)).plusDays(1), filler.endDate)) // Split into two
+      case OverlapEmploymentStart => List(noRecord(filler.startDate, Some(employment.startDate.minusDays(1)))) // Align end date
+      case OverlapEmploymentEnd => List(noRecord(employment.endDate.getOrElse(taxYear.finishes.minusDays(1)).plusDays(1), filler.endDate)) // Align start date
+      case _ => List(filler) // Unchanged
     }
   }
-
-  def encompassed(filler: Employment, employment: Employment, taxYear: TaxYear): Boolean =
-    (filler.startDate.isEqual(employment.startDate) || filler.startDate.isAfter(employment.startDate)) &&
-      (filler.endDate.getOrElse(taxYear.finishes).equals(employment.endDate.getOrElse(taxYear.finishes)) ||
-    filler.endDate.getOrElse(taxYear.finishes).isBefore(employment.endDate.getOrElse(taxYear.finishes)))
-
-  def overlapStart (filler: Employment, employment: Employment, taxYear: TaxYear): Boolean =
-    filler.startDate.isBefore(employment.startDate) && filler.endDate.getOrElse(taxYear.finishes).isAfter(employment.startDate)
-
-  def overlapEnd (filler: Employment, employment: Employment, taxYear: TaxYear): Boolean =
-    filler.startDate.isBefore(employment.endDate.getOrElse(taxYear.finishes)) &&
-      filler.endDate.getOrElse(taxYear.finishes).isAfter(employment.endDate.getOrElse(taxYear.finishes))
 
   def getEmployment(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Employment] = {
     getFromCache(nino, taxYear).flatMap { paye =>
@@ -134,8 +114,8 @@ class EmploymentHistoryService @Inject()(
 
 
   def getPayAndTax(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Option[PayAndTax]] = {
-      getFromCache(nino, taxYear).map(_.payAndTax.get(employmentId))
-        .orNotFound(s"PayAndTax not found for NINO ${nino.value}, tax year ${taxYear.toString} and employmentId $employmentId")
+    getFromCache(nino, taxYear).map(_.payAndTax.get(employmentId))
+      .orNotFound(s"PayAndTax not found for NINO ${nino.value}, tax year ${taxYear.toString} and employmentId $employmentId")
   }
 
   def getTaxAccount(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[Option[TaxAccount]] = {
@@ -164,7 +144,7 @@ class EmploymentHistoryService @Inject()(
   def getTaxYears(nino: Nino): Future[List[IndividualTaxYear]] = {
 
     val taxYearList = List(TaxYear.current,
-                           TaxYear.current.back(1),
+      TaxYear.current.back(1),
       TaxYear.current.back(2),
       TaxYear.current.back(3),
       TaxYear.current.back(4))

@@ -2,8 +2,8 @@
   "employments": [
     {
       "employmentId": "01318d7c-bcd9-47e2-8c38-551e7ccdfae3",
-      "startDate": "%yearZero%-01-21",
-      "endDate": "%yearZero%-02-21",
+      "startDate": "%taxYearFinishYear%-01-21",
+      "endDate": "%taxYearFinishYear%-02-21",
       "payeReference": "paye-1",
       "employerName": "employer-1",
       "receivingOccupationalPension": false,
@@ -12,7 +12,7 @@
     },
     {
       "employmentId": "019f5fee-d5e4-4f3e-9569-139b8ad81a87",
-      "startDate": "%yearZero%-02-22",
+      "startDate": "%taxYearFinishYear%-02-22",
       "payeReference": "paye-2",
       "employerName": "employer-2",
       "receivingOccupationalPension": false,
@@ -41,7 +41,7 @@
       "payAndTaxId": "2e2abe0a-8c4f-49fc-bdd2-cc13054e7172",
       "taxablePayTotal": 2222.22,
       "taxTotal": 111.11,
-      "paymentDate": "%yearMinusOne%-02-20",
+      "paymentDate": "%taxYearStartYear%-02-20",
       "earlierYearUpdates": []
     }
   },
