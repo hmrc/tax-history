@@ -345,11 +345,10 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
 
     // todo : look at naming of year placeholders
     "fetch Employments successfully from cache" in {
-      val taxYear = TaxYear.current.previous
-      val yearZero = taxYear.finishYear
-      val yearMinusOne = taxYear.startYear
 
-      val placeHolders = Seq(PlaceHolder("%yearMinusOne%", yearMinusOne.toString), PlaceHolder("%yearZero%", yearZero.toString))
+      val taxYear = TaxYear.current.previous
+
+      val placeHolders = Seq(PlaceHolder("%yearMinusOne%", taxYear.startYear.toString), PlaceHolder("%yearZero%", taxYear.finishYear.toString))
       lazy val paye = loadFile("/json/withPlaceholders/model/api/paye.json", placeHolders).as[PayAsYouEarn]
 
       val testEmployment2 =
@@ -467,10 +466,19 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
     }
 
     "return a list with no gaps, when employments overlap and have gaps at the start" in {
-      val employments = List(livePotentiallyCeasedEmployment, liveMidYearEmployment)
-
-      println(s">>>>>> ${testEmploymentHistoryService.addFillers(employments, TaxYear.current)}")
+      val employments = List(liveNoEndEmployment, liveMidYearEmployment)
       testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(true, false, false))
+    }
+
+    "return a list with no gaps, when ceased employments overlap and have gaps" in {
+      val employments = List(ceasedBeforeStartEmployment, ceasedNoEndEmployment, ceasedAfterEndEmployment)
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(false, true, false, false))
+    }
+
+    "return a list with no gaps, when potentially ceased employments overlap and have gaps" in {
+      val employments = List(ceasedBeforeStartEmployment, liveMidYearEmployment, potentiallyCeasedEmployment)
+      println(s">>>>>> ${testEmploymentHistoryService.addFillers(employments, TaxYear.current)}")
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(false, true, false, false))
     }
 
     "return a list with no gaps, when original employment has a gap in the middle" in {
@@ -485,7 +493,7 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
 
     "return a list with no gaps, when original employment has a gap at the start and end" in {
       val employments = List(liveMidYearEmployment)
-      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(true, false, true))
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(true, true, false, true))
     }
   }
 }
