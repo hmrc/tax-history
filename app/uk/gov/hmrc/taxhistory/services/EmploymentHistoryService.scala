@@ -61,17 +61,6 @@ class EmploymentHistoryService @Inject()(
       fillers
     }
 
-  private def alignFillerDates(filler: Employment, employment: Employment, taxYear: TaxYear): List[Employment] = {
-    fillerState(filler, employment, taxYear) match {
-      case EncompassedByEmployment => List.empty // Discard
-      case OverlapEmployment => List(noRecord(filler.startDate, Some(employment.startDate.minusDays(1))),
-        noRecord(employment.endDate.getOrElse(taxYear.finishes.minusDays(1)).plusDays(1), filler.endDate)) // Split into two
-      case OverlapEmploymentStart => List(noRecord(filler.startDate, Some(employment.startDate.minusDays(1)))) // Align end date
-      case OverlapEmploymentEnd => List(noRecord(employment.endDate.getOrElse(taxYear.finishes.minusDays(1)).plusDays(1), filler.endDate)) // Align start date
-      case _ => List(filler) // Unchanged
-    }
-  }
-
   def getEmployment(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Employment] = {
     getFromCache(nino, taxYear).flatMap { paye =>
       logger.debug("Returning result of a getEmployment")
@@ -281,6 +270,17 @@ class EmploymentHistoryService @Inject()(
         val fillerEndDate = if (nextE.startDate.minusDays(1) == taxYear.finishes && taxYear == TaxYear.current) None else Some(nextE.startDate.minusDays(1))
         List(Employment.noRecord(fillerStartDate, fillerEndDate), nextE) // gap
       case _ => List(nextE) // no gap
+    }
+  }
+
+  private def alignFillerDates(filler: Employment, employment: Employment, taxYear: TaxYear): List[Employment] = {
+    fillerState(filler, employment, taxYear) match {
+      case EncompassedByEmployment => List.empty // Discard
+      case OverlapEmployment => List(noRecord(filler.startDate, Some(employment.startDate.minusDays(1))),
+        noRecord(employment.endDate.getOrElse(taxYear.finishes.minusDays(1)).plusDays(1), filler.endDate)) // Split into two
+      case OverlapEmploymentStart => List(noRecord(filler.startDate, Some(employment.startDate.minusDays(1)))) // Align end date
+      case OverlapEmploymentEnd => List(noRecord(employment.endDate.getOrElse(taxYear.finishes.minusDays(1)).plusDays(1), filler.endDate)) // Align start date
+      case _ => List(filler) // Unchanged
     }
   }
 
