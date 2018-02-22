@@ -17,8 +17,6 @@
 package uk.gov.hmrc.taxhistory.services
 
 
-import java.io
-import java.time.LocalDate
 import javax.inject.Inject
 
 import uk.gov.hmrc.domain.Nino

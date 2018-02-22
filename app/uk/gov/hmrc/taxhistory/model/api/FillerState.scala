@@ -18,17 +18,27 @@ package uk.gov.hmrc.taxhistory.model.api
 
 import uk.gov.hmrc.time.TaxYear
 
+/**
+  * The filler state describes the temporal relationship of a filler to an employment.
+  */
 trait FillerState
 
 object FillerState {
 
+  /**
+    * Returns a single fillerState, in order of precedence, falling back to Unrelated if the timing of
+    * employment and filler have no overlap
+    */
   def fillerState(filler: Employment, employment: Employment, taxYear: TaxYear): FillerState =
     Seq(encompassed(filler, employment, taxYear),
       overlapCompletely(filler, employment, taxYear),
       overlapStart(filler, employment, taxYear),
       overlapEnd(filler, employment, taxYear),
-      Some(Unaffected)).flatten.head
+      Some(Unrelated)).flatten.head
 
+  /*
+    The filler falls entirely within the bounds of the employment
+   */
   private def encompassed(filler: Employment, employment: Employment, taxYear: TaxYear): Option[FillerState] =
     if ((filler.startDate.isEqual(employment.startDate) || filler.startDate.isAfter(employment.startDate)) &&
       (filler.endDate.getOrElse(taxYear.finishes).equals(employment.endDate.getOrElse(taxYear.finishes)) ||
@@ -39,6 +49,9 @@ object FillerState {
       None
     }
 
+  /*
+    The filler straddles the start of the employment
+   */
   private def overlapStart(filler: Employment, employment: Employment, taxYear: TaxYear): Option[FillerState] =
     if (filler.startDate.isBefore(employment.startDate) &&
       filler.endDate.getOrElse(taxYear.finishes).isAfter(employment.startDate)) {
@@ -47,6 +60,9 @@ object FillerState {
       None
     }
 
+  /*
+    The filler straddles the end of the employment
+   */
   private def overlapEnd(filler: Employment, employment: Employment, taxYear: TaxYear): Option[FillerState] =
     if (filler.startDate.isBefore(employment.endDate.getOrElse(taxYear.finishes)) &&
       filler.endDate.getOrElse(taxYear.finishes).isAfter(employment.endDate.getOrElse(taxYear.finishes))){
@@ -55,6 +71,9 @@ object FillerState {
       None
     }
 
+  /*
+    The employment falls entirely within the bounds of the filler
+   */
   private def overlapCompletely(filler: Employment, employment: Employment, taxYear: TaxYear): Option[FillerState] =
     if (overlapStart(filler, employment, taxYear).contains(OverlapEmploymentStart) &&
       overlapEnd(filler, employment, taxYear).contains(OverlapEmploymentEnd)) {
@@ -72,5 +91,5 @@ case object OverlapEmploymentEnd extends FillerState
 
 case object OverlapEmployment extends FillerState
 
-case object Unaffected extends FillerState
+case object Unrelated extends FillerState
 
