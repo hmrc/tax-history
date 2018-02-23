@@ -17,7 +17,6 @@
 package uk.gov.hmrc.taxhistory.services
 
 
-import java.io
 import javax.inject.Inject
 
 import uk.gov.hmrc.domain.Nino
@@ -27,6 +26,8 @@ import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.{NpsConnector, RtiConnector}
 import uk.gov.hmrc.taxhistory.model.api._
+import uk.gov.hmrc.taxhistory.model.api.Employment._
+import uk.gov.hmrc.taxhistory.model.api.FillerState._
 import uk.gov.hmrc.taxhistory.model.audit.{DataEventDetail, NpsRtiMismatch, OnlyInRti, PAYEForAgents}
 import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
@@ -34,6 +35,7 @@ import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, 
 import uk.gov.hmrc.taxhistory.utils.Logging
 import uk.gov.hmrc.time.TaxYear
 
+import scala.annotation.tailrec
 import scala.concurrent.Future
 
 class EmploymentHistoryService @Inject()(
@@ -43,20 +45,19 @@ class EmploymentHistoryService @Inject()(
                                           val auditable: Auditable
                                         ) extends Logging {
 
-  def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] = {
-    getFromCache(nino, taxYear).map (es => addFillers(es.employments.map(_.enrichWithURIs(taxYear.startYear)), taxYear))
-  }
+  def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] =
+    getFromCache(nino, taxYear).map(es => addFillers(es.employments.map(_.enrichWithURIs(taxYear.startYear)), taxYear))
 
-  def addFillers(employments: List[Employment], taxYear: TaxYear): List[Employment] = {
-    // previous and next year objects are added to handle missing employments at either end of the list
-    val previousYearEnd = Employment.noRecord(taxYear.starts.minusDays(1), Some(taxYear.starts.minusDays(1)))
-    val nextYearStart = Employment.noRecord(taxYear.finishes.plusDays(1), Some(taxYear.finishes.plusDays(1)))
+  def addFillers(employments: List[Employment], taxYear: TaxYear): List[Employment] =
+    (employments ++ getFillers(employments, List(Employment.noRecord(taxYear.starts, Some(taxYear.finishes))), taxYear)) sortBy (_.startDate.toDate)
 
-    (previousYearEnd +: employments :+ nextYearStart)
-      .foldLeft(List[Employment]()) { (acc, e) =>
-        acc ++ getFiller(acc.reverse.headOption, e, taxYear) }
-      .drop(1).dropRight(1) // remove the previous and next year elements as we no longer need them
-  }
+  @tailrec
+  private def getFillers(employments: List[Employment], fillers: List[Employment], taxYear: TaxYear): List[Employment] =
+    if (employments.nonEmpty) {
+      getFillers(employments.tail, fillers flatMap (filler => alignFillerDates(filler, employments.head, taxYear)), taxYear)
+    } else {
+      fillers
+    }
 
   def getEmployment(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Employment] = {
     getFromCache(nino, taxYear).flatMap { paye =>
@@ -100,8 +101,8 @@ class EmploymentHistoryService @Inject()(
 
 
   def getPayAndTax(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Option[PayAndTax]] = {
-      getFromCache(nino, taxYear).map(_.payAndTax.get(employmentId))
-        .orNotFound(s"PayAndTax not found for NINO ${nino.value}, tax year ${taxYear.toString} and employmentId $employmentId")
+    getFromCache(nino, taxYear).map(_.payAndTax.get(employmentId))
+      .orNotFound(s"PayAndTax not found for NINO ${nino.value}, tax year ${taxYear.toString} and employmentId $employmentId")
   }
 
   def getTaxAccount(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[Option[TaxAccount]] = {
@@ -130,7 +131,7 @@ class EmploymentHistoryService @Inject()(
   def getTaxYears(nino: Nino): Future[List[IndividualTaxYear]] = {
 
     val taxYearList = List(TaxYear.current,
-                           TaxYear.current.back(1),
+      TaxYear.current.back(1),
       TaxYear.current.back(2),
       TaxYear.current.back(3),
       TaxYear.current.back(4))
@@ -267,6 +268,17 @@ class EmploymentHistoryService @Inject()(
         val fillerEndDate = if (nextE.startDate.minusDays(1) == taxYear.finishes && taxYear == TaxYear.current) None else Some(nextE.startDate.minusDays(1))
         List(Employment.noRecord(fillerStartDate, fillerEndDate), nextE) // gap
       case _ => List(nextE) // no gap
+    }
+  }
+
+  private def alignFillerDates(filler: Employment, employment: Employment, taxYear: TaxYear): List[Employment] = {
+    fillerState(filler, employment, taxYear) match {
+      case EncompassedByEmployment => List.empty // Discard
+      case OverlapEmployment => List(noRecord(filler.startDate, Some(employment.startDate.minusDays(1))),
+        noRecord(employment.endDate.getOrElse(taxYear.finishes.minusDays(1)).plusDays(1), filler.endDate)) // Split into two
+      case OverlapEmploymentStart => List(noRecord(filler.startDate, Some(employment.startDate.minusDays(1)))) // Align end date
+      case OverlapEmploymentEnd => List(noRecord(employment.endDate.getOrElse(taxYear.finishes.minusDays(1)).plusDays(1), filler.endDate)) // Align start date
+      case _ => List(filler) // Unchanged
     }
   }
 

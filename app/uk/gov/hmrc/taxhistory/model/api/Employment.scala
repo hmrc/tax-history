@@ -21,8 +21,9 @@ import java.util.UUID
 import org.joda.time.LocalDate
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
-import play.api.libs.json.{JsPath, Reads, Writes}
+import play.api.libs.json.{JsPath, Json, Reads, Writes}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
+import uk.gov.hmrc.time.TaxYear
 
 case class Employment(employmentId: UUID = UUID.randomUUID(),
                       startDate: LocalDate,
@@ -46,11 +47,21 @@ case class Employment(employmentId: UUID = UUID.randomUUID(),
 
 object Employment {
 
-  private val noRecord = "No record"
+  def noRecord(startDate: LocalDate, endDate: Option[LocalDate]): Employment = {
+    val noRecord = "No record"
 
-  def noRecord(startDate: LocalDate, endDate: Option[LocalDate]): Employment =
-    Employment(startDate = startDate, endDate = endDate, payeReference = noRecord, employerName = noRecord,
+    // Override the end date to be None if it represents the end of the current tax year
+    val overriddenEndDate =
+      if (endDate.getOrElse(TaxYear.taxYearFor(startDate).finishes).equals(TaxYear.current.finishes)) {
+        None
+      } else {
+      endDate
+    }
+
+    Employment(startDate = startDate, endDate = overriddenEndDate, payeReference = noRecord, employerName = noRecord,
       employmentStatus = EmploymentStatus.Unknown, worksNumber = noRecord)
+
+  }
 
   implicit val jsonReads: Reads[Employment] = (
     (JsPath \ "employmentId").read[UUID] and

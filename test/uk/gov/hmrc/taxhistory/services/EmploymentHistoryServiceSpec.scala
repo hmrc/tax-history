@@ -33,7 +33,7 @@ import uk.gov.hmrc.taxhistory.fixtures.Employments
 import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.model.utils.{PlaceHolder, TestUtil}
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentMatchingHelper
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
@@ -344,30 +344,33 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
     }
 
     "fetch Employments successfully from cache" in {
-      lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
+      val taxYear = TaxYear.current.previous
+
+      val placeHolders = Seq(PlaceHolder("%taxYearStartYear%", taxYear.startYear.toString), PlaceHolder("%taxYearFinishYear%", taxYear.finishYear.toString))
+      lazy val paye = loadFile("/json/withPlaceholders/model/api/paye.json", placeHolders).as[PayAsYouEarn]
 
       val testEmployment2 =
         Employment(UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
-          new LocalDate("2016-01-21"), Some(new LocalDate("2017-01-01")), "paye-1", "employer-1",
-          Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),
-          Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax"),
-          Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
+          locaDateCyMinus1("01", "21"), Some(locaDateCyMinus1("02", "21")), "paye-1", "employer-1",
+          Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),
+          Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax"),
+          Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
           receivingOccupationalPension = false, Live, "00191048716")
 
       val testEmployment3 = Employment(UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
-        new LocalDate("2016-02-22"), None, "paye-2", "employer-2",
-        Some("/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/company-benefits"),
-        Some("/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/pay-and-tax"),
-        Some("/2014/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
+        locaDateCyMinus1("02", "22"), None, "paye-2", "employer-2",
+        Some(s"/${taxYear.startYear}/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/company-benefits"),
+        Some(s"/${taxYear.startYear}/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/pay-and-tax"),
+        Some(s"/${taxYear.startYear}/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
         receivingOccupationalPension = false, Live, "00191048716")
 
       // Set up the test data in the cache
-      await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye))
+      await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), taxYear), paye))
 
-      val employments = await(testEmploymentHistoryService.getEmployments(Nino("AA000000A"), TaxYear(2014)))
-      employments.head.startDate must be (new LocalDate("2014-04-06"))
-      employments.head.endDate must be (Some(new LocalDate("2016-01-20")))
+      val employments = await(testEmploymentHistoryService.getEmployments(Nino("AA000000A"), taxYear))
       employments.head.employmentStatus must be(EmploymentStatus.Unknown)
+      employments.head.startDate must be (new LocalDate("2016-04-06"))
+      employments.head.endDate must be (Some(new LocalDate("2017-01-20")))
       employments must contain (testEmployment2)
       employments must contain (testEmployment3)
     }
@@ -460,6 +463,21 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
       testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(true, false, false))
     }
 
+    "return a list with no gaps, when employments overlap and have gaps at the start" in {
+      val employments = List(liveNoEndEmployment, liveMidYearEmployment)
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(true, false, false))
+    }
+
+    "return a list with no gaps, when ceased employments overlap and have gaps" in {
+      val employments = List(ceasedBeforeStartEmployment, ceasedNoEndEmployment, ceasedAfterEndEmployment)
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(false, true, false, false))
+    }
+
+    "return a list with no gaps, when potentially ceased employments overlap and have gaps" in {
+      val employments = List(ceasedBeforeStartEmployment, liveMidYearEmployment, potentiallyCeasedEmployment)
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(false, true, false, false))
+    }
+
     "return a list with no gaps, when original employment has a gap in the middle" in {
       val employments = List(liveStartYearEmployment, liveEndYearEmployment)
       testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(false, true, false))
@@ -467,7 +485,7 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
 
     "return a list with no gaps, when original employment has a gap at the end" in {
       val employments = List(liveStartYearEmployment, liveMidYearEmployment)
-      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(false, false, true))
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(false, true, false, true))
     }
 
     "return a list with no gaps, when original employment has a gap at the start and end" in {
