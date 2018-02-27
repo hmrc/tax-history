@@ -64,9 +64,6 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
 
   val npsEmploymentWithOtherIncomeSourceIndicator: List[NpsEmployment] = List(
     NpsEmployment(
-      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = true, otherIncomeSourceIndicator = false,
-      new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live),
-    NpsEmployment(
       "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = true,
       new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live))
 
