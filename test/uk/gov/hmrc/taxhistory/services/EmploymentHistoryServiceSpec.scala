@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxhistory.services
 import java.util.UUID
 
 import org.joda.time.LocalDate
-import org.mockito.Matchers
+import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
@@ -28,7 +28,6 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
-import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.fixtures.Employments
 import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
@@ -56,11 +55,7 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
   val npsEmploymentWithJobSeekerAllowance: List[NpsEmployment] = List(
     NpsEmployment(
       "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = true, otherIncomeSourceIndicator = false,
-      new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live),
-    NpsEmployment(
-      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false,
       new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live))
-
 
   val npsEmploymentWithOtherIncomeSourceIndicator: List[NpsEmployment] = List(
     NpsEmployment(
@@ -90,21 +85,28 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
 
   "Employment Service" should {
     "successfully get Nps Employments Data" in {
-      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.npsConnector.getEmployments(any(), any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
 
       noException shouldBe thrownBy(await(testEmploymentHistoryService.retrieveNpsEmployments(testNino, TaxYear(2016))))
     }
 
+    "successfully get Nps Employments Data with jobseekers allowance" in {
+      when(testEmploymentHistoryService.npsConnector.getEmployments(any(), any()))
+        .thenReturn(Future.successful(npsEmploymentWithJobSeekerAllowance))
+
+      noException shouldBe thrownBy(await(testEmploymentHistoryService.retrieveNpsEmployments(testNino, TaxYear(2016))))
+    }
+
     "return any non success status response from get Nps Employments api" in {
-      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.npsConnector.getEmployments(any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
       intercept[BadRequestException](await(testEmploymentHistoryService.retrieveNpsEmployments(testNino, TaxYear(2016))))
     }
 
     "successfully get Rti Employments Data" in {
-      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
         .thenReturn(Future.successful(testRtiData))
 
       val result = await(testEmploymentHistoryService.retrieveRtiData(testNino, TaxYear(2016)))
@@ -112,19 +114,19 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
     }
 
     "return not found status response from get Nps Employments api" in {
-      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.npsConnector.getEmployments(any(), any()))
         .thenReturn(Future.successful(Nil))
       intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
     }
 
     "return success status despite failing response from get Rti Employments api when there are nps employments" in {
-      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.npsConnector.getEmployments(any(), any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
-      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
-      when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.npsConnector.getIabds(any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
-      when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.npsConnector.getTaxAccount(any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
       noException shouldBe thrownBy {
@@ -133,13 +135,13 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
     }
 
     "return success response from get Employments" in {
-      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.npsConnector.getEmployments(any(), any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
-      when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.npsConnector.getIabds(any(), any()))
         .thenReturn(Future.successful(testIabds))
-      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
         .thenReturn(Future.successful(testRtiData))
-      when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.npsConnector.getTaxAccount(any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
       val paye = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)))
@@ -172,7 +174,7 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
 
     "successfully merge rti and nps employment1 data into employment1 list" in {
 
-      when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.npsConnector.getTaxAccount(any(), any()))
         .thenReturn(Future.successful(testNpsTaxAccount))
 
       val npsEmployments = npsEmploymentResponse
@@ -214,13 +216,12 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
 
     "successfully exclude nps employment1 data" when {
 
-
       "otherIncomeSourceIndicator is true from list of employments" in {
-        when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
+        when(testEmploymentHistoryService.npsConnector.getEmployments(any(), any()))
           .thenReturn(Future.successful(npsEmploymentWithOtherIncomeSourceIndicator))
-        when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any()))
+        when(testEmploymentHistoryService.npsConnector.getIabds(any(), any()))
           .thenReturn(Future.successful(testIabds))
-        when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
+        when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
           .thenReturn(Future.successful(testRtiData))
 
         intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
@@ -230,11 +231,11 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
     "throw not found error" when {
 
       "nps employments contain single element with npsEmploymentWithJustOtherIncomeSourceIndicator attribute is true" in {
-        when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
+        when(testEmploymentHistoryService.npsConnector.getEmployments(any(), any()))
           .thenReturn(Future.successful(npsEmploymentWithJustOtherIncomeSourceIndicator))
-        when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any()))
+        when(testEmploymentHistoryService.npsConnector.getIabds(any(), any()))
           .thenReturn(Future.successful(testIabds))
-        when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
+        when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
           .thenReturn(Future.successful(testRtiData))
 
         intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
@@ -242,7 +243,7 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
     }
 
     "return an empty list from get Nps Iabds api for bad request response " in {
-      when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.npsConnector.getIabds(any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
       await(testEmploymentHistoryService.retrieveNpsIabds(testNino, TaxYear(2016))) mustBe List.empty
@@ -253,21 +254,21 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
     }
 
     "return None from get Nps Tax Account api for bad request response " in {
-      when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.npsConnector.getTaxAccount(any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
       await(testEmploymentHistoryService.retrieveNpsTaxAccount(testNino, TaxYear(2016))) mustBe None
     }
 
     "return None from get Nps Tax Account api for not found response " in {
-      when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.npsConnector.getTaxAccount(any(), any()))
         .thenReturn(Future.failed(new NotFoundException("")))
 
       await(testEmploymentHistoryService.retrieveNpsTaxAccount(testNino, TaxYear(2016))) mustBe None
     }
 
 
-    "get onlyRtiEmployments  from List of Rti employments and List Nps Employments" in {
+    "get onlyRtiEmployments from List of Rti employments and List Nps Employments" in {
       val rtiEmployment1 = RtiEmployment(1, "offNo1", "ref1", None, Nil, Nil)
       val rtiEmployment2 = RtiEmployment(5, "offNo5", "ref5", None, Nil, Nil)
       val rtiEmployment3 = RtiEmployment(3, "offNo3", "ref3", None, Nil, Nil)
@@ -286,8 +287,6 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
         receivingOccupationalPension = false, EmploymentStatus.Live)
 
       val npsEmployments = List(npsEmployment1, npsEmployment2, npsEmployment3)
-      val rtiData = RtiData("QQ0000002", rtiEmployments)
-      val mockAuditable = mock[Auditable]
 
       val onlyInRti = EmploymentMatchingHelper.unmatchedRtiEmployments(npsEmployments, rtiEmployments)
 
@@ -344,10 +343,10 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
 
       val employments = await(testEmploymentHistoryService.getEmployments(Nino("AA000000A"), taxYear))
       employments.head.employmentStatus must be(EmploymentStatus.Unknown)
-      employments.head.startDate must be (new LocalDate("2016-04-06"))
-      employments.head.endDate must be (Some(new LocalDate("2017-01-20")))
-      employments must contain (testEmployment2)
-      employments must contain (testEmployment3)
+      employments.head.startDate must be(new LocalDate("2016-04-06"))
+      employments.head.endDate must be(Some(new LocalDate("2017-01-20")))
+      employments must contain(testEmployment2)
+      employments must contain(testEmployment3)
     }
 
     "return a single filler when no employment was returned from cache" in {
@@ -356,9 +355,9 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
       await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye))
 
       val employments = await(testEmploymentHistoryService.getEmployments(Nino("AA000000A"), TaxYear(2014)))
-      employments.head.startDate must be (new LocalDate("2014-04-06"))
-      employments.head.endDate must be (Some(new LocalDate("2015-04-05")))
-      employments.head.employmentStatus must be (EmploymentStatus.Unknown)
+      employments.head.startDate must be(new LocalDate("2014-04-06"))
+      employments.head.endDate must be(Some(new LocalDate("2015-04-05")))
+      employments.head.employmentStatus must be(EmploymentStatus.Unknown)
     }
 
 
@@ -420,7 +419,7 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
 
   "withEmploymentGaps" should {
 
-    def isNoRecordEmnployment(employment: Employment): Boolean =
+    def isNoRecordEmployment(employment: Employment): Boolean =
       employment.employerName == "No record" && employment.employmentStatus == EmploymentStatus.Unknown
 
     "return the original list when no employment gaps exist" in {
@@ -430,42 +429,42 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
 
     "return a list with one entry when no employments exist" in {
       val employments = List.empty[Employment]
-      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(true))
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map isNoRecordEmployment must be(Seq(true))
     }
 
     "return a list with no gaps, when original employment has a gap at the start" in {
       val employments = List(liveMidYearEmployment, liveEndYearEmployment)
-      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(true, false, false))
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map isNoRecordEmployment must be(Seq(true, false, false))
     }
 
     "return a list with no gaps, when employments overlap and have gaps at the start" in {
       val employments = List(liveNoEndEmployment, liveMidYearEmployment)
-      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(true, false, false))
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map isNoRecordEmployment must be(Seq(true, false, false))
     }
 
     "return a list with no gaps, when ceased employments overlap and have gaps" in {
       val employments = List(ceasedBeforeStartEmployment, ceasedNoEndEmployment, ceasedAfterEndEmployment)
-      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(false, true, false, false))
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map isNoRecordEmployment must be(Seq(false, true, false, false))
     }
 
     "return a list with no gaps, when potentially ceased employments overlap and have gaps" in {
       val employments = List(ceasedBeforeStartEmployment, liveMidYearEmployment, potentiallyCeasedEmployment)
-      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(false, true, false, false))
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map isNoRecordEmployment must be(Seq(false, true, false, false))
     }
 
     "return a list with no gaps, when original employment has a gap in the middle" in {
       val employments = List(liveStartYearEmployment, liveEndYearEmployment)
-      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(false, true, false))
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map isNoRecordEmployment must be(Seq(false, true, false))
     }
 
     "return a list with no gaps, when original employment has a gap at the end" in {
       val employments = List(liveStartYearEmployment, liveMidYearEmployment)
-      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(false, true, false, true))
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map isNoRecordEmployment must be(Seq(false, true, false, true))
     }
 
     "return a list with no gaps, when original employment has a gap at the start and end" in {
       val employments = List(liveMidYearEmployment)
-      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map (isNoRecordEmnployment(_)) must be(Seq(true, false, true))
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map isNoRecordEmployment must be(Seq(true, false, true))
     }
   }
 }
