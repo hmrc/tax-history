@@ -27,30 +27,30 @@ trait Employments {
   val testWorksNumber = "00191048716"
 
   val liveOngoingEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts, None, "Nothing", "An Employer",
-    None, None, None, false, EmploymentStatus.Live, testWorksNumber)
+    None, None, None, false, false, EmploymentStatus.Live, testWorksNumber)
 
   val liveNoEndEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts.plusDays(30), None, "Nothing", "An Employer",
-    None, None, None, false, EmploymentStatus.Live, testWorksNumber)
+    None, None, None, false, false, EmploymentStatus.Live, testWorksNumber)
 
   val liveStartYearEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts, Some(TaxYear.current.starts.plusDays(10)), "Nothing", "An Employer",
-    None, None, None, false, EmploymentStatus.Live, testWorksNumber)
+    None, None, None, false, false, EmploymentStatus.Live, testWorksNumber)
 
   val liveMidYearEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts.plusDays(40) , Some(TaxYear.current.finishes.minusDays(10)), "Nothing", "An Employer",
-    None, None, None, false, EmploymentStatus.Live, testWorksNumber)
+    None, None, None, false, false, EmploymentStatus.Live, testWorksNumber)
 
   val liveEndYearEmployment = Employment(UUID.randomUUID(), TaxYear.current.finishes.minusDays(10) , Some(TaxYear.current.finishes), "Nothing", "An Employer",
-    None, None, None, false, EmploymentStatus.Live, testWorksNumber)
+    None, None, None, false, false, EmploymentStatus.Live, testWorksNumber)
 
   val ceasedBeforeStartEmployment = Employment(UUID.randomUUID(), TaxYear.current.previous.starts.plusDays(5) , Some(TaxYear.current.starts.plusDays(30)), "Nothing", "An Employer",
-    None, None, None, false, EmploymentStatus.Ceased, testWorksNumber)
+    None, None, None, false, false, EmploymentStatus.Ceased, testWorksNumber)
 
   val ceasedNoEndEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts.plusDays(90) , None, "Nothing", "An Employer",
-    None, None, None, false, EmploymentStatus.Ceased, testWorksNumber)
+    None, None, None, false, false, EmploymentStatus.Ceased, testWorksNumber)
 
   val ceasedAfterEndEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts.plusDays(60), Some(TaxYear.current.next.starts.plusDays(30)), "Nothing", "An Employer",
-    None, None, None, false, EmploymentStatus.Ceased, testWorksNumber)
+    None, None, None, false, false, EmploymentStatus.Ceased, testWorksNumber)
 
   val potentiallyCeasedEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts.plusDays(90) , None, "Nothing", "An Employer",
-    None, None, None, false, EmploymentStatus.PotentiallyCeased, testWorksNumber)
+    None, None, None, false, false, EmploymentStatus.PotentiallyCeased, testWorksNumber)
 
 }

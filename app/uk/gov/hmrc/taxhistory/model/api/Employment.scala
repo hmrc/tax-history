@@ -34,6 +34,7 @@ case class Employment(employmentId: UUID = UUID.randomUUID(),
                       payAndTaxURI: Option[String] = None,
                       employmentURI: Option[String] = None,
                       receivingOccupationalPension: Boolean = false,
+                      receivingJobSeekersAllowance: Boolean = false,
                       employmentStatus: EmploymentStatus,
                       worksNumber: String) {
 
@@ -73,6 +74,7 @@ object Employment {
       (JsPath \ "payAndTaxURI").readNullable[String] and
       (JsPath \ "employmentURI").readNullable[String] and
       (JsPath \ "receivingOccupationalPension").read[Boolean] and
+      (JsPath \ "receivingJobSeekersAllowance").read[Boolean] and
       JsPath.read[EmploymentStatus] and
       (JsPath \ "worksNumber").read[String]
     ) (Employment.apply _)
@@ -88,6 +90,7 @@ object Employment {
       (JsPath \ "payAndTaxURI").writeNullable[String] and
       (JsPath \ "employmentURI").writeNullable[String] and
       (JsPath \ "receivingOccupationalPension").write[Boolean] and
+      (JsPath \ "receivingJobSeekersAllowance").write[Boolean] and
       JsPath.write[EmploymentStatus] and
       (JsPath \ "worksNumber").write[String]
     ) (unlift(Employment.unapply))
