@@ -44,6 +44,7 @@ case class NpsEmployment(nino: String,
       startDate = startDate,
       endDate = endDate,
       receivingOccupationalPension = receivingOccupationalPension,
+      receivingJobSeekersAllowance = receivingJobSeekersAllowance,
       employmentStatus = employmentStatus,
       worksNumber = worksNumber.getOrElse("")
     )

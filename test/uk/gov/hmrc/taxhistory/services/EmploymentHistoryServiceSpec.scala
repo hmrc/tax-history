@@ -216,21 +216,9 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
 
 
     "successfully exclude nps employment1 data" when {
-      "nps receivingJobseekersAllowance is true from list of employments" in {
-        when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
-          .thenReturn(Future.successful(npsEmploymentWithJobSeekerAllowance))
-        when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any()))
-          .thenReturn(Future.successful(testIabds))
-        when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
-          .thenReturn(Future.successful(testRtiData))
 
-        val payAsYouEarn = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)))
 
-        val employments = payAsYouEarn.employments
-        employments.size mustBe 1
-      }
-
-      "nps receivingJobseekersAllowance and otherIncomeSourceIndicator is true from list of employments" in {
+      "otherIncomeSourceIndicator is true from list of employments" in {
         when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
           .thenReturn(Future.successful(npsEmploymentWithOtherIncomeSourceIndicator))
         when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any()))
@@ -243,16 +231,6 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
     }
 
     "throw not found error" when {
-      "nps employments contain single element with receivingJobseekersAllowance attribute is true" in {
-        when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
-          .thenReturn(Future.successful(npsEmploymentWithJustJobSeekerAllowance))
-        when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any()))
-          .thenReturn(Future.successful(testIabds))
-        when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
-          .thenReturn(Future.successful(testRtiData))
-
-        intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
-      }
 
       "nps employments contain single element with npsEmploymentWithJustOtherIncomeSourceIndicator attribute is true" in {
         when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
@@ -355,14 +333,14 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
           Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),
           Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax"),
           Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
-          receivingOccupationalPension = false, Live, "00191048716")
+          receivingOccupationalPension = false, receivingJobSeekersAllowance = false, Live, "00191048716")
 
       val testEmployment3 = Employment(UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
         locaDateCyMinus1("02", "22"), None, "paye-2", "employer-2",
         Some(s"/${taxYear.startYear}/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/company-benefits"),
         Some(s"/${taxYear.startYear}/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/pay-and-tax"),
         Some(s"/${taxYear.startYear}/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
-        receivingOccupationalPension = false, Live, "00191048716")
+        receivingOccupationalPension = false, receivingJobSeekersAllowance = false, Live, "00191048716")
 
       // Set up the test data in the cache
       await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), taxYear), paye))
@@ -395,7 +373,7 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
         Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),
         Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax"),
         Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
-        receivingOccupationalPension = false, Live, "00191048716")
+        receivingOccupationalPension = false, receivingJobSeekersAllowance = false, Live, "00191048716")
 
       await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye))
 

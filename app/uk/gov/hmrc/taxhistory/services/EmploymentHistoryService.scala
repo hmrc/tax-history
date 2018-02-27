@@ -227,7 +227,7 @@ class EmploymentHistoryService @Inject()(
    */
   def retrieveNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[NpsEmployment]] =
     npsConnector.getEmployments(nino, taxYear.currentYear).map { employments =>
-      employments.filterNot(x => x.receivingJobSeekersAllowance || x.otherIncomeSourceIndicator)
+      employments.filterNot(x => x.otherIncomeSourceIndicator)
     }.orNotFound(s"No NPS employments found for $nino $taxYear")
 
 
