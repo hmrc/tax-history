@@ -52,10 +52,15 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
       "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false,
       otherIncomeSourceIndicator = false, new LocalDate("2015-01-21"), None, receivingOccupationalPension = true, Live))
 
-  val npsEmploymentWithJobSeekerAllowance: List[NpsEmployment] = List(
+  val npsEmploymentWithJobSeekerAllowanceCY: List[NpsEmployment] = List(
     NpsEmployment(
       "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = true, otherIncomeSourceIndicator = false,
-      new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live))
+      new LocalDate(s"${TaxYear.current.currentYear}-01-21"), None, receivingOccupationalPension = false, Live))
+
+  val npsEmploymentWithJobSeekerAllowanceCYMinus1: List[NpsEmployment] = List(
+    NpsEmployment(
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = true, otherIncomeSourceIndicator = false,
+      new LocalDate(s"${TaxYear.current.previous.currentYear}-01-21"), None, receivingOccupationalPension = false, Live))
 
   val npsEmploymentWithOtherIncomeSourceIndicator: List[NpsEmployment] = List(
     NpsEmployment(
@@ -91,9 +96,9 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
       noException shouldBe thrownBy(await(testEmploymentHistoryService.retrieveNpsEmployments(testNino, TaxYear(2016))))
     }
 
-    "successfully get Nps Employments Data with jobseekers allowance" in {
+    "successfully get Nps Employments Data with jobseekers allowance for cy-1" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(any(), any()))
-        .thenReturn(Future.successful(npsEmploymentWithJobSeekerAllowance))
+        .thenReturn(Future.successful(npsEmploymentWithJobSeekerAllowanceCYMinus1))
 
       noException shouldBe thrownBy(await(testEmploymentHistoryService.retrieveNpsEmployments(testNino, TaxYear(2016))))
     }
@@ -215,6 +220,17 @@ class EmploymentHistoryServiceSpec extends PlaySpec with MockitoSugar with TestU
 
 
     "successfully exclude nps employment1 data" when {
+
+      "nps receivingJobseekersAllowance is true for CY" in {
+        when(testEmploymentHistoryService.npsConnector.getEmployments(any(), any()))
+          .thenReturn(Future.successful(npsEmploymentWithJobSeekerAllowanceCY))
+        when(testEmploymentHistoryService.npsConnector.getIabds(any(), any()))
+          .thenReturn(Future.successful(testIabds))
+        when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
+          .thenReturn(Future.successful(testRtiData))
+
+        intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(TaxYear.current.currentYear))))
+      }
 
       "otherIncomeSourceIndicator is true from list of employments" in {
         when(testEmploymentHistoryService.npsConnector.getEmployments(any(), any()))

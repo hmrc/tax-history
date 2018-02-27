@@ -225,10 +225,17 @@ class EmploymentHistoryService @Inject()(
   /*
     Retrieve NpsEmployments directly from the NPS microservice.
    */
-  def retrieveNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[NpsEmployment]] =
-    npsConnector.getEmployments(nino, taxYear.currentYear).map { employments =>
-      employments.filterNot(x => x.otherIncomeSourceIndicator)
+  def retrieveNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[NpsEmployment]] = {
+    val passedInTaxYear = taxYear.currentYear
+
+    npsConnector.getEmployments(nino, passedInTaxYear).map { employments =>
+      if (TaxYear.current.currentYear.equals(passedInTaxYear)) {
+        employments.filterNot(x => x.receivingJobSeekersAllowance | x.otherIncomeSourceIndicator)
+      } else {
+        employments.filterNot(_.otherIncomeSourceIndicator)
+      }
     }.orNotFound(s"No NPS employments found for $nino $taxYear")
+  }
 
 
   /*
