@@ -163,7 +163,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       payAsYouEarn.employments.head.endDate mustBe None
       payAsYouEarn.incomeSources.head._2 must be(testIncomeSource)
       val Some(companyBenefits) = payAsYouEarn.benefits.get(employment.employmentId.toString)
-      companyBenefits.size mustBe 8
+      companyBenefits.size mustBe 9
     }
 
     "Build employment1 when there is no  data for rti, Iabd and income source" in {
@@ -194,7 +194,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       val payAndTax = payAsYouEarn.payAndTax.get(employment.employmentId.toString)
       payAndTax mustBe None
       val companyBenefits = payAsYouEarn.benefits.get(employment.employmentId.toString)
-      companyBenefits.get.size mustBe 8
+      companyBenefits.get.size mustBe 9
     }
 
     "Build employment1 when there is data for Iabd is None or Null" in {
