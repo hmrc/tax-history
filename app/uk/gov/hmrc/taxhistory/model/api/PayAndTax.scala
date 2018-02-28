@@ -21,9 +21,10 @@ import java.util.UUID
 import org.joda.time.LocalDate
 import play.api.libs.json.Json
 
-case class PayAndTax(payAndTaxId:UUID = UUID.randomUUID(),
+case class PayAndTax(payAndTaxId: UUID = UUID.randomUUID(),
                      taxablePayTotal: Option[BigDecimal] = None,
-                     taxTotal: Option[BigDecimal]= None,
+                     taxTotal: Option[BigDecimal] = None,
+                     studentLoan: Option[BigDecimal] = None,
                      paymentDate: Option[LocalDate] = None,
                      earlierYearUpdates: List[EarlierYearUpdate])
 
