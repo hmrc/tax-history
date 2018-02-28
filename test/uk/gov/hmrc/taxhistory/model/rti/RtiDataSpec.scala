@@ -17,13 +17,14 @@
 package uk.gov.hmrc.taxhistory.model.rti
 
 import org.joda.time.LocalDate
+import play.api.libs.json.JsValue
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 class RtiDataSpec extends TestUtil with UnitSpec {
 
-  lazy val rtiSuccessfulResponseURLDummy = loadFile("/json/rti/response/dummyRti.json")
+  lazy val rtiSuccessfulResponseURLDummy: JsValue = loadFile("/json/rti/response/dummyRti.json")
 
   "RtiData" should {
 
@@ -58,11 +59,12 @@ class RtiDataSpec extends TestUtil with UnitSpec {
 
     }
     "transform Rti Response Json correctly which containing Payments" in {
-      val payments20160313 = rtiDetails.employments.map(emp => emp.payments.find(pay => pay.paidOnDate == new LocalDate(2016,3,31))).flatten
+      val payments20160313 = rtiDetails.employments.flatMap(emp => emp.payments.find(pay => pay.paidOnDate == new LocalDate(2016, 3, 31)))
       payments20160313.size shouldBe 1
       payments20160313.head.paidOnDate shouldBe new LocalDate(2016,3,31)
       payments20160313.head.taxablePayYTD shouldBe BigDecimal.valueOf(20000.00)
       payments20160313.head.totalTaxYTD shouldBe BigDecimal.valueOf(1880.00)
+      payments20160313.head.studentLoansYTD.get shouldBe BigDecimal.valueOf(333.33)
     }
     "sort payment list by paid on date with latest payment in last position" in {
       val paymentsList = rtiDetails.employments.head.payments.sorted
@@ -73,7 +75,7 @@ class RtiDataSpec extends TestUtil with UnitSpec {
     }
 
     "transform Rti Response Json correctly which containing EndOfYearUpdates" in {
-      val earlierYearUpdates = rtiDetails.employments.map(emp => emp.earlierYearUpdates.find(eyu => eyu.receivedDate == new LocalDate(2016,6,1))).flatten
+      val earlierYearUpdates = rtiDetails.employments.flatMap(emp => emp.earlierYearUpdates.find(eyu => eyu.receivedDate == new LocalDate(2016, 6, 1)))
       earlierYearUpdates.size shouldBe 1
       earlierYearUpdates.head.receivedDate shouldBe new LocalDate(2016,6,1)
       earlierYearUpdates.head.taxablePayDelta shouldBe BigDecimal.valueOf(-600.99)
