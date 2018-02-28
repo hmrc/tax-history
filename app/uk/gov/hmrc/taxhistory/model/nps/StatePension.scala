@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxhistory.model.api
+package uk.gov.hmrc.taxhistory.model.nps
 
-import java.util.UUID
+import play.api.libs.json.{Json, OFormat}
 
-import play.api.libs.json.Json
+case class StatePension(grossAmount: BigDecimal, typeDescription: String)
 
-case class TaxAccount(taxAccountId: UUID = UUID.randomUUID(),
-                      outstandingDebtRestriction: Option[BigDecimal] = None,
-                      underpaymentAmount: Option[BigDecimal] = None,
-                      actualPUPCodedInCYPlusOneTaxYear: Option[BigDecimal] = None)
-
-object TaxAccount {
-  implicit val formats = Json.format[TaxAccount]
+object StatePension {
+  implicit val formats: OFormat[StatePension] = Json.format[StatePension]
 }
-

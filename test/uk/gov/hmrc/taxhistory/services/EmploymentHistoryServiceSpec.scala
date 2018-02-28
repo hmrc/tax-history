@@ -169,6 +169,10 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       eyu.taxablePayEYU shouldBe BigDecimal(-600.99)
       eyu.taxEYU shouldBe BigDecimal(-10.99)
 
+      val Some(statePension) = paye.statePension
+      statePension.grossAmount shouldBe BigDecimal(1253.23)
+      statePension.typeDescription shouldBe "State Pension"
+
       val Some(benefits) = paye.benefits.get(employments.head.employmentId.toString)
       benefits.size shouldBe 2
       benefits.head.iabdType shouldBe "CarFuelBenefit"
@@ -198,6 +202,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       val employment = payAsYouEarn.employments.head
       val Some(payAndTax) = payAsYouEarn.payAndTax.get(employment.employmentId.toString)
       val Some(benefits) = payAsYouEarn.benefits.get(employment.employmentId.toString)
+      val Some(statePension) = payAsYouEarn.statePension
 
       employment.employerName shouldBe "Aldi"
       employment.payeReference shouldBe "531/J4816"
@@ -216,6 +221,8 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       benefits.head.amount shouldBe BigDecimal(100)
       benefits.last.iabdType shouldBe "VanBenefit"
       benefits.last.amount shouldBe BigDecimal(100)
+      statePension.grossAmount shouldBe BigDecimal(1253.23)
+      statePension.typeDescription shouldBe "State Pension"
     }
 
     "successfully exclude nps employment1 data" when {

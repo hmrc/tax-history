@@ -8,3 +8,4 @@ GET        /:nino/:taxYear/employments/:employmentId/company-benefits        @uk
 GET        /:nino/:taxYear/employments/:employmentId/pay-and-tax             @uk.gov.hmrc.taxhistory.controllers.PayAndTaxController.getPayAndTax(nino:String,taxYear:Int,employmentId:String)
 GET        /:nino/:taxYear/employments/:employmentId/income-source           @uk.gov.hmrc.taxhistory.controllers.TaxAccountController.getIncomeSource(nino:String,taxYear:Int,employmentId:String)
 GET        /:nino/:taxYear/tax-account                                       @uk.gov.hmrc.taxhistory.controllers.TaxAccountController.getTaxAccount(nino:String,taxYear:Int)
+GET        /:nino/:taxYear/state-pension                                     @uk.gov.hmrc.taxhistory.controllers.StatePensionController.getStatePension(nino:String,taxYear:Int)

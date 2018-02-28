@@ -36,6 +36,7 @@ import uk.gov.hmrc.taxhistory.utils.Logging
 import uk.gov.hmrc.time.TaxYear
 
 import scala.annotation.tailrec
+import scala.collection.immutable
 import scala.concurrent.Future
 
 class EmploymentHistoryService @Inject()(
@@ -120,6 +121,17 @@ class EmploymentHistoryService @Inject()(
     }
   }
 
+  def getStatePension(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[Option[StatePension]] = {
+    getFromCache(nino, taxYear).flatMap { paye =>
+      logger.debug("Returning result from getStatePension")
+
+      paye.statePension match {
+        case Some(statePension) => Future.successful(Some(statePension))
+        case None => Future.failed(new NotFoundException(s"StatePension not found for NINO ${nino.value} and tax year ${taxYear.toString}"))
+      }
+    }
+  }
+
   def getIncomeSource(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Option[IncomeSource]] = {
     if (taxYear == TaxYear.current) {
       getFromCache(nino, taxYear).map(_.incomeSources.get(employmentId))
@@ -182,6 +194,8 @@ class EmploymentHistoryService @Inject()(
                        iabds: List[Iabd]
                       )(implicit hc: HeaderCarrier): PayAsYouEarn = {
 
+    val (iabdsNoStatePensions, statePension) = filterStatePension(iabds)
+
     val employmentMatches: Map[NpsEmployment, RtiEmployment] = EmploymentMatchingHelper.matchedEmployments(npsEmployments, rtiEmployments)
 
     // Check for any RTI employment which doesn't match any NPS employment, and send an audit event if this is the case.
@@ -210,16 +224,16 @@ class EmploymentHistoryService @Inject()(
 
       EmploymentHistoryServiceHelper.buildPAYE(
         rtiEmployment = employmentMatches.get(npsEmployment),
-        iabds = iabds.matchedCompanyBenefits(npsEmployment),
+        iabds = iabdsNoStatePensions.matchedCompanyBenefits(npsEmployment),
         incomeSource = incomeSource,
         npsEmployment = npsEmployment
       )
     }
 
     EmploymentHistoryServiceHelper.combinePAYEs(payes).copy(
-      allowances = iabds.allowances,
-      taxAccount = taxAccountOption.map(_.toTaxAccount)
-    )
+      allowances = iabdsNoStatePensions.allowances,
+      taxAccount = taxAccountOption.map(_.toTaxAccount),
+      statePension = statePension.map(_.toStatePension))
   }
 
   /*
@@ -289,4 +303,15 @@ class EmploymentHistoryService @Inject()(
     }
   }
 
+  private def filterStatePension(iabds: List[Iabd]): (List[Iabd], Option[Iabd]) = {
+    def matchStatePension(iabd: Iabd): Boolean = {
+      iabd.`type` match {
+        case StatePensions => true
+        case _ => false
+      }
+    }
+
+    (iabds.filterNot(matchStatePension),
+      iabds.find(matchStatePension))
+  }
 }

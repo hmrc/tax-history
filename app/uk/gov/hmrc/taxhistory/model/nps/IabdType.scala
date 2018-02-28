@@ -22,6 +22,8 @@ import play.api.libs.json._
 
 sealed trait IabdType
 
+case object StatePensions extends IabdType
+
 sealed trait CompanyBenefits extends IabdType
 
 case object EmployerProvidedServices extends CompanyBenefits
@@ -67,7 +69,7 @@ case object UnKnown extends IabdType
 
 
 object IabdType {
-  val UnknownIabdTypeId = -1000
+  val UnknownIabdTypeId: Int = -1000
 
   def apply(id: Int): IabdType = idMap.getOrElse(id, UnKnown)
   def unapply(iabdType: IabdType): Int = idMap.collectFirst({ case (key, value) if value == iabdType => key }).getOrElse(UnknownIabdTypeId)
@@ -104,7 +106,8 @@ object IabdType {
     117 -> NonCashBenefit,
     56  -> FlatRateJobExpenses,
     57  -> ProfessionalSubscriptions,
-    101 -> EarlierYearsAdjustment
+    101 -> EarlierYearsAdjustment,
+    66  -> StatePensions
   )
 
   implicit val format = new Format[IabdType] {
@@ -120,7 +123,10 @@ case class Iabd(nino: String,
                 `type`: IabdType,
                 grossAmount : Option[BigDecimal] = None,
                 typeDescription : Option[String] = None,
-                source: Option[Int] = None)
+                source: Option[Int] = None) {
+
+  def toStatePension = StatePension(grossAmount = grossAmount.getOrElse(0.0), typeDescription.getOrElse(""))
+}
 
 object Iabd {
   implicit val formats = Json.format[Iabd]

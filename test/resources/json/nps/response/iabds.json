@@ -25,6 +25,18 @@
     "typeDescription": "Vehicle Expenses"
   },
   {
+    "nino": "AM242413",
+    "sequenceNumber": 201600008,
+    "taxYear": 2016,
+    "type": 66,
+    "source": 17,
+    "grossAmount": 1253.23,
+    "receiptDate": null,
+    "captureDate": "15/03/2017",
+    "typeDescription": "State Pension",
+    "netAmount": null
+  },
+  {
     "captureDate": null,
     "grossAmount": 10600,
     "netAmount": null,
