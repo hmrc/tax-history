@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxhistory.services
 
 
-import javax.inject.Inject
+import javax.inject.{Inject, Named}
 
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
@@ -25,9 +25,9 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.connectors.{NpsConnector, RtiConnector}
-import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.api.Employment._
 import uk.gov.hmrc.taxhistory.model.api.FillerState._
+import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.audit.{DataEventDetail, NpsRtiMismatch, OnlyInRti, PAYEForAgents}
 import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
@@ -36,14 +36,13 @@ import uk.gov.hmrc.taxhistory.utils.Logging
 import uk.gov.hmrc.time.TaxYear
 
 import scala.annotation.tailrec
-import scala.collection.immutable
 import scala.concurrent.Future
 
-class EmploymentHistoryService @Inject()(
-                                          val npsConnector: NpsConnector,
-                                          val rtiConnector: RtiConnector,
-                                          val cacheService: PayeCacheService,
-                                          val auditable: Auditable
+class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
+                                         val rtiConnector: RtiConnector,
+                                         val cacheService: PayeCacheService,
+                                         val auditable: Auditable,
+                                         @Named("featureFlags.currentYearFlag") val currentYearFlag: Boolean
                                         ) extends Logging {
 
   def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] =
@@ -142,13 +141,14 @@ class EmploymentHistoryService @Inject()(
 
   def getTaxYears(nino: Nino): Future[List[IndividualTaxYear]] = {
 
-    val taxYearList = List(TaxYear.current,
-      TaxYear.current.back(1),
+    val taxYearList: List[TaxYear] = List(TaxYear.current.back(1),
       TaxYear.current.back(2),
       TaxYear.current.back(3),
       TaxYear.current.back(4))
 
-    val taxYears = taxYearList.map(year => IndividualTaxYear(year = year.startYear,
+    val completeTaxYearList = if (currentYearFlag) TaxYear.current +: taxYearList else taxYearList
+
+    val taxYears = completeTaxYearList.map(year => IndividualTaxYear(year = year.startYear,
       allowancesURI = s"/${year.startYear}/allowances",
       employmentsURI = s"/${year.startYear}/employments",
       taxAccountURI = s"/${year.startYear}/tax-account"))
