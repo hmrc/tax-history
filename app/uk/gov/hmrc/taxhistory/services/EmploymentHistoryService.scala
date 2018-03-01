@@ -50,7 +50,8 @@ class EmploymentHistoryService @Inject()(
     getFromCache(nino, taxYear).map(es => addFillers(es.employments.map(_.enrichWithURIs(taxYear.startYear)), taxYear))
 
   def addFillers(employments: List[Employment], taxYear: TaxYear): List[Employment] =
-    (employments ++ getFillers(employments, List(Employment.noRecord(taxYear.starts, Some(taxYear.finishes))), taxYear)) sortBy (_.startDate.toDate)
+    (employments ++ getFillers(employments.filterNot(emp => emp.receivingOccupationalPension),
+      List(Employment.noRecord(taxYear.starts, Some(taxYear.finishes))), taxYear)) sortBy (_.startDate.toDate)
 
   @tailrec
   private def getFillers(employments: List[Employment], fillers: List[Employment], taxYear: TaxYear): List[Employment] =
