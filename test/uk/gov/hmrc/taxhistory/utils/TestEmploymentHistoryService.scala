@@ -28,6 +28,8 @@ object TestEmploymentHistoryService extends AnyRef with MockitoSugar {
       rtiConnector = mock[RtiConnector],
       cacheService = TestPayeCacheService(),
       auditable = mock[Auditable],
-      currentYearFlag = true
+      currentYearFlag = true,
+      statePensionFlag = true,
+      jobSeekersAllowanceFlag = true
     )
 }

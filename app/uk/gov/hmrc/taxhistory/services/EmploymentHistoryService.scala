@@ -42,11 +42,16 @@ class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
                                          val rtiConnector: RtiConnector,
                                          val cacheService: PayeCacheService,
                                          val auditable: Auditable,
-                                         @Named("featureFlags.currentYearFlag") val currentYearFlag: Boolean
+                                         @Named("featureFlags.currentYearFlag") val currentYearFlag: Boolean,
+                                         @Named("featureFlags.statePensionFlag") val statePensionFlag: Boolean,
+                                         @Named("featureFlags.jobSeekersAllowanceFlag") val jobSeekersAllowanceFlag: Boolean
                                         ) extends Logging {
 
-  def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] =
-    getFromCache(nino, taxYear).map(es => addFillers(es.employments.map(_.enrichWithURIs(taxYear.startYear)), taxYear))
+  def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] = {
+    if (jobSeekersAllowanceFlag) getFromCache(nino, taxYear).map(es => addFillers(es.employments.map(_.enrichWithURIs(taxYear.startYear)), taxYear))
+    else getFromCache(nino, taxYear).map(es => addFillers(es.employments.map(_.enrichWithURIs(taxYear.startYear)), taxYear).
+      filterNot(emp => emp.receivingJobSeekersAllowance))
+  }
 
   def addFillers(employments: List[Employment], taxYear: TaxYear): List[Employment] =
     (employments ++ getFillers(employments.filterNot(emp => emp.receivingOccupationalPension),
@@ -64,8 +69,7 @@ class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
     getFromCache(nino, taxYear).flatMap { paye =>
       logger.debug("Returning result of a getEmployment")
       paye.employments.find(_.employmentId.toString == employmentId) match {
-        case Some(employment) =>
-          Future.successful(employment.enrichWithURIs(taxYear.startYear))
+        case Some(employment) => Future.successful(employment.enrichWithURIs(taxYear.startYear))
         case None =>
           logger.info("Cache has expired from mongo")
           Future.failed(new NotFoundException(s"Employment not found for NINO ${nino.value} and tax year ${taxYear.toString}"))
@@ -126,7 +130,9 @@ class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
       logger.debug("Returning result from getStatePension")
 
       paye.statePension match {
-        case Some(statePension) => Future.successful(Some(statePension))
+        case Some(statePension) => Future.successful(
+          if (statePensionFlag) Some(statePension)
+          else None)
         case None => Future.failed(new NotFoundException(s"StatePension not found for NINO ${nino.value} and tax year ${taxYear.toString}"))
       }
     }
