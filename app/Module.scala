@@ -57,6 +57,7 @@ class Module(val environment: Environment, val configuration: Configuration) ext
     bindConfigString("microservice.services.rti-hod.originatorId",       default = Some("local"))
     bindConfigString("microservice.services.rti-hod.env",                default = Some("local"))
     bindConfigString("microservice.services.rti-hod.authorizationToken", default = Some("local"))
+    bindConfigBoolean("featureFlags.currentYearFlag")
 
     bind(classOf[String]).annotatedWith(Names.named("rti-hod-base-url")).toProvider(provide(baseUrl("rti-hod")))
     bind(classOf[String]).annotatedWith(Names.named("nps-hod-base-url")).toProvider(provide(baseUrl("nps-hod")))
@@ -82,15 +83,23 @@ class Module(val environment: Environment, val configuration: Configuration) ext
     bind(classOf[String]).annotatedWith(Names.named(s"$propertyName")).toProvider(ConfigStringProvider(propertyName, default))
 
   private case class ConfigStringProvider(propertyName: String, default: Option[String] = None) extends Provider[String] {
-    lazy val get =
+    lazy val get: String =
       configuration.getString(propertyName).orElse(default).getOrElse(throw new RuntimeException(s"No configuration value found for '$propertyName'"))
+  }
+
+  private def bindConfigBoolean(propertyName: String, default: Boolean = false) =
+    bind(classOf[Boolean]).annotatedWith(Names.named(s"$propertyName")).toProvider(ConfigBooleanProvider(propertyName, Some(default)))
+
+  private case class ConfigBooleanProvider(propertyName: String, default: Option[Boolean] = None) extends Provider[Boolean] {
+    lazy val get: Boolean =
+      configuration.getBoolean(propertyName).orElse(default).getOrElse(throw new RuntimeException(s"No configuration value found for '$propertyName'"))
   }
 
   private def bindConfigInt(propertyName: String, default: Option[Int] = None) =
     bind(classOf[Int]).annotatedWith(Names.named(s"$propertyName")).toProvider(ConfigIntProvider(propertyName, default))
 
   private case class ConfigIntProvider(propertyName: String, default: Option[Int] = None) extends Provider[Int] {
-    lazy val get =
+    lazy val get: Int =
       configuration.getInt(propertyName).orElse(default).getOrElse(throw new RuntimeException(s"No configuration value found for '$propertyName'"))
   }
 }
