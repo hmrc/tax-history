@@ -38,20 +38,20 @@ import scala.concurrent.Future
 
 
 class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
   val testNino = randomNino()
   
-  val testEmploymentHistoryService = TestEmploymentHistoryService.createNew()
+  val testEmploymentHistoryService: EmploymentHistoryService = TestEmploymentHistoryService.createNew()
 
   val npsEmploymentResponse :List[NpsEmployment] = List(
     NpsEmployment(
-      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), false, false,
-      new LocalDate("2015-01-21"), None, false, Live))
+      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false,
+      otherIncomeSourceIndicator = false, new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live))
 
 
-  lazy val iabdsResponse = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
+  lazy val iabdsResponse: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
 
-  lazy val rtiEmploymentResponse = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
+  lazy val rtiEmploymentResponse: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
 
   "PayAndTax " should {
     "successfully populated from rti" in {
@@ -71,8 +71,9 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
     "successfully retrieve payAndTaxURI from cache" in {
       lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
-      val testPayAndTax = Some(PayAndTax(UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"), Some(2222.22),Some(111.11),
-        Some(new LocalDate("2016-02-20")), List()))
+      val testPayAndTax = Some(PayAndTax(payAndTaxId = UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"),
+        taxablePayTotal = Some(2222.22), taxTotal = Some(111.11), studentLoan = Some(333.33),
+          paymentDate = Some(new LocalDate("2016-02-20")), earlierYearUpdates = List()))
 
       testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye)
 

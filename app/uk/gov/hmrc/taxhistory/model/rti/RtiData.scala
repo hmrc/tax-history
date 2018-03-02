@@ -22,15 +22,15 @@ import play.api.libs.json._
 import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, PayAndTax}
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
 
-case class RtiData(nino:String,
-                   employments:List[RtiEmployment])
+case class RtiData(nino: String,
+                   employments: List[RtiEmployment])
 
-case class RtiEmployment(sequenceNo:Int,
-                         officeNumber:String,
-                         payeRef:String,
-                         currentPayId: Option[String]= None,
-                         payments:List[RtiPayment],
-                         earlierYearUpdates:List[RtiEarlierYearUpdate]) {
+case class RtiEmployment(sequenceNo: Int,
+                         officeNumber: String,
+                         payeRef: String,
+                         currentPayId: Option[String] = None,
+                         payments: List[RtiPayment],
+                         earlierYearUpdates: List[RtiEarlierYearUpdate]) {
 
   def toPayAndTax: PayAndTax = {
     val eyus = earlierYearUpdates.map(_.toEarlierYearUpdate)
@@ -38,28 +38,28 @@ case class RtiEmployment(sequenceNo:Int,
 
     payments match {
       case Nil => PayAndTax(earlierYearUpdates = nonEmptyEyus)
-      case matchingPayments => {
+      case matchingPayments =>
         val payment = matchingPayments.sorted.last
         PayAndTax(taxablePayTotal = Some(payment.taxablePayYTD),
           taxTotal = Some(payment.totalTaxYTD),
-          paymentDate=Some(payment.paidOnDate),
+          studentLoan = payment.studentLoansYTD,
+          paymentDate = Some(payment.paidOnDate),
           earlierYearUpdates = nonEmptyEyus)
-      }
     }
   }
 
 }
 
-case class RtiPayment(
-                      paidOnDate:LocalDate,
-                      taxablePayYTD:BigDecimal,
-                      totalTaxYTD:BigDecimal) extends Ordered[RtiPayment] {
-  def compare(that: RtiPayment) = this.paidOnDate compare that.paidOnDate
+case class RtiPayment(paidOnDate: LocalDate,
+                      taxablePayYTD: BigDecimal,
+                      totalTaxYTD: BigDecimal,
+                      studentLoansYTD: Option[BigDecimal] = None) extends Ordered[RtiPayment] {
+  def compare(that: RtiPayment): Int = this.paidOnDate compare that.paidOnDate
 }
 
-case class RtiEarlierYearUpdate(taxablePayDelta:BigDecimal,
-                                totalTaxDelta:BigDecimal,
-                                receivedDate:LocalDate) {
+case class RtiEarlierYearUpdate(taxablePayDelta: BigDecimal,
+                                totalTaxDelta: BigDecimal,
+                                receivedDate: LocalDate) {
 
   def toEarlierYearUpdate: EarlierYearUpdate = {
     EarlierYearUpdate(
@@ -72,32 +72,46 @@ case class RtiEarlierYearUpdate(taxablePayDelta:BigDecimal,
 
 
 object RtiPayment {
-  implicit val reader = new Reads[RtiPayment]{
-     def reads(js: JsValue): JsResult[RtiPayment] = {
-       implicit val stringMapFormat = JsonUtils.mapFormat[String,BigDecimal]("type", "amount")
-       val mandatoryMonetaryAmountMap = (js \ "mandatoryMonetaryAmount").as[Map[String, BigDecimal]]
+  implicit val reader = new Reads[RtiPayment] {
+    def reads(js: JsValue): JsResult[RtiPayment] = {
+      implicit val stringMapFormat = JsonUtils.mapFormat[String, BigDecimal]("type", "amount")
+      val mandatoryMonetaryAmountMap: Option[Map[String, BigDecimal]] =
+        (js \ "mandatoryMonetaryAmount").asOpt[Map[String, BigDecimal]]
 
-       JsSuccess(
-         RtiPayment(
-           paidOnDate = (js \ "pmtDate").as[LocalDate](JsonUtils.rtiDateFormat),
-           taxablePayYTD = mandatoryMonetaryAmountMap("TaxablePayYTD"),
-           totalTaxYTD = mandatoryMonetaryAmountMap("TotalTaxYTD")))
-     }
-   }
+      val optionalMonetaryAmountMap: Option[Map[String, BigDecimal]] =
+        (js \ "optionalMonetaryAmount").asOpt[Map[String, BigDecimal]]
+
+      val taxablePay: BigDecimal = mandatoryMonetaryAmountMap.getOrElse(Map.empty).getOrElse("TaxablePayYTD", 0.0)
+      val totalTax: BigDecimal = mandatoryMonetaryAmountMap.getOrElse(Map.empty).getOrElse("TotalTaxYTD", 0.0)
+      val studentLoan: Option[BigDecimal] = optionalMonetaryAmountMap.getOrElse(Map.empty).get("StudentLoansYTD")
+
+      JsSuccess(
+        RtiPayment(
+          paidOnDate = (js \ "pmtDate").as[LocalDate](JsonUtils.rtiDateFormat),
+          taxablePayYTD = taxablePay,
+          totalTaxYTD = totalTax,
+          studentLoansYTD = studentLoan)
+        )
+    }
+  }
 
   implicit val writer = Json.writes[RtiPayment]
 }
 
 object RtiEarlierYearUpdate {
-  implicit val reader = new Reads[RtiEarlierYearUpdate]{
+  implicit val reader = new Reads[RtiEarlierYearUpdate] {
     def reads(js: JsValue): JsResult[RtiEarlierYearUpdate] = {
-      implicit val stringMapFormat = JsonUtils.mapFormat[String,BigDecimal]("type", "amount")
-      val mandatoryMonetaryAmountMap = (js \ "optionalAdjustmentAmount").as[Map[String, BigDecimal]]
+      implicit val stringMapFormat = JsonUtils.mapFormat[String, BigDecimal]("type", "amount")
+      val mandatoryMonetaryAmountMap: Option[Map[String, BigDecimal]] =
+        (js \ "optionalAdjustmentAmount").asOpt[Map[String, BigDecimal]]
+
+      val taxablePayDelta: BigDecimal = mandatoryMonetaryAmountMap.getOrElse(Map.empty).getOrElse("TaxablePayDelta", 0.0)
+      val totalTaxDelta: BigDecimal = mandatoryMonetaryAmountMap.getOrElse(Map.empty).getOrElse("TotalTaxDelta", 0.0)
       val receivedDate = (js \ "rcvdDate").as[LocalDate](JsonUtils.rtiDateFormat)
 
       JsSuccess(
-        RtiEarlierYearUpdate(taxablePayDelta = mandatoryMonetaryAmountMap("TaxablePayDelta"),
-          totalTaxDelta = mandatoryMonetaryAmountMap("TotalTaxDelta"),
+        RtiEarlierYearUpdate(taxablePayDelta = taxablePayDelta,
+          totalTaxDelta = totalTaxDelta,
           receivedDate = receivedDate)
       )
     }
@@ -108,23 +122,23 @@ object RtiEarlierYearUpdate {
 object RtiEmployment {
   implicit val reader = new Reads[RtiEmployment] {
     def reads(js: JsValue): JsResult[RtiEmployment] = {
-        for {
-          sequenceNo <- (js \ "sequenceNumber" ).validate[Int]
-          officeNumber <- (js \ "empRefs" \ "officeNo").validate[String]
-          payeRef <- (js \ "empRefs" \ "payeRef").validate[String]
-          currentPayId <- (js \ "currentPayId").validateOpt[String]
-          payments <- (js \ "payments" \ "inYear").validate[List[RtiPayment]]
-          earlierYearUpdates <- JsSuccess((js \ "payments" \ "eyu").asOpt[List[RtiEarlierYearUpdate]])
-        } yield {
-            RtiEmployment(
-              sequenceNo = sequenceNo,
-              payeRef = payeRef,
-              officeNumber = officeNumber,
-              currentPayId = currentPayId,
-              payments = payments,
-              earlierYearUpdates = earlierYearUpdates.getOrElse(Nil)
-            )
-        }
+      for {
+        sequenceNo <- (js \ "sequenceNumber").validate[Int]
+        officeNumber <- (js \ "empRefs" \ "officeNo").validate[String]
+        payeRef <- (js \ "empRefs" \ "payeRef").validate[String]
+        currentPayId <- (js \ "currentPayId").validateOpt[String]
+        payments <- (js \ "payments" \ "inYear").validate[List[RtiPayment]]
+        earlierYearUpdates <- JsSuccess((js \ "payments" \ "eyu").asOpt[List[RtiEarlierYearUpdate]])
+      } yield {
+        RtiEmployment(
+          sequenceNo = sequenceNo,
+          payeRef = payeRef,
+          officeNumber = officeNumber,
+          currentPayId = currentPayId,
+          payments = payments,
+          earlierYearUpdates = earlierYearUpdates.getOrElse(Nil)
+        )
+      }
     }
   }
   implicit val writer = Json.writes[RtiEmployment]
@@ -137,7 +151,7 @@ object RtiData {
         nino <- (js \ "request" \ "nino").validate[String]
         employments <- (js \ "individual" \ "employments" \ "employment").validate[List[RtiEmployment]]
       } yield {
-          RtiData( nino = nino, employments = employments )
+        RtiData(nino = nino, employments = employments)
       }
     }
   }

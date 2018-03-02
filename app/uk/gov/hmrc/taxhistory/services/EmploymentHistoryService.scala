@@ -172,7 +172,7 @@ class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
     * the tax year summary (`PayAsYouEarn`) and combines this data into a `PayAsYouEarn` instance.
     */
   def retrieveAndBuildPaye(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[PayAsYouEarn] = {
-    for {
+    val paye = for {
       npsEmployments <- retrieveNpsEmployments(nino, taxYear)
       rtiDataOpt <- retrieveRtiData(nino, taxYear)
       rtiEmployments = rtiDataOpt.map(_.employments).getOrElse(Nil)
@@ -181,6 +181,7 @@ class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
     } yield {
       mergeEmployments(nino, taxYear, npsEmployments, rtiEmployments, taxAccountOpt, iabds)
     }
+    paye
   }
 
   /**

@@ -20,12 +20,12 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.taxhistory.model.nps.{IncomeSource, StatePension}
 
 
-case class PayAsYouEarn(employments:  List[Employment] = Nil,
-                        allowances:   List[Allowance] = Nil,
-                        incomeSources: Map[String,IncomeSource] = Map.empty,
-                        benefits:     Map[String,List[CompanyBenefit]] = Map.empty,
-                        payAndTax:    Map[String,PayAndTax] = Map.empty,
-                        taxAccount:   Option[TaxAccount] = None,
+case class PayAsYouEarn(employments: List[Employment] = Nil,
+                        allowances: List[Allowance] = Nil,
+                        incomeSources: Map[String, IncomeSource] = Map.empty,
+                        benefits: Map[String, List[CompanyBenefit]] = Map.empty,
+                        payAndTax: Map[String, PayAndTax] = Map.empty,
+                        taxAccount: Option[TaxAccount] = None,
                         statePension: Option[StatePension] = None)
 
 object PayAsYouEarn {

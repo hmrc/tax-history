@@ -44,6 +44,7 @@
       "taxablePayTotal": 2222.22,
       "taxTotal": 111.11,
       "paymentDate": "2016-02-20",
+      "studentLoan": 333.33,
       "earlierYearUpdates": []
     }
   },

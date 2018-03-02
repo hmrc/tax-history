@@ -17,26 +17,25 @@
 package uk.gov.hmrc.taxhistory.model.rti
 
 import org.joda.time.LocalDate
+import play.api.libs.json.JsValue
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 class RtiDataSpec extends TestUtil with UnitSpec {
 
-  lazy val rtiSuccessfulResponseURLDummy = loadFile("/json/rti/response/dummyRti.json")
+  lazy val rtiSuccessfulResponseURLDummy: JsValue = loadFile("/json/rti/response/dummyRti.json")
 
   "RtiData" should {
 
     val rtiDetails = rtiSuccessfulResponseURLDummy.as[RtiData](RtiData.reader)
 
     "transform Rti Response Json correctly to RtiData Model " in {
-
       rtiDetails shouldBe a[RtiData]
       rtiDetails.nino shouldBe "AA000000"
-
     }
-    "transform Rti Response Json correctly containing Employments" in {
 
+    "transform Rti Response Json correctly containing Employments" in {
       val employment49 = rtiDetails.employments.find(emp => emp.sequenceNo == 49 )
       employment49.isDefined shouldBe true
 
@@ -48,6 +47,7 @@ class RtiDataSpec extends TestUtil with UnitSpec {
       employment49.get.earlierYearUpdates.head.taxablePayDelta shouldBe -600.99
       employment49.get.earlierYearUpdates.head.totalTaxDelta shouldBe -10.99
       employment49.get.earlierYearUpdates.head.receivedDate shouldBe LocalDate.parse("2016-06-01")
+      employment49.get.toPayAndTax.studentLoan.get shouldBe BigDecimal.valueOf(333.33)
 
       val employment39 = rtiDetails.employments.find(emp => emp.sequenceNo == 39 )
       employment39.isDefined shouldBe true
@@ -55,15 +55,18 @@ class RtiDataSpec extends TestUtil with UnitSpec {
       employment39.get.officeNumber shouldBe "267"
       employment39.get.payments.size shouldBe 7
       employment39.get.earlierYearUpdates.size shouldBe 0
-
+      employment39.get.toPayAndTax.studentLoan shouldBe None
     }
+
     "transform Rti Response Json correctly which containing Payments" in {
-      val payments20160313 = rtiDetails.employments.map(emp => emp.payments.find(pay => pay.paidOnDate == new LocalDate(2016,3,31))).flatten
+      val payments20160313 = rtiDetails.employments.flatMap(emp => emp.payments.find(pay => pay.paidOnDate == new LocalDate(2016, 3, 31)))
       payments20160313.size shouldBe 1
       payments20160313.head.paidOnDate shouldBe new LocalDate(2016,3,31)
       payments20160313.head.taxablePayYTD shouldBe BigDecimal.valueOf(20000.00)
       payments20160313.head.totalTaxYTD shouldBe BigDecimal.valueOf(1880.00)
+      payments20160313.head.studentLoansYTD.get shouldBe BigDecimal.valueOf(333.33)
     }
+
     "sort payment list by paid on date with latest payment in last position" in {
       val paymentsList = rtiDetails.employments.head.payments.sorted
       paymentsList.size shouldBe 5
@@ -73,13 +76,11 @@ class RtiDataSpec extends TestUtil with UnitSpec {
     }
 
     "transform Rti Response Json correctly which containing EndOfYearUpdates" in {
-      val earlierYearUpdates = rtiDetails.employments.map(emp => emp.earlierYearUpdates.find(eyu => eyu.receivedDate == new LocalDate(2016,6,1))).flatten
+      val earlierYearUpdates = rtiDetails.employments.flatMap(emp => emp.earlierYearUpdates.find(eyu => eyu.receivedDate == new LocalDate(2016, 6, 1)))
       earlierYearUpdates.size shouldBe 1
       earlierYearUpdates.head.receivedDate shouldBe new LocalDate(2016,6,1)
       earlierYearUpdates.head.taxablePayDelta shouldBe BigDecimal.valueOf(-600.99)
       earlierYearUpdates.head.totalTaxDelta shouldBe BigDecimal.valueOf(-10.99)
     }
-
   }
 }
-
