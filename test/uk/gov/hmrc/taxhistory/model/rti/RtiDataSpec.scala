@@ -31,13 +31,11 @@ class RtiDataSpec extends TestUtil with UnitSpec {
     val rtiDetails = rtiSuccessfulResponseURLDummy.as[RtiData](RtiData.reader)
 
     "transform Rti Response Json correctly to RtiData Model " in {
-
       rtiDetails shouldBe a[RtiData]
       rtiDetails.nino shouldBe "AA000000"
-
     }
-    "transform Rti Response Json correctly containing Employments" in {
 
+    "transform Rti Response Json correctly containing Employments" in {
       val employment49 = rtiDetails.employments.find(emp => emp.sequenceNo == 49 )
       employment49.isDefined shouldBe true
 
@@ -49,6 +47,7 @@ class RtiDataSpec extends TestUtil with UnitSpec {
       employment49.get.earlierYearUpdates.head.taxablePayDelta shouldBe -600.99
       employment49.get.earlierYearUpdates.head.totalTaxDelta shouldBe -10.99
       employment49.get.earlierYearUpdates.head.receivedDate shouldBe LocalDate.parse("2016-06-01")
+      employment49.get.toPayAndTax.studentLoan.get shouldBe BigDecimal.valueOf(333.33)
 
       val employment39 = rtiDetails.employments.find(emp => emp.sequenceNo == 39 )
       employment39.isDefined shouldBe true
@@ -56,8 +55,9 @@ class RtiDataSpec extends TestUtil with UnitSpec {
       employment39.get.officeNumber shouldBe "267"
       employment39.get.payments.size shouldBe 7
       employment39.get.earlierYearUpdates.size shouldBe 0
-
+      employment39.get.toPayAndTax.studentLoan shouldBe None
     }
+
     "transform Rti Response Json correctly which containing Payments" in {
       val payments20160313 = rtiDetails.employments.flatMap(emp => emp.payments.find(pay => pay.paidOnDate == new LocalDate(2016, 3, 31)))
       payments20160313.size shouldBe 1
@@ -66,6 +66,7 @@ class RtiDataSpec extends TestUtil with UnitSpec {
       payments20160313.head.totalTaxYTD shouldBe BigDecimal.valueOf(1880.00)
       payments20160313.head.studentLoansYTD.get shouldBe BigDecimal.valueOf(333.33)
     }
+
     "sort payment list by paid on date with latest payment in last position" in {
       val paymentsList = rtiDetails.employments.head.payments.sorted
       paymentsList.size shouldBe 5
@@ -81,7 +82,5 @@ class RtiDataSpec extends TestUtil with UnitSpec {
       earlierYearUpdates.head.taxablePayDelta shouldBe BigDecimal.valueOf(-600.99)
       earlierYearUpdates.head.totalTaxDelta shouldBe BigDecimal.valueOf(-10.99)
     }
-
   }
 }
-
