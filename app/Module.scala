@@ -58,6 +58,8 @@ class Module(val environment: Environment, val configuration: Configuration) ext
     bindConfigString("microservice.services.rti-hod.env",                default = Some("local"))
     bindConfigString("microservice.services.rti-hod.authorizationToken", default = Some("local"))
     bindConfigBoolean("featureFlags.currentYearFlag")
+    bindConfigBoolean("featureFlags.statePensionFlag")
+    bindConfigBoolean("featureFlags.jobSeekersAllowanceFlag")
 
     bind(classOf[String]).annotatedWith(Names.named("rti-hod-base-url")).toProvider(provide(baseUrl("rti-hod")))
     bind(classOf[String]).annotatedWith(Names.named("nps-hod-base-url")).toProvider(provide(baseUrl("nps-hod")))
