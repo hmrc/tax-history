@@ -52,6 +52,7 @@ class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
     else getFromCache(nino, taxYear).map(es => addFillers(es.employments.map(_.enrichWithURIs(taxYear.startYear)), taxYear).
       filterNot(emp => emp.receivingJobSeekersAllowance))
   }
+
   def addFillers(employments: List[Employment], taxYear: TaxYear): List[Employment] =
     (employments ++ getFillers(employments.filterNot(emp => emp.receivingOccupationalPension),
       List(Employment.noRecord(taxYear.starts, Some(taxYear.finishes))), taxYear)) sortBy (_.startDate.toDate)
