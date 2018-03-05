@@ -48,9 +48,17 @@ class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
                                         ) extends Logging {
 
   def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] = {
-    if (jobSeekersAllowanceFlag) getFromCache(nino, taxYear).map(es => addFillers(es.employments.map(_.enrichWithURIs(taxYear.startYear)), taxYear))
-    else getFromCache(nino, taxYear).map(es => addFillers(es.employments.map(_.enrichWithURIs(taxYear.startYear)), taxYear).
-      filterNot(emp => emp.receivingJobSeekersAllowance))
+    getFromCache(nino, taxYear).map { es =>
+      val employments = es.employments.map(_.enrichWithURIs(taxYear.startYear))
+
+      if(employments.forall(_.receivingOccupationalPension)) employments
+      else if (jobSeekersAllowanceFlag) {
+        addFillers(employments, taxYear)
+      }
+      else {
+        addFillers(employments, taxYear).filterNot(emp => emp.receivingJobSeekersAllowance)
+      }
+    }
   }
 
   def addFillers(employments: List[Employment], taxYear: TaxYear): List[Employment] =

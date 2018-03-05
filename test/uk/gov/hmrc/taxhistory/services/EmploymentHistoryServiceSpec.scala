@@ -369,15 +369,13 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       employments should contain(testEmployment3)
     }
 
-    "return a single filler when no employment was returned from cache" in {
+    "return an empty list when no employment(not including pensions) was returned from cache" in {
       val paye = PayAsYouEarn(employments = Nil)
 
       await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye))
 
       val employments = await(testEmploymentHistoryService.getEmployments(Nino("AA000000A"), TaxYear(2014)))
-      employments.head.startDate shouldBe new LocalDate("2014-04-06")
-      employments.head.endDate shouldBe Some(new LocalDate("2015-04-05"))
-      employments.head.employmentStatus shouldBe EmploymentStatus.Unknown
+      employments shouldBe List.empty
     }
 
 
