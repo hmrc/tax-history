@@ -52,12 +52,8 @@ class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
       val employments = es.employments.map(_.enrichWithURIs(taxYear.startYear))
 
       if(employments.forall(_.receivingOccupationalPension)) employments
-      else if (jobSeekersAllowanceFlag) {
-        addFillers(employments, taxYear)
-      }
-      else {
-        addFillers(employments, taxYear).filterNot(emp => emp.receivingJobSeekersAllowance)
-      }
+      else if (jobSeekersAllowanceFlag) addFillers(employments, taxYear)
+      else addFillers(employments, taxYear).filterNot(emp => emp.receivingJobSeekersAllowance)
     }
   }
 
