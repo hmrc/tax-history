@@ -45,7 +45,7 @@ class RtiConnector @Inject()(val http: HttpGet,
 
   def createHeader: HeaderCarrier = HeaderCarrier(extraHeaders =
     Seq("Environment" -> environment,
-      "Authorization" -> authorizationToken,
+      "Authorization" -> authorization,
       "Gov-Uk-Originator-Id" -> originatorId))
 
   def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[RtiData] = {

@@ -54,7 +54,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
     "create the correct headers" in {
       val headers = testRtiConnector.createHeader
-      headers.extraHeaders mustBe List(("Environment", "env"), ("Authorization", "auth"), ("Gov-Uk-Originator-Id", "orgId"))
+      headers.extraHeaders mustBe List(("Environment", "env"), ("Authorization", "Bearer auth"), ("Gov-Uk-Originator-Id", "orgId"))
     }
 
     "get RTI data " when {
