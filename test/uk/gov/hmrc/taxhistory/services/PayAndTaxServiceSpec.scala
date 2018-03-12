@@ -26,6 +26,7 @@ import org.scalatestplus.play.PlaySpec
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier}
+import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.api.{PayAndTax, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
@@ -37,7 +38,7 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.Future
 
 
-class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
+class PayAndTaxServiceSpec extends UnitSpec with MockitoSugar with TestUtil {
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val testNino = randomNino()
   
@@ -53,7 +54,7 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   lazy val rtiEmploymentResponse: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
 
-  "PayAndTax " should {
+  "PayAndTax" should {
     "successfully populated from rti" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
@@ -66,7 +67,7 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       val payAsYouEarn = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino,TaxYear(2016)))
 
       val payAndTax = payAsYouEarn.payAndTax
-      payAndTax.size mustBe 1
+      payAndTax.size shouldBe 1
     }
 
     "successfully retrieve payAndTaxURI from cache" in {
@@ -78,8 +79,23 @@ class PayAndTaxServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye)
 
       val payAndTax = await(testEmploymentHistoryService.getPayAndTax(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
-      payAndTax must be(testPayAndTax)
+      payAndTax shouldBe testPayAndTax
     }
+  }
 
+  "getAllPayAndTax" should {
+    "successfully retrieve all data from cache" in {
+      lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
+      val testPayAndTaxList = List(
+        PayAndTax(payAndTaxId = UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"),
+          taxablePayTotal = Some(2222.22), taxTotal = Some(111.11), studentLoan = Some(333.33),
+          paymentDate = Some(new LocalDate("2016-02-20")), earlierYearUpdates = List())
+      )
+
+      testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye)
+
+      val payAndTax = await(testEmploymentHistoryService.getAllPayAndTax(Nino("AA000000A"), TaxYear(2014)))
+      payAndTax shouldBe testPayAndTaxList
+    }
   }
 }
