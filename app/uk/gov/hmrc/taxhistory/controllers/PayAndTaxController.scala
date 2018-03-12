@@ -32,11 +32,14 @@ class PayAndTaxController @Inject()(val employmentHistoryService: EmploymentHist
 
   def getPayAndTax(nino: String, taxYear: Int, employmentId: String): Action[AnyContent] = Action.async { implicit request =>
     relationshipAuthService.withAuthorisedRelationship(Nino(nino)) { _ =>
-      retrievePayAndTax(Nino(nino), TaxYear(taxYear), employmentId)
+      toResult{employmentHistoryService.getPayAndTax(Nino(nino), TaxYear(taxYear), employmentId)}
     }
   }
 
-  private def retrievePayAndTax(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit hc:HeaderCarrier): Future[Result] = toResult {
-    employmentHistoryService.getPayAndTax(nino, taxYear, employmentId)
+  def getAllPayAndTax(nino: String, taxYear: Int): Action[AnyContent] = Action.async { implicit request =>
+    relationshipAuthService.withAuthorisedRelationship(Nino(nino)) { _ =>
+      toResult{employmentHistoryService.getAllPayAndTax(Nino(nino), TaxYear(taxYear))}
+    }
   }
+
 }

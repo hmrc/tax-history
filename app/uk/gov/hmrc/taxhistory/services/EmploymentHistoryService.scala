@@ -114,6 +114,11 @@ class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
       .orNotFound(s"PayAndTax not found for NINO ${nino.value}, tax year ${taxYear.toString} and employmentId $employmentId")
   }
 
+  def getAllPayAndTax(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[PayAndTax]] = {
+    getFromCache(nino, taxYear).map(_.payAndTax.values.toList)
+      .orNotFound(s"PayAndTax not found for NINO ${nino.value}, tax year ${taxYear.toString}")
+  }
+
   def getTaxAccount(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[Option[TaxAccount]] = {
     if (taxYear == TaxYear.current.previous) {
       getFromCache(nino, taxYear).flatMap { paye =>
