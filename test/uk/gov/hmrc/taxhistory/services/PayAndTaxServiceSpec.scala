@@ -86,7 +86,7 @@ class PayAndTaxServiceSpec extends UnitSpec with MockitoSugar with TestUtil {
   "getAllPayAndTax" should {
     "successfully retrieve all data from cache" in {
       lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
-      val testPayAndTaxList = List(
+      val testPayAndTaxList = Map("01318d7c-bcd9-47e2-8c38-551e7ccdfae3" ->
         PayAndTax(payAndTaxId = UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"),
           taxablePayTotal = Some(2222.22), taxTotal = Some(111.11), studentLoan = Some(333.33),
           paymentDate = Some(new LocalDate("2016-02-20")), earlierYearUpdates = List())
@@ -94,7 +94,7 @@ class PayAndTaxServiceSpec extends UnitSpec with MockitoSugar with TestUtil {
 
       testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye)
 
-      val payAndTax = await(testEmploymentHistoryService.getAllPayAndTax(Nino("AA000000A"), TaxYear(2014)))
+      val payAndTax: Map[String, PayAndTax] = await(testEmploymentHistoryService.getAllPayAndTax(Nino("AA000000A"), TaxYear(2014)))
       payAndTax shouldBe testPayAndTaxList
     }
   }

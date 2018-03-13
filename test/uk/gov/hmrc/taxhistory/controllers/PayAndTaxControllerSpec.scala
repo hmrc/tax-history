@@ -22,7 +22,7 @@ import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
-import org.scalatestplus.play.{OneServerPerSuite, PlaySpec}
+import org.scalatestplus.play.OneServerPerSuite
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.agentmtdidentifiers.model.Arn
@@ -46,7 +46,7 @@ class PayAndTaxControllerSpec extends UnitSpec with OneServerPerSuite with Mocki
   val employmentId: String = UUID.randomUUID().toString
 
   val testPayAndTax = PayAndTax(earlierYearUpdates = Nil)
-  val testPayAndTaxList = List(testPayAndTax, testPayAndTax)
+  val testPayAndTaxMap = Map(s"${testPayAndTax.payAndTaxId}" -> testPayAndTax, s"${testPayAndTax.payAndTaxId}" -> testPayAndTax)
 
   override def beforeEach: Unit = {
     reset(mockEmploymentHistoryService)
@@ -85,7 +85,7 @@ class PayAndTaxControllerSpec extends UnitSpec with OneServerPerSuite with Mocki
   "getAllPayAndTax" should {
     "respond with OK for successful get" in {
       when(mockEmploymentHistoryService.getAllPayAndTax(any(), any())(any[HeaderCarrier]))
-        .thenReturn(Future.successful(testPayAndTaxList))
+        .thenReturn(Future.successful(testPayAndTaxMap))
       val result = testPayAndTaxController.getAllPayAndTax(ninoWithAgent.nino, taxYear).apply(FakeRequest())
       status(result) shouldBe OK
     }
@@ -101,7 +101,7 @@ class PayAndTaxControllerSpec extends UnitSpec with OneServerPerSuite with Mocki
 
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
       when(mockEmploymentHistoryService.getAllPayAndTax(any(), any())(any[HeaderCarrier]))
-        .thenReturn(Future.successful(testPayAndTaxList))
+        .thenReturn(Future.successful(testPayAndTaxMap))
       val result = testPayAndTaxController.getPayAndTax(ninoWithoutAgent.nino, taxYear, employmentId).apply(FakeRequest())
       status(result) shouldBe UNAUTHORIZED
     }
