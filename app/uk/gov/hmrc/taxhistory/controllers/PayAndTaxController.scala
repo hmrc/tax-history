@@ -18,25 +18,29 @@ package uk.gov.hmrc.taxhistory.controllers
 
 import javax.inject.Inject
 
-import play.api.mvc.{Action, AnyContent, Result}
+import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, RelationshipAuthService}
 import uk.gov.hmrc.time.TaxYear
-
-import scala.concurrent.Future
 
 class PayAndTaxController @Inject()(val employmentHistoryService: EmploymentHistoryService,
                                     val relationshipAuthService: RelationshipAuthService) extends TaxHistoryController {
 
   def getPayAndTax(nino: String, taxYear: Int, employmentId: String): Action[AnyContent] = Action.async { implicit request =>
     relationshipAuthService.withAuthorisedRelationship(Nino(nino)) { _ =>
-      retrievePayAndTax(Nino(nino), TaxYear(taxYear), employmentId)
+      toResult {
+        employmentHistoryService.getPayAndTax(Nino(nino), TaxYear(taxYear), employmentId)
+      }
     }
   }
 
-  private def retrievePayAndTax(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit hc:HeaderCarrier): Future[Result] = toResult {
-    employmentHistoryService.getPayAndTax(nino, taxYear, employmentId)
+  def getAllPayAndTax(nino: String, taxYear: Int): Action[AnyContent] = Action.async { implicit request =>
+    relationshipAuthService.withAuthorisedRelationship(Nino(nino)) { _ =>
+      toResult {
+        employmentHistoryService.getAllPayAndTax(Nino(nino), TaxYear(taxYear))
+      }
+    }
   }
+
 }

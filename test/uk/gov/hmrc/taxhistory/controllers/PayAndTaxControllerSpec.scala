@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxhistory.controllers
 
 import java.util.UUID
 
-import org.mockito.Matchers
+import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
@@ -27,6 +27,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.agentmtdidentifiers.model.Arn
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.api.PayAndTax
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
@@ -34,19 +35,20 @@ import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestRelationshipAuthService}
 
 import scala.concurrent.Future
 
-class PayAndTaxControllerSpec extends PlaySpec with OneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
+class PayAndTaxControllerSpec extends UnitSpec with OneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
 
-  val mockEmploymentHistoryService = mock[EmploymentHistoryService]
+  val mockEmploymentHistoryService: EmploymentHistoryService = mock[EmploymentHistoryService]
 
   val ninoWithAgent = randomNino()
   val ninoWithoutAgent = randomNino()
 
   val taxYear = 2016
-  val employmentId=UUID.randomUUID().toString
+  val employmentId: String = UUID.randomUUID().toString
 
   val testPayAndTax = PayAndTax(earlierYearUpdates = Nil)
+  val testPayAndTaxList = List(testPayAndTax, testPayAndTax)
 
-  override def beforeEach = {
+  override def beforeEach: Unit = {
     reset(mockEmploymentHistoryService)
   }
 
@@ -55,28 +57,53 @@ class PayAndTaxControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
     relationshipAuthService = TestRelationshipAuthService(Map(ninoWithAgent -> Arn("TestArn")))
   )
 
-  "getPayAndTax" must {
+  "getPayAndTax" should {
     "respond with OK for successful get" in {
-      when(mockEmploymentHistoryService.getPayAndTax(Matchers.any(),Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getPayAndTax(any(), any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(testPayAndTax)))
       val result = testPayAndTaxController.getPayAndTax(ninoWithAgent.nino, taxYear, employmentId).apply(FakeRequest())
-      status(result) must be(OK)
+      status(result) shouldBe OK
     }
 
     "propagate error responses from upstream microservices" in {
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-        when(mockEmploymentHistoryService.getPayAndTax(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(mockEmploymentHistoryService.getPayAndTax(any(), any(), any())(any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
         val result = testPayAndTaxController.getPayAndTax(ninoWithAgent.nino, taxYear, employmentId).apply(FakeRequest())
-        status(result) must be(expectedStatus)
+        status(result) shouldBe expectedStatus
       }
     }
 
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
-      when(mockEmploymentHistoryService.getPayAndTax(Matchers.any(),Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getPayAndTax(any(), any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(testPayAndTax)))
       val result = testPayAndTaxController.getPayAndTax(ninoWithoutAgent.nino, taxYear, employmentId).apply(FakeRequest())
-      status(result) must be(UNAUTHORIZED)
+      status(result) shouldBe UNAUTHORIZED
+    }
+  }
+
+  "getAllPayAndTax" should {
+    "respond with OK for successful get" in {
+      when(mockEmploymentHistoryService.getAllPayAndTax(any(), any())(any[HeaderCarrier]))
+        .thenReturn(Future.successful(testPayAndTaxList))
+      val result = testPayAndTaxController.getAllPayAndTax(ninoWithAgent.nino, taxYear).apply(FakeRequest())
+      status(result) shouldBe OK
+    }
+
+    "propagate error responses from upstream microservices" in {
+      HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
+        when(mockEmploymentHistoryService.getAllPayAndTax(any(), any())(any[HeaderCarrier]))
+          .thenReturn(Future.failed(httpException))
+        val result = testPayAndTaxController.getAllPayAndTax(ninoWithAgent.nino, taxYear).apply(FakeRequest())
+        status(result) shouldBe expectedStatus
+      }
+    }
+
+    "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
+      when(mockEmploymentHistoryService.getAllPayAndTax(any(), any())(any[HeaderCarrier]))
+        .thenReturn(Future.successful(testPayAndTaxList))
+      val result = testPayAndTaxController.getPayAndTax(ninoWithoutAgent.nino, taxYear, employmentId).apply(FakeRequest())
+      status(result) shouldBe UNAUTHORIZED
     }
   }
 
