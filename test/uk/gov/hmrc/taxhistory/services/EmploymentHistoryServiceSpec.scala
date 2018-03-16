@@ -438,7 +438,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
   "withEmploymentGaps" should {
 
     def isNoRecordEmployment(employment: Employment): Boolean =
-      employment.employerName == "No record" && employment.employmentStatus == EmploymentStatus.Unknown
+      employment.employerName == "No record held" && employment.employmentStatus == EmploymentStatus.Unknown
 
     "return the original list when no employment gaps exist" in {
       val employments = List(liveOngoingEmployment)
