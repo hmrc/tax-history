@@ -363,8 +363,9 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
 
       val employments = await(testEmploymentHistoryService.getEmployments(Nino("AA000000A"), taxYear))
       employments.head.employmentStatus shouldBe EmploymentStatus.Unknown
-      employments.head.startDate shouldBe new LocalDate("2016-04-06")
-      employments.head.endDate shouldBe Some(new LocalDate("2017-01-20"))
+
+      employments.head.startDate shouldBe taxYear.starts.withMonthOfYear(4).withDayOfMonth(6)
+      employments.head.endDate shouldBe Some(taxYear.finishes.withMonthOfYear(1).withDayOfMonth(20))
       employments should contain(testEmployment2)
       employments should contain(testEmployment3)
     }
