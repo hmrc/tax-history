@@ -33,7 +33,9 @@ object EmploymentMatchingHelper extends TaxHistoryHelper with Logging {
       worksNumber  <- npsEmployment.worksNumber
     } yield {
       currentPayId == worksNumber
-    }).getOrElse(false)
+    }).getOrElse {
+      rtiEmployment.sequenceNo == npsEmployment.sequenceNumber
+    }
   }
 
   /*
