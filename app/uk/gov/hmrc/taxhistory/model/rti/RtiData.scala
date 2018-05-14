@@ -127,7 +127,7 @@ object RtiEmployment {
         officeNumber <- (js \ "empRefs" \ "officeNo").validate[String]
         payeRef <- (js \ "empRefs" \ "payeRef").validate[String]
         currentPayId <- (js \ "currentPayId").validateOpt[String]
-        payments <- (js \ "payments" \ "inYear").validate[List[RtiPayment]]
+        payments <- (js \ "payments" \ "inYear").validateOpt[List[RtiPayment]]
         earlierYearUpdates <- JsSuccess((js \ "payments" \ "eyu").asOpt[List[RtiEarlierYearUpdate]])
       } yield {
         RtiEmployment(
@@ -135,7 +135,7 @@ object RtiEmployment {
           payeRef = payeRef,
           officeNumber = officeNumber,
           currentPayId = currentPayId,
-          payments = payments,
+          payments = payments.getOrElse(List.empty),
           earlierYearUpdates = earlierYearUpdates.getOrElse(Nil)
         )
       }

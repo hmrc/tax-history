@@ -1,0 +1,846 @@
+{
+  "queryResult": 0,
+  "request": {
+    "nino": "AA000000",
+    "relatedTaxYear": "15-16",
+    "requestId": "M1461338419483"
+  },
+  "individual": {
+    "currentNino": "AA000000",
+    "relatedTaxYear": "15-16",
+    "employments": {
+      "employment": [
+        {
+          "empRefs": {
+            "officeNo": "531",
+            "payeRef": "J4816",
+            "aoRef": "531PP00002017"
+          },
+          "currentPayId": "6044041000000",
+          "payments": {
+            "inYear": [
+              {
+                "occPenInd": true,
+                "payId": "6044041000000",
+                "payFreq": "M1",
+                "monthNo": "11",
+                "periodsCovered": 1,
+                "hoursWorked": "Up to 15.99",
+                "mandatoryMonetaryAmount": [
+                  {
+                    "type": "TaxablePayYTD",
+                    "amount": 20000.00
+                  },
+                  {
+                    "type": "TotalTaxYTD",
+                    "amount": 1880.00
+                  },
+                  {
+                    "type": "TaxDeductedOrRefunded",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "TaxablePay",
+                    "amount": 1.00
+                  }
+                ],
+                "optionalMonetaryAmount": [
+                  {
+                    "type": "BenefitsTaxedViaPayrollYTD",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsNotPaidYTD",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsPaidYTD",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "SAPYTD",
+                    "amount": 0.00
+                  },
+                  {
+                    "type": "SMPYTD",
+                    "amount": 0.00
+                  },
+                  {
+                    "type": "StudentLoansYTD",
+                    "amount": 333.33
+                  },
+                  {
+                    "type": "BenefitsTaxedViaPayroll",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "DednsFromNetPay",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsNotPaid",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsPaid",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "ItemsSubjectToClass1NIC",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "NonTaxOrNICPmt",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "PayAfterStatDedns",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "StudentLoanRecovered",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "OccPensionAmount",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "StatePensionAmount",
+                    "amount": 1.00
+                  }
+                ],
+                "taxCode": {
+                  "value": "K1"
+                },
+                "starter": {
+                  "startDate": "2013-11-01",
+                  "startDec": "A",
+                  "studentLoan": true,
+                  "occPensionBereaved": true,
+                  "statePensionBereaved": true,
+                  "seconded": {
+                    "stay183DaysOrMore": true,
+                    "eeaCitizen": true,
+                    "epm6": true
+                  }
+                },
+                "niLettersAndValues": [
+                  {
+                    "niLetter": "R",
+                    "scon": "S0000000A",
+                    "niFigure": [
+                      {
+                        "type": "AtLELYTD",
+                        "amount": 5824.00
+                      },
+                      {
+                        "type": "EmpeeContribnsInPd",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "EmpeeContribnsYTD",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "GrossEarningsForNICsInPd",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "GrossEarningsForNICsYTD",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "LELtoPTYTD",
+                        "amount": 2236.00
+                      },
+                      {
+                        "type": "PTtoUAPYTD",
+                        "amount": 11940.00
+                      },
+                      {
+                        "type": "TotalEmpNICInPd",
+                        "amount": 1265.64
+                      },
+                      {
+                        "type": "TotalEmpNICYTD",
+                        "amount": 1265.64
+                      },
+                      {
+                        "type": "UAPtoUELYTD",
+                        "amount": 0.00
+                      }
+                    ]
+                  }
+                ],
+                "niLiability": {
+                  "directorsNIC": "AN",
+                  "taxWkOfApptOfDirector": "1"
+                },
+                "pmtDate": "2016-03-31",
+                "rcvdDate": "2015-05-26",
+                "pmtConfidence": 1,
+                "taxYear": "15-16"
+              },
+              {
+                "occPenInd": true,
+                "payId": "6044041000000",
+                "payFreq": "M1",
+                "monthNo": "10",
+                "periodsCovered": 1,
+                "hoursWorked": "Up to 15.99",
+                "mandatoryMonetaryAmount": [
+                  {
+                    "type": "TaxablePayYTD",
+                    "amount": 18000.00
+                  },
+                  {
+                    "type": "TotalTaxYTD",
+                    "amount": 1680.00
+                  },
+                  {
+                    "type": "TaxDeductedOrRefunded",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "TaxablePay",
+                    "amount": 1.00
+                  }
+                ],
+                "optionalMonetaryAmount": [
+                  {
+                    "type": "BenefitsTaxedViaPayrollYTD",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsNotPaidYTD",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsPaidYTD",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "SAPYTD",
+                    "amount": 0.00
+                  },
+                  {
+                    "type": "SMPYTD",
+                    "amount": 0.00
+                  },
+                  {
+                    "type": "StudentLoansYTD",
+                    "amount": 0.00
+                  },
+                  {
+                    "type": "BenefitsTaxedViaPayroll",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "DednsFromNetPay",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsNotPaid",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsPaid",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "ItemsSubjectToClass1NIC",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "NonTaxOrNICPmt",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "PayAfterStatDedns",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "StudentLoanRecovered",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "OccPensionAmount",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "StatePensionAmount",
+                    "amount": 1.00
+                  }
+                ],
+                "taxCode": {
+                  "value": "K1"
+                },
+                "starter": {
+                  "startDate": "2013-11-01",
+                  "startDec": "A",
+                  "studentLoan": true,
+                  "occPensionBereaved": true,
+                  "statePensionBereaved": true,
+                  "seconded": {
+                    "stay183DaysOrMore": true,
+                    "eeaCitizen": true,
+                    "epm6": true
+                  }
+                },
+                "niLettersAndValues": [
+                  {
+                    "niLetter": "R",
+                    "scon": "S0000000A",
+                    "niFigure": [
+                      {
+                        "type": "AtLELYTD",
+                        "amount": 5824.00
+                      },
+                      {
+                        "type": "EmpeeContribnsInPd",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "EmpeeContribnsYTD",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "GrossEarningsForNICsInPd",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "GrossEarningsForNICsYTD",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "LELtoPTYTD",
+                        "amount": 2236.00
+                      },
+                      {
+                        "type": "PTtoUAPYTD",
+                        "amount": 11940.00
+                      },
+                      {
+                        "type": "TotalEmpNICInPd",
+                        "amount": 1265.64
+                      },
+                      {
+                        "type": "TotalEmpNICYTD",
+                        "amount": 1265.64
+                      },
+                      {
+                        "type": "UAPtoUELYTD",
+                        "amount": 0.00
+                      }
+                    ]
+                  }
+                ],
+                "niLiability": {
+                  "directorsNIC": "AN",
+                  "taxWkOfApptOfDirector": "1"
+                },
+                "pmtDate": "2016-02-29",
+                "rcvdDate": "2015-05-26",
+                "pmtConfidence": 1,
+                "taxYear": "15-16"
+              },
+              {
+                "occPenInd": true,
+                "payId": "6044041000000",
+                "payFreq": "M1",
+                "monthNo": "1",
+                "periodsCovered": 1,
+                "hoursWorked": "Up to 15.99",
+                "mandatoryMonetaryAmount": [
+                  {
+                    "type": "TaxablePayYTD",
+                    "amount": 16000.00
+                  },
+                  {
+                    "type": "TotalTaxYTD",
+                    "amount": 1480.00
+                  },
+                  {
+                    "type": "TaxDeductedOrRefunded",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "TaxablePay",
+                    "amount": 1.00
+                  }
+                ],
+                "optionalMonetaryAmount": [
+                  {
+                    "type": "BenefitsTaxedViaPayrollYTD",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsNotPaidYTD",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsPaidYTD",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "SAPYTD",
+                    "amount": 0.00
+                  },
+                  {
+                    "type": "SMPYTD",
+                    "amount": 0.00
+                  },
+                  {
+                    "type": "StudentLoansYTD",
+                    "amount": 0.00
+                  },
+                  {
+                    "type": "BenefitsTaxedViaPayroll",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "DednsFromNetPay",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsNotPaid",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsPaid",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "ItemsSubjectToClass1NIC",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "NonTaxOrNICPmt",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "PayAfterStatDedns",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "StudentLoanRecovered",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "OccPensionAmount",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "StatePensionAmount",
+                    "amount": 1.00
+                  }
+                ],
+                "taxCode": {
+                  "value": "K1"
+                },
+                "onStrike": true,
+                "unpaidAbsence": true,
+                "starter": {
+                  "startDate": "2013-11-01",
+                  "startDec": "A",
+                  "studentLoan": true,
+                  "occPensionBereaved": true,
+                  "statePensionBereaved": true,
+                  "seconded": {
+                    "stay183DaysOrMore": true,
+                    "eeaCitizen": true,
+                    "epm6": true
+                  }
+                },
+                "niLettersAndValues": [
+                  {
+                    "niLetter": "R",
+                    "scon": "S0000000A",
+                    "niFigure": [
+                      {
+                        "type": "AtLELYTD",
+                        "amount": 5824.00
+                      },
+                      {
+                        "type": "EmpeeContribnsInPd",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "EmpeeContribnsYTD",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "GrossEarningsForNICsInPd",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "GrossEarningsForNICsYTD",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "LELtoPTYTD",
+                        "amount": 2236.00
+                      },
+                      {
+                        "type": "PTtoUAPYTD",
+                        "amount": 11940.00
+                      },
+                      {
+                        "type": "TotalEmpNICInPd",
+                        "amount": 1265.64
+                      },
+                      {
+                        "type": "TotalEmpNICYTD",
+                        "amount": 1265.64
+                      },
+                      {
+                        "type": "UAPtoUELYTD",
+                        "amount": 0.00
+                      }
+                    ]
+                  }
+                ],
+                "niLiability": {
+                  "directorsNIC": "AN",
+                  "taxWkOfApptOfDirector": "1"
+                },
+                "pmtDate": "2016-01-29",
+                "rcvdDate": "2015-05-26",
+                "pmtConfidence": 1,
+                "taxYear": "15-16"
+              },
+              {
+                "occPenInd": true,
+                "payId": "6044041000000",
+                "payFreq": "M1",
+                "monthNo": "1",
+                "periodsCovered": 1,
+                "hoursWorked": "Up to 15.99",
+                "mandatoryMonetaryAmount": [
+                  {
+                    "type": "TaxablePayYTD",
+                    "amount": 12000.00
+                  },
+                  {
+                    "type": "TotalTaxYTD",
+                    "amount": 1080.00
+                  },
+                  {
+                    "type": "TaxDeductedOrRefunded",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "TaxablePay",
+                    "amount": 1.00
+                  }
+                ],
+                "optionalMonetaryAmount": [
+                  {
+                    "type": "BenefitsTaxedViaPayrollYTD",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsNotPaidYTD",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsPaidYTD",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "SAPYTD",
+                    "amount": 0.00
+                  },
+                  {
+                    "type": "SMPYTD",
+                    "amount": 0.00
+                  },
+                  {
+                    "type": "StudentLoansYTD",
+                    "amount": 0.00
+                  },
+                  {
+                    "type": "BenefitsTaxedViaPayroll",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "DednsFromNetPay",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsNotPaid",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsPaid",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "ItemsSubjectToClass1NIC",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "NonTaxOrNICPmt",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "PayAfterStatDedns",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "StudentLoanRecovered",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "OccPensionAmount",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "StatePensionAmount",
+                    "amount": 1.00
+                  }
+                ],
+                "taxCode": {
+                  "value": "K1"
+                },
+                "starter": {
+                  "startDate": "2013-11-01",
+                  "startDec": "A",
+                  "studentLoan": true,
+                  "occPensionBereaved": true,
+                  "statePensionBereaved": true,
+                  "seconded": {
+                    "stay183DaysOrMore": true,
+                    "eeaCitizen": true,
+                    "epm6": true
+                  }
+                },
+                "niLettersAndValues": [
+                  {
+                    "niLetter": "R",
+                    "scon": "S0000000A",
+                    "niFigure": [
+                      {
+                        "type": "AtLELYTD",
+                        "amount": 5824.00
+                      },
+                      {
+                        "type": "EmpeeContribnsInPd",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "EmpeeContribnsYTD",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "GrossEarningsForNICsInPd",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "GrossEarningsForNICsYTD",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "LELtoPTYTD",
+                        "amount": 2236.00
+                      },
+                      {
+                        "type": "PTtoUAPYTD",
+                        "amount": 11940.00
+                      },
+                      {
+                        "type": "TotalEmpNICInPd",
+                        "amount": 1265.64
+                      },
+                      {
+                        "type": "TotalEmpNICYTD",
+                        "amount": 1265.64
+                      },
+                      {
+                        "type": "UAPtoUELYTD",
+                        "amount": 0.00
+                      }
+                    ]
+                  }
+                ],
+                "niLiability": {
+                  "directorsNIC": "AN",
+                  "taxWkOfApptOfDirector": "1"
+                },
+                "pmtDate": "2015-12-31",
+                "rcvdDate": "2015-05-26",
+                "pmtConfidence": 1,
+                "taxYear": "15-16"
+              },
+              {
+                "occPenInd": true,
+                "payId": "6044041000000",
+                "payFreq": "M1",
+                "monthNo": "1",
+                "periodsCovered": 1,
+                "hoursWorked": "Up to 15.99",
+                "mandatoryMonetaryAmount": [
+                  {
+                    "type": "TaxablePayYTD",
+                    "amount": 8000.00
+                  },
+                  {
+                    "type": "TotalTaxYTD",
+                    "amount": 880.00
+                  },
+                  {
+                    "type": "TaxDeductedOrRefunded",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "TaxablePay",
+                    "amount": 1.00
+                  }
+                ],
+                "optionalMonetaryAmount": [
+                  {
+                    "type": "BenefitsTaxedViaPayrollYTD",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsNotPaidYTD",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsPaidYTD",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "SAPYTD",
+                    "amount": 0.00
+                  },
+                  {
+                    "type": "SMPYTD",
+                    "amount": 0.00
+                  },
+                  {
+                    "type": "StudentLoansYTD",
+                    "amount": 0.00
+                  },
+                  {
+                    "type": "BenefitsTaxedViaPayroll",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "DednsFromNetPay",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsNotPaid",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "EmpeePenContribnsPaid",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "ItemsSubjectToClass1NIC",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "NonTaxOrNICPmt",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "PayAfterStatDedns",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "StudentLoanRecovered",
+                    "amount": 1.00
+                  },
+                  {
+                    "type": "OccPensionAmount",
+                    "amount": 12300.00
+                  },
+                  {
+                    "type": "StatePensionAmount",
+                    "amount": 1.00
+                  }
+                ],
+                "taxCode": {
+                  "value": "K1"
+                },
+                "starter": {
+                  "startDate": "2013-11-01",
+                  "startDec": "A",
+                  "studentLoan": true,
+                  "occPensionBereaved": true,
+                  "statePensionBereaved": true,
+                  "seconded": {
+                    "stay183DaysOrMore": true,
+                    "eeaCitizen": true,
+                    "epm6": true
+                  }
+                },
+                "niLettersAndValues": [
+                  {
+                    "niLetter": "R",
+                    "scon": "S0000000A",
+                    "niFigure": [
+                      {
+                        "type": "AtLELYTD",
+                        "amount": 5824.00
+                      },
+                      {
+                        "type": "EmpeeContribnsInPd",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "EmpeeContribnsYTD",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "GrossEarningsForNICsInPd",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "GrossEarningsForNICsYTD",
+                        "amount": 1.00
+                      },
+                      {
+                        "type": "LELtoPTYTD",
+                        "amount": 2236.00
+                      },
+                      {
+                        "type": "PTtoUAPYTD",
+                        "amount": 11940.00
+                      },
+                      {
+                        "type": "TotalEmpNICInPd",
+                        "amount": 1265.64
+                      },
+                      {
+                        "type": "TotalEmpNICYTD",
+                        "amount": 1265.64
+                      },
+                      {
+                        "type": "UAPtoUELYTD",
+                        "amount": 0.00
+                      }
+                    ]
+                  }
+                ],
+                "niLiability": {
+                  "directorsNIC": "AN",
+                  "taxWkOfApptOfDirector": "1"
+                },
+                "pmtDate": "2015-11-30",
+                "rcvdDate": "2015-05-26",
+                "pmtConfidence": 1,
+                "taxYear": "15-16"
+              }
+            ]
+          },
+          "sequenceNumber": 49
+        }
+      ]
+    }
+  }
+}

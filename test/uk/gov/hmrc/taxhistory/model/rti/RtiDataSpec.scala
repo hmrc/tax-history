@@ -82,5 +82,23 @@ class RtiDataSpec extends TestUtil with UnitSpec {
       earlierYearUpdates.head.taxablePayDelta shouldBe BigDecimal.valueOf(-600.99)
       earlierYearUpdates.head.totalTaxDelta shouldBe BigDecimal.valueOf(-10.99)
     }
+
+    "transform Rti Response Json containing inYear payment but no eyu payment" in {
+      val rtiResponse: JsValue = loadFile("/json/rti/response/dummyRtiHasOnlyInYearPayments.json")
+      val rtiDetails = rtiResponse.as[RtiData](RtiData.reader)
+      val employment = rtiDetails.employments.head
+
+      employment.earlierYearUpdates shouldBe List.empty
+      employment.payments.size shouldBe 5
+    }
+
+    "transform Rti Response Json containing eyu payment but no inYear payment" in {
+      val rtiResponse: JsValue = loadFile("/json/rti/response/dummyRtiHasOnlyEyuPayments.json")
+      val rtiDetails = rtiResponse.as[RtiData](RtiData.reader)
+      val employment = rtiDetails.employments.head
+
+      employment.earlierYearUpdates.size shouldBe 2
+      employment.payments shouldBe List.empty
+    }
   }
 }

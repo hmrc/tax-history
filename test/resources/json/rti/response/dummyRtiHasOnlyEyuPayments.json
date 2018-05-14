@@ -1,0 +1,143 @@
+{
+  "queryResult": 0,
+  "request": {
+    "nino": "AA000000",
+    "relatedTaxYear": "15-16",
+    "requestId": "M1461338419483"
+  },
+  "individual": {
+    "currentNino": "AA000000",
+    "relatedTaxYear": "15-16",
+    "employments": {
+      "employment": [
+        {
+          "empRefs": {
+            "officeNo": "531",
+            "payeRef": "J4816",
+            "aoRef": "531PP00002017"
+          },
+          "currentPayId": "6044041000000",
+          "payments": {
+            "eyu": [
+              {
+                "payId": "T011",
+                "optionalAdjustmentAmount": [
+                  {
+                    "type": "TaxablePayDelta",
+                    "amount": -600.99
+                  },
+                  {
+                    "type": "TotalTaxDelta",
+                    "amount": -10.99
+                  }
+                ],
+                "taxCode": {
+                  "value": "1000L"
+                },
+                "starter": {
+                  "startDate": "2015-08-01",
+                  "startDec": "C"
+                },
+                "niLettersAndValues": [
+                  {
+                    "niLetter": "J",
+                    "niFigure": [
+                      {
+                        "type": "AtLELDelta",
+                        "amount": 0
+                      },
+                      {
+                        "type": "EmpeeContribnsDelta",
+                        "amount": -5.99
+                      },
+                      {
+                        "type": "GrossEarningsForNICs",
+                        "amount": -600.99
+                      },
+                      {
+                        "type": "LELtoPTDelta",
+                        "amount": 0
+                      },
+                      {
+                        "type": "PTtoUAPDelta",
+                        "amount": 0
+                      },
+                      {
+                        "type": "TotalEmpNICDelta",
+                        "amount": 0
+                      },
+                      {
+                        "type": "UAPtoUELDelta",
+                        "amount": 0
+                      }
+                    ]
+                  }
+                ],
+                "type": "E",
+                "rcvdDate": "2016-06-01"
+              },
+              {
+                "payId": "T011",
+                "optionalAdjustmentAmount": [
+                  {
+                    "type": "TaxablePayDelta",
+                    "amount": 0.00
+                  },
+                  {
+                    "type": "TotalTaxDelta",
+                    "amount": 0.00
+                  }
+                ],
+                "taxCode": {
+                  "value": "1000L"
+                },
+                "starter": {
+                  "startDate": "2015-08-01",
+                  "startDec": "C"
+                },
+                "niLettersAndValues": [
+                  {
+                    "niLetter": "J",
+                    "niFigure": [
+                      {
+                        "type": "AtLELDelta",
+                        "amount": 0
+                      },
+                      {
+                        "type": "EmpeeContribnsDelta",
+                        "amount": -5.99
+                      },
+                      {
+                        "type": "GrossEarningsForNICs",
+                        "amount": -600.99
+                      },
+                      {
+                        "type": "LELtoPTDelta",
+                        "amount": 0
+                      },
+                      {
+                        "type": "PTtoUAPDelta",
+                        "amount": 0
+                      },
+                      {
+                        "type": "TotalEmpNICDelta",
+                        "amount": 0
+                      },
+                      {
+                        "type": "UAPtoUELDelta",
+                        "amount": 0
+                      }
+                    ]
+                  }
+                ],
+                "type": "E",
+                "rcvdDate": "2016-06-01"
+              }
+            ]
+          },
+          "sequenceNumber": 49
+        }
+      ]
+    }
+  }
+}
