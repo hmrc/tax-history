@@ -30,7 +30,7 @@ import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.fixtures.Employments
 import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
-import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, DesTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.{PlaceHolder, TestUtil}
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentMatchingHelper
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
@@ -82,7 +82,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
   lazy val rtiDuplicateEmploymentsResponse: JsValue = loadFile("/json/rti/response/dummyRtiDuplicateEmployments.json")
   lazy val rtiPartialDuplicateEmploymentsResponse: JsValue = loadFile("/json/rti/response/dummyRtiPartialDuplicateEmployments.json")
   lazy val rtiNonMatchingEmploymentsResponse: JsValue = loadFile("/json/rti/response/dummyRtiNonMatchingEmployment.json")
-  lazy val testNpsTaxAccount: NpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
+  lazy val testDesTaxAccount: DesTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[DesTaxAccount]
   lazy val testIabds: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
 
   val startDate = new LocalDate("2015-01-21")
@@ -128,9 +128,9 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
         .thenReturn(Future.successful(npsEmploymentResponse))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
-      when(testEmploymentHistoryService.npsConnector.getIabds(any(), any()))
+      when(testEmploymentHistoryService.desConnector.getIabds(any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
-      when(testEmploymentHistoryService.npsConnector.getTaxAccount(any(), any()))
+      when(testEmploymentHistoryService.desConnector.getTaxAccount(any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
       noException shouldBe thrownBy {
@@ -141,11 +141,11 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
     "return success response from get Employments" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(any(), any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
-      when(testEmploymentHistoryService.npsConnector.getIabds(any(), any()))
+      when(testEmploymentHistoryService.desConnector.getIabds(any(), any()))
         .thenReturn(Future.successful(testIabds))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
         .thenReturn(Future.successful(testRtiData))
-      when(testEmploymentHistoryService.npsConnector.getTaxAccount(any(), any()))
+      when(testEmploymentHistoryService.desConnector.getTaxAccount(any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
       val paye = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)))
@@ -182,8 +182,8 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
 
     "successfully merge rti and nps employment1 data into employment1 list" in {
 
-      when(testEmploymentHistoryService.npsConnector.getTaxAccount(any(), any()))
-        .thenReturn(Future.successful(testNpsTaxAccount))
+      when(testEmploymentHistoryService.desConnector.getTaxAccount(any(), any()))
+        .thenReturn(Future.successful(testDesTaxAccount))
 
       val npsEmployments = npsEmploymentResponse
 
@@ -193,7 +193,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
           taxYear = TaxYear.current.previous,
           npsEmployments = npsEmployments,
           rtiEmployments = testRtiData.employments,
-          taxAccountOption = Some(testNpsTaxAccount),
+          taxAccountOption = Some(testDesTaxAccount),
           iabds = testIabds
         )
 
@@ -228,7 +228,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       "nps receivingJobseekersAllowance is true for CY" in {
         when(testEmploymentHistoryService.npsConnector.getEmployments(any(), any()))
           .thenReturn(Future.successful(npsEmploymentWithJobSeekerAllowanceCY))
-        when(testEmploymentHistoryService.npsConnector.getIabds(any(), any()))
+        when(testEmploymentHistoryService.desConnector.getIabds(any(), any()))
           .thenReturn(Future.successful(testIabds))
         when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
           .thenReturn(Future.successful(testRtiData))
@@ -239,7 +239,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       "otherIncomeSourceIndicator is true from list of employments" in {
         when(testEmploymentHistoryService.npsConnector.getEmployments(any(), any()))
           .thenReturn(Future.successful(npsEmploymentWithOtherIncomeSourceIndicator))
-        when(testEmploymentHistoryService.npsConnector.getIabds(any(), any()))
+        when(testEmploymentHistoryService.desConnector.getIabds(any(), any()))
           .thenReturn(Future.successful(testIabds))
         when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
           .thenReturn(Future.successful(testRtiData))
@@ -253,7 +253,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       "nps employments contain single element with npsEmploymentWithJustOtherIncomeSourceIndicator attribute is true" in {
         when(testEmploymentHistoryService.npsConnector.getEmployments(any(), any()))
           .thenReturn(Future.successful(npsEmploymentWithJustOtherIncomeSourceIndicator))
-        when(testEmploymentHistoryService.npsConnector.getIabds(any(), any()))
+        when(testEmploymentHistoryService.desConnector.getIabds(any(), any()))
           .thenReturn(Future.successful(testIabds))
         when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
           .thenReturn(Future.successful(testRtiData))
@@ -263,10 +263,10 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
     }
 
     "return an empty list from get Nps Iabds api for bad request response " in {
-      when(testEmploymentHistoryService.npsConnector.getIabds(any(), any()))
+      when(testEmploymentHistoryService.desConnector.getIabds(any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
-      await(testEmploymentHistoryService.retrieveNpsIabds(testNino, TaxYear(2016))) shouldBe List.empty
+      await(testEmploymentHistoryService.retrieveDesIabds(testNino, TaxYear(2016))) shouldBe List.empty
     }
 
     "return none where tax year is not cy-1" in {
@@ -274,17 +274,17 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
     }
 
     "return None from get Nps Tax Account api for bad request response " in {
-      when(testEmploymentHistoryService.npsConnector.getTaxAccount(any(), any()))
+      when(testEmploymentHistoryService.desConnector.getTaxAccount(any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
-      await(testEmploymentHistoryService.retrieveNpsTaxAccount(testNino, TaxYear(2016))) shouldBe None
+      await(testEmploymentHistoryService.retrieveDesTaxAccount(testNino, TaxYear(2016))) shouldBe None
     }
 
     "return None from get Nps Tax Account api for not found response " in {
-      when(testEmploymentHistoryService.npsConnector.getTaxAccount(any(), any()))
+      when(testEmploymentHistoryService.desConnector.getTaxAccount(any(), any()))
         .thenReturn(Future.failed(new NotFoundException("")))
 
-      await(testEmploymentHistoryService.retrieveNpsTaxAccount(testNino, TaxYear(2016))) shouldBe None
+      await(testEmploymentHistoryService.retrieveDesTaxAccount(testNino, TaxYear(2016))) shouldBe None
     }
 
 

@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.connectors.{NpsConnector, RtiConnector}
+import uk.gov.hmrc.taxhistory.connectors.{DesConnector, NpsConnector, RtiConnector}
 import uk.gov.hmrc.taxhistory.model.api.Employment._
 import uk.gov.hmrc.taxhistory.model.api.FillerState._
 import uk.gov.hmrc.taxhistory.model.api._
@@ -38,7 +38,8 @@ import uk.gov.hmrc.time.TaxYear
 import scala.annotation.tailrec
 import scala.concurrent.Future
 
-class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
+class EmploymentHistoryService @Inject()(val desConnector: DesConnector,
+                                         val npsConnector: NpsConnector,
                                          val rtiConnector: RtiConnector,
                                          val cacheService: PayeCacheService,
                                          val auditable: Auditable,
@@ -191,8 +192,8 @@ class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
       npsEmployments <- retrieveNpsEmployments(nino, taxYear)
       rtiDataOpt <- retrieveRtiData(nino, taxYear)
       rtiEmployments = rtiDataOpt.map(_.employments).getOrElse(Nil)
-      iabds <- retrieveNpsIabds(nino, taxYear)
-      taxAccountOpt <- retrieveNpsTaxAccount(nino, taxYear)
+      iabds <- retrieveDesIabds(nino, taxYear)
+      taxAccountOpt <- retrieveDesTaxAccount(nino, taxYear)
     } yield {
       mergeEmployments(nino, taxYear, npsEmployments, rtiEmployments, taxAccountOpt, iabds)
     }
@@ -207,7 +208,7 @@ class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
                        taxYear: TaxYear,
                        npsEmployments: List[NpsEmployment],
                        rtiEmployments: List[RtiEmployment],
-                       taxAccountOption: Option[NpsTaxAccount],
+                       taxAccountOption: Option[DesTaxAccount],
                        iabds: List[Iabd]
                       )(implicit hc: HeaderCarrier): PayAsYouEarn = {
 
@@ -268,7 +269,6 @@ class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
     }.orNotFound(s"No NPS employments found for $nino $taxYear")
   }
 
-
   /*
     Retrieve RtiData directly from the RTI microservice.
    */
@@ -277,17 +277,17 @@ class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
       .recover { case _ => None } // We want to present some information even if the retrieval from RTI failed.
 
   /*
-    Retrieve Iabds directly from the NPS microservice.
+    Retrieve Iabds directly from DES.
    */
-  def retrieveNpsIabds(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[Iabd]] =
-    npsConnector.getIabds(nino, taxYear.currentYear)
+  def retrieveDesIabds(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[Iabd]] =
+    desConnector.getIabds(nino, taxYear.currentYear)
       .recover { case _ => Nil } // We want to present some information even if the retrieval of IABDs failed.
 
   /*
-    Retrieve TaxAccount directly from the NPS microservice.
+    Retrieve TaxAccount directly from DES.
    */
-  def retrieveNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[NpsTaxAccount]] =
-    npsConnector.getTaxAccount(nino, taxYear.currentYear).map(Some(_))
+  def retrieveDesTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[DesTaxAccount]] =
+    desConnector.getTaxAccount(nino, taxYear.currentYear).map(Some(_))
       .recover { case _ => None } // We want to present some information even if the retrieval of the tax account failed.
 
   /*

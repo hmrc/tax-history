@@ -17,12 +17,11 @@
 package uk.gov.hmrc.taxhistory.connectors
 
 import javax.inject.{Inject, Named}
-
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
-import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.utils.Logging
 
 import scala.concurrent.Future
@@ -30,13 +29,10 @@ import scala.concurrent.Future
 class NpsConnector @Inject()(val http: HttpGet,
                              val metrics: TaxHistoryMetrics,
                              @Named("nps-hod-base-url") val baseUrl: String,
-                             @Named("microservice.services.nps-hod.path") val path: String,
                              @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends AnyRef with Logging {
 
   private val servicePrefix = "nps-hod-service/services/nps"
   def employmentUrl(nino: Nino, year: Int) = s"$baseUrl/$servicePrefix/person/${nino.value}/employment/$year"
-  def iabdsUrl(nino: Nino, year: Int)      = s"$baseUrl/$servicePrefix/person/${nino.value}/iabds/$year"
-  def taxAccountUrl(nino: Nino, year: Int) = s"$baseUrl/$servicePrefix/person/${nino.value}/tax-account/$year"
 
   def basicNpsHeaders(hc: HeaderCarrier): HeaderCarrier = {
     hc.withExtraHeaders("Gov-Uk-Originator-Id" -> originatorId)
@@ -56,42 +52,6 @@ class NpsConnector @Inject()(val http: HttpGet,
       metrics.incrementFailedCounter(MetricsEnum.NPS_GET_EMPLOYMENTS)
       timerContext.stop()
       logger.warn(s"NPS connector - Error returned from NPS connector (getEmployments): ${e.toString}: ${e.getMessage}")
-    }
-    result
-  }
-
-  def getIabds(nino: Nino, year: Int): Future[List[Iabd]] = {
-    implicit val hc = basicNpsHeaders(HeaderCarrier())
-
-    val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_IABDS)
-
-    val result = http.GET[List[Iabd]](iabdsUrl(nino, year))
-    result.onSuccess { case _ =>
-      timerContext.stop()
-      metrics.incrementSuccessCounter(MetricsEnum.NPS_GET_IABDS)
-    }
-    result.onFailure { case e =>
-      metrics.incrementFailedCounter(MetricsEnum.NPS_GET_IABDS)
-      timerContext.stop()
-      logger.warn(s"NPS connector - Error returned from NPS connector (getIabds): ${e.toString}: ${e.getMessage}")
-    }
-    result
-  }
-
-  def getTaxAccount(nino: Nino, year: Int): Future[NpsTaxAccount] = {
-    implicit val hc = basicNpsHeaders(HeaderCarrier())
-
-    val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_TAX_ACCOUNT)
-
-    val result = http.GET[NpsTaxAccount](taxAccountUrl(nino, year))
-    result.onSuccess { case _ =>
-      timerContext.stop()
-      metrics.incrementSuccessCounter(MetricsEnum.NPS_GET_TAX_ACCOUNT)
-    }
-    result.onFailure { case e =>
-      metrics.incrementFailedCounter(MetricsEnum.NPS_GET_TAX_ACCOUNT)
-      timerContext.stop()
-      logger.warn(s"NPS connector - Error returned from NPS connector (getTaxAccount): ${e.toString}: ${e.getMessage}")
     }
     result
   }

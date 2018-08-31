@@ -25,18 +25,13 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
-import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-
 import scala.concurrent.Future
-
 
 class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   lazy val testNpsEmployment = loadFile("/json/nps/response/employments.json").as[List[NpsEmployment]]
-  lazy val testIabds = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
-  lazy val testNpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
-
 
   val testNino = randomNino()
   val testYear = 2016
@@ -56,14 +51,6 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
     "create the correct url for employment" in {
       testNpsConnector.employmentUrl(testNino, testYear) must be (s"/fake/nps-hod-service/services/nps/person/$testNino/employment/$testYear")
-    }
-
-    "create the correct url for iabds" in {
-      testNpsConnector.iabdsUrl(testNino, testYear) must be (s"/fake/nps-hod-service/services/nps/person/$testNino/iabds/$testYear")
-    }
-
-    "create the correct url for taxAccount" in {
-      testNpsConnector.taxAccountUrl(testNino, testYear) must be (s"/fake/nps-hod-service/services/nps/person/$testNino/tax-account/$testYear")
     }
 
     "get EmploymentData data" when {
@@ -94,78 +81,15 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         intercept[BadRequestException](await(result))
       }
     }
-
-    "get Iabds data " when {
-      "given a valid Nino and TaxYear" in {
-        implicit val hc = HeaderCarrier()
-        val testIabdsConnector = testNpsConnector
-
-        when(testIabdsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
-
-        when(testIabdsConnector.http.GET[List[Iabd]](any())(any(), any(), any())).thenReturn(Future.successful(testIabds))
-
-        val result = testIabdsConnector.getIabds(testNino, testYear)
-
-        await(result) mustBe testIabds
-      }
-
-      "return and handle an service unavailable error response " in {
-        val expectedResponse = Json.parse( """{"reason": "Service Unavailable Error"}""")
-        implicit val hc = HeaderCarrier()
-        val testIabdsConnector = testNpsConnector
-        when(testIabdsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
-
-        when(testIabdsConnector.http.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.failed(new Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
-
-        val result = testIabdsConnector.getIabds(testNino, testYear)
-
-        intercept[Upstream5xxResponse](await(result))
-      }
-    }
-
-    "get Tax Account data " when {
-      "given a valid Nino and TaxYear" in {
-        implicit val hc = HeaderCarrier()
-        val testTaxAccountConnector = testNpsConnector
-
-        when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
-
-        when(testTaxAccountConnector.http.GET[NpsTaxAccount](any())(any(), any(), any())).thenReturn(Future.successful(testNpsTaxAccount))
-
-        val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
-
-        await(result) mustBe testNpsTaxAccount
-      }
-
-      "return and handle an error response" in {
-        val expectedResponse = Json.parse( """{"reason": "Some thing went wrong"}""")
-        implicit val hc = HeaderCarrier()
-        val testTaxAccountConnector = testNpsConnector
-        when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
-
-        when(testTaxAccountConnector.http.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.failed(new BadRequestException("")))
-
-        val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
-
-        intercept[BadRequestException](await(result))
-      }
-    }
-
   }
 
   lazy val testNpsConnector = new NpsConnector(
     http = mock[HttpGet],
     baseUrl = "/fake",
     metrics = mock[TaxHistoryMetrics],
-    originatorId = "orgId",
-    path = "/path"
+    originatorId = "orgId"
   ) {
     override val metrics = mock[TaxHistoryMetrics]
     val mockTimerContext = mock[Timer.Context]
   }
-
 }
-
-

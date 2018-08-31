@@ -55,9 +55,9 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
     "successfully populated from iabds" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
-      when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.desConnector.getIabds(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(iabdsResponse))
-      when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.desConnector.getTaxAccount(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new NotFoundException("")))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new NotFoundException("")))

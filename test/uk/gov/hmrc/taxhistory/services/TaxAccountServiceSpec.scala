@@ -27,7 +27,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.taxhistory.model.api.{PayAsYouEarn, TaxAccount}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
-import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, DesTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
@@ -47,16 +47,16 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       new LocalDate("2015-01-21"), None, true, Live))
 
 
-  lazy val testNpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
+  lazy val testDesTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[DesTaxAccount]
 
   "TaxAccount" should {
     "successfully be populated from GetTaxAccount" in {
       when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
-      when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.desConnector.getIabds(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new NotFoundException("")))
-      when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(testNpsTaxAccount))
+      when(testEmploymentHistoryService.desConnector.getTaxAccount(Matchers.any(), Matchers.any()))
+        .thenReturn(Future.successful(testDesTaxAccount))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new NotFoundException("")))
 
