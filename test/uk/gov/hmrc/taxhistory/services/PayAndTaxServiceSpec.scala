@@ -22,8 +22,6 @@ import org.joda.time.LocalDate
 import org.mockito.Matchers
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
-import org.scalatestplus.play.PlaySpec
-import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -56,13 +54,13 @@ class PayAndTaxServiceSpec extends UnitSpec with MockitoSugar with TestUtil {
 
   "PayAndTax" should {
     "successfully populated from rti" in {
-      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
-      when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.desNpsConnector.getIabds(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(iabdsResponse))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(rtiEmploymentResponse))
-      when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new BadRequestException("")))
       val payAsYouEarn = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino,TaxYear(2016)))
 

@@ -32,8 +32,8 @@ class TaxHistoryMetrics @Inject() (val metrics: Metrics) {
     MetricsEnum.NPS_GET_TAX_ACCOUNT -> registry.timer("nps-get-tax-account-response-timer")
   )
   val successCounters = Map(
-    MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.counter("nps-get-employments-success-counter"),
     MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.counter("rti-get-employments-success-counter"),
+    MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.counter("nps-get-employments-success-counter"),
     MetricsEnum.NPS_GET_IABDS       -> registry.counter("nps-get-iabds-success-counter"),
     MetricsEnum.NPS_GET_TAX_ACCOUNT -> registry.counter("nps-get-tax-account-success-counter")
   )

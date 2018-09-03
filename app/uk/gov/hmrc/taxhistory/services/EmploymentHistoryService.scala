@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.connectors.{NpsConnector, RtiConnector}
+import uk.gov.hmrc.taxhistory.connectors.{DesNpsConnector, SquidNpsConnector, RtiConnector}
 import uk.gov.hmrc.taxhistory.model.api.Employment._
 import uk.gov.hmrc.taxhistory.model.api.FillerState._
 import uk.gov.hmrc.taxhistory.model.api._
@@ -38,7 +38,8 @@ import uk.gov.hmrc.time.TaxYear
 import scala.annotation.tailrec
 import scala.concurrent.Future
 
-class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
+class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
+                                         val squidNpsConnector: SquidNpsConnector,
                                          val rtiConnector: RtiConnector,
                                          val cacheService: PayeCacheService,
                                          val auditable: Auditable,
@@ -259,7 +260,7 @@ class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
   def retrieveNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[NpsEmployment]] = {
     val passedInTaxYear = taxYear.currentYear
 
-    npsConnector.getEmployments(nino, passedInTaxYear).map { employments =>
+    squidNpsConnector.getEmployments(nino, passedInTaxYear).map { employments =>
       if (TaxYear.current.currentYear.equals(passedInTaxYear)) {
         employments.filterNot(x => x.receivingJobSeekersAllowance | x.otherIncomeSourceIndicator)
       } else {
@@ -267,7 +268,6 @@ class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
       }
     }.orNotFound(s"No NPS employments found for $nino $taxYear")
   }
-
 
   /*
     Retrieve RtiData directly from the RTI microservice.
@@ -277,17 +277,17 @@ class EmploymentHistoryService @Inject()(val npsConnector: NpsConnector,
       .recover { case _ => None } // We want to present some information even if the retrieval from RTI failed.
 
   /*
-    Retrieve Iabds directly from the NPS microservice.
+    Retrieve Iabds directly from DES.
    */
   def retrieveNpsIabds(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[Iabd]] =
-    npsConnector.getIabds(nino, taxYear.currentYear)
+    desNpsConnector.getIabds(nino, taxYear.currentYear)
       .recover { case _ => Nil } // We want to present some information even if the retrieval of IABDs failed.
 
   /*
-    Retrieve TaxAccount directly from the NPS microservice.
+    Retrieve TaxAccount directly from DES.
    */
   def retrieveNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[NpsTaxAccount]] =
-    npsConnector.getTaxAccount(nino, taxYear.currentYear).map(Some(_))
+    desNpsConnector.getTaxAccount(nino, taxYear.currentYear).map(Some(_))
       .recover { case _ => None } // We want to present some information even if the retrieval of the tax account failed.
 
   /*

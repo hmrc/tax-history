@@ -30,10 +30,9 @@ import scala.concurrent.Future
 
 class RtiConnector @Inject()(val http: HttpGet,
                              val metrics: TaxHistoryMetrics,
-                             @Named("rti-hod-base-url") val baseUrl: String,
-                             @Named("microservice.services.rti-hod.authorizationToken") val authorizationToken: String,
-                             @Named("microservice.services.rti-hod.env") val environment: String,
-                             @Named("microservice.services.rti-hod.originatorId") val originatorId: String
+                             @Named("des-base-url") val baseUrl: String,
+                             @Named("microservice.services.des.authorizationToken") val authorizationToken: String,
+                             @Named("microservice.services.des.env") val environment: String
                             ) extends AnyRef with Logging {
 
   lazy val authorization: String = s"Bearer $authorizationToken"
@@ -45,8 +44,7 @@ class RtiConnector @Inject()(val http: HttpGet,
 
   def createHeader: HeaderCarrier = HeaderCarrier(extraHeaders =
     Seq("Environment" -> environment,
-      "Authorization" -> authorization,
-      "Gov-Uk-Originator-Id" -> originatorId))
+      "Authorization" -> authorization))
 
   def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[RtiData] = {
     implicit val hc: HeaderCarrier = createHeader

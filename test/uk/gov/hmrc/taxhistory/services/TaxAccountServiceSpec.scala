@@ -51,11 +51,11 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   "TaxAccount" should {
     "successfully be populated from GetTaxAccount" in {
-      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
-      when(testEmploymentHistoryService.npsConnector.getIabds(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.desNpsConnector.getIabds(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new NotFoundException("")))
-      when(testEmploymentHistoryService.npsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(testNpsTaxAccount))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new NotFoundException("")))
