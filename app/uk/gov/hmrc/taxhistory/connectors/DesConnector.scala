@@ -21,7 +21,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
-import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, DesTaxAccount}
+import uk.gov.hmrc.taxhistory.model.nps.{Iabd, DesTaxAccount}
 import uk.gov.hmrc.taxhistory.utils.Logging
 
 import scala.concurrent.Future
@@ -29,7 +29,7 @@ import scala.concurrent.Future
 class DesConnector @Inject()(val http: HttpGet,
                              val metrics: TaxHistoryMetrics,
                              @Named("des-base-url") val baseUrl: String,
-                             @Named("des-authorizationToken") val authorizationToken: String,
+                             @Named("des.authorizationToken") val authorizationToken: String,
                              @Named("des.env") val env: String) extends AnyRef with Logging {
 
   private val servicePrefix = "/pay-as-you-earn"

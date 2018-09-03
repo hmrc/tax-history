@@ -34,7 +34,7 @@ class DesTaxAccountSpec extends TestUtil with UnitSpec {
   private val taxAccount = getTaxAcoountResponseURLDummy.as[DesTaxAccount]
 
   "GetTaxAccount" should {
-    "transform Nps Get Tax Account Response Json correctly to DesTaxAccount Model " in {
+    "transform Des Get Tax Account Response Json correctly to DesTaxAccount Model " in {
       taxAccount shouldBe a[DesTaxAccount]
       taxAccount.getPrimaryEmploymentId shouldBe Some(primaryEmploymentId)
       taxAccount.getActualPupCodedInCYPlusOne shouldBe Some(actualPupCodedInCYPlusOne)

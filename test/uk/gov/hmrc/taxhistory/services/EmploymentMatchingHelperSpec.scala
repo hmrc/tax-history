@@ -24,8 +24,6 @@ import uk.gov.hmrc.taxhistory.fixtures.{NpsEmployments, RtiEmployments}
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentMatchingHelper
-import uk.gov.hmrc.taxhistory.services.helpers.EmploymentMatchingHelper.formatString
-import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 
 class EmploymentMatchingHelperSpec extends PlaySpec with TestUtil with BeforeAndAfterEach with NpsEmployments with RtiEmployments {
 
