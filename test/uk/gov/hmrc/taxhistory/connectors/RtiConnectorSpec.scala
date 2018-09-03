@@ -54,7 +54,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
     "create the correct headers" in {
       val headers = testRtiConnector.createHeader
-      headers.extraHeaders mustBe List(("Environment", "env"), ("Authorization", "Bearer auth"), ("Gov-Uk-Originator-Id", "orgId"))
+      headers.extraHeaders mustBe List(("Environment", "env"), ("Authorization", "Bearer auth"))
     }
 
     "get RTI data " when {
@@ -90,13 +90,9 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     baseUrl = "/test",
     metrics = mock[TaxHistoryMetrics],
     authorizationToken = "auth",
-    environment = "env",
-    originatorId = "orgId"
+    environment = "env"
   ) {
     override val metrics =  mock[TaxHistoryMetrics]
     val mockTimerContext = mock[Timer.Context]
   }
-
 }
-
-

@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.connectors.{DesConnector, NpsConnector, RtiConnector}
+import uk.gov.hmrc.taxhistory.connectors.{DesNpsConnector, SquidNpsConnector, RtiConnector}
 import uk.gov.hmrc.taxhistory.model.api.Employment._
 import uk.gov.hmrc.taxhistory.model.api.FillerState._
 import uk.gov.hmrc.taxhistory.model.api._
@@ -38,8 +38,8 @@ import uk.gov.hmrc.time.TaxYear
 import scala.annotation.tailrec
 import scala.concurrent.Future
 
-class EmploymentHistoryService @Inject()(val desConnector: DesConnector,
-                                         val npsConnector: NpsConnector,
+class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
+                                         val squidNpsConnector: SquidNpsConnector,
                                          val rtiConnector: RtiConnector,
                                          val cacheService: PayeCacheService,
                                          val auditable: Auditable,
@@ -192,8 +192,8 @@ class EmploymentHistoryService @Inject()(val desConnector: DesConnector,
       npsEmployments <- retrieveNpsEmployments(nino, taxYear)
       rtiDataOpt <- retrieveRtiData(nino, taxYear)
       rtiEmployments = rtiDataOpt.map(_.employments).getOrElse(Nil)
-      iabds <- retrieveDesIabds(nino, taxYear)
-      taxAccountOpt <- retrieveDesTaxAccount(nino, taxYear)
+      iabds <- retrieveNpsIabds(nino, taxYear)
+      taxAccountOpt <- retrieveNpsTaxAccount(nino, taxYear)
     } yield {
       mergeEmployments(nino, taxYear, npsEmployments, rtiEmployments, taxAccountOpt, iabds)
     }
@@ -208,7 +208,7 @@ class EmploymentHistoryService @Inject()(val desConnector: DesConnector,
                        taxYear: TaxYear,
                        npsEmployments: List[NpsEmployment],
                        rtiEmployments: List[RtiEmployment],
-                       taxAccountOption: Option[DesTaxAccount],
+                       taxAccountOption: Option[NpsTaxAccount],
                        iabds: List[Iabd]
                       )(implicit hc: HeaderCarrier): PayAsYouEarn = {
 
@@ -260,7 +260,7 @@ class EmploymentHistoryService @Inject()(val desConnector: DesConnector,
   def retrieveNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[NpsEmployment]] = {
     val passedInTaxYear = taxYear.currentYear
 
-    npsConnector.getEmployments(nino, passedInTaxYear).map { employments =>
+    squidNpsConnector.getEmployments(nino, passedInTaxYear).map { employments =>
       if (TaxYear.current.currentYear.equals(passedInTaxYear)) {
         employments.filterNot(x => x.receivingJobSeekersAllowance | x.otherIncomeSourceIndicator)
       } else {
@@ -279,15 +279,15 @@ class EmploymentHistoryService @Inject()(val desConnector: DesConnector,
   /*
     Retrieve Iabds directly from DES.
    */
-  def retrieveDesIabds(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[Iabd]] =
-    desConnector.getIabds(nino, taxYear.currentYear)
+  def retrieveNpsIabds(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[Iabd]] =
+    desNpsConnector.getIabds(nino, taxYear.currentYear)
       .recover { case _ => Nil } // We want to present some information even if the retrieval of IABDs failed.
 
   /*
     Retrieve TaxAccount directly from DES.
    */
-  def retrieveDesTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[DesTaxAccount]] =
-    desConnector.getTaxAccount(nino, taxYear.currentYear).map(Some(_))
+  def retrieveNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[NpsTaxAccount]] =
+    desNpsConnector.getTaxAccount(nino, taxYear.currentYear).map(Some(_))
       .recover { case _ => None } // We want to present some information even if the retrieval of the tax account failed.
 
   /*

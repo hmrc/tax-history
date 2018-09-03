@@ -54,7 +54,7 @@ object IncomeSource {
   implicit val formats = Json.format[IncomeSource]
 }
 
-case class DesTaxAccount(incomeSources: List[IncomeSource]){
+case class NpsTaxAccount(incomeSources: List[IncomeSource]){
 
    val PrimaryEmployment = 1
    val OutStandingDebtType = 41
@@ -94,7 +94,7 @@ case class DesTaxAccount(incomeSources: List[IncomeSource]){
 
 }
 
-object DesTaxAccount {
-  implicit val formats = Json.format[DesTaxAccount]
+object NpsTaxAccount {
+  implicit val formats = Json.format[NpsTaxAccount]
 }
 

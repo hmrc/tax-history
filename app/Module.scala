@@ -54,30 +54,18 @@ class Module(val environment: Environment, val configuration: Configuration) ext
     bindConfigInt("mongodb.cache.expire.seconds", default = Some(60 * 30))
     bindConfigString("mongodb.name")
     bindConfigString("microservice.services.nps-hod.originatorId",       default = Some("HMRC_GDS"))
-    bindConfigString("microservice.services.rti-hod.originatorId",       default = Some("local"))
-    bindConfigString("microservice.services.rti-hod.env",                default = Some("local"))
-    bindConfigString("microservice.services.rti-hod.authorizationToken", default = Some("local"))
+    bindConfigString("microservice.services.des.env",                default = Some("local"))
+    bindConfigString("microservice.services.des.authorizationToken", default = Some("local"))
     bindConfigBoolean("featureFlags.currentYearFlag")
     bindConfigBoolean("featureFlags.statePensionFlag")
     bindConfigBoolean("featureFlags.jobSeekersAllowanceFlag")
 
-    bindConfigProperty("des.authorizationToken")
-    bindConfigProperty("des.env")
-
-    bind(classOf[String]).annotatedWith(Names.named("rti-hod-base-url")).toProvider(provide(baseUrl("rti-hod")))
     bind(classOf[String]).annotatedWith(Names.named("nps-hod-base-url")).toProvider(provide(baseUrl("nps-hod")))
     bind(classOf[String]).annotatedWith(Names.named("des-base-url")).toProvider(provide(baseUrl("des")))
 
     bind(classOf[MongoDbConnection]).toProvider(provide(new MongoDbConnection {}))
 
     bind(classOf[String]).annotatedWith(Names.named("appName")).toProvider(AppNameProvider)
-  }
-
-  private def bindConfigProperty(propertyName: String) =
-    bind(classOf[String]).annotatedWith(named(s"$propertyName")).toProvider(new ConfigPropertyProvider(propertyName))
-
-  private class ConfigPropertyProvider(propertyName: String) extends Provider[String] {
-    override lazy val get = getConfString(propertyName, throw new RuntimeException(s"No configuration value found for '$propertyName'"))
   }
 
   private def provide[A](value: => A): Provider[A] = new Provider[A] {

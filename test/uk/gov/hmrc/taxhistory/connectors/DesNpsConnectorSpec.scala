@@ -24,14 +24,14 @@ import org.scalatestplus.play.PlaySpec
 import play.api.test.Helpers._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
-import uk.gov.hmrc.taxhistory.model.nps.{Iabd, DesTaxAccount}
+import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import scala.concurrent.Future
 
-class DesConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
+class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   lazy val testIabds = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
-  lazy val testDesTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[DesTaxAccount]
+  lazy val testNpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
 
   val testNino = randomNino()
   val testYear = 2016
@@ -45,39 +45,39 @@ class DesConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     }
 
     "create the correct headers" in {
-      val headers = testDesConnector.basicDesHeaders(HeaderCarrier())
+      val headers = testDesNpsConnector.basicDesHeaders(HeaderCarrier())
       headers.extraHeaders mustBe List(("Environment", "test"), ("Authorization", "someToken"))
     }
 
     "create the correct url for iabds" in {
-      testDesConnector.iabdsUrl(testNino, testYear) must be(s"/fake/pay-as-you-earn/individuals/$testNino/iabds/tax-year/$testYear")
+      testDesNpsConnector.iabdsUrl(testNino, testYear) must be(s"/fake/pay-as-you-earn/individuals/$testNino/iabds/tax-year/$testYear")
     }
 
     "create the correct url for taxAccount" in {
-      testDesConnector.taxAccountUrl(testNino, testYear) must be(s"/fake/pay-as-you-earn/individuals/$testNino/tax-account/tax-year/$testYear")
+      testDesNpsConnector.taxAccountUrl(testNino, testYear) must be(s"/fake/pay-as-you-earn/individuals/$testNino/tax-account/tax-year/$testYear")
     }
 
     "get Iabds data " when {
       "given a valid Nino and TaxYear" in {
         implicit val hc = HeaderCarrier()
 
-        when(testDesConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+        when(testDesNpsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testDesConnector.http.GET[List[Iabd]](any())(any(), any(), any())).thenReturn(Future.successful(testIabds))
+        when(testDesNpsConnector.http.GET[List[Iabd]](any())(any(), any(), any())).thenReturn(Future.successful(testIabds))
 
-        val result = testDesConnector.getIabds(testNino, testYear)
+        val result = testDesNpsConnector.getIabds(testNino, testYear)
 
         await(result) mustBe testIabds
       }
 
       "return and handle an service unavailable error response " in {
         implicit val hc = HeaderCarrier()
-        when(testDesConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+        when(testDesNpsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testDesConnector.http.GET[HttpResponse](any())(any(), any(), any()))
+        when(testDesNpsConnector.http.GET[HttpResponse](any())(any(), any(), any()))
           .thenReturn(Future.failed(new Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
 
-        val result = testDesConnector.getIabds(testNino, testYear)
+        val result = testDesNpsConnector.getIabds(testNino, testYear)
 
         intercept[Upstream5xxResponse](await(result))
       }
@@ -86,25 +86,25 @@ class DesConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     "get Tax Account data " when {
       "given a valid Nino and TaxYear" in {
         implicit val hc = HeaderCarrier()
-        val testTaxAccountConnector = testDesConnector
+        val testTaxAccountConnector = testDesNpsConnector
 
         when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testTaxAccountConnector.http.GET[DesTaxAccount](any())(any(), any(), any())).thenReturn(Future.successful(testDesTaxAccount))
+        when(testTaxAccountConnector.http.GET[NpsTaxAccount](any())(any(), any(), any())).thenReturn(Future.successful(testNpsTaxAccount))
 
         val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
 
-        await(result) mustBe testDesTaxAccount
+        await(result) mustBe testNpsTaxAccount
       }
 
       "return and handle an error response" in {
         implicit val hc = HeaderCarrier()
-        when(testDesConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+        when(testDesNpsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testDesConnector.http.GET[HttpResponse](any())(any(), any(), any()))
+        when(testDesNpsConnector.http.GET[HttpResponse](any())(any(), any(), any()))
           .thenReturn(Future.failed(new BadRequestException("")))
 
-        val result = testDesConnector.getTaxAccount(testNino, testYear)
+        val result = testDesNpsConnector.getTaxAccount(testNino, testYear)
 
         intercept[BadRequestException](await(result))
       }
@@ -112,7 +112,7 @@ class DesConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   }
 
-  lazy val testDesConnector = new DesConnector(
+  lazy val testDesNpsConnector = new DesNpsConnector(
     http = mock[HttpGet],
     baseUrl = "/fake",
     metrics = mock[TaxHistoryMetrics],

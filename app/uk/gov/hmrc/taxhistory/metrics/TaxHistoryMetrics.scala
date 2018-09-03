@@ -28,20 +28,20 @@ class TaxHistoryMetrics @Inject() (val metrics: Metrics) {
   val timers = Map(
     MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.timer("nps-get-employments-response-timer"),
     MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.timer("rti-get-employments-response-timer"),
-    MetricsEnum.DES_GET_IABDS       -> registry.timer("des-get-iabds-response-timer"),
-    MetricsEnum.DES_GET_TAX_ACCOUNT -> registry.timer("des-get-tax-account-response-timer")
+    MetricsEnum.NPS_GET_IABDS       -> registry.timer("nps-get-iabds-response-timer"),
+    MetricsEnum.NPS_GET_TAX_ACCOUNT -> registry.timer("nps-get-tax-account-response-timer")
   )
   val successCounters = Map(
     MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.counter("rti-get-employments-success-counter"),
     MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.counter("nps-get-employments-success-counter"),
-    MetricsEnum.DES_GET_IABDS       -> registry.counter("des-get-iabds-success-counter"),
-    MetricsEnum.DES_GET_TAX_ACCOUNT -> registry.counter("des-get-tax-account-success-counter")
+    MetricsEnum.NPS_GET_IABDS       -> registry.counter("nps-get-iabds-success-counter"),
+    MetricsEnum.NPS_GET_TAX_ACCOUNT -> registry.counter("nps-get-tax-account-success-counter")
   )
   val failedCounters = Map(
     MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.counter("nps-get-employments-failed-counter"),
     MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.counter("rti-get-employments-failed-counter"),
-    MetricsEnum.DES_GET_IABDS       -> registry.counter("des-get-iabds-failed-counter"),
-    MetricsEnum.DES_GET_TAX_ACCOUNT -> registry.counter("des-get-tax-account-failed-counter")
+    MetricsEnum.NPS_GET_IABDS       -> registry.counter("nps-get-iabds-failed-counter"),
+    MetricsEnum.NPS_GET_TAX_ACCOUNT -> registry.counter("nps-get-tax-account-failed-counter")
   )
 
   def startTimer(api: MetricsEnum): Context = timers(api).time()

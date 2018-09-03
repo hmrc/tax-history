@@ -29,7 +29,7 @@ import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import scala.concurrent.Future
 
-class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
+class SquidNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   lazy val testNpsEmployment = loadFile("/json/nps/response/employments.json").as[List[NpsEmployment]]
 
@@ -83,7 +83,7 @@ class NpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     }
   }
 
-  lazy val testNpsConnector = new NpsConnector(
+  lazy val testNpsConnector = new SquidNpsConnector(
     http = mock[HttpGet],
     baseUrl = "/fake",
     metrics = mock[TaxHistoryMetrics],

@@ -26,10 +26,10 @@ import uk.gov.hmrc.taxhistory.utils.Logging
 
 import scala.concurrent.Future
 
-class NpsConnector @Inject()(val http: HttpGet,
-                             val metrics: TaxHistoryMetrics,
-                             @Named("nps-hod-base-url") val baseUrl: String,
-                             @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends AnyRef with Logging {
+class SquidNpsConnector @Inject()(val http: HttpGet,
+                                  val metrics: TaxHistoryMetrics,
+                                  @Named("nps-hod-base-url") val baseUrl: String,
+                                  @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends AnyRef with Logging {
 
   private val servicePrefix = "nps-hod-service/services/nps"
   def employmentUrl(nino: Nino, year: Int) = s"$baseUrl/$servicePrefix/person/${nino.value}/employment/$year"
@@ -51,7 +51,7 @@ class NpsConnector @Inject()(val http: HttpGet,
     result.onFailure { case e =>
       metrics.incrementFailedCounter(MetricsEnum.NPS_GET_EMPLOYMENTS)
       timerContext.stop()
-      logger.warn(s"NPS connector - Error returned from NPS connector (getEmployments): ${e.toString}: ${e.getMessage}")
+      logger.warn(s"SQUID NPS connector - Error returned from SQUID NPS connector (getEmployments): ${e.toString}: ${e.getMessage}")
     }
     result
   }

@@ -54,13 +54,13 @@ class PayAndTaxServiceSpec extends UnitSpec with MockitoSugar with TestUtil {
 
   "PayAndTax" should {
     "successfully populated from rti" in {
-      when(testEmploymentHistoryService.npsConnector.getEmployments(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
-      when(testEmploymentHistoryService.desConnector.getIabds(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.desNpsConnector.getIabds(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(iabdsResponse))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(rtiEmploymentResponse))
-      when(testEmploymentHistoryService.desConnector.getTaxAccount(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new BadRequestException("")))
       val payAsYouEarn = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino,TaxYear(2016)))
 

@@ -22,7 +22,7 @@ import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-class DesTaxAccountSpec extends TestUtil with UnitSpec {
+class NpsTaxAccountSpec extends TestUtil with UnitSpec {
 
   lazy val getTaxAcoountResponseURLDummy: JsValue = loadFile("/json/nps/response/GetTaxAccount.json")
 
@@ -31,11 +31,11 @@ class DesTaxAccountSpec extends TestUtil with UnitSpec {
   private val outStandingDebt = 145.75
   private val underPayment = 15423.29
 
-  private val taxAccount = getTaxAcoountResponseURLDummy.as[DesTaxAccount]
+  private val taxAccount = getTaxAcoountResponseURLDummy.as[NpsTaxAccount]
 
   "GetTaxAccount" should {
-    "transform Des Get Tax Account Response Json correctly to DesTaxAccount Model " in {
-      taxAccount shouldBe a[DesTaxAccount]
+    "transform Nps Get Tax Account Response Json correctly to NpsTaxAccount Model " in {
+      taxAccount shouldBe a[NpsTaxAccount]
       taxAccount.getPrimaryEmploymentId shouldBe Some(primaryEmploymentId)
       taxAccount.getActualPupCodedInCYPlusOne shouldBe Some(actualPupCodedInCYPlusOne)
       taxAccount.getOutStandingDebt shouldBe Some(outStandingDebt)

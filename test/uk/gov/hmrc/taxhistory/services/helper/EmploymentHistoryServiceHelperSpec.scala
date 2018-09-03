@@ -38,7 +38,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
   lazy val testRtiData: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
   lazy val testIabds: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
   lazy val testIncomeSource = IncomeSource(1, 1, None, Nil, Nil, testTaxCode, None, 1, "")
-  lazy val testDesTaxAccount: DesTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[DesTaxAccount]
+  lazy val testNpsTaxAccount: NpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
 
   val startDate = new LocalDate("2015-01-21")
   lazy val employment1 = Employment(payeReference = "1234",
