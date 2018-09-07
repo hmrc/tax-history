@@ -46,7 +46,7 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
     "create the correct headers" in {
       val headers = testDesNpsConnector.basicDesHeaders(HeaderCarrier())
-      headers.extraHeaders mustBe List(("Environment", "test"), ("Authorization", "someToken"))
+      headers.extraHeaders mustBe List(("Environment", "test"), ("Authorization", "Bearer someToken"))
     }
 
     "create the correct url for iabds" in {
