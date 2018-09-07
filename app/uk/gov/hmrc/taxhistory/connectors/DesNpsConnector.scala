@@ -38,7 +38,7 @@ class DesNpsConnector @Inject()(val http: HttpGet,
 
   def basicDesHeaders(hc: HeaderCarrier): HeaderCarrier = {
     hc.withExtraHeaders("Environment" -> env,
-    "Authorization" -> authorizationToken)
+      "Authorization" -> s"Bearer $authorizationToken")
   }
 
   def getIabds(nino: Nino, year: Int): Future[List[Iabd]] = {
