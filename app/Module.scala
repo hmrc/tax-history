@@ -15,7 +15,6 @@
  */
 
 import javax.inject.Provider
-
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names
 import com.google.inject.name.Names.named
