@@ -47,7 +47,11 @@ Gets a list of employment objects for a given nino and tax year
     employerName:String,
     companyBenefitsURI: Option[String] (e.g. /:taxyear/employments/:employmentId/company-benefits),
     payAndTaxURI: Option[String] (e.g. /:taxyear/employments/:employmentId/pay-and-tax),
-    employmentURI: Option[String] (e.g. /:taxyear/employments/:employmentId)
+    employmentURI: Option[String] (e.g. /:taxyear/employments/:employmentId),
+    receivingOccupationalPension:Boolean,
+    receivingJobSeekersAllowance:Boolean,
+    employmentStatus: Int (Live=1, PotentiallyCeased=2, Ceased=3, Unknown=99),
+    worksNumber:String
   }
 ]
 ```
@@ -77,7 +81,11 @@ Employment{
   employerName:String,
   companyBenefitsURI: Option[String] (e.g. /:taxyear/employments/:employmentId/company-benefits),
   payAndTaxURI: Option[String] (e.g. /:taxyear/employments/:employmentId/pay-and-tax),
-  employmentURI: Option[String] (e.g. /:taxyear/employments/:employmentId)
+  employmentURI: Option[String] (e.g. /:taxyear/employments/:employmentId),
+  receivingOccupationalPension:Boolean,
+  receivingJobSeekersAllowance:Boolean,
+  employmentStatus: Int (Live=1, PotentiallyCeased=2, Ceased=3, Unknown=99),
+  worksNumber:String
 }
 ```
 
@@ -94,11 +102,12 @@ Gets a list of allowance objects for a given nino and tax year
 |----|----|----|
 | ```:nino```| true | Standard National Insurance Number format e.g. QQ123456A |
 | ```:taxyear```| true | The first year in a tax year. e.g. for tax year 6th April 2016 - 5th April 2017 would be ```2016``` |
+
 **Return Format**
 ```
 [
     Allowance{
-     allowanceId: String UUID Format,
+      allowanceId: String UUID Format,
       iabdType: String,
       amount: BigDecimal
     }
@@ -124,9 +133,10 @@ Gets a list of company benefits objects for a given nino, tax year and employmen
 ```
 [
     CompanyBenefit{
-     companyBenefitId: String UUID Format,
+      companyBenefitId: String UUID Format,
       iabdType: String,
-      amount: BigDecimal
+      amount: BigDecimal,
+      source: Option[Int]
     }
 ]
 ```
@@ -152,11 +162,12 @@ Gets pay and tax object containing a list of EYU's for a given nino, tax year an
     PayAndTax{
         payAndTaxId: String UUID Format,
         taxablePayTotal: Option[BigDecimal],
-         taxTotal: Option[BigDecimal],
-         paymentDate: Option[LocalDate],
-         earlierYearUpdates: List[EarlierYearUpdate]
+        taxTotal: Option[BigDecimal],
+        studentLoan: Option[BigDecimal],
+        paymentDate: Option[LocalDate],
+        earlierYearUpdates: List[EarlierYearUpdate]
 
-         ## - Above eyu list is of the below objects
+        ## - Above eyu list is of the below objects
         EarlierYearUpdate{
             earlierYearUpdateId: String UUID Format,
             taxablePayEYU: BigDecimal,
