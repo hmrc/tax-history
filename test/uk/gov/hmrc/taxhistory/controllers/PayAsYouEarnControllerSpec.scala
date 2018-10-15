@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxhistory.controllers
 
 import org.joda.time.LocalDate
-import org.mockito.Matchers
+import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
@@ -64,24 +64,32 @@ class PayAsYouEarnControllerSpec extends PlaySpec with OneServerPerSuite with Mo
 
   val testCtrlr = new PayAsYouEarnController(mockEmploymentHistoryService)
 
-  private trait GetFromCacheSucceeds {
-    when(mockEmploymentHistoryService.getFromCache(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+  protected def withGetFromCacheSucceeeded(testCode: => Any) = {
+    when(mockEmploymentHistoryService.getFromCache(any(), any())(any[HeaderCarrier]))
       .thenReturn(Future.successful(testPaye))
+
+    testCode
+
+    verify(mockEmploymentHistoryService).getFromCache(any(), any())(any[HeaderCarrier])
   }
 
-  private class GetFromCacheFails(httpException: Exception) {
-    when(mockEmploymentHistoryService.getFromCache(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+  protected def withGetFromCacheFailed(httpException: Exception)(testCode: => Any) = {
+    when(mockEmploymentHistoryService.getFromCache(any(), any())(any[HeaderCarrier]))
       .thenReturn(Future.failed(httpException))
+
+    testCode
+
+    verify(mockEmploymentHistoryService).getFromCache(any(), any())(any[HeaderCarrier])
   }
 
   "getAllDetails" must {
 
-    "respond with OK for successful get" in new GetFromCacheSucceeds {
+    "respond with OK for successful get" in withGetFromCacheSucceeeded {
       val result = testCtrlr.getPayAsYouEarn(ninoWithAgent.nino, taxYear = 2016).apply(FakeRequest())
       status(result) must be(OK)
     }
 
-    "respond with json serialised PayAsYouEarn" in new GetFromCacheSucceeds {
+    "respond with json serialised PayAsYouEarn" in withGetFromCacheSucceeeded {
       val result = testCtrlr.getPayAsYouEarn(ninoWithAgent.nino, taxYear = 2016).apply(FakeRequest())
       contentAsJson(result) must be(Json.parse(
         s"""
@@ -106,13 +114,19 @@ class PayAsYouEarnControllerSpec extends PlaySpec with OneServerPerSuite with Mo
         """.stripMargin))
     }
 
-    "propagate error responses from upstream microservices" in {
-      HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-        new GetFromCacheFails(httpException) {
+    HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
+      s"propagate error responses from upstream microservices: when exception is ${httpException.getClass.getSimpleName} and expected status is $expectedStatus" in {
+        withGetFromCacheFailed(httpException) {
           val result = testCtrlr.getPayAsYouEarn(ninoWithAgent.nino, taxYear = 2015).apply(FakeRequest())
           status(result) must be(expectedStatus)
         }
       }
+    }
+
+    "respond with 400 BAD_REQUEST when NINO is invalid" in {
+      val malformedNino = "A123"
+      val result = testCtrlr.getPayAsYouEarn(malformedNino, taxYear = 2015).apply(FakeRequest())
+      status(result) must be(BAD_REQUEST)
     }
 
   }

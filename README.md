@@ -230,9 +230,9 @@ Gets tax account information for a given nino and tax year
 #### Get All Details
 Gets all information for a given nino and tax year. This includes:
 - all employments
-- for each employment that has any, a list of company benefits
-- for each employment that has any, a list of pay and tax details. Each pay and tax detail will also have a list of their Earlier Year Updates (EYUs).
-- for each employment that has any, a list of income sources
+- a list of company benefits, if available, for each employment
+- a list of pay and tax details, if available, for each employment. Each pay and tax detail will also have a list of their Earlier Year Updates (EYUs).
+- a list of income sources, if available, for each employment
 - all allowances
 - the tax account information if available
 - state pension details if available

@@ -19,13 +19,21 @@ package uk.gov.hmrc.taxhistory.controllers
 import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.http.BadRequestException
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 
+import scala.concurrent.Future
+
 class PayAsYouEarnController @Inject()(val employmentHistoryService: EmploymentHistoryService) extends TaxHistoryController {
 
   def getPayAsYouEarn(nino: String, taxYear: Int): Action[AnyContent] = Action.async { implicit request =>
-    toResult(employmentHistoryService.getFromCache(Nino(nino), TaxYear(taxYear)))
+    toResult {
+      if(Nino.isValid(nino))
+        employmentHistoryService.getFromCache(Nino(nino), TaxYear(taxYear))
+      else
+        Future.failed(new BadRequestException("Invalid NINO"))
+    }
   }
 }
