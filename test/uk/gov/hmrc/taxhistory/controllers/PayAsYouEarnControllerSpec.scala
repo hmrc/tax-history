@@ -31,6 +31,7 @@ import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestRelationshipAuthService}
+import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
@@ -85,12 +86,12 @@ class PayAsYouEarnControllerSpec extends PlaySpec with OneServerPerSuite with Mo
   "getAllDetails" must {
 
     "respond with OK for successful get" in withGetFromCacheSucceeeded {
-      val result = testCtrlr.getPayAsYouEarn(ninoWithAgent.nino, taxYear = 2016).apply(FakeRequest())
+      val result = testCtrlr.getPayAsYouEarn(ninoWithAgent, TaxYear(2016)).apply(FakeRequest())
       status(result) must be(OK)
     }
 
     "respond with json serialised PayAsYouEarn" in withGetFromCacheSucceeeded {
-      val result = testCtrlr.getPayAsYouEarn(ninoWithAgent.nino, taxYear = 2016).apply(FakeRequest())
+      val result = testCtrlr.getPayAsYouEarn(ninoWithAgent, TaxYear(2016)).apply(FakeRequest())
       contentAsJson(result) must be(Json.parse(
         s"""
           |{
@@ -117,19 +118,10 @@ class PayAsYouEarnControllerSpec extends PlaySpec with OneServerPerSuite with Mo
     HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
       s"propagate error responses from upstream microservices: when exception is ${httpException.getClass.getSimpleName} and expected status is $expectedStatus" in {
         withGetFromCacheFailed(httpException) {
-          val result = testCtrlr.getPayAsYouEarn(ninoWithAgent.nino, taxYear = 2015).apply(FakeRequest())
+          val result = testCtrlr.getPayAsYouEarn(ninoWithAgent, TaxYear(2015)).apply(FakeRequest())
           status(result) must be(expectedStatus)
         }
       }
     }
-
-    "respond with 400 BAD_REQUEST when NINO is invalid" in {
-      val malformedNino = "A123"
-      val result = testCtrlr.getPayAsYouEarn(malformedNino, taxYear = 2015).apply(FakeRequest())
-      status(result) must be(BAD_REQUEST)
-
-      verify(mockEmploymentHistoryService, times(0)).getFromCache(any(), any())(any[HeaderCarrier])
-    }
-
   }
 }

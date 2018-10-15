@@ -15,6 +15,7 @@ trait MicroService {
   import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
   import uk.gov.hmrc.versioning.SbtGitVersioning
   import play.sbt.routes.RoutesKeys.routesGenerator
+  import play.sbt.routes.RoutesKeys.routesImport
 
 
   import TestPhases._
@@ -48,6 +49,7 @@ trait MicroService {
     .settings(scalaSettings: _*)
     .settings(publishingSettings: _*)
     .settings(defaultSettings(): _*)
+    .settings(routesImport ++= Seq("uk.gov.hmrc.taxhistory.binders.PathBinders._"))
     .settings(
       scalaVersion := "2.11.11",
       libraryDependencies ++= appDependencies,

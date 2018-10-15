@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxhistory.controllers
+package uk.gov.hmrc.taxhistory.binders
 
-import javax.inject.Inject
-import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
-import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 
-class PayAsYouEarnController @Inject()(val employmentHistoryService: EmploymentHistoryService) extends TaxHistoryController {
-
-  def getPayAsYouEarn(nino: Nino, taxYear: TaxYear): Action[AnyContent] = Action.async { implicit request =>
-    toResult(employmentHistoryService.getFromCache(nino, taxYear))
-  }
+object PathBinders {
+  implicit val ninoBinder = new SimpleObjectBinder[Nino](Nino.apply, _.value)
+  implicit val taxYearBinder = new SimpleObjectBinder[TaxYear](yearStr => TaxYear(yearStr.toInt), _.startYear.toString)
 }
