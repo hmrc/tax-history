@@ -127,6 +127,8 @@ class PayAsYouEarnControllerSpec extends PlaySpec with OneServerPerSuite with Mo
       val malformedNino = "A123"
       val result = testCtrlr.getPayAsYouEarn(malformedNino, taxYear = 2015).apply(FakeRequest())
       status(result) must be(BAD_REQUEST)
+
+      verify(mockEmploymentHistoryService, times(0)).getFromCache(any(), any())(any[HeaderCarrier])
     }
 
   }
