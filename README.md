@@ -8,7 +8,7 @@ Source code for the back end microservice for the Income Record Viewer service
 ### License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html")
-
+PayAndTax
 ### Running the application
 
 In order to run the microservice, you must have SBT installed. You should then be able to start the application using:
@@ -42,7 +42,7 @@ Gets a list of employment objects for a given nino and tax year
   Employment {
     employmentId: String UUID Format
     startDate:LocalDate,
-    endtDate:Option[LocalDate],
+    endDate:Option[LocalDate],
     payeReference:String,
     employerName:String,
     companyBenefitsURI: Option[String] (e.g. /:taxyear/employments/:employmentId/company-benefits),
@@ -76,7 +76,7 @@ Gets an employment object for a given nino and tax year and employmentId
 Employment{
   employmentId: String UUID Format
   startDate:LocalDate,
-  endtDate:Option[LocalDate],
+  endDate:Option[LocalDate],
   payeReference:String,
   employerName:String,
   companyBenefitsURI: Option[String] (e.g. /:taxyear/employments/:employmentId/company-benefits),
@@ -146,7 +146,7 @@ Gets pay and tax object containing a list of EYU's for a given nino, tax year an
 
 | *URL* | *Supported Methods* | *Description* |
 |--------|----|----|
-| ```/:nino/:taxyear/employments/:employmentId/pay-and-tax``` | GET | Retrieves all company benefits for an given nino, tax year and employmentId as below. |
+| ```/:nino/:taxyear/employments/:employmentId/pay-and-tax``` | GET | Retrieves all pay and tax and EYU for an given nino, tax year and employmentId as below. |
 
 **Parameters**
 
@@ -227,3 +227,115 @@ Gets tax account information for a given nino and tax year
     }
 ```
 
+#### Get All Details
+Gets all information for a given nino and tax year. This includes:
+- all employments
+- for each employment that has any, a list of company benefits
+- for each employment that has any, a list of pay and tax details. Each pay and tax detail will also have a list of their Earlier Year Updates (EYUs).
+- for each employment that has any, a list of income sources
+- all allowances
+- the tax account information if available
+- state pension details if available
+
+| *URL* | *Supported Methods* | *Description* |
+|--------|----|----|
+| ```/:nino/:year/all-details``` | GET | Retrieves all details for a given nino and tax year. |
+
+**Parameters**
+
+|*Parameter*|*Required*|*Description*|
+|----|----|----|
+| ```:nino```| true | Standard National Insurance Number format e.g. QQ123456A |
+| ```:taxyear```| true | The first year in a tax year. e.g. for tax year 6th April 2016 - 5th April 2017 would be ```2016``` |
+
+**Return Format**
+```
+{
+  "employments": [
+    Employment{
+      "employmentId" : String UUID
+      "startDate" : LocalDate,
+      "endDate" : Option[LocalDate],
+      "payeReference" : String,
+      "employerName" : String,
+      "receivingOccupationalPension" : Boolean,
+      "receivingJobSeekersAllowance" : Boolean,
+      "employmentStatus" : Int (Live=1, PotentiallyCeased=2, Ceased=3, Unknown=99),
+      "worksNumber" : String,
+      "companyBenefitsURI" : Option[String],
+      "payAndTaxURI" : Option[String],
+      "employmentURI" : Option[String]
+    }
+  ],
+
+  "allowances" : [
+    Allowance{
+      "allowanceId": String UUID,
+      "iabdType": String,
+      "amount": BigDecimal
+    }
+  ],
+
+  "benefits" : {
+    "[employmentId UUID]" : [
+      CompanyBenefit{
+        "companyBenefitId" : String UUID,
+        "iabdType" : String,
+        "amount" : BigDecimal,
+        "source" : Option[Int]
+      }
+    ]
+  },
+
+  "payAndTax" : {
+    "[employmentId UUID]" : PayAndTax{
+      "payAndTaxId" : String UUID,
+      "taxablePayTotal" : Option[BigDecimal],
+      "taxTotal" : Option[BigDecimal],
+      "studentLoan" : Option[BigDecimal],
+      "paymentDate" : Option[LocalDate],
+      "earlierYearUpdates" : [
+        EarlierYearUpdate{
+          "earlierYearUpdateId" : String UUID,
+          "taxablePayEYU" : BigDecimal,
+          "taxEYU" : BigDecimal,
+          "receivedDate" : LocalDate
+        }
+      ]
+    }
+  },
+
+  "incomeSources" : {
+    "[employmentId UUID]" : IncomeSource{
+      "employmentId" : Int,
+      "employmentType" : Int,
+      "actualPUPCodedInCYPlusOneTaxYear" : Option[BigDecimal],
+      "deductions" : List[TaDeduction],
+      "allowances" : List[TaAllowance],
+      "taxCode" : uk.gov.hmrc.domain.TaxCode,
+      "basisOperation" : Option[Int],
+      "employmentTaxDistrictNumber" : Int,
+      "employmentPayeRef" : String
+    }
+  },
+
+  "taxAccount" : Option[TaxAccount]{
+    "taxAccountId" : String UUID,
+    "outstandingDebtRestriction" : Option[BigDecimal],
+    "underpaymentAmount" : Option[BigDecimal],
+    "actualPUPCodedInCYPlusOneTaxYear" : Option[BigDecimal]
+  },
+
+  "statePension" : Option[StatePension]{
+    "grossAmount" : BigDecimal,
+    "typeDescription" : String
+  }
+}
+```
+
+The `benefits`, `payAndTax`, and `incomeSources` objects will map an employment's `employmentId` UUID to an object containing details for that employment. If an employment has no details, then there will be no UUID key present for that employment.
+
+Empty list, empty map and optional handling:
+- For the lists (`employments`, `allowances`), if there are no list elements, the key will still be present in the json but with an empty list value, e.g. `"allowances" : []`
+- For the maps (`benefits`, `payAndTax`, `incomeSources`), if there are no employments with any details, the map's key will still be present but the map's object value would be an empty object, e.g. `"benefits" : {}`.
+- For the optionals (`taxAccount`, `statePension`), if they are not available then the key/value entry will be missing from the json.
