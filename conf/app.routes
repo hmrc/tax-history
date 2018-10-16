@@ -10,3 +10,4 @@ GET        /:nino/:taxYear/all-pay-and-tax                                   @uk
 GET        /:nino/:taxYear/employments/:employmentId/income-source           @uk.gov.hmrc.taxhistory.controllers.TaxAccountController.getIncomeSource(nino:String,taxYear:Int,employmentId:String)
 GET        /:nino/:taxYear/tax-account                                       @uk.gov.hmrc.taxhistory.controllers.TaxAccountController.getTaxAccount(nino:String,taxYear:Int)
 GET        /:nino/:taxYear/state-pension                                     @uk.gov.hmrc.taxhistory.controllers.StatePensionController.getStatePension(nino:String,taxYear:Int)
+GET        /:nino/:taxYear/all-details                                       @uk.gov.hmrc.taxhistory.controllers.PayAsYouEarnController.getPayAsYouEarn(nino: uk.gov.hmrc.domain.Nino,taxYear:uk.gov.hmrc.time.TaxYear)
