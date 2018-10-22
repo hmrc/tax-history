@@ -17,14 +17,14 @@
 package uk.gov.hmrc.taxhistory.services
 
 
+import com.fasterxml.jackson.core.JsonParseException
 import javax.inject.{Inject, Named}
-
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.connectors.{DesNpsConnector, SquidNpsConnector, RtiConnector}
+import uk.gov.hmrc.taxhistory.connectors.{DesNpsConnector, RtiConnector, SquidNpsConnector}
 import uk.gov.hmrc.taxhistory.model.api.Employment._
 import uk.gov.hmrc.taxhistory.model.api.FillerState._
 import uk.gov.hmrc.taxhistory.model.api._
@@ -131,7 +131,7 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
         }
       }
     } else {
-      Future(None)
+      Future.failed(new NotFoundException(s"TaxAccount only available for last completed tax year"))
     }
   }
 
@@ -149,11 +149,11 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
   }
 
   def getIncomeSource(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Option[IncomeSource]] = {
-    if (taxYear == TaxYear.current) {
+    (if(taxYear == TaxYear.current) {
       getFromCache(nino, taxYear).map(_.incomeSources.get(employmentId))
     } else {
       Future(None)
-    }
+    }).orNotFound(s"IncomeSource not found for NINO ${nino.value}, tax year ${taxYear.toString}, and employmentId $employmentId")
   }
 
   def getTaxYears(nino: Nino): Future[List[IndividualTaxYear]] = {

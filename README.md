@@ -218,6 +218,10 @@ Gets tax account information for a given nino and tax year
 | ```:taxyear```| true | The first year in a tax year. e.g. for tax year 6th April 2016 - 5th April 2017 would be ```2016``` |
 
 **Return Format**
+If there is no tax account information for the nino and tax year, a 404 (not found) status is returned.
+
+If there is tax account information, the response will be 200 (ok) containing a json object like:
+
 ```
     TaxAccount {
         taxAccountId :  String UUID Format,,
@@ -243,8 +247,11 @@ Gets income source details for a given nino, tax year and employment
 | ```:employmentId```| true | Unique UUID in the standard format e.g. 123e4567-e89b-12d3-a456-426655440000 |
 
 **Return Format**
+If there is no income source details for the employment, a 404 (not found) status is returned.
+
+If there is income source details, the response will be 200 (ok) containing a json object like:
 ```
-    IncomeSource {
+    IncomeSource{
         "employmentId": Int,
         "employmentType": Option[Int],
         "actualPUPCodedInCYPlusOneTaxYear": Option[BigDecimal],

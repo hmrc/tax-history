@@ -78,9 +78,8 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       taxAccount must be(testTaxAccount)
     }
 
-    "return no tax account from cache for current year" in {
-      val taxAccount = await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear.current))
-      taxAccount must be(None)
+    "fail to retrieve from cache for current year with NotFoundException" in {
+      intercept[NotFoundException](await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear.current)))
     }
 
   }
