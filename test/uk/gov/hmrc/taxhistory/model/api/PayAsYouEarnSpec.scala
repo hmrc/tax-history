@@ -233,12 +233,12 @@ class PayAsYouEarnSpec extends TestUtil with UnitSpec {
     "(de)serialising the 'incomeSources' field" should {
       val incomeSource1 = IncomeSource(
         employmentId = 1,
-        employmentType = 1,
+        employmentType = Some(1),
         actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal("0")),
-        taxCode = TaxCode("227L"),
+        taxCode = Option("227L"),
         basisOperation = Some(2),
-        employmentTaxDistrictNumber = 126,
-        employmentPayeRef = "P32",
+        employmentTaxDistrictNumber = Some(126),
+        employmentPayeRef = Some("P32"),
         allowances = List(
           TaAllowance(`type` = 11, npsDescription = "personal allowance", amount = BigDecimal("11000"), sourceAmount = Some(BigDecimal("11000")))
         ),

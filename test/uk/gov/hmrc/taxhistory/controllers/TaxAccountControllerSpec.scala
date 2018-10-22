@@ -48,7 +48,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
 
   private val testTaxAccount = TaxAccount()
   private val testTaxYear = TaxYear.current.previous.currentYear
-  private val testTaxCode = TaxCode("1150L")
+  private val testTaxCode = "1150L"
 
   override def beforeEach: Unit = {
     reset(mockEmploymentHistoryService)
@@ -90,7 +90,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
   "getIncomeSource" must {
 
     val testEmnploymentId = UUID.randomUUID().toString
-    val testIncomeSource = IncomeSource(1, 1, None, List.empty, List.empty, testTaxCode, None, 1, "")
+    val testIncomeSource = IncomeSource(1, Some(1), None, List.empty, List.empty, Some(testTaxCode), None, Some(1), Some(""))
 
     "respond with OK for successful get" in {
       when(mockEmploymentHistoryService.getIncomeSource(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier]))

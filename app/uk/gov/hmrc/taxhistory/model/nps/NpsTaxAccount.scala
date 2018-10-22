@@ -40,14 +40,14 @@ object TaAllowance {
 }
 
 case class IncomeSource(employmentId:Int,
-                        employmentType:Int,
+                        employmentType:Option[Int],
                         actualPUPCodedInCYPlusOneTaxYear:Option[BigDecimal],
                         deductions: List[TaDeduction],
                         allowances: List[TaAllowance],
-                        taxCode: TaxCode,
+                        taxCode: Option[String],
                         basisOperation: Option[Int],
-                        employmentTaxDistrictNumber: Int,
-                        employmentPayeRef: String
+                        employmentTaxDistrictNumber: Option[Int],
+                        employmentPayeRef: Option[String]
                        )
 
 object IncomeSource {
@@ -60,20 +60,25 @@ case class NpsTaxAccount(incomeSources: List[IncomeSource]){
    val OutStandingDebtType = 41
    val UnderpaymentAmountType = 35
 
+  private def findPrimaryEmployment: Option[IncomeSource] = {
+    incomeSources.find(_.employmentType.contains(PrimaryEmployment))
+  }
+
   def getPrimaryEmploymentId={
-    incomeSources.find(_.employmentType==PrimaryEmployment).map(_.employmentId)
+    findPrimaryEmployment.map(_.employmentId)
   }
   def getOutStandingDebt={
-    incomeSources.find(_.employmentType==PrimaryEmployment).
-      flatMap(_.deductions.find(_.`type` == OutStandingDebtType)).flatMap(_.sourceAmount)
+    findPrimaryEmployment
+      .flatMap(_.deductions.find(_.`type` == OutStandingDebtType)).flatMap(_.sourceAmount)
   }
 
   def getUnderPayment={
-    incomeSources.find(_.employmentType==PrimaryEmployment).
-      flatMap(_.deductions.find(_.`type` == UnderpaymentAmountType)).flatMap(_.sourceAmount)
+    findPrimaryEmployment
+      .flatMap(_.deductions.find(_.`type` == UnderpaymentAmountType)).flatMap(_.sourceAmount)
   }
   def getActualPupCodedInCYPlusOne={
-    incomeSources.find(_.employmentType==PrimaryEmployment).flatMap(_.actualPUPCodedInCYPlusOneTaxYear)
+    findPrimaryEmployment
+      .flatMap(_.actualPUPCodedInCYPlusOneTaxYear)
   }
 
   def toTaxAccount: TaxAccount =
@@ -85,8 +90,9 @@ case class NpsTaxAccount(incomeSources: List[IncomeSource]){
 
   def matchedIncomeSource(npsEmployment: NpsEmployment): Option[IncomeSource] = {
     val iSs = incomeSources.filter { iS =>
-      iS.employmentTaxDistrictNumber.toString == npsEmployment.taxDistrictNumber &&
-        iS.employmentPayeRef == npsEmployment.payeNumber
+      val taxDistrictNumMatches = iS.employmentTaxDistrictNumber.map(_.toString).contains(npsEmployment.taxDistrictNumber)
+      val payeRefMatches = iS.employmentPayeRef.contains(npsEmployment.payeNumber)
+      taxDistrictNumMatches && payeRefMatches
     }
 
     if (iSs.lengthCompare(1) > 0) iSs.find(iS => iS.employmentId == npsEmployment.sequenceNumber) else iSs.headOption

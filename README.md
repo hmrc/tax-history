@@ -227,6 +227,50 @@ Gets tax account information for a given nino and tax year
     }
 ```
 
+#### Get Income Source
+Gets income source details for a given nino, tax year and employment
+
+| *URL* | *Supported Methods* | *Description* |
+|--------|----|----|
+| ```/:nino/:taxYear/employments/:employmentId/income-source``` | GET | Retrieves the income source for a given nino, tax year and employmentId. |
+
+**Parameters**
+
+|*Parameter*|*Required*|*Description*|
+|----|----|----|
+| ```:nino```| true | Standard National Insurance Number format e.g. QQ123456A |
+| ```:taxyear```| true | The first year in a tax year. e.g. for tax year 6th April 2016 - 5th April 2017 would be ```2016``` |
+| ```:employmentId```| true | Unique UUID in the standard format e.g. 123e4567-e89b-12d3-a456-426655440000 |
+
+**Return Format**
+```
+    IncomeSource {
+        "employmentId": Int,
+        "employmentType": Option[Int],
+        "actualPUPCodedInCYPlusOneTaxYear": Option[BigDecimal],
+        "deductions": [
+            TaDeduction{
+                "type": Int,
+                "npsDescription": String,
+                "amount": BigDecimal,
+                "sourceAmount": Option[BigDecimal]
+            }
+        ],
+        "allowances": [
+            TaAllowance{
+                "type": Int,
+                "npsDescription": String,
+                "amount": BigDecimal,
+                "sourceAmount": Option[BigDecimal],
+            }
+        ],
+        "basisOperation": Option[Int],
+        "employmentTaxDistrictNumber": Option[Int],
+        "employmentPayeRef": Option[String],
+        "taxCode": Option[String]
+    }
+```
+
 #### Get All Details
 Gets all information for a given nino and tax year. This includes:
 - all employments
@@ -307,15 +351,29 @@ Gets all information for a given nino and tax year. This includes:
 
   "incomeSources" : {
     "[employmentId UUID]" : IncomeSource{
-      "employmentId" : Int,
-      "employmentType" : Int,
-      "actualPUPCodedInCYPlusOneTaxYear" : Option[BigDecimal],
-      "deductions" : List[TaDeduction],
-      "allowances" : List[TaAllowance],
-      "taxCode" : uk.gov.hmrc.domain.TaxCode,
-      "basisOperation" : Option[Int],
-      "employmentTaxDistrictNumber" : Int,
-      "employmentPayeRef" : String
+        "employmentId": Int,
+        "employmentType": Option[Int],
+        "actualPUPCodedInCYPlusOneTaxYear": Option[BigDecimal],
+        "deductions": [
+            TaDeduction{
+                "type": Int,
+                "npsDescription": String,
+                "amount": BigDecimal,
+                "sourceAmount": Option[BigDecimal]
+            }
+        ],
+        "allowances": [
+            TaAllowance{
+                "type": Int,
+                "npsDescription": String,
+                "amount": BigDecimal,
+                "sourceAmount": Option[BigDecimal],
+            }
+        ],
+        "basisOperation": Option[Int],
+        "employmentTaxDistrictNumber": Option[Int],
+        "employmentPayeRef": Option[String],
+        "taxCode": Option[String]
     }
   },
 

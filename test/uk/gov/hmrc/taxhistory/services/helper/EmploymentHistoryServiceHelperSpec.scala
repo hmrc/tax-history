@@ -34,10 +34,10 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       "AA000000", 6, "0531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false,
       otherIncomeSourceIndicator = false, new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live))
 
-  val testTaxCode = TaxCode("1150L")
+  val testTaxCode = "1150L"
   lazy val testRtiData: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
   lazy val testIabds: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
-  lazy val testIncomeSource = IncomeSource(1, 1, None, Nil, Nil, testTaxCode, None, 1, "")
+  lazy val testIncomeSource = IncomeSource(1, Some(1), None, Nil, Nil, Some(testTaxCode), None, Some(1), Some(""))
   lazy val testNpsTaxAccount: NpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
 
   val startDate = new LocalDate("2015-01-21")
