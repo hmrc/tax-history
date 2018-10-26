@@ -17,20 +17,21 @@
 package uk.gov.hmrc.taxhistory.controllers
 
 import org.joda.time.LocalDate
-import org.mockito.Matchers._
+import org.mockito.Matchers.{any, eq => meq}
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.{OneServerPerSuite, PlaySpec}
 import play.api.libs.json.Json
+import play.api.mvc._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.model.api.{Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
-import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestRelationshipAuthService}
+import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, SaAuthService}
+import uk.gov.hmrc.taxhistory.utils.HttpErrors
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
@@ -38,10 +39,9 @@ import scala.concurrent.Future
 class PayAsYouEarnControllerSpec extends PlaySpec with OneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
 
   val mockEmploymentHistoryService: EmploymentHistoryService = mock[EmploymentHistoryService]
+  val mockSaAuthService: SaAuthService = mock[SaAuthService]
 
-  val ninoWithAgent = randomNino()
-  val ninoWithoutAgent = randomNino()
-
+  val testNino = randomNino()
   val testEmploymentId = java.util.UUID.randomUUID
   val testStartDate = LocalDate.now()
   val testPaye =
@@ -61,65 +61,128 @@ class PayAsYouEarnControllerSpec extends PlaySpec with OneServerPerSuite with Mo
 
   override def beforeEach = {
     reset(mockEmploymentHistoryService)
+    reset(mockSaAuthService)
   }
 
-  val testCtrlr = new PayAsYouEarnController(mockEmploymentHistoryService)
+  val testCtrlr = new PayAsYouEarnController(mockEmploymentHistoryService, mockSaAuthService)
 
-  protected def withGetFromCacheSucceeeded(testCode: => Any) = {
+  def withSuccessfulSaAuthorisation(testCode: => Any) = {
+    when(mockSaAuthService.checkSaAuthorisation(meq(testNino)))
+      .thenReturn(Action)
+
+    testCode
+  }
+
+  def withFailedSaAuthorisation(failureStatus: Int)(testCode: => Any) = {
+    val failingAction = new ActionBuilder[Request] {
+      override def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]) = Future.successful(Results.Status(failureStatus))
+    }
+    when(mockSaAuthService.checkSaAuthorisation(meq(testNino)))
+      .thenReturn(failingAction)
+
+    testCode
+  }
+
+  def withSuccessfulGetFromCache(testCode: => Any) {
     when(mockEmploymentHistoryService.getFromCache(any(), any())(any[HeaderCarrier]))
       .thenReturn(Future.successful(testPaye))
 
     testCode
 
-    verify(mockEmploymentHistoryService).getFromCache(any(), any())(any[HeaderCarrier])
+    verify(mockEmploymentHistoryService).getFromCache(meq(testNino), any())(any[HeaderCarrier])
   }
 
-  protected def withGetFromCacheFailed(httpException: Exception)(testCode: => Any) = {
-    when(mockEmploymentHistoryService.getFromCache(any(), any())(any[HeaderCarrier]))
-      .thenReturn(Future.failed(httpException))
+  def withFailedGetFromCache(httpException: Exception)(testCode: => Any) = {
+    def apply(testCode: => Any) = {
+      when(mockEmploymentHistoryService.getFromCache(meq(testNino), any())(any[HeaderCarrier]))
+        .thenReturn(Future.failed(httpException))
 
-    testCode
+      testCode
 
-    verify(mockEmploymentHistoryService).getFromCache(any(), any())(any[HeaderCarrier])
+      verify(mockEmploymentHistoryService).getFromCache(meq(testNino), any())(any[HeaderCarrier])
+    }
   }
 
   "getAllDetails" must {
 
-    "respond with OK for successful get" in withGetFromCacheSucceeeded {
-      val result = testCtrlr.getPayAsYouEarn(ninoWithAgent, TaxYear(2016)).apply(FakeRequest())
-      status(result) must be(OK)
+    "secure access via the SaAuthorisationService" when {
+      "not logged in" in {
+        withFailedSaAuthorisation(UNAUTHORIZED) {
+          val result = testCtrlr.getPayAsYouEarn(testNino, TaxYear(2016))(FakeRequest())
+          status(result) must be(UNAUTHORIZED)
+
+          verify(mockSaAuthService).checkSaAuthorisation(meq(testNino))
+          verifyZeroInteractions(mockEmploymentHistoryService)
+        }
+      }
+
+      "not authorised to access the nino" in {
+        withFailedSaAuthorisation(FORBIDDEN) {
+          val result = testCtrlr.getPayAsYouEarn(testNino, TaxYear(2016))(FakeRequest())
+          status(result) must be(FORBIDDEN)
+
+          verify(mockSaAuthService).checkSaAuthorisation(meq(testNino))
+          verifyZeroInteractions(mockEmploymentHistoryService)
+        }
+      }
+
+      "logged in and authorised to access the nino" in {
+        withSuccessfulSaAuthorisation {
+          withSuccessfulGetFromCache {
+            val result = testCtrlr.getPayAsYouEarn(testNino, TaxYear(2016))(FakeRequest())
+            status(result) must be(OK)
+
+            verify(mockSaAuthService).checkSaAuthorisation(meq(testNino))
+          }
+        }
+      }
     }
 
-    "respond with json serialised PayAsYouEarn" in withGetFromCacheSucceeeded {
-      val result = testCtrlr.getPayAsYouEarn(ninoWithAgent, TaxYear(2016)).apply(FakeRequest())
-      contentAsJson(result) must be(Json.parse(
-        s"""
-          |{
-          |  "employments" : [
-          |    {
-          |      "employmentId":"${testEmploymentId.toString}",
-          |      "startDate":"${testStartDate.toString}",
-          |      "payeReference":"SOME_PAYE",
-          |      "employerName":"Megacorp Plc",
-          |      "receivingOccupationalPension":false,
-          |      "receivingJobSeekersAllowance":false,
-          |      "employmentStatus":1,
-          |      "worksNumber":"00191048716"
-          |    }
-          |  ],
-          |  "allowances" : [],
-          |  "incomeSources" : {},
-          |  "benefits" : {},
-          |  "payAndTax" : {}
-          |}
-        """.stripMargin))
+    "respond with OK for successful get" in {
+      withSuccessfulSaAuthorisation {
+        withSuccessfulGetFromCache {
+          val result = testCtrlr.getPayAsYouEarn(testNino, TaxYear(2016)).apply(FakeRequest())
+          status(result) must be(OK)
+        }
+      }
+    }
+
+    "respond with json serialised PayAsYouEarn" in {
+      withSuccessfulSaAuthorisation {
+        withSuccessfulGetFromCache {
+          val result = testCtrlr.getPayAsYouEarn(testNino, TaxYear(2016)).apply(FakeRequest())
+          contentAsJson(result) must be(Json.parse(
+            s"""
+               |{
+               |  "employments" : [
+               |    {
+               |      "employmentId":"${testEmploymentId.toString}",
+               |      "startDate":"${testStartDate.toString}",
+               |      "payeReference":"SOME_PAYE",
+               |      "employerName":"Megacorp Plc",
+               |      "receivingOccupationalPension":false,
+               |      "receivingJobSeekersAllowance":false,
+               |      "employmentStatus":1,
+               |      "worksNumber":"00191048716"
+               |    }
+               |  ],
+               |  "allowances" : [],
+               |  "incomeSources" : {},
+               |  "benefits" : {},
+               |  "payAndTax" : {}
+               |}
+          """.stripMargin))
+        }
+      }
     }
 
     HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
       s"propagate error responses from upstream microservices: when exception is ${httpException.getClass.getSimpleName} and expected status is $expectedStatus" in {
-        withGetFromCacheFailed(httpException) {
-          val result = testCtrlr.getPayAsYouEarn(ninoWithAgent, TaxYear(2015)).apply(FakeRequest())
-          status(result) must be(expectedStatus)
+        withSuccessfulSaAuthorisation {
+          withFailedGetFromCache(httpException) {
+            val result = testCtrlr.getPayAsYouEarn(testNino, TaxYear(2015)).apply(FakeRequest())
+            status(result) must be(expectedStatus)
+          }
         }
       }
     }

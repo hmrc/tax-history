@@ -248,7 +248,21 @@ Gets all information for a given nino and tax year. This includes:
 | ```:nino```| true | Standard National Insurance Number format e.g. QQ123456A |
 | ```:taxyear```| true | The first year in a tax year. e.g. for tax year 6th April 2016 - 5th April 2017 would be ```2016``` |
 
-**Return Format**
+**Authorisation**
+
+The logged in user must be either:
+- An individual who has a NINO that matches the requested NINO in the URL
+- An agent with an IR-SA-AGENT enrolment and who has a delegated IR-SA enrolment for the client identified by the requested NINO (where the IR-SA enrolment's UTR matches the client's SA UTR). The `citizen-details` service is used to lookup the client's SA UTR for their NINO - if no SA UTR is available from `citizen-details` access is not allowed.
+
+**Responses**
+
+401 - If there is no active session
+
+403 - If there is an active session, but they do not have authorisation to access the requested NINO's details. See note on Authorisation above.
+
+404 - If no data was found
+
+200 - With a response format as below:
 ```
 {
   "employments": [
