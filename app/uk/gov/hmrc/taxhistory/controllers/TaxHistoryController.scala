@@ -31,7 +31,7 @@ trait TaxHistoryController extends BaseController with Logging {
         logger.warn("Bad Request: " + e400.message)
         BadRequest
       case e404: NotFoundException =>
-        logger.warn("404 Not found: " + e404.message)
+        logger.info("404 Not found: " + e404.message)
         NotFound
       case e4xx: Upstream4xxResponse =>
         logger.warn(s"Service returned error ${e4xx.upstreamResponseCode}: ${e4xx.message}")

@@ -269,8 +269,10 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       await(testEmploymentHistoryService.retrieveNpsIabds(testNino, TaxYear(2016))) shouldBe List.empty
     }
 
-    "return none where tax year is not cy-1" in {
-      await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear(2015))) shouldBe None
+    "return 404 Not Found for tax account details when" in {
+      intercept[NotFoundException]{
+        await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear(2015)))
+      }
     }
 
     "return None from get Nps Tax Account api for bad request response " in {
