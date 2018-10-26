@@ -254,7 +254,15 @@ The logged in user must be either:
 - An individual who has a NINO that matches the requested NINO in the URL
 - An agent with an IR-SA-AGENT enrolment and who has a delegated IR-SA enrolment for the client identified by the requested NINO (where the IR-SA enrolment's UTR matches the client's SA UTR). The `citizen-details` service is used to lookup the client's SA UTR for their NINO - if no SA UTR is available from `citizen-details` access is not allowed.
 
-**Return Format**
+**Responses**
+
+401 - If there is no active session
+
+403 - If there is an active session, but they do not have authorisation to access the requested NINO's details. See note on Authorisation above.
+
+404 - If no data was found
+
+200 - With a response format as below:
 ```
 {
   "employments": [
