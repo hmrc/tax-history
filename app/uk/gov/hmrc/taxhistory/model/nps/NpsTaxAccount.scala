@@ -17,9 +17,7 @@
 package uk.gov.hmrc.taxhistory.model.nps
 
 import play.api.libs.json._
-import uk.gov.hmrc.domain.TaxCode
-import uk.gov.hmrc.domain.TaxCodeFormats._
-import uk.gov.hmrc.taxhistory.model.api.TaxAccount
+import uk.gov.hmrc.taxhistory.model.api.{IncomeSource, TaxAccount}
 
 case class TaDeduction(`type`:Int,
                        npsDescription: String,
@@ -39,41 +37,64 @@ object TaAllowance {
   implicit val formats = Json.format[TaAllowance]
 }
 
-case class IncomeSource(employmentId:Int,
-                        employmentType:Int,
-                        actualPUPCodedInCYPlusOneTaxYear:Option[BigDecimal],
-                        deductions: List[TaDeduction],
-                        allowances: List[TaAllowance],
-                        taxCode: TaxCode,
-                        basisOperation: Option[Int],
-                        employmentTaxDistrictNumber: Int,
-                        employmentPayeRef: String
-                       )
-
-object IncomeSource {
-  implicit val formats = Json.format[IncomeSource]
+case class NpsIncomeSource(employmentId:Int,
+                           employmentType:Option[Int],
+                           actualPUPCodedInCYPlusOneTaxYear:Option[BigDecimal],
+                           deductions: List[TaDeduction],
+                           allowances: List[TaAllowance],
+                           taxCode: Option[String],
+                           basisOperation: Option[Int],
+                           employmentTaxDistrictNumber: Option[Int],
+                           employmentPayeRef: Option[String]
+                       ) {
+  def toIncomeSource: Option[IncomeSource] = {
+    if (taxCode.isEmpty || employmentType.isEmpty || employmentTaxDistrictNumber.isEmpty || employmentPayeRef.isEmpty)
+      None
+    else
+      Some(IncomeSource(
+        employmentId = this.employmentId,
+        employmentType = this.employmentType.get,
+        actualPUPCodedInCYPlusOneTaxYear = this.actualPUPCodedInCYPlusOneTaxYear,
+        deductions = this.deductions,
+        allowances = this.allowances,
+        taxCode = this.taxCode.get,
+        basisOperation = this.basisOperation,
+        employmentTaxDistrictNumber = this.employmentTaxDistrictNumber.get,
+        employmentPayeRef = this.employmentPayeRef.get
+      ))
+  }
 }
 
-case class NpsTaxAccount(incomeSources: List[IncomeSource]){
+object NpsIncomeSource {
+  implicit val formats = Json.format[NpsIncomeSource]
+}
 
-   val PrimaryEmployment = 1
-   val OutStandingDebtType = 41
-   val UnderpaymentAmountType = 35
+case class NpsTaxAccount(incomeSources: List[NpsIncomeSource]){
 
-  def getPrimaryEmploymentId={
-    incomeSources.find(_.employmentType==PrimaryEmployment).map(_.employmentId)
-  }
-  def getOutStandingDebt={
-    incomeSources.find(_.employmentType==PrimaryEmployment).
-      flatMap(_.deductions.find(_.`type` == OutStandingDebtType)).flatMap(_.sourceAmount)
+  val PrimaryEmployment = 1
+  val OutStandingDebtType = 41
+  val UnderpaymentAmountType = 35
+
+  private def findPrimaryEmployment: Option[NpsIncomeSource] = {
+    incomeSources.find(_.employmentType.contains(PrimaryEmployment))
   }
 
-  def getUnderPayment={
-    incomeSources.find(_.employmentType==PrimaryEmployment).
-      flatMap(_.deductions.find(_.`type` == UnderpaymentAmountType)).flatMap(_.sourceAmount)
+  private[nps] def getPrimaryEmploymentId={
+    findPrimaryEmployment.map(_.employmentId)
   }
-  def getActualPupCodedInCYPlusOne={
-    incomeSources.find(_.employmentType==PrimaryEmployment).flatMap(_.actualPUPCodedInCYPlusOneTaxYear)
+
+  private[nps] def getOutStandingDebt={
+    findPrimaryEmployment
+      .flatMap(_.deductions.find(_.`type` == OutStandingDebtType)).flatMap(_.sourceAmount)
+  }
+
+  private[nps] def getUnderPayment={
+    findPrimaryEmployment
+      .flatMap(_.deductions.find(_.`type` == UnderpaymentAmountType)).flatMap(_.sourceAmount)
+  }
+  private[nps] def getActualPupCodedInCYPlusOne={
+    findPrimaryEmployment
+      .flatMap(_.actualPUPCodedInCYPlusOneTaxYear)
   }
 
   def toTaxAccount: TaxAccount =
@@ -85,11 +106,17 @@ case class NpsTaxAccount(incomeSources: List[IncomeSource]){
 
   def matchedIncomeSource(npsEmployment: NpsEmployment): Option[IncomeSource] = {
     val iSs = incomeSources.filter { iS =>
-      iS.employmentTaxDistrictNumber.toString == npsEmployment.taxDistrictNumber &&
-        iS.employmentPayeRef == npsEmployment.payeNumber
+      val taxDistrictNumMatches = iS.employmentTaxDistrictNumber.map(_.toString).contains(npsEmployment.taxDistrictNumber)
+      val payeRefMatches = iS.employmentPayeRef.contains(npsEmployment.payeNumber)
+      taxDistrictNumMatches && payeRefMatches
     }
 
-    if (iSs.lengthCompare(1) > 0) iSs.find(iS => iS.employmentId == npsEmployment.sequenceNumber) else iSs.headOption
+    val matchedNpsIncomeSource = if (iSs.lengthCompare(1) > 0)
+      iSs.find(iS => iS.employmentId == npsEmployment.sequenceNumber)
+    else
+      iSs.headOption
+
+    matchedNpsIncomeSource.flatMap(_.toIncomeSource)
   }
 
 }

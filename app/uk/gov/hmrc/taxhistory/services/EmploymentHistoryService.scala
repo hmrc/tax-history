@@ -238,12 +238,12 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
     // One [[PayAsYouEarn]] instance will be produced for each npsEmployment.
     val payes: List[PayAsYouEarn] = npsEmployments.map { npsEmployment =>
 
-      val incomeSource = if (taxAccountOption.isDefined) taxAccountOption.get.matchedIncomeSource(npsEmployment) else None
+      val matchedIncomeSource = taxAccountOption.flatMap(_.matchedIncomeSource(npsEmployment))
 
       EmploymentHistoryServiceHelper.buildPAYE(
         rtiEmployment = employmentMatches.get(npsEmployment),
         iabds = iabdsNoStatePensions.matchedCompanyBenefits(npsEmployment),
-        incomeSource = incomeSource,
+        incomeSource = matchedIncomeSource,
         npsEmployment = npsEmployment
       )
     }

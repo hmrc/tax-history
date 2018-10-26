@@ -22,7 +22,6 @@ import org.joda.time.LocalDate
 import play.api.libs.json.JsObject
 import play.api.libs.json._
 import play.api.libs.json.Json._
-import uk.gov.hmrc.domain.TaxCode
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -235,7 +234,7 @@ class PayAsYouEarnSpec extends TestUtil with UnitSpec {
         employmentId = 1,
         employmentType = 1,
         actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal("0")),
-        taxCode = TaxCode("227L"),
+        taxCode = "227L",
         basisOperation = Some(2),
         employmentTaxDistrictNumber = 126,
         employmentPayeRef = "P32",

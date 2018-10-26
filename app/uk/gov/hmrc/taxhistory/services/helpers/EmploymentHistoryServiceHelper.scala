@@ -17,8 +17,8 @@
 package uk.gov.hmrc.taxhistory.services.helpers
 
 import uk.gov.hmrc.tai.model.rti.RtiEmployment
-import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, PayAndTax, PayAsYouEarn}
-import uk.gov.hmrc.taxhistory.model.nps._
+import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, IncomeSource, PayAndTax, PayAsYouEarn}
+import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, Iabd}
 import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 import uk.gov.hmrc.taxhistory.utils.Logging
 
