@@ -70,31 +70,45 @@ class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUt
         intercept[Upstream5xxResponse](await(testConnector.lookupSaUtr(Nino("AA000003D"))))
       }
 
-    "increment successful metric counter on successful call" in
-      new CitizenDetailsRespondsWithUtr(forThisNino = Nino("AA000003D")) {
-        await(testConnector.lookupSaUtr(forThisNino))
-        eventually(verify(mockMetrics).incrementSuccessCounter(MetricsEnum.CITIZEN_DETAILS))
-      }
+    "record metrics" when {
+      "increment successful metric counter on successful call that returned a UTR" in
+        new CitizenDetailsRespondsWithUtr(forThisNino = Nino("AA000003D")) {
+          await(testConnector.lookupSaUtr(forThisNino))
+          eventually(verify(mockMetrics).incrementSuccessCounter(MetricsEnum.CITIZEN_DETAILS))
+        }
 
-    "increment failed metric counter on failed call" in
-      new CitizenDetailsFails(new BadRequestException("")) {
-        intercept[Throwable](await(testConnector.lookupSaUtr(Nino("AA000003D"))))
-        eventually(verify(mockMetrics).incrementFailedCounter(MetricsEnum.CITIZEN_DETAILS))
-      }
+      "increment successful metric counter on successful call that returned no UTR" in
+        new CitizenDetailsRespondsWithoutUtr(forThisNino = Nino("AA000003D")) {
+          await(testConnector.lookupSaUtr(forThisNino))
+          eventually(verify(mockMetrics).incrementSuccessCounter(MetricsEnum.CITIZEN_DETAILS))
+        }
 
-    "tracks time of successful calls" in
-      new CitizenDetailsRespondsWithUtr(forThisNino = Nino("AA000003D")) {
-        await(testConnector.lookupSaUtr(forThisNino))
-        verify(mockMetrics).startTimer(MetricsEnum.CITIZEN_DETAILS)
-        eventually(verify(mockTimerContext).stop())
-      }
+      "increment successful metric counter on call that returned 404" in
+        new CitizenDetailsFails(new NotFoundException("")) {
+          await(testConnector.lookupSaUtr(Nino("AA000003D")))
+          eventually(verify(mockMetrics).incrementSuccessCounter(MetricsEnum.CITIZEN_DETAILS))
+        }
 
-    "tracks time of unsuccessful calls" in
-      new CitizenDetailsFails(new BadRequestException("")) {
-        intercept[Throwable](await(testConnector.lookupSaUtr(Nino("AA000003D"))))
-        verify(mockMetrics).startTimer(MetricsEnum.CITIZEN_DETAILS)
-        eventually(verify(mockTimerContext).stop())
-      }
+      "tracks time of successful calls" in
+        new CitizenDetailsRespondsWithUtr(forThisNino = Nino("AA000003D")) {
+          await(testConnector.lookupSaUtr(forThisNino))
+          verify(mockMetrics).startTimer(MetricsEnum.CITIZEN_DETAILS)
+          eventually(verify(mockTimerContext).stop())
+        }
+
+      "increment failed metric counter on failed call" in
+        new CitizenDetailsFails(new BadRequestException("")) {
+          intercept[Throwable](await(testConnector.lookupSaUtr(Nino("AA000003D"))))
+          eventually(verify(mockMetrics).incrementFailedCounter(MetricsEnum.CITIZEN_DETAILS))
+        }
+
+      "tracks time of unsuccessful calls" in
+        new CitizenDetailsFails(new BadRequestException("")) {
+          intercept[Throwable](await(testConnector.lookupSaUtr(Nino("AA000003D"))))
+          verify(mockMetrics).startTimer(MetricsEnum.CITIZEN_DETAILS)
+          eventually(verify(mockTimerContext).stop())
+        }
+    }
   }
 
   class CitizenDetailsRespondsWithUtr(val forThisNino: Nino) {
@@ -120,7 +134,7 @@ class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUt
         """.stripMargin)))
   }
 
-  class CitizenDetailsRespondsWithoutUtr(forThisNino: Nino) {
+  class CitizenDetailsRespondsWithoutUtr(val forThisNino: Nino) {
     when(mockMetrics.startTimer(any())).thenReturn(mockTimerContext)
     when(mockHttp.GET[JsValue](any())(any(), any(), any()))
       .thenReturn(Future.successful(Json.parse(
