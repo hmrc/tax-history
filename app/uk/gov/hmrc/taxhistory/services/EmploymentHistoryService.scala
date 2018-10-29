@@ -239,6 +239,10 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
     val payes: List[PayAsYouEarn] = npsEmployments.map { npsEmployment =>
 
       val matchedIncomeSource = taxAccountOption.flatMap(_.matchedIncomeSource(npsEmployment))
+      
+      if(matchedIncomeSource.isEmpty && taxYear == TaxYear.current) {
+        logger.warn("No matched income source found for employment in current tax year")
+      }
 
       EmploymentHistoryServiceHelper.buildPAYE(
         rtiEmployment = employmentMatches.get(npsEmployment),
