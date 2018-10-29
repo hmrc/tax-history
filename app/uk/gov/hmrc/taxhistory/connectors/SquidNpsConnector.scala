@@ -20,6 +20,7 @@ import javax.inject.{Inject, Named}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
+import uk.gov.hmrc.taxhistory.metrics.MetricsEnum.MetricsEnum
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.utils.Logging
@@ -41,18 +42,32 @@ class SquidNpsConnector @Inject()(val http: HttpGet,
   def getEmployments(nino: Nino, year: Int): Future[List[NpsEmployment]] = {
     implicit val hc = basicNpsHeaders(HeaderCarrier())
 
-    val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_EMPLOYMENTS)
+    withMetrics(MetricsEnum.NPS_GET_EMPLOYMENTS) {
+      http.GET[List[NpsEmployment]](employmentUrl(nino, year))
+    }
+  }
 
-    val result = http.GET[List[NpsEmployment]](employmentUrl(nino, year))
-    result.onSuccess { case _ =>
-      timerContext.stop()
-      metrics.incrementSuccessCounter(MetricsEnum.NPS_GET_EMPLOYMENTS)
+  private def withMetrics[T](metric: MetricsEnum)(codeBlock: => Future[T])(implicit hc: HeaderCarrier) = {
+    val timerContext = metrics.startTimer(metric)
+
+    val result: Future[T] = codeBlock
+
+    result.onSuccess{
+      case _ =>
+        timerContext.stop()
+        metrics.incrementSuccessCounter(metric)
     }
-    result.onFailure { case e =>
-      metrics.incrementFailedCounter(MetricsEnum.NPS_GET_EMPLOYMENTS)
-      timerContext.stop()
-      logger.warn(s"SQUID NPS connector - Error returned from SQUID NPS connector (getEmployments): ${e.toString}: ${e.getMessage}")
+
+    result.onFailure{
+      case _ : NotFoundException  =>
+        timerContext.stop()
+        metrics.incrementSuccessCounter(metric)
+      case e =>
+        metrics.incrementFailedCounter(metric)
+        timerContext.stop()
+        logger.warn(s"SQUID NPS connector - Error returned from SQUID NPS connector (${metric.toString}): ${e.toString}: ${e.getMessage}")
     }
+
     result
   }
 }

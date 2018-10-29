@@ -17,11 +17,11 @@
 package uk.gov.hmrc.taxhistory.connectors
 
 import javax.inject.{Inject, Named}
-
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.taxhistory.metrics.MetricsEnum.MetricsEnum
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.utils.Logging
 import uk.gov.hmrc.time.TaxYear
@@ -49,18 +49,32 @@ class RtiConnector @Inject()(val http: HttpGet,
   def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[RtiData] = {
     implicit val hc: HeaderCarrier = createHeader
 
-    val timerContext = metrics.startTimer(MetricsEnum.RTI_GET_EMPLOYMENTS)
+    withMetrics(MetricsEnum.RTI_GET_EMPLOYMENTS){
+      http.GET[RtiData](rtiEmploymentsUrl(nino, taxYear))
+    }
+  }
 
-    val result = http.GET[RtiData](rtiEmploymentsUrl(nino, taxYear))
-    result.onSuccess { case _ =>
-      timerContext.stop()
-      metrics.incrementSuccessCounter(MetricsEnum.RTI_GET_EMPLOYMENTS)
+  private def withMetrics[T](metric: MetricsEnum)(codeBlock: => Future[T])(implicit hc: HeaderCarrier) = {
+    val timerContext = metrics.startTimer(metric)
+
+    val result: Future[T] = codeBlock
+
+    result.onSuccess{
+      case _ =>
+        timerContext.stop()
+        metrics.incrementSuccessCounter(metric)
     }
-    result.onFailure { case e =>
-      metrics.incrementFailedCounter(MetricsEnum.RTI_GET_EMPLOYMENTS)
-      timerContext.stop()
-      logger.warn(s"RTIAPI - Error returned from RTI HODS: ${e.toString}: ${e.getMessage}")
+
+    result.onFailure{
+      case _ : NotFoundException  =>
+        timerContext.stop()
+        metrics.incrementSuccessCounter(metric)
+      case e =>
+        metrics.incrementFailedCounter(metric)
+        timerContext.stop()
+        logger.warn(s"RTIAPI - Error returned from RTI HODS (${metric.toString}): ${e.toString}: ${e.getMessage}")
     }
+
     result
   }
 }
