@@ -27,11 +27,10 @@ import org.scalatestplus.play.OneServerPerSuite
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.agentmtdidentifiers.model.Arn
-import uk.gov.hmrc.domain.{Nino, TaxCode}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.taxhistory.model.api.TaxAccount
-import uk.gov.hmrc.taxhistory.model.nps.IncomeSource
+import uk.gov.hmrc.taxhistory.model.api.{IncomeSource, TaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestRelationshipAuthService}
@@ -48,7 +47,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
 
   private val testTaxAccount = TaxAccount()
   private val testTaxYear = TaxYear.current.previous.currentYear
-  private val testTaxCode = TaxCode("1150L")
+  private val testTaxCode = "1150L"
 
   override def beforeEach: Unit = {
     reset(mockEmploymentHistoryService)

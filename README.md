@@ -217,13 +217,65 @@ Gets tax account information for a given nino and tax year
 | ```:nino```| true | Standard National Insurance Number format e.g. QQ123456A |
 | ```:taxyear```| true | The first year in a tax year. e.g. for tax year 6th April 2016 - 5th April 2017 would be ```2016``` |
 
-**Return Format**
+**Responses**
+
+404 - if there is no tax account information for the nino and tax year
+
+200 - if there is tax account information, the response will contain a json object like:
+
 ```
     TaxAccount {
         taxAccountId :  String UUID Format,,
         outstandingDebtRestriction: Option[BigDecimal],
         underpaymentAmount: Option[BigDecimal],
         actualPUPCodedInCYPlusOneTaxYear: Option[BigDecimal]
+    }
+```
+
+#### Get Income Source
+Gets income source details for a given nino, tax year and employment
+
+| *URL* | *Supported Methods* | *Description* |
+|--------|----|----|
+| ```/:nino/:taxYear/employments/:employmentId/income-source``` | GET | Retrieves the income source for a given nino, tax year and employmentId. |
+
+**Parameters**
+|*Parameter*|*Required*|*Description*|
+|----|----|----|
+| ```:nino```| true | Standard National Insurance Number format e.g. QQ123456A |
+| ```:taxyear```| true | The first year in a tax year. e.g. for tax year 6th April 2016 - 5th April 2017 would be ```2016``` |
+| ```:employmentId```| true | Unique UUID in the standard format e.g. 123e4567-e89b-12d3-a456-426655440000 |
+
+**Responses**
+
+404 - if there is no income source details for the employment
+
+200 - if there is income source details, the response will contain a json object like:
+```
+    IncomeSource{
+        "employmentId": Int,
+        "employmentType": Int,
+        "actualPUPCodedInCYPlusOneTaxYear": Option[BigDecimal],
+        "deductions": [
+            TaDeduction{
+                "type": Int,
+                "npsDescription": String,
+                "amount": BigDecimal,
+                "sourceAmount": Option[BigDecimal]
+            }
+        ],
+        "allowances": [
+            TaAllowance{
+                "type": Int,
+                "npsDescription": String,
+                "amount": BigDecimal,
+                "sourceAmount": Option[BigDecimal],
+            }
+        ],
+        "basisOperation": Option[Int],
+        "employmentTaxDistrictNumber": Int,
+        "employmentPayeRef": String,
+        "taxCode": String
     }
 ```
 
@@ -324,9 +376,23 @@ The logged in user must be either:
       "employmentId" : Int,
       "employmentType" : Int,
       "actualPUPCodedInCYPlusOneTaxYear" : Option[BigDecimal],
-      "deductions" : List[TaDeduction],
-      "allowances" : List[TaAllowance],
-      "taxCode" : uk.gov.hmrc.domain.TaxCode,
+      "deductions" : [
+        TaDeduction{
+          "type": Int,
+          "npsDescription": String,
+          "amount": BigDecimal,
+          "sourceAmount": Option[BigDecimal]
+        }
+      ],
+      "allowances" : [
+        TaAllowance{
+          "type": Int,
+          "npsDescription": String,
+          "amount": BigDecimal,
+          "sourceAmount": Option[BigDecimal]
+        }
+      ],
+      "taxCode" : String,
       "basisOperation" : Option[Int],
       "employmentTaxDistrictNumber" : Int,
       "employmentPayeRef" : String

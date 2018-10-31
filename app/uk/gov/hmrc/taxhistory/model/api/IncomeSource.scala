@@ -17,17 +17,18 @@
 package uk.gov.hmrc.taxhistory.model.api
 
 import play.api.libs.json.Json
-import uk.gov.hmrc.taxhistory.model.nps.StatePension
+import uk.gov.hmrc.taxhistory.model.nps.{TaAllowance, TaDeduction}
 
+case class IncomeSource(employmentId: Int,
+                        employmentType: Int,
+                        actualPUPCodedInCYPlusOneTaxYear: Option[BigDecimal],
+                        deductions: List[TaDeduction],
+                        allowances: List[TaAllowance],
+                        taxCode: String,
+                        basisOperation: Option[Int],
+                        employmentTaxDistrictNumber: Int,
+                        employmentPayeRef: String)
 
-case class PayAsYouEarn(employments: List[Employment] = Nil,
-                        allowances: List[Allowance] = Nil,
-                        incomeSources: Map[String, IncomeSource] = Map.empty,
-                        benefits: Map[String, List[CompanyBenefit]] = Map.empty,
-                        payAndTax: Map[String, PayAndTax] = Map.empty,
-                        taxAccount: Option[TaxAccount] = None,
-                        statePension: Option[StatePension] = None)
-
-object PayAsYouEarn {
-  implicit val formats = Json.format[PayAsYouEarn]
+object IncomeSource {
+  implicit val formats = Json.format[IncomeSource]
 }

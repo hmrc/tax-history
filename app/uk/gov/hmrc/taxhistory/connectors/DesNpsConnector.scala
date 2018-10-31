@@ -22,7 +22,6 @@ import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsTaxAccount}
-import uk.gov.hmrc.taxhistory.utils.Logging
 
 import scala.concurrent.Future
 
@@ -30,7 +29,7 @@ class DesNpsConnector @Inject()(val http: HttpGet,
                              val metrics: TaxHistoryMetrics,
                              @Named("des-base-url") val baseUrl: String,
                              @Named("microservice.services.des.authorizationToken") val authorizationToken: String,
-                             @Named("microservice.services.des.env") val env: String) extends AnyRef with Logging {
+                             @Named("microservice.services.des.env") val env: String) extends ConnectorMetrics {
 
   private val servicePrefix = "/pay-as-you-earn"
   def iabdsUrl(nino: Nino, year: Int)      = s"$baseUrl$servicePrefix/individuals/${nino.value}/iabds/tax-year/$year"
@@ -44,36 +43,16 @@ class DesNpsConnector @Inject()(val http: HttpGet,
   def getIabds(nino: Nino, year: Int): Future[List[Iabd]] = {
     implicit val hc = basicDesHeaders(HeaderCarrier())
 
-    val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_IABDS)
-
-    val result = http.GET[List[Iabd]](iabdsUrl(nino, year))
-    result.onSuccess { case _ =>
-      timerContext.stop()
-      metrics.incrementSuccessCounter(MetricsEnum.NPS_GET_IABDS)
+    withMetrics(MetricsEnum.NPS_GET_IABDS) {
+      http.GET[List[Iabd]](iabdsUrl(nino, year))
     }
-    result.onFailure { case e =>
-      metrics.incrementFailedCounter(MetricsEnum.NPS_GET_IABDS)
-      timerContext.stop()
-      logger.warn(s"DES NPS connector - Error returned from DES NPS connector (getIabds): ${e.toString}: ${e.getMessage}")
-    }
-    result
   }
 
   def getTaxAccount(nino: Nino, year: Int): Future[NpsTaxAccount] = {
     implicit val hc = basicDesHeaders(HeaderCarrier())
 
-    val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_TAX_ACCOUNT)
-
-    val result = http.GET[NpsTaxAccount](taxAccountUrl(nino, year))
-    result.onSuccess { case _ =>
-      timerContext.stop()
-      metrics.incrementSuccessCounter(MetricsEnum.NPS_GET_TAX_ACCOUNT)
+    withMetrics(MetricsEnum.NPS_GET_TAX_ACCOUNT) {
+      http.GET[NpsTaxAccount](taxAccountUrl(nino, year))
     }
-    result.onFailure { case e =>
-      metrics.incrementFailedCounter(MetricsEnum.NPS_GET_TAX_ACCOUNT)
-      timerContext.stop()
-      logger.warn(s"DES NPS connector - Error returned from DES NPS connector (getTaxAccount): ${e.toString}: ${e.getMessage}")
-    }
-    result
   }
 }

@@ -131,7 +131,7 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
         }
       }
     } else {
-      Future(None)
+      Future.failed(new NotFoundException(s"TaxAccount only available for last completed tax year"))
     }
   }
 
@@ -149,11 +149,11 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
   }
 
   def getIncomeSource(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Option[IncomeSource]] = {
-    if (taxYear == TaxYear.current) {
+    (if (taxYear == TaxYear.current) {
       getFromCache(nino, taxYear).map(_.incomeSources.get(employmentId))
     } else {
       Future(None)
-    }
+    }).orNotFound(s"IncomeSource not found for NINO ${nino.value}, tax year ${taxYear.toString}, and employmentId $employmentId")
   }
 
   def getTaxYears(nino: Nino): Future[List[IndividualTaxYear]] = {
@@ -238,12 +238,16 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
     // One [[PayAsYouEarn]] instance will be produced for each npsEmployment.
     val payes: List[PayAsYouEarn] = npsEmployments.map { npsEmployment =>
 
-      val incomeSource = if (taxAccountOption.isDefined) taxAccountOption.get.matchedIncomeSource(npsEmployment) else None
+      val matchedIncomeSource = taxAccountOption.flatMap(_.matchedIncomeSource(npsEmployment))
+      
+      if(matchedIncomeSource.isEmpty && taxYear == TaxYear.current) {
+        logger.warn("No matched income source found for employment in current tax year")
+      }
 
       EmploymentHistoryServiceHelper.buildPAYE(
         rtiEmployment = employmentMatches.get(npsEmployment),
         iabds = iabdsNoStatePensions.matchedCompanyBenefits(npsEmployment),
-        incomeSource = incomeSource,
+        incomeSource = matchedIncomeSource,
         npsEmployment = npsEmployment
       )
     }

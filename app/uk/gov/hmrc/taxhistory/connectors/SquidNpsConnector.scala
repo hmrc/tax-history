@@ -22,16 +22,16 @@ import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
-import uk.gov.hmrc.taxhistory.utils.Logging
 
 import scala.concurrent.Future
 
 class SquidNpsConnector @Inject()(val http: HttpGet,
                                   val metrics: TaxHistoryMetrics,
                                   @Named("nps-hod-base-url") val baseUrl: String,
-                                  @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends AnyRef with Logging {
+                                  @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends ConnectorMetrics {
 
   private val servicePrefix = "nps-hod-service/services/nps"
+
   def employmentUrl(nino: Nino, year: Int) = s"$baseUrl/$servicePrefix/person/${nino.value}/employment/$year"
 
   def basicNpsHeaders(hc: HeaderCarrier): HeaderCarrier = {
@@ -41,18 +41,8 @@ class SquidNpsConnector @Inject()(val http: HttpGet,
   def getEmployments(nino: Nino, year: Int): Future[List[NpsEmployment]] = {
     implicit val hc = basicNpsHeaders(HeaderCarrier())
 
-    val timerContext = metrics.startTimer(MetricsEnum.NPS_GET_EMPLOYMENTS)
-
-    val result = http.GET[List[NpsEmployment]](employmentUrl(nino, year))
-    result.onSuccess { case _ =>
-      timerContext.stop()
-      metrics.incrementSuccessCounter(MetricsEnum.NPS_GET_EMPLOYMENTS)
+    withMetrics(MetricsEnum.NPS_GET_EMPLOYMENTS) {
+      http.GET[List[NpsEmployment]](employmentUrl(nino, year))
     }
-    result.onFailure { case e =>
-      metrics.incrementFailedCounter(MetricsEnum.NPS_GET_EMPLOYMENTS)
-      timerContext.stop()
-      logger.warn(s"SQUID NPS connector - Error returned from SQUID NPS connector (getEmployments): ${e.toString}: ${e.getMessage}")
-    }
-    result
   }
 }

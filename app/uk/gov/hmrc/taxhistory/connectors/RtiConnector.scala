@@ -17,13 +17,11 @@
 package uk.gov.hmrc.taxhistory.connectors
 
 import javax.inject.{Inject, Named}
-
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
-import uk.gov.hmrc.taxhistory.utils.Logging
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
@@ -33,7 +31,7 @@ class RtiConnector @Inject()(val http: HttpGet,
                              @Named("des-base-url") val baseUrl: String,
                              @Named("microservice.services.des.authorizationToken") val authorizationToken: String,
                              @Named("microservice.services.des.env") val environment: String
-                            ) extends AnyRef with Logging {
+                            ) extends ConnectorMetrics {
 
   lazy val authorization: String = s"Bearer $authorizationToken"
 
@@ -49,18 +47,8 @@ class RtiConnector @Inject()(val http: HttpGet,
   def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[RtiData] = {
     implicit val hc: HeaderCarrier = createHeader
 
-    val timerContext = metrics.startTimer(MetricsEnum.RTI_GET_EMPLOYMENTS)
-
-    val result = http.GET[RtiData](rtiEmploymentsUrl(nino, taxYear))
-    result.onSuccess { case _ =>
-      timerContext.stop()
-      metrics.incrementSuccessCounter(MetricsEnum.RTI_GET_EMPLOYMENTS)
+    withMetrics(MetricsEnum.RTI_GET_EMPLOYMENTS) {
+      http.GET[RtiData](rtiEmploymentsUrl(nino, taxYear))
     }
-    result.onFailure { case e =>
-      metrics.incrementFailedCounter(MetricsEnum.RTI_GET_EMPLOYMENTS)
-      timerContext.stop()
-      logger.warn(s"RTIAPI - Error returned from RTI HODS: ${e.toString}: ${e.getMessage}")
-    }
-    result
   }
 }
