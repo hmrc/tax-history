@@ -16,23 +16,20 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
-import com.codahale.metrics.Timer.Context
 import javax.inject.{Inject, Named}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
-import uk.gov.hmrc.taxhistory.metrics.MetricsEnum.MetricsEnum
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsTaxAccount}
-import uk.gov.hmrc.taxhistory.utils.Logging
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class DesNpsConnector @Inject()(val http: HttpGet,
                              val metrics: TaxHistoryMetrics,
                              @Named("des-base-url") val baseUrl: String,
                              @Named("microservice.services.des.authorizationToken") val authorizationToken: String,
-                             @Named("microservice.services.des.env") val env: String) extends AnyRef with Logging {
+                             @Named("microservice.services.des.env") val env: String) extends ConnectorMetrics {
 
   private val servicePrefix = "/pay-as-you-earn"
   def iabdsUrl(nino: Nino, year: Int)      = s"$baseUrl$servicePrefix/individuals/${nino.value}/iabds/tax-year/$year"
@@ -57,29 +54,5 @@ class DesNpsConnector @Inject()(val http: HttpGet,
     withMetrics(MetricsEnum.NPS_GET_TAX_ACCOUNT) {
       http.GET[NpsTaxAccount](taxAccountUrl(nino, year))
     }
-  }
-
-  private def withMetrics[T](metric: MetricsEnum)(codeBlock: => Future[T])(implicit hc: HeaderCarrier) = {
-    val timerContext = metrics.startTimer(metric)
-
-    val result: Future[T] = codeBlock
-
-    result.onSuccess{
-      case _ =>
-        timerContext.stop()
-        metrics.incrementSuccessCounter(metric)
-    }
-
-    result.onFailure{
-      case _ : NotFoundException  =>
-        timerContext.stop()
-        metrics.incrementSuccessCounter(metric)
-      case e =>
-        metrics.incrementFailedCounter(metric)
-        timerContext.stop()
-        logger.warn(s"DES NPS connector - Error returned from DES NPS connector (${metric.toString}): ${e.toString}: ${e.getMessage}")
-    }
-
-    result
   }
 }

@@ -22,35 +22,19 @@ import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
-import uk.gov.hmrc.taxhistory.utils.Logging
 
 import scala.concurrent.Future
 
 class CitizenDetailsConnector @Inject()(val http: HttpGet,
                                         val metrics: TaxHistoryMetrics,
-                                        @Named("citizen-details-base-url") val baseUrl: String) extends AnyRef with Logging {
+                                        @Named("citizen-details-base-url") val baseUrl: String) extends ConnectorMetrics {
   def lookupSaUtr(nino: Nino)(implicit hc: HeaderCarrier): Future[Option[SaUtr]] = {
-    val timerContext = metrics.startTimer(MetricsEnum.CITIZEN_DETAILS)
-
-    val futureCall = http.GET[JsValue](s"$baseUrl/citizen-details/nino/$nino").map { json =>
-      (json \ "ids" \ "sautr").asOpt[SaUtr]
+    withMetrics(MetricsEnum.CITIZEN_DETAILS) {
+      http.GET[JsValue](s"$baseUrl/citizen-details/nino/$nino").map { json =>
+        (json \ "ids" \ "sautr").asOpt[SaUtr]
+      }
     }.recover {
-      case e: NotFoundException => None
+      case _: NotFoundException => None
     }
-
-    futureCall.onSuccess {
-      case _ =>
-        timerContext.stop()
-        metrics.incrementSuccessCounter(MetricsEnum.CITIZEN_DETAILS)
-    }
-
-    futureCall.onFailure {
-      case e =>
-      metrics.incrementFailedCounter(MetricsEnum.CITIZEN_DETAILS)
-      timerContext.stop()
-      logger.warn(s"CitizenDetails connector failed", e)
-    }
-
-    futureCall
   }
 }
