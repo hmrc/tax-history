@@ -162,7 +162,9 @@ Gets pay and tax object containing a list of EYU's for a given nino, tax year an
     PayAndTax{
         payAndTaxId: String UUID Format,
         taxablePayTotal: Option[BigDecimal],
+        taxablePayTotalIncluldingEYU: Option[BigDecimal],
         taxTotal: Option[BigDecimal],
+        taxTotalIncludingEYU: Option[BigDecimal],
         studentLoan: Option[BigDecimal],
         paymentDate: Option[LocalDate],
         earlierYearUpdates: List[EarlierYearUpdate]
@@ -357,7 +359,9 @@ The logged in user must be either:
     "[employmentId UUID]" : PayAndTax{
       "payAndTaxId" : String UUID,
       "taxablePayTotal" : Option[BigDecimal],
+      "taxablePayTotalIncluldingEYU": Option[BigDecimal],
       "taxTotal" : Option[BigDecimal],
+      "taxTotalIncludingEYU": Option[BigDecimal],
       "studentLoan" : Option[BigDecimal],
       "paymentDate" : Option[LocalDate],
       "earlierYearUpdates" : [

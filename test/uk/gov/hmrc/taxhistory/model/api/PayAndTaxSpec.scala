@@ -54,21 +54,27 @@ class PayAndTaxSpec extends TestUtil with UnitSpec {
   lazy val payAndTaxNoEyu =  PayAndTax(
                                 payAndTaxId = UUID.fromString("7407debb-5aa2-445d-8633-1875a2ebf559"),
                                 taxablePayTotal = Some(BigDecimal(76543.21)),
+                                taxablePayTotalIncludingEYU = Some(BigDecimal(76543.21)),
                                 taxTotal = Some(BigDecimal(6666.66)),
+                                taxTotalIncludingEYU = Some(BigDecimal(6666.66)),
                                 earlierYearUpdates = Nil,
                                 paymentDate=Some(new LocalDate("2016-02-20")))
 
   lazy val payAndTaxValuesNone = PayAndTax(
                                   payAndTaxId = UUID.fromString("2dd8910e-95a4-4ede-b8af-977ca27b4a78"),
                                   taxablePayTotal = None,
+                                  taxablePayTotalIncludingEYU = None,
                                   taxTotal = None,
+                                  taxTotalIncludingEYU = None,
                                   earlierYearUpdates = Nil,
                                   paymentDate=None)
 
   lazy val payAndTaxWithEyu = PayAndTax(
                                 payAndTaxId = UUID.fromString("bb1c1ea4-04d0-4285-a2e6-4ade1e57f12a"),
                                 taxablePayTotal = Some(BigDecimal(1234567.89)),
+                                taxablePayTotalIncludingEYU = Some(BigDecimal(1234691.34)),
                                 taxTotal = Some(BigDecimal(2222.22)),
+                                taxTotalIncludingEYU = Some(BigDecimal(2290.11)),
                                 earlierYearUpdates = eyuList,
                                 paymentDate=Some(new LocalDate("2016-02-20")))
 
@@ -77,7 +83,7 @@ class PayAndTaxSpec extends TestUtil with UnitSpec {
     "transform into Json from object correctly without Eyu's" in {
       Json.toJson(payAndTaxNoEyu) shouldBe payAndTaxNoEyuJson
     }
-    "transform into object from json correctly  without Eyu's" in {
+    "transform into object from json correctly without Eyu's" in {
       payAndTaxNoEyuJson.as[PayAndTax] shouldBe payAndTaxNoEyu
     }
 

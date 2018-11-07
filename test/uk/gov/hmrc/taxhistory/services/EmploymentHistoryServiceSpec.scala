@@ -159,7 +159,9 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
 
       val Some(payAndTax) = paye.payAndTax.get(employments.head.employmentId.toString)
       payAndTax.taxablePayTotal shouldBe Some(BigDecimal.valueOf(20000.00))
+      payAndTax.taxablePayTotalIncludingEYU shouldBe Some(BigDecimal.valueOf(19399.01))
       payAndTax.taxTotal shouldBe Some(BigDecimal.valueOf(1880.00))
+      payAndTax.taxTotalIncludingEYU shouldBe Some(BigDecimal.valueOf(1869.01))
       payAndTax.earlierYearUpdates.size shouldBe 1
 
       val eyu = payAndTax.earlierYearUpdates.head
@@ -208,7 +210,9 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       employment.endDate shouldBe None
       employment.receivingOccupationalPension shouldBe true
       payAndTax.taxablePayTotal shouldBe Some(BigDecimal.valueOf(20000.00))
+      payAndTax.taxablePayTotalIncludingEYU shouldBe Some(BigDecimal.valueOf(19399.01))
       payAndTax.taxTotal shouldBe Some(BigDecimal.valueOf(1880.00))
+      payAndTax.taxTotalIncludingEYU shouldBe Some(BigDecimal.valueOf(1869.01))
       payAndTax.earlierYearUpdates.size shouldBe 1
       val eyu = payAndTax.earlierYearUpdates.head
       eyu.taxablePayEYU shouldBe BigDecimal(-600.99)

@@ -191,7 +191,9 @@ class PayAsYouEarnSpec extends TestUtil with UnitSpec {
       val payAndTax1 = PayAndTax(
         payAndTaxId = UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"),
         taxablePayTotal = Some(BigDecimal("2222.22")),
+        taxablePayTotalIncludingEYU = Some(BigDecimal("2222.23")),
         taxTotal = Some(BigDecimal("111.11")),
+        taxTotalIncludingEYU = Some(BigDecimal("111.12")),
         paymentDate = Some(new LocalDate("2016-02-20")),
         studentLoan = Some(BigDecimal("333.33")),
         earlierYearUpdates = Nil
@@ -203,7 +205,9 @@ class PayAsYouEarnSpec extends TestUtil with UnitSpec {
            |    "$employment1Id": {
            |      "payAndTaxId": "2e2abe0a-8c4f-49fc-bdd2-cc13054e7172",
            |      "taxablePayTotal": 2222.22,
+           |      "taxablePayTotalIncludingEYU": 2222.23,
            |      "taxTotal": 111.11,
+           |      "taxTotalIncludingEYU": 111.12,
            |      "paymentDate": "2016-02-20",
            |      "studentLoan": 333.33,
            |      "earlierYearUpdates": []
