@@ -37,11 +37,20 @@ case class RtiEmployment(sequenceNo: Int,
     val nonEmptyEyus = eyus.filter(eyu => eyu.taxablePayEYU != 0 && eyu.taxEYU != 0)
 
     payments match {
-      case Nil => PayAndTax(earlierYearUpdates = nonEmptyEyus)
+      case Nil => PayAndTax(earlierYearUpdates = nonEmptyEyus, taxablePayTotalIncludingEYU = None, taxTotalIncludingEYU = None)
       case matchingPayments =>
         val payment = matchingPayments.sorted.last
-        PayAndTax(taxablePayTotal = Some(payment.taxablePayYTD),
-          taxTotal = Some(payment.totalTaxYTD),
+
+        val taxablePayTotal = payment.taxablePayYTD
+        val taxablePayTotalIncludingEYU = taxablePayTotal + nonEmptyEyus.map(_.taxablePayEYU).sum
+
+        val taxTotal = payment.totalTaxYTD
+        val taxTotalIncludingEYU = taxTotal + nonEmptyEyus.map(_.taxEYU).sum
+
+        PayAndTax(taxablePayTotal = Some(taxablePayTotal),
+          taxablePayTotalIncludingEYU = Some(taxablePayTotalIncludingEYU),
+          taxTotal = Some(taxTotal),
+          taxTotalIncludingEYU = Some(taxTotalIncludingEYU),
           studentLoan = payment.studentLoansYTD,
           paymentDate = Some(payment.paidOnDate),
           earlierYearUpdates = nonEmptyEyus)
@@ -102,11 +111,11 @@ object RtiEarlierYearUpdate {
   implicit val reader = new Reads[RtiEarlierYearUpdate] {
     def reads(js: JsValue): JsResult[RtiEarlierYearUpdate] = {
       implicit val stringMapFormat = JsonUtils.mapFormat[String, BigDecimal]("type", "amount")
-      val mandatoryMonetaryAmountMap: Option[Map[String, BigDecimal]] =
+      val optionalAdjustmentAmountMap: Option[Map[String, BigDecimal]] =
         (js \ "optionalAdjustmentAmount").asOpt[Map[String, BigDecimal]]
 
-      val taxablePayDelta: BigDecimal = mandatoryMonetaryAmountMap.getOrElse(Map.empty).getOrElse("TaxablePayDelta", 0.0)
-      val totalTaxDelta: BigDecimal = mandatoryMonetaryAmountMap.getOrElse(Map.empty).getOrElse("TotalTaxDelta", 0.0)
+      val taxablePayDelta: BigDecimal = optionalAdjustmentAmountMap.getOrElse(Map.empty).getOrElse("TaxablePayDelta", 0.0)
+      val totalTaxDelta: BigDecimal = optionalAdjustmentAmountMap.getOrElse(Map.empty).getOrElse("TotalTaxDelta", 0.0)
       val receivedDate = (js \ "rcvdDate").as[LocalDate](JsonUtils.rtiDateFormat)
 
       JsSuccess(

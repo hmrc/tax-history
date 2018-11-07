@@ -59,8 +59,11 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
   lazy val companyBenefit = CompanyBenefit(iabdType = "type",
     amount = BigDecimal(123.00))
 
-  lazy val payAndTax = PayAndTax(taxablePayTotal = Some(BigDecimal(2222.22)),
+  lazy val payAndTax = PayAndTax(
+    taxablePayTotal = Some(BigDecimal(2222.22)),
+    taxablePayTotalIncludingEYU = Some(BigDecimal(2222.22)),
     taxTotal = Some(BigDecimal(111.11)),
+    taxTotalIncludingEYU = Some(BigDecimal(111.11)),
     earlierYearUpdates = Nil)
 
   lazy val payAsYouEarn1 = PayAsYouEarn(
