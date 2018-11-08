@@ -18,13 +18,12 @@ package uk.gov.hmrc.taxhistory.services
 
 
 import javax.inject.{Inject, Named}
-
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.connectors.{DesNpsConnector, SquidNpsConnector, RtiConnector}
+import uk.gov.hmrc.taxhistory.connectors.{DesNpsConnector, RtiConnector, SquidNpsConnector}
 import uk.gov.hmrc.taxhistory.model.api.Employment._
 import uk.gov.hmrc.taxhistory.model.api.FillerState._
 import uk.gov.hmrc.taxhistory.model.api._
@@ -52,14 +51,14 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
     getFromCache(nino, taxYear).map { es =>
       val employments = es.employments.map(_.enrichWithURIs(taxYear.startYear))
 
-      if(employments.forall(_.receivingOccupationalPension)) employments
+      if(employments.forall(_.isOccupationalPension)) employments
       else if (jobSeekersAllowanceFlag) addFillers(employments, taxYear)
-      else addFillers(employments, taxYear).filterNot(emp => emp.receivingJobSeekersAllowance)
+      else addFillers(employments, taxYear).filterNot(emp => emp.isJobseekersAllowance)
     }
   }
 
   def addFillers(employments: List[Employment], taxYear: TaxYear): List[Employment] =
-    (employments ++ getFillers(employments.filterNot(emp => emp.receivingOccupationalPension),
+    (employments ++ getFillers(employments.filterNot(emp => emp.isOccupationalPension),
       List(Employment.noRecord(taxYear.starts, Some(taxYear.finishes))), taxYear)) sortBy (_.startDate.toDate)
 
   @tailrec

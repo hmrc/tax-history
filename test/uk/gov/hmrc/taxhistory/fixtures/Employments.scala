@@ -32,7 +32,7 @@ trait Employments {
     endDate = None,
     payeReference = "Nothing",
     employerName = "An Employer",
-    None, None, None, false, false, None,
+    None, None, None, None,
     employmentStatus = EmploymentStatus.Live,
     testWorksNumber)
 
