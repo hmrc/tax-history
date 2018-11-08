@@ -355,14 +355,14 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
           Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),
           Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax"),
           Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
-          receivingOccupationalPension = false, receivingJobSeekersAllowance = false, Live, "00191048716")
+          receivingOccupationalPension = false, receivingJobSeekersAllowance = false, None, Live, "00191048716")
 
       val testEmployment3 = Employment(UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
         locaDateCyMinus1("02", "22"), None, "paye-2", "employer-2",
         Some(s"/${taxYear.startYear}/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/company-benefits"),
         Some(s"/${taxYear.startYear}/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/pay-and-tax"),
         Some(s"/${taxYear.startYear}/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
-        receivingOccupationalPension = false, receivingJobSeekersAllowance = false, Live, "00191048716")
+        receivingOccupationalPension = false, receivingJobSeekersAllowance = false, None, Live, "00191048716")
 
       // Set up the test data in the cache
       await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), taxYear), paye))
@@ -394,7 +394,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
         Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),
         Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax"),
         Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
-        receivingOccupationalPension = false, receivingJobSeekersAllowance = false, Live, "00191048716")
+        receivingOccupationalPension = false, receivingJobSeekersAllowance = false, None, Live, "00191048716")
 
       await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye))
 

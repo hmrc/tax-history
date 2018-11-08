@@ -77,8 +77,8 @@ object Employment {
       (JsPath \ "employmentURI").readNullable[String] and
       (JsPath \ "receivingOccupationalPension").read[Boolean] and
       (JsPath \ "receivingJobSeekersAllowance").read[Boolean] and
-      JsPath.read[EmploymentStatus] and
       (JsPath \ "employmentPaymentType").readNullable[EmploymentPaymentType] and
+      JsPath.read[EmploymentStatus] and
       (JsPath \ "worksNumber").read[String]
     ) (Employment.apply _)
 
