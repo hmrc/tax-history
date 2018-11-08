@@ -50,6 +50,7 @@ class PayAsYouEarnSpec extends TestUtil with UnitSpec {
         payeReference = "paye-1",
         employerName = "employer-1",
         employmentStatus = EmploymentStatus.Live,
+        employmentPaymentType = Some(EmploymentPaymentType.IncapacityBenefit),
         worksNumber = "00191048716"
       )
       val employments1Json = Json.parse(
@@ -62,6 +63,7 @@ class PayAsYouEarnSpec extends TestUtil with UnitSpec {
           |      "employerName": "employer-1",
           |      "receivingOccupationalPension": false,
           |      "receivingJobSeekersAllowance": false,
+          |      "employmentPaymentType": "IncapacityBenefit",
           |      "employmentStatus": 1,
           |      "worksNumber": "00191048716"
           |    }
@@ -74,6 +76,7 @@ class PayAsYouEarnSpec extends TestUtil with UnitSpec {
         payeReference = "paye-2",
         employerName = "employer-2",
         employmentStatus = EmploymentStatus.Live,
+        employmentPaymentType = None,
         worksNumber = "00191048716"
       )
       val employments2Json = Json.parse(
