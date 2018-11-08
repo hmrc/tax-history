@@ -51,6 +51,24 @@ class EmploymentPaymentTypeSpec extends TestUtil with UnitSpec {
       }
     }
   }
+
+  "calling paymentType" should {
+    "return JobSeekersAllowance if 'receivingJobseekersAllowance' flag is true" in {
+      paymentType("123/AB123", false, receivingJobSeekersAllowance = true) shouldBe Some(JobseekersAllowance)
+    }
+    "return OccupationalPension if 'receivingOccupationalPension' flag is true" in {
+      paymentType("123/AB123", receivingOccupationalPension = true, false) shouldBe Some(OccupationalPension)
+    }
+    "return IncapacityBenefit if PAYE reference is '892/BA500'" in {
+      paymentType("892/BA500", false, false) shouldBe Some(IncapacityBenefit)
+    }
+    "return EmploymentAndSupportAllowance if PAYE reference is '267/ESA500'" in {
+      paymentType("267/ESA500", false, false) shouldBe Some(EmploymentAndSupportAllowance)
+    }
+    "return StatePensionLumpSum if PAYE reference is '267/LS500'" in {
+      paymentType("267/LS500", false, false) shouldBe Some(StatePensionLumpSum)
+    }
+  }
 }
 
 

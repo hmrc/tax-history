@@ -41,6 +41,21 @@ object EmploymentPaymentType {
 
   def unapply(paymentType: EmploymentPaymentType): Option[String] = Some(paymentType.name)
 
+  def paymentType(payeReference: String,
+            receivingOccupationalPension: Boolean,
+            receivingJobSeekersAllowance: Boolean): Option[EmploymentPaymentType] = {
+    if(receivingOccupationalPension)
+      Some(OccupationalPension)
+    else if (receivingJobSeekersAllowance)
+      Some(JobseekersAllowance)
+    else payeReference match {
+      case "892/BA500" => Some(IncapacityBenefit)
+      case "267/ESA500" => Some(EmploymentAndSupportAllowance)
+      case "267/LS500" => Some(StatePensionLumpSum)
+      case _ => None
+    }
+  }
+
   private implicit val reads: Reads[EmploymentPaymentType] = new Reads[EmploymentPaymentType] {
     override def reads(json: JsValue): JsResult[EmploymentPaymentType] = json match {
       case JsString(value)  => Try(JsSuccess(EmploymentPaymentType(value))).getOrElse(JsError(s"Invalid EmploymentPaymentType $value"))

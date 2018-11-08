@@ -62,7 +62,7 @@ object Employment {
     }
 
     Employment(startDate = startDate, endDate = overriddenEndDate, payeReference = noRecord, employerName = noRecord,
-      employmentStatus = EmploymentStatus.Unknown,  worksNumber = noRecord)
+      employmentPaymentType = None, employmentStatus = EmploymentStatus.Unknown,  worksNumber = noRecord)
 
   }
 
