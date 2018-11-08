@@ -23,6 +23,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json.{JsPath, Json, Reads, Writes}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
+import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType._
 import uk.gov.hmrc.time.TaxYear
 
 case class Employment(employmentId: UUID = UUID.randomUUID(),
@@ -35,6 +36,7 @@ case class Employment(employmentId: UUID = UUID.randomUUID(),
                       employmentURI: Option[String] = None,
                       receivingOccupationalPension: Boolean = false,
                       receivingJobSeekersAllowance: Boolean = false,
+                      employmentPaymentType: Option[EmploymentPaymentType] = None,
                       employmentStatus: EmploymentStatus,
                       worksNumber: String) {
 
@@ -60,7 +62,7 @@ object Employment {
     }
 
     Employment(startDate = startDate, endDate = overriddenEndDate, payeReference = noRecord, employerName = noRecord,
-      employmentStatus = EmploymentStatus.Unknown, worksNumber = noRecord)
+      employmentStatus = EmploymentStatus.Unknown,  worksNumber = noRecord)
 
   }
 
@@ -76,6 +78,7 @@ object Employment {
       (JsPath \ "receivingOccupationalPension").read[Boolean] and
       (JsPath \ "receivingJobSeekersAllowance").read[Boolean] and
       JsPath.read[EmploymentStatus] and
+      (JsPath \ "employmentPaymentType").readNullable[EmploymentPaymentType] and
       (JsPath \ "worksNumber").read[String]
     ) (Employment.apply _)
 
@@ -91,6 +94,7 @@ object Employment {
       (JsPath \ "employmentURI").writeNullable[String] and
       (JsPath \ "receivingOccupationalPension").write[Boolean] and
       (JsPath \ "receivingJobSeekersAllowance").write[Boolean] and
+      (JsPath \ "employmentPaymentType").writeNullable[EmploymentPaymentType] and
       JsPath.write[EmploymentStatus] and
       (JsPath \ "worksNumber").write[String]
     ) (unlift(Employment.unapply))
