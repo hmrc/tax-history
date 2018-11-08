@@ -157,7 +157,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       employments.head.payeReference shouldBe "531/J4816"
       employments.head.startDate shouldBe startDate
       employments.head.endDate shouldBe None
-      employments.head.employmentPaymentType shouldBe None
+      employments.head.employmentPaymentType shouldBe Some(OccupationalPension)
 
       val Some(payAndTax) = paye.payAndTax.get(employments.head.employmentId.toString)
       payAndTax.taxablePayTotal shouldBe Some(BigDecimal.valueOf(20000.00))
