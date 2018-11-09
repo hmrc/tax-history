@@ -19,8 +19,8 @@ package uk.gov.hmrc.taxhistory.services.helper
 import org.joda.time.LocalDate
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import uk.gov.hmrc.domain.TaxCode
 import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType.{JobseekersAllowance, OccupationalPension, StatePensionLumpSum}
 import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps._
@@ -232,6 +232,30 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       payAndTax.get.earlierYearUpdates.size mustBe 1
       val companyBenefits = payAsYouEarn.benefits.get(employment.employmentId.toString)
       companyBenefits mustBe None
+    }
+
+    "Employments employmentPaymentType is determined from the NPS employment's properties" when {
+      "NPS employment has receivingJobseekersAllowance flag set to true" in {
+        val npsEmployment = npsEmploymentResponseWithTaxDistrictNumber.head.copy(receivingJobSeekersAllowance = true)
+        val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, Nil, Some(testIncomeSource), npsEmployment)
+        payAsYouEarn.employments.head.employmentPaymentType mustBe Some(JobseekersAllowance)
+
+      }
+      "NPS employment has receivingOccupantionalPension flag set to true" in {
+        val npsEmployment = npsEmploymentResponseWithTaxDistrictNumber.head.copy(receivingOccupationalPension = true)
+        val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, Nil, Some(testIncomeSource), npsEmployment)
+        payAsYouEarn.employments.head.employmentPaymentType mustBe Some(OccupationalPension)
+      }
+      "NPS employment has a recognised PAYE reference" in {
+        val npsEmployment = npsEmploymentResponseWithTaxDistrictNumber.head.copy(taxDistrictNumber = "267", payeNumber = "LS500")
+        val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, Nil, Some(testIncomeSource), npsEmployment)
+        payAsYouEarn.employments.head.employmentPaymentType mustBe Some(StatePensionLumpSum)
+      }
+      "NPS employment has no properties that signal a special employment type" in {
+        val npsEmployment = npsEmploymentResponseWithTaxDistrictNumber.head
+        val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, Nil, Some(testIncomeSource), npsEmployment)
+        payAsYouEarn.employments.head.employmentPaymentType mustBe None
+      }
     }
   }
 }

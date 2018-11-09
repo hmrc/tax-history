@@ -28,6 +28,7 @@ import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.fixtures.Employments
+import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType.OccupationalPension
 import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
@@ -156,6 +157,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       employments.head.payeReference shouldBe "531/J4816"
       employments.head.startDate shouldBe startDate
       employments.head.endDate shouldBe None
+      employments.head.employmentPaymentType shouldBe Some(OccupationalPension)
 
       val Some(payAndTax) = paye.payAndTax.get(employments.head.employmentId.toString)
       payAndTax.taxablePayTotal shouldBe Some(BigDecimal.valueOf(20000.00))
@@ -208,7 +210,8 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       employment.payeReference shouldBe "531/J4816"
       employment.startDate shouldBe startDate
       employment.endDate shouldBe None
-      employment.receivingOccupationalPension shouldBe true
+      employment.isOccupationalPension shouldBe true
+      employment.employmentPaymentType shouldBe Some(OccupationalPension)
       payAndTax.taxablePayTotal shouldBe Some(BigDecimal.valueOf(20000.00))
       payAndTax.taxablePayTotalIncludingEYU shouldBe Some(BigDecimal.valueOf(19399.01))
       payAndTax.taxTotal shouldBe Some(BigDecimal.valueOf(1880.00))
@@ -355,14 +358,14 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
           Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),
           Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax"),
           Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
-          receivingOccupationalPension = false, receivingJobSeekersAllowance = false, Live, "00191048716")
+          None, Live, "00191048716")
 
       val testEmployment3 = Employment(UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
         locaDateCyMinus1("02", "22"), None, "paye-2", "employer-2",
         Some(s"/${taxYear.startYear}/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/company-benefits"),
         Some(s"/${taxYear.startYear}/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/pay-and-tax"),
         Some(s"/${taxYear.startYear}/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
-        receivingOccupationalPension = false, receivingJobSeekersAllowance = false, Live, "00191048716")
+        None, Live, "00191048716")
 
       // Set up the test data in the cache
       await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), taxYear), paye))
@@ -394,7 +397,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
         Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),
         Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax"),
         Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
-        receivingOccupationalPension = false, receivingJobSeekersAllowance = false, Live, "00191048716")
+        None, Live, "00191048716")
 
       await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye))
 

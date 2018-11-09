@@ -6,7 +6,6 @@
       "endDate": "2017-01-01",
       "payeReference": "paye-1",
       "employerName": "employer-1",
-      "receivingOccupationalPension": false,
       "employmentStatus": 1
     },
     {
@@ -14,7 +13,6 @@
       "startDate": "2016-02-22",
       "payeReference": "paye-2",
       "employerName": "employer-2",
-      "receivingOccupationalPension": false,
       "employmentStatus": 1
     }
   ],

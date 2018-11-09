@@ -48,13 +48,19 @@ Gets a list of employment objects for a given nino and tax year
     companyBenefitsURI: Option[String] (e.g. /:taxyear/employments/:employmentId/company-benefits),
     payAndTaxURI: Option[String] (e.g. /:taxyear/employments/:employmentId/pay-and-tax),
     employmentURI: Option[String] (e.g. /:taxyear/employments/:employmentId),
-    receivingOccupationalPension:Boolean,
-    receivingJobSeekersAllowance:Boolean,
+    employmentPaymentType: Option[String] (see note below),
     employmentStatus: Int (Live=1, PotentiallyCeased=2, Ceased=3, Unknown=99),
     worksNumber:String
   }
 ]
 ```
+
+The `employmentPaymentType` field, if present, will have one of the following values:
+- "OccupationalPension"
+- "JobseekersAllowance"
+- "IncapacityBenefit"
+- "EmploymentAndSupportAllowance"
+- "StatePensionLumpSum"
 
 #### Get individual Employment
 Gets an employment object for a given nino and tax year and employmentId
@@ -82,12 +88,18 @@ Employment{
   companyBenefitsURI: Option[String] (e.g. /:taxyear/employments/:employmentId/company-benefits),
   payAndTaxURI: Option[String] (e.g. /:taxyear/employments/:employmentId/pay-and-tax),
   employmentURI: Option[String] (e.g. /:taxyear/employments/:employmentId),
-  receivingOccupationalPension:Boolean,
-  receivingJobSeekersAllowance:Boolean,
+  employmentPaymentType: Option[String] (see note below),
   employmentStatus: Int (Live=1, PotentiallyCeased=2, Ceased=3, Unknown=99),
   worksNumber:String
 }
 ```
+
+The `employmentPaymentType` field, if present, will have one of the following values:
+- "OccupationalPension"
+- "JobseekersAllowance"
+- "IncapacityBenefit"
+- "EmploymentAndSupportAllowance"
+- "StatePensionLumpSum"
 
 #### Get List of Allowances
 Gets a list of allowance objects for a given nino and tax year
@@ -326,8 +338,7 @@ The logged in user must be either:
       "endDate" : Option[LocalDate],
       "payeReference" : String,
       "employerName" : String,
-      "receivingOccupationalPension" : Boolean,
-      "receivingJobSeekersAllowance" : Boolean,
+      "employmentPaymentType" : Option[String] (see note below),
       "employmentStatus" : Int (Live=1, PotentiallyCeased=2, Ceased=3, Unknown=99),
       "worksNumber" : String,
       "companyBenefitsURI" : Option[String],
@@ -423,3 +434,10 @@ Empty list, empty map and optional handling:
 - For the lists (`employments`, `allowances`), if there are no list elements, the key will still be present in the json but with an empty list value, e.g. `"allowances" : []`
 - For the maps (`benefits`, `payAndTax`, `incomeSources`), if there are no employments with any details, the map's key will still be present but the map's object value would be an empty object, e.g. `"benefits" : {}`.
 - For the optionals (`taxAccount`, `statePension`), if they are not available then the key/value entry will be missing from the json.
+
+The `employmentPaymentType` field, if present, will have one of the following values:
+- "OccupationalPension"
+- "JobseekersAllowance"
+- "IncapacityBenefit"
+- "EmploymentAndSupportAllowance"
+- "StatePensionLumpSum"

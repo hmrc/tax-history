@@ -21,8 +21,9 @@ import java.util.UUID
 import org.joda.time.LocalDate
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
-import play.api.libs.json.{JsPath, Json, Reads, Writes}
+import play.api.libs.json.{__, Json, Reads, Writes}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
+import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType._
 import uk.gov.hmrc.time.TaxYear
 
 case class Employment(employmentId: UUID = UUID.randomUUID(),
@@ -33,10 +34,12 @@ case class Employment(employmentId: UUID = UUID.randomUUID(),
                       companyBenefitsURI: Option[String] = None,
                       payAndTaxURI: Option[String] = None,
                       employmentURI: Option[String] = None,
-                      receivingOccupationalPension: Boolean = false,
-                      receivingJobSeekersAllowance: Boolean = false,
+                      employmentPaymentType: Option[EmploymentPaymentType] = None,
                       employmentStatus: EmploymentStatus,
                       worksNumber: String) {
+
+  def isOccupationalPension: Boolean = employmentPaymentType.contains(OccupationalPension)
+  def isJobseekersAllowance: Boolean = employmentPaymentType.contains(JobseekersAllowance)
 
   def enrichWithURIs(taxYear: Int): Employment = {
     val baseURI = s"/$taxYear/employments/${employmentId.toString}"
@@ -60,39 +63,37 @@ object Employment {
     }
 
     Employment(startDate = startDate, endDate = overriddenEndDate, payeReference = noRecord, employerName = noRecord,
-      employmentStatus = EmploymentStatus.Unknown, worksNumber = noRecord)
+      employmentPaymentType = None, employmentStatus = EmploymentStatus.Unknown,  worksNumber = noRecord)
 
   }
 
   implicit val jsonReads: Reads[Employment] = (
-    (JsPath \ "employmentId").read[UUID] and
-      (JsPath \ "startDate").read[LocalDate] and
-      (JsPath \ "endDate").readNullable[LocalDate] and
-      (JsPath \ "payeReference").read[String] and
-      (JsPath \ "employerName").read[String] and
-      (JsPath \ "companyBenefitsURI").readNullable[String] and
-      (JsPath \ "payAndTaxURI").readNullable[String] and
-      (JsPath \ "employmentURI").readNullable[String] and
-      (JsPath \ "receivingOccupationalPension").read[Boolean] and
-      (JsPath \ "receivingJobSeekersAllowance").read[Boolean] and
-      JsPath.read[EmploymentStatus] and
-      (JsPath \ "worksNumber").read[String]
+    (__ \ "employmentId").read[UUID] and
+      (__ \ "startDate").read[LocalDate] and
+      (__ \ "endDate").readNullable[LocalDate] and
+      (__ \ "payeReference").read[String] and
+      (__ \ "employerName").read[String] and
+      (__ \ "companyBenefitsURI").readNullable[String] and
+      (__ \ "payAndTaxURI").readNullable[String] and
+      (__ \ "employmentURI").readNullable[String] and
+      (__ \ "employmentPaymentType").readNullable[EmploymentPaymentType] and
+      __.read[EmploymentStatus] and
+      (__ \ "worksNumber").read[String]
     ) (Employment.apply _)
 
 
-  implicit val locationWrites: Writes[Employment] = (
-    (JsPath \ "employmentId").write[UUID] and
-      (JsPath \ "startDate").write[LocalDate] and
-      (JsPath \ "endDate").writeNullable[LocalDate] and
-      (JsPath \ "payeReference").write[String] and
-      (JsPath \ "employerName").write[String] and
-      (JsPath \ "companyBenefitsURI").writeNullable[String] and
-      (JsPath \ "payAndTaxURI").writeNullable[String] and
-      (JsPath \ "employmentURI").writeNullable[String] and
-      (JsPath \ "receivingOccupationalPension").write[Boolean] and
-      (JsPath \ "receivingJobSeekersAllowance").write[Boolean] and
-      JsPath.write[EmploymentStatus] and
-      (JsPath \ "worksNumber").write[String]
+  implicit val jsonWrites: Writes[Employment] = (
+    (__ \ "employmentId").write[UUID] and
+      (__ \ "startDate").write[LocalDate] and
+      (__ \ "endDate").writeNullable[LocalDate] and
+      (__ \ "payeReference").write[String] and
+      (__ \ "employerName").write[String] and
+      (__ \ "companyBenefitsURI").writeNullable[String] and
+      (__ \ "payAndTaxURI").writeNullable[String] and
+      (__ \ "employmentURI").writeNullable[String] and
+      (__ \ "employmentPaymentType").writeNullable[EmploymentPaymentType] and
+      __.write[EmploymentStatus] and
+      (__ \ "worksNumber").write[String]
     ) (unlift(Employment.unapply))
 
 }

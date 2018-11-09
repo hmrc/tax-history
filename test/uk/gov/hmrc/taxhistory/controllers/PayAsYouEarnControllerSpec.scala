@@ -160,8 +160,6 @@ class PayAsYouEarnControllerSpec extends PlaySpec with OneServerPerSuite with Mo
                |      "startDate":"${testStartDate.toString}",
                |      "payeReference":"SOME_PAYE",
                |      "employerName":"Megacorp Plc",
-               |      "receivingOccupationalPension":false,
-               |      "receivingJobSeekersAllowance":false,
                |      "employmentStatus":1,
                |      "worksNumber":"00191048716"
                |    }

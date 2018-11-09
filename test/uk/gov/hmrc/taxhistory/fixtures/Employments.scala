@@ -26,31 +26,52 @@ trait Employments {
 
   val testWorksNumber = "00191048716"
 
-  val liveOngoingEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts, None, "Nothing", "An Employer",
-    None, None, None, false, false, EmploymentStatus.Live, testWorksNumber)
+  private def templateEmployment = Employment(
+    employmentId = UUID.randomUUID(),
+    startDate = TaxYear.current.starts,
+    endDate = None,
+    payeReference = "Nothing",
+    employerName = "An Employer",
+    None, None, None, None,
+    employmentStatus = EmploymentStatus.Live,
+    testWorksNumber)
 
-  val liveNoEndEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts.plusDays(30), None, "Nothing", "An Employer",
-    None, None, None, false, false, EmploymentStatus.Live, testWorksNumber)
+  val liveOngoingEmployment = templateEmployment
 
-  val liveStartYearEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts, Some(TaxYear.current.starts.plusDays(10)), "Nothing", "An Employer",
-    None, None, None, false, false, EmploymentStatus.Live, testWorksNumber)
+  val liveNoEndEmployment = templateEmployment.copy(startDate = TaxYear.current.starts.plusDays(30))
 
-  val liveMidYearEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts.plusDays(40) , Some(TaxYear.current.finishes.minusDays(10)), "Nothing", "An Employer",
-    None, None, None, false, false, EmploymentStatus.Live, testWorksNumber)
+  val liveStartYearEmployment = templateEmployment.copy(endDate = Some(TaxYear.current.starts.plusDays(10)))
 
-  val liveEndYearEmployment = Employment(UUID.randomUUID(), TaxYear.current.finishes.minusDays(10) , Some(TaxYear.current.finishes), "Nothing", "An Employer",
-    None, None, None, false, false, EmploymentStatus.Live, testWorksNumber)
+  val liveMidYearEmployment = templateEmployment.copy(
+    startDate = TaxYear.current.starts.plusDays(40),
+    endDate = Some(TaxYear.current.finishes.minusDays(10))
+  )
 
-  val ceasedBeforeStartEmployment = Employment(UUID.randomUUID(), TaxYear.current.previous.starts.plusDays(5) , Some(TaxYear.current.starts.plusDays(30)), "Nothing", "An Employer",
-    None, None, None, false, false, EmploymentStatus.Ceased, testWorksNumber)
+  val liveEndYearEmployment = templateEmployment.copy(
+    startDate = TaxYear.current.finishes.minusDays(10),
+    endDate = Some(TaxYear.current.finishes)
+  )
 
-  val ceasedNoEndEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts.plusDays(90) , None, "Nothing", "An Employer",
-    None, None, None, false, false, EmploymentStatus.Ceased, testWorksNumber)
+  val ceasedBeforeStartEmployment = templateEmployment.copy(
+    startDate = TaxYear.current.previous.starts.plusDays(5) ,
+    endDate = Some(TaxYear.current.starts.plusDays(30)),
+    employmentStatus = EmploymentStatus.Ceased
+  )
 
-  val ceasedAfterEndEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts.plusDays(60), Some(TaxYear.current.next.starts.plusDays(30)), "Nothing", "An Employer",
-    None, None, None, false, false, EmploymentStatus.Ceased, testWorksNumber)
+  val ceasedNoEndEmployment = templateEmployment.copy(
+    startDate = TaxYear.current.starts.plusDays(90),
+    employmentStatus = EmploymentStatus.Ceased
+  )
 
-  val potentiallyCeasedEmployment = Employment(UUID.randomUUID(), TaxYear.current.starts.plusDays(90) , None, "Nothing", "An Employer",
-    None, None, None, false, false, EmploymentStatus.PotentiallyCeased, testWorksNumber)
+  val ceasedAfterEndEmployment = templateEmployment.copy(
+    startDate = TaxYear.current.starts.plusDays(60),
+    endDate = Some(TaxYear.current.next.starts.plusDays(30)),
+    employmentStatus = EmploymentStatus.Ceased
+  )
+
+  val potentiallyCeasedEmployment = templateEmployment.copy(
+    startDate = TaxYear.current.starts.plusDays(90),
+    employmentStatus = EmploymentStatus.PotentiallyCeased
+  )
 
 }
