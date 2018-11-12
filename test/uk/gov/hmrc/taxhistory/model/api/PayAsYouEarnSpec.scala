@@ -162,7 +162,8 @@ class PayAsYouEarnSpec extends TestUtil with UnitSpec {
            |      {
            |        "companyBenefitId": "c9923a63-4208-4e03-926d-7c7c88adc7ee",
            |        "iabdType": "companyBenefitType",
-           |        "amount": 12
+           |        "amount": 12,
+           |        "isForecastBenefit": true
            |      }
            |    ]
            |  }
