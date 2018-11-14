@@ -34,18 +34,31 @@ package uk.gov.hmrc.taxhistory.model.api
 
 import java.util.UUID
 
-import play.api.libs.json.Json
+import play.api.libs.json.{JsArray, JsBoolean, JsDefined, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 class CompanyBenefitSpec extends TestUtil with UnitSpec {
 
-  lazy val companyBenefitJson = loadFile("/json/model/api/companyBenefit.json")
-  lazy val companyBenefitListJson = loadFile("/json/model/api/companyBenefits.json")
+  lazy val companyBenefitJson = Json.parse(
+    """
+      |{
+      |  "companyBenefitId":"c9923a63-4208-4e03-926d-7c7c88adc7ee",
+      |  "iabdType":"companyBenefitType",
+      |  "amount":12,
+      |  "source" : 1,
+      |  "isForecastBenefit" : true
+      |}
+    """.stripMargin)
+  lazy val companyBenefitListJson = JsArray(Seq(companyBenefitJson))
 
-  lazy val companyBenefit = CompanyBenefit(companyBenefitId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
-                                  iabdType = "companyBenefitType",
-                                  amount = BigDecimal(12.00))
+
+  lazy val companyBenefit = CompanyBenefit(
+    companyBenefitId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
+    iabdType = "companyBenefitType",
+    amount = BigDecimal(12.00),
+    source = Some(1)
+  )
 
   lazy val companyBenefitList = List(companyBenefit)
 
@@ -66,6 +79,42 @@ class CompanyBenefitSpec extends TestUtil with UnitSpec {
     }
     "transform into object list from json correctly " in {
       companyBenefitListJson.as[List[CompanyBenefit]] shouldBe companyBenefitList
+    }
+
+    "transform into Json with an 'isForecastBenefit' field" in {
+      val forecastSource = Some(1)
+      val actualSource = Some(19)
+      (Json.toJson(companyBenefit.copy(source = actualSource)) \ "isForecastBenefit") shouldBe JsDefined(JsBoolean(false))
+      (Json.toJson(companyBenefit.copy(source = forecastSource)) \ "isForecastBenefit") shouldBe JsDefined(JsBoolean(true))
+      (Json.toJson(companyBenefit.copy(source = None)) \ "isForecastBenefit") shouldBe JsDefined(JsBoolean(true))
+    }
+
+    "determine the 'isForecastBenefit' flag" when {
+      val benefit = CompanyBenefit(iabdType = "", amount = BigDecimal(0), source = None)
+      "source is 19 - P11D (ECS), then it is not forecast" in {
+        benefit.copy(source = Some(19)).isForecastBenefit shouldBe false
+      }
+      "source is 21 - P11D (MANUAL), then it is not forecast" in {
+        benefit.copy(source = Some(21)).isForecastBenefit shouldBe false
+      }
+      "source is 28 - P11D (Assessed P11D), then it is not forecast" in {
+        benefit.copy(source = Some(28)).isForecastBenefit shouldBe false
+
+      }
+      "source is 29 - P11D (P11D/P9D), then it is not forecast" in {
+        benefit.copy(source = Some(29)).isForecastBenefit shouldBe false
+
+      }
+      "source is some other number, then it is forecast" in {
+        val p11dSources = Seq(19, 21, 28, 29)
+        val forecastSources = (1 to 200).filterNot(p11dSources.contains)
+        forecastSources.foreach{ forecastSource =>
+          benefit.copy(source = Some(forecastSource)).isForecastBenefit shouldBe true
+        }
+      }
+      "source is not present, then it is forecast" in {
+        benefit.copy(source = None).isForecastBenefit shouldBe true
+      }
     }
   }
 }

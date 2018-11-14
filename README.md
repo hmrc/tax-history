@@ -148,7 +148,8 @@ Gets a list of company benefits objects for a given nino, tax year and employmen
       companyBenefitId: String UUID Format,
       iabdType: String,
       amount: BigDecimal,
-      source: Option[Int]
+      source: Option[Int],
+      isForecastBenefit: Boolean
     }
 ]
 ```
@@ -361,7 +362,8 @@ The logged in user must be either:
         "companyBenefitId" : String UUID,
         "iabdType" : String,
         "amount" : BigDecimal,
-        "source" : Option[Int]
+        "source" : Option[Int],
+        "isForecastBenefit" : Boolean
       }
     ]
   },
