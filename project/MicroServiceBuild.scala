@@ -10,17 +10,17 @@ object MicroServiceBuild extends Build with MicroService {
 
   val compile = Seq(
     ws,
-    "uk.gov.hmrc" %% "bootstrap-play-25" % "3.10.0",
-    "uk.gov.hmrc" %% "play-ui" % "7.25.0-play-25",
+    "uk.gov.hmrc" %% "bootstrap-play-25" % "4.0.0",
+    "uk.gov.hmrc" %% "play-ui" % "7.26.0-play-25",
     "uk.gov.hmrc" %% "domain" % "5.2.0",
     "uk.gov.hmrc" %% "agent-mtd-identifiers" % "0.12.0",
     "uk.gov.hmrc" %% "tax-year" % "0.4.0",
     "uk.gov.hmrc" %% "auth-client" % "2.17.0-play-25",
-    "uk.gov.hmrc" %% "mongo-caching" % "5.5.0"
+    "uk.gov.hmrc" %% "mongo-caching" % "5.6.0"
   )
 
   def test(scope: String = "test,it") = Seq(
-    "uk.gov.hmrc" %% "hmrctest" % "3.2.0" % scope,
+    "uk.gov.hmrc" %% "hmrctest" % "3.3.0" % scope,
     "org.pegdown" % "pegdown" % "1.6.0" % scope,
     "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
     "uk.gov.hmrc" %% "reactivemongo-test" % "3.1.0" % scope,

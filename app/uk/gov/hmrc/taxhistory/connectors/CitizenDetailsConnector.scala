@@ -20,12 +20,13 @@ import javax.inject.{Inject, Named}
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 
 import scala.concurrent.Future
 
-class CitizenDetailsConnector @Inject()(val http: HttpGet,
+class CitizenDetailsConnector @Inject()(val http: HttpClient,
                                         val metrics: TaxHistoryMetrics,
                                         @Named("citizen-details-base-url") val baseUrl: String) extends ConnectorMetrics {
   def lookupSaUtr(nino: Nino)(implicit hc: HeaderCarrier): Future[Option[SaUtr]] = {

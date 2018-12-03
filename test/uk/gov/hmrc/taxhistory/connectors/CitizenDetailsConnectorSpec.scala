@@ -27,6 +27,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
@@ -36,7 +37,7 @@ import scala.concurrent.Future
 class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with BeforeAndAfterEach {
   implicit val hc = HeaderCarrier()
 
-  private val mockHttp = mock[HttpGet]
+  private val mockHttp = mock[HttpClient]
   private val mockMetrics = mock[TaxHistoryMetrics]
   private val mockTimerContext = mock[Timer.Context]
 

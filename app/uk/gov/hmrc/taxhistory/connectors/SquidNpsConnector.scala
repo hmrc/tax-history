@@ -19,13 +19,14 @@ package uk.gov.hmrc.taxhistory.connectors
 import javax.inject.{Inject, Named}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 
 import scala.concurrent.Future
 
-class SquidNpsConnector @Inject()(val http: HttpGet,
+class SquidNpsConnector @Inject()(val http: HttpClient,
                                   val metrics: TaxHistoryMetrics,
                                   @Named("nps-hod-base-url") val baseUrl: String,
                                   @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends ConnectorMetrics {
