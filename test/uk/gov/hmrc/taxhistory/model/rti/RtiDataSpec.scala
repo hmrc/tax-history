@@ -16,10 +16,15 @@
 
 package uk.gov.hmrc.taxhistory.model.rti
 
+import java.util.UUID
+
 import org.joda.time.LocalDate
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
+import play.api.libs.json.Json.{fromJson, toJson}
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEarlierYearUpdate}
+import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, Employment, EmploymentPaymentType, PayAsYouEarn}
+import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 class RtiDataSpec extends TestUtil with UnitSpec {
@@ -99,6 +104,107 @@ class RtiDataSpec extends TestUtil with UnitSpec {
 
       employment.earlierYearUpdates.size shouldBe 2
       employment.payments shouldBe List.empty
+    }
+  }
+
+  "RtiEarlierYearUpdate" when {
+    val eyuSerialised: JsObject = Json.parse(
+      s"""
+         |{
+         |  "optionalAdjustmentAmount": [
+         |    {
+         |      "type": "TaxablePayDelta",
+         |      "amount": -600.99
+         |    },
+         |    {
+         |      "type": "TotalTaxDelta",
+         |      "amount": -10.99
+         |    },
+         |    {
+         |      "type": "StudentLoanRecoveredDelta",
+         |      "amount": 333.33
+         |    }
+         |  ],
+         |  "rcvdDate": "2016-06-01"
+         |}
+        """.stripMargin).as[JsObject]
+
+    val eyuDeserialised = RtiEarlierYearUpdate(
+      taxablePayDelta = BigDecimal(-600.99),
+      totalTaxDelta = BigDecimal(-10.99),
+      studentLoanRecoveredDelta = Some(333.33),
+      receivedDate = LocalDate.parse("2016-06-01")
+    )
+
+    "deserialising from an RTI EYU json object" should {
+      "deserialise to an RtiEarlierYearUpdate" when {
+        "the EYU's 'optionalAdjustmentAmount' array is present" in {
+          fromJson[RtiEarlierYearUpdate](eyuSerialised).get shouldBe eyuDeserialised
+        }
+        "the EYU's 'optionalAdjustmentAmount' array is not present" in {
+          val eyuWithoutAdjustmentAmount = eyuSerialised - "optionalAdjustmentAmount"
+          fromJson[RtiEarlierYearUpdate](eyuWithoutAdjustmentAmount).get shouldBe RtiEarlierYearUpdate(
+            taxablePayDelta = BigDecimal("0"),
+            totalTaxDelta = BigDecimal("0"),
+            studentLoanRecoveredDelta = None,
+            receivedDate = eyuDeserialised.receivedDate
+          )
+        }
+      }
+
+      "deserialise the taxablePayDelta field" when {
+        "the EYU's 'optionalAdjustmentAmount' contains an object with 'type' of 'TaxablePayDelta'" in {
+          fromJson[RtiEarlierYearUpdate](eyuSerialised).get.taxablePayDelta shouldBe BigDecimal("-600.99")
+        }
+        "the EYU's 'optionalAdjustmentAmount' does not contain an object with 'type' of 'TaxablePayDelta'" in {
+          val eyuWithoutTaxablePayDelta = eyuSerialised + ("optionalAdjustmentAmount" -> JsArray())
+          fromJson[RtiEarlierYearUpdate](eyuWithoutTaxablePayDelta).get.taxablePayDelta shouldBe BigDecimal("0")
+        }
+      }
+
+      "deserialise the totalTaxDelta field" when {
+        "the EYU's 'optionalAdjustmentAmount' contains an object with 'type' of 'TotalTaxDelta'" in {
+          fromJson[RtiEarlierYearUpdate](eyuSerialised).get.totalTaxDelta shouldBe BigDecimal("-10.99")
+        }
+        "the EYU's 'optionalAdjustmentAmount' does not contain an object with 'type' of 'TotalTaxDelta'" in {
+          val eyuWithoutTotalTaxDelta = eyuSerialised + ("optionalAdjustmentAmount" -> JsArray())
+          fromJson[RtiEarlierYearUpdate](eyuWithoutTotalTaxDelta).get.totalTaxDelta shouldBe BigDecimal("0")
+        }
+      }
+
+      "deserialise the studentLoanRecoveredDelta field" when {
+        "the EYU's 'optionalAdjustmentAmount' contains an object with 'type' of 'StudentLoanRecoveredDelta'" in {
+          fromJson[RtiEarlierYearUpdate](eyuSerialised).get.studentLoanRecoveredDelta shouldBe Some(BigDecimal("333.33"))
+        }
+        "the EYU's 'optionalAdjustmentAmount' does not contain an object with 'type' of 'TotalTaxDelta'" in {
+          val eyuWithoutTotalTaxDelta = eyuSerialised + ("optionalAdjustmentAmount" -> JsArray())
+          fromJson[RtiEarlierYearUpdate](eyuWithoutTotalTaxDelta).get.studentLoanRecoveredDelta shouldBe None
+        }
+      }
+    }
+
+    "toEarlierYearUpdate is called" should {
+      val testUuid = UUID.randomUUID()
+
+      "convert itself to an EarlierYearUpdate" in {
+        val taxHistoryEyu = eyuDeserialised.toEarlierYearUpdate.copy(earlierYearUpdateId = testUuid)
+        taxHistoryEyu shouldBe EarlierYearUpdate(
+          taxablePayEYU = eyuDeserialised.taxablePayDelta,
+          taxEYU = eyuDeserialised.totalTaxDelta,
+          studentLoanEYU = eyuDeserialised.studentLoanRecoveredDelta,
+          receivedDate = eyuDeserialised.receivedDate,
+          earlierYearUpdateId = testUuid
+        )
+      }
+
+      "generate a random earlierYearUpdateId" in {
+        val eyu1 = eyuDeserialised.toEarlierYearUpdate
+        val eyu2 = eyuDeserialised.toEarlierYearUpdate
+        eyu1 should not be eyu2
+
+        eyu1.copy(earlierYearUpdateId = testUuid) shouldBe eyu2.copy(earlierYearUpdateId = testUuid)
+      }
+
     }
   }
 }

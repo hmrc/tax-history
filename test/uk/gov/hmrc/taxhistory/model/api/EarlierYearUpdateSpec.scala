@@ -57,7 +57,7 @@ class EarlierYearUpdateSpec extends TestUtil with UnitSpec {
     receivedDate = new LocalDate("2015-05-29"))
   lazy val earlierYearUpdateList = List(earlierYearUpdate1,earlierYearUpdate2)
 
-  "Employment" should {
+  "EarlierYearUpdate" should {
 
     "transform into Json from object correctly " in {
       Json.toJson(earlierYearUpdate1) shouldBe earlierYearUpdateJson
