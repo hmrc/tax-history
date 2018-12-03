@@ -111,11 +111,18 @@ class RtiEmploymentSpec extends TestUtil with UnitSpec with RtiEmployments {
       }
 
       "calculate studentLoansIncludingEYU" when {
+        val rtiEYU = RtiEarlierYearUpdate(
+          studentLoanRecoveredDelta = Some(101),
+          taxablePayDelta = BigDecimal("0"),
+          totalTaxDelta = BigDecimal("0"),
+          receivedDate = LocalDate.parse("2018-01-01")
+        )
+
         "there are EYUs of type 'StudentLoanRecoveredDelta', it sums them all together with the 'studentLoan'" in {
           val payAndTax = testEmployment.copy(
             earlierYearUpdates = List(
-              RtiEarlierYearUpdate(studentLoanRecoveredDelta = Some(101), taxablePayDelta = BigDecimal(1), totalTaxDelta = BigDecimal(3), receivedDate = LocalDate.parse("2018-01-01")),
-              RtiEarlierYearUpdate(studentLoanRecoveredDelta = Some(-103), taxablePayDelta = BigDecimal(2), totalTaxDelta = BigDecimal(4), receivedDate = LocalDate.parse("2018-01-01"))
+              rtiEYU.copy(studentLoanRecoveredDelta = Some(101)),
+              rtiEYU.copy(studentLoanRecoveredDelta = Some(-103))
             )
           ).toPayAndTax
           payAndTax.studentLoanIncludingEYU shouldBe Some(testEmploymentStudentLoansYTD + 101 - 103)
@@ -123,8 +130,8 @@ class RtiEmploymentSpec extends TestUtil with UnitSpec with RtiEmployments {
         "there are EYUs of type 'StudentLoanRecoveredDelta', but there's no 'studentLoan', it just sums the EYUs without any 'studentLoan'" in {
           val payAndTax = testEmployment.copy(
             earlierYearUpdates = List(
-              RtiEarlierYearUpdate(studentLoanRecoveredDelta = Some(101), taxablePayDelta = BigDecimal(1), totalTaxDelta = BigDecimal(3), receivedDate = LocalDate.parse("2018-01-01")),
-              RtiEarlierYearUpdate(studentLoanRecoveredDelta = Some(-103), taxablePayDelta = BigDecimal(2), totalTaxDelta = BigDecimal(4), receivedDate = LocalDate.parse("2018-01-01"))
+              rtiEYU.copy(studentLoanRecoveredDelta = Some(101)),
+              rtiEYU.copy(studentLoanRecoveredDelta = Some(-103))
             ),
             payments = List(testRtiPayment.copy(studentLoansYTD = None))
           ).toPayAndTax
@@ -135,7 +142,7 @@ class RtiEmploymentSpec extends TestUtil with UnitSpec with RtiEmployments {
         "there are no EYUs of type 'StudentLoanRecoveredDelta', it just has the same value as 'studentLoan" in {
           val payAndTax = testEmployment.copy(
             earlierYearUpdates = List(
-              RtiEarlierYearUpdate(studentLoanRecoveredDelta = None, taxablePayDelta = BigDecimal(1), totalTaxDelta = BigDecimal(2), receivedDate = LocalDate.parse("2018-01-01"))
+              RtiEarlierYearUpdate(studentLoanRecoveredDelta = None, taxablePayDelta = BigDecimal("1"), totalTaxDelta = BigDecimal("2"), receivedDate = LocalDate.parse("2018-01-01"))
             )
           ).toPayAndTax
           payAndTax.studentLoanIncludingEYU shouldBe payAndTax.studentLoan
