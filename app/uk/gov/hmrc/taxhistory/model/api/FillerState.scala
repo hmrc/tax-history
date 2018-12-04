@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
+import org.joda.time.LocalDate
 import uk.gov.hmrc.time.TaxYear
 
 /**
-  * The filler state describes the temporal relationship of a filler to an employment.
+  * The filler state describes the temporal relationship of a filler (an employment gap) to an employment.
   */
 trait FillerState
 
@@ -29,20 +30,20 @@ object FillerState {
     * Returns a single fillerState, in order of precedence, falling back to Unrelated if the timing of
     * employment and filler have no overlap
     */
-  def fillerState(filler: Employment, employment: Employment, taxYear: TaxYear): FillerState =
-    Seq(encompassed(filler, employment, taxYear),
-      overlapCompletely(filler, employment, taxYear),
-      overlapStart(filler, employment, taxYear),
-      overlapEnd(filler, employment, taxYear),
+  def fillerState(fillerStartDate: LocalDate, fillerEndDate: LocalDate, employmentStartDate: LocalDate, employmentEndDate: LocalDate): FillerState = {
+    Seq(encompassed(fillerStartDate, fillerEndDate, employmentStartDate, employmentEndDate),
+      overlapCompletely(fillerStartDate, fillerEndDate, employmentStartDate, employmentEndDate),
+      overlapStart(fillerStartDate, fillerEndDate, employmentStartDate, employmentEndDate),
+      overlapEnd(fillerStartDate, fillerEndDate, employmentStartDate, employmentEndDate),
       Some(Unrelated)).flatten.head
+  }
 
   /*
     The filler falls entirely within the bounds of the employment
    */
-  private def encompassed(filler: Employment, employment: Employment, taxYear: TaxYear): Option[FillerState] =
-    if ((filler.startDate.isEqual(employment.startDate) || filler.startDate.isAfter(employment.startDate)) &&
-      (filler.endDate.getOrElse(taxYear.finishes).equals(employment.endDate.getOrElse(taxYear.finishes)) ||
-        filler.endDate.getOrElse(taxYear.finishes).isBefore(employment.endDate.getOrElse(taxYear.finishes)))) {
+  private def encompassed(fillerStartDate: LocalDate, fillerEndDate: LocalDate, employmentStartDate: LocalDate, employmentEndDate: LocalDate): Option[FillerState] =
+    if ((fillerStartDate.isEqual(employmentStartDate) || fillerStartDate.isAfter(employmentStartDate)) &&
+      (fillerEndDate.equals(employmentEndDate) || fillerEndDate.isBefore(employmentEndDate))) {
       Some(EncompassedByEmployment)
     }
     else {
@@ -52,9 +53,8 @@ object FillerState {
   /*
     The filler straddles the start of the employment
    */
-  private def overlapStart(filler: Employment, employment: Employment, taxYear: TaxYear): Option[FillerState] =
-    if (filler.startDate.isBefore(employment.startDate) &&
-      filler.endDate.getOrElse(taxYear.finishes).isAfter(employment.startDate)) {
+  private def overlapStart(fillerStartDate: LocalDate, fillerEndDate: LocalDate, employmentStartDate: LocalDate, employmentEndDate: LocalDate): Option[FillerState] =
+    if (fillerStartDate.isBefore(employmentStartDate) && fillerEndDate.isAfter(employmentStartDate)) {
       Some(OverlapEmploymentStart)
     } else {
       None
@@ -63,9 +63,8 @@ object FillerState {
   /*
     The filler straddles the end of the employment
    */
-  private def overlapEnd(filler: Employment, employment: Employment, taxYear: TaxYear): Option[FillerState] =
-    if (filler.startDate.isBefore(employment.endDate.getOrElse(taxYear.finishes)) &&
-      filler.endDate.getOrElse(taxYear.finishes).isAfter(employment.endDate.getOrElse(taxYear.finishes))){
+  private def overlapEnd(fillerStartDate: LocalDate, fillerEndDate: LocalDate, employmentStartDate: LocalDate, employmentEndDate: LocalDate): Option[FillerState] =
+    if (fillerStartDate.isBefore(employmentEndDate) && fillerEndDate.isAfter(employmentEndDate)){
       Some(OverlapEmploymentEnd)
     } else {
       None
@@ -74,13 +73,15 @@ object FillerState {
   /*
     The employment falls entirely within the bounds of the filler
    */
-  private def overlapCompletely(filler: Employment, employment: Employment, taxYear: TaxYear): Option[FillerState] =
-    if (overlapStart(filler, employment, taxYear).contains(OverlapEmploymentStart) &&
-      overlapEnd(filler, employment, taxYear).contains(OverlapEmploymentEnd)) {
+  private def overlapCompletely(fillerStartDate: LocalDate, fillerEndDate: LocalDate, employmentStartDate: LocalDate, employmentEndDate: LocalDate): Option[FillerState] = {
+    val isOverlappingStart = overlapStart(fillerStartDate, fillerEndDate, employmentStartDate, employmentEndDate).contains(OverlapEmploymentStart)
+    val isOverlappingEnd = overlapEnd(fillerStartDate, fillerEndDate, employmentStartDate, employmentEndDate).contains(OverlapEmploymentEnd)
+    if (isOverlappingStart && isOverlappingEnd) {
       Some(OverlapEmployment)
     } else {
       None
     }
+  }
 }
 
 case object EncompassedByEmployment extends FillerState

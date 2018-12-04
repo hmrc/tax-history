@@ -58,7 +58,7 @@ class NpsEmploymentSpec extends TestUtil with UnitSpec {
       employment.receivingJobSeekersAllowance shouldBe true
       employment.receivingOccupationalPension shouldBe true
       employment.otherIncomeSourceIndicator shouldBe true
-      employment.startDate shouldBe startDate
+      employment.startDate shouldBe Some(startDate)
       employment.endDate shouldBe Some(endDate)
       employment.employmentStatus shouldBe EmploymentStatus.Live
     }

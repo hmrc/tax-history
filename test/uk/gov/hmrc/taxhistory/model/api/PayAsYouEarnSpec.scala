@@ -45,7 +45,7 @@ class PayAsYouEarnSpec extends TestUtil with UnitSpec {
     "(de)serialising the 'employments' field" should {
       val employment1 = Employment(
         employmentId = UUID.fromString(employment1Id),
-        startDate = new LocalDate("2016-01-21"),
+        startDate = Some(new LocalDate("2016-01-21")),
         endDate = Some(new LocalDate("2017-01-01")),
         payeReference = "paye-1",
         employerName = "employer-1",
@@ -69,7 +69,7 @@ class PayAsYouEarnSpec extends TestUtil with UnitSpec {
 
       val employment2 = Employment(
         employmentId = UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
-        startDate = new LocalDate("2016-02-22"),
+        startDate = Some(new LocalDate("2016-02-22")),
         endDate = None,
         payeReference = "paye-2",
         employerName = "employer-2",

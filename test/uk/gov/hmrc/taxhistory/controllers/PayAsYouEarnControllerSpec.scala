@@ -48,7 +48,7 @@ class PayAsYouEarnControllerSpec extends PlaySpec with OneServerPerSuite with Mo
     PayAsYouEarn(
       employments = List(Employment(
         employmentId = testEmploymentId,
-        startDate = testStartDate,
+        startDate = Some(testStartDate),
         payeReference = "SOME_PAYE", employerName = "Megacorp Plc",
         employmentStatus = EmploymentStatus.Live, worksNumber = "00191048716")),
       allowances = List.empty,

@@ -32,7 +32,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
   val npsEmploymentResponseWithTaxDistrictNumber: List[NpsEmployment] = List(
     NpsEmployment(
       "AA000000", 6, "0531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false,
-      otherIncomeSourceIndicator = false, new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live))
+      otherIncomeSourceIndicator = false, Some(new LocalDate("2015-01-21")), None, receivingOccupationalPension = false, Live))
 
   val testTaxCode = "1150L"
   lazy val testRtiData: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
@@ -42,12 +42,12 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
 
   val startDate = new LocalDate("2015-01-21")
   lazy val employment1 = Employment(payeReference = "1234",
-    startDate = new LocalDate("2016-10-20"),
+    startDate = Some(new LocalDate("2016-10-20")),
     employerName = "AnEmployerName",
     employmentStatus = EmploymentStatus.Live, worksNumber = "00191048716")
 
   lazy val employment2 = Employment(payeReference = "4321",
-    startDate = new LocalDate("2015-12-01"),
+    startDate = Some(new LocalDate("2015-12-01")),
     employerName = "AnotherEmployerName",
     employmentStatus = EmploymentStatus.Live, worksNumber = "00191048716")
 
@@ -162,7 +162,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       payAndTax.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       payAndTax.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       payAndTax.earlierYearUpdates.size mustBe 1
-      payAsYouEarn.employments.head.startDate mustBe startDate
+      payAsYouEarn.employments.head.startDate mustBe Some(startDate)
       payAsYouEarn.employments.head.endDate mustBe None
       payAsYouEarn.incomeSources.head._2 must be(testIncomeSource)
       val Some(companyBenefits) = payAsYouEarn.benefits.get(employment.employmentId.toString)
@@ -176,7 +176,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
-      employment.startDate mustBe startDate
+      employment.startDate mustBe Some(startDate)
       employment.endDate mustBe None
       val payAndTax = payAsYouEarn.payAndTax.get(employment.employmentId.toString)
       payAndTax mustBe None
@@ -192,7 +192,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
-      employment.startDate mustBe startDate
+      employment.startDate mustBe Some(startDate)
       employment.endDate mustBe None
       val payAndTax = payAsYouEarn.payAndTax.get(employment.employmentId.toString)
       payAndTax mustBe None
@@ -207,7 +207,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
-      employment.startDate mustBe startDate
+      employment.startDate mustBe Some(startDate)
       employment.endDate mustBe None
       val payAndTax = payAsYouEarn.payAndTax.get(employment.employmentId.toString)
       payAndTax.get.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
@@ -224,7 +224,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       val employment = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
-      employment.startDate mustBe startDate
+      employment.startDate mustBe Some(startDate)
       employment.endDate mustBe None
       val payAndTax = payAsYouEarn.payAndTax.get(employment.employmentId.toString)
       payAndTax.get.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))

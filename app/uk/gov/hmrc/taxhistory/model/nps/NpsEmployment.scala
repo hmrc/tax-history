@@ -29,7 +29,7 @@ case class NpsEmployment(nino: String,
                          worksNumber: Option[String] = None,
                          receivingJobSeekersAllowance: Boolean = false,
                          otherIncomeSourceIndicator: Boolean = false,
-                         startDate: LocalDate,
+                         startDate: Option[LocalDate],
                          endDate: Option[LocalDate] = None,
                          receivingOccupationalPension: Boolean = false,
                          employmentStatus: EmploymentStatus
@@ -54,7 +54,7 @@ case class NpsEmployment(nino: String,
 object NpsEmployment {
   implicit val reader = new Reads[NpsEmployment] {
     def reads(js: JsValue): JsResult[NpsEmployment] = {
-      val startDate = (js \ "startDate").as[LocalDate](JsonUtils.npsDateFormat)
+      val startDate = (js \ "startDate").asOpt[LocalDate](JsonUtils.npsDateFormat)
       val endDate = (js \ "endDate").asOpt[LocalDate](JsonUtils.npsDateFormat)
       for {
         nino <- (js \ "nino").validate[String]

@@ -41,7 +41,7 @@ Gets a list of employment objects for a given nino and tax year
 [
   Employment {
     employmentId: String UUID Format
-    startDate:LocalDate,
+    startDate:Option[LocalDate],
     endDate:Option[LocalDate],
     payeReference:String,
     employerName:String,
@@ -81,7 +81,7 @@ Gets an employment object for a given nino and tax year and employmentId
 ```
 Employment{
   employmentId: String UUID Format
-  startDate:LocalDate,
+  startDate:Option[LocalDate],
   endDate:Option[LocalDate],
   payeReference:String,
   employerName:String,
@@ -336,7 +336,7 @@ The logged in user must be either:
   "employments": [
     Employment{
       "employmentId" : String UUID
-      "startDate" : LocalDate,
+      "startDate" : Option[LocalDate],
       "endDate" : Option[LocalDate],
       "payeReference" : String,
       "employerName" : String,

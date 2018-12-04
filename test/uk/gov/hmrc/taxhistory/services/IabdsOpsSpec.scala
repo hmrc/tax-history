@@ -37,7 +37,7 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil {
   val npsEmploymentResponse :List[NpsEmployment] = List(
     NpsEmployment(
       "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false,
-      otherIncomeSourceIndicator = false, new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live))
+      otherIncomeSourceIndicator = false, Some(new LocalDate("2015-01-21")), None, receivingOccupationalPension = false, Live))
 
 
   lazy val iabdList: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]

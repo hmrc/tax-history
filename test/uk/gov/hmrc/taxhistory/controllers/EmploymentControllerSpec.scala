@@ -41,7 +41,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
   val ninoWithAgent = randomNino()
   val ninoWithoutAgent = randomNino()
 
-  val testEmployment = Employment(startDate = LocalDate.now(),
+  val testEmployment = Employment(startDate = Some(LocalDate.now()),
     payeReference = "SOME_PAYE", employerName = "Megacorp Plc",
     employmentStatus = EmploymentStatus.Live, worksNumber = "00191048716")
   val testEmployments = List(testEmployment)
