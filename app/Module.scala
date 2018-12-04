@@ -14,25 +14,20 @@
  * limitations under the License.
  */
 
-import javax.inject.Provider
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names
-import com.google.inject.name.Names.named
-import com.kenshoo.play.metrics.{Metrics, MetricsImpl}
+import javax.inject.Provider
 import play.api.Mode.Mode
 import play.api.{Configuration, Environment}
 import play.modules.reactivemongo.MongoDbConnection
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.http.{CoreGet, CorePost, HttpGet, HttpPost}
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
-import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
 import uk.gov.hmrc.play.bootstrap.config.LoadAuditingConfig
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.play.bootstrap.http.{DefaultHttpClient, HttpClient}
 import uk.gov.hmrc.play.config.{AppName, ServicesConfig}
 import uk.gov.hmrc.taxhistory._
-import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.services.{PayeCacheService, TaxHistoryMongoCacheService}
 
 class Module(val environment: Environment, val configuration: Configuration) extends AbstractModule with ServicesConfig {
@@ -42,9 +37,7 @@ class Module(val environment: Environment, val configuration: Configuration) ext
 
   def configure() = {
 
-    bind(classOf[HttpGet]).to(classOf[WSHttpImpl])
-    bind(classOf[HttpPost]).to(classOf[WSHttpImpl])
-    bind(classOf[HttpClient]).to(classOf[WSHttpImpl])
+    bind(classOf[HttpClient]).to(classOf[DefaultHttpClient])
     bind(classOf[AuditingConfig]).toProvider(new AuditingConfigProvider("auditing"))
     bind(classOf[AuthConnector]).to(classOf[DefaultAuthConnector])
     bind(classOf[Audit]).to(classOf[MicroserviceAudit])

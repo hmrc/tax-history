@@ -23,9 +23,11 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.test.Helpers._
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+
 import scala.concurrent.Future
 
 class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
@@ -113,7 +115,7 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
   }
 
   lazy val testDesNpsConnector = new DesNpsConnector(
-    http = mock[HttpGet],
+    http = mock[HttpClient],
     baseUrl = "/fake",
     metrics = mock[TaxHistoryMetrics],
     authorizationToken = "someToken",

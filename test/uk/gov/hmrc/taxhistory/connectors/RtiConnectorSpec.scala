@@ -24,6 +24,7 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -86,7 +87,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
   }
 
   lazy val testRtiConnector = new RtiConnector(
-    http = mock[HttpGet],
+    http = mock[HttpClient],
     baseUrl = "/test",
     metrics = mock[TaxHistoryMetrics],
     authorizationToken = "auth",

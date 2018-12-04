@@ -27,6 +27,7 @@ case class PayAndTax(payAndTaxId: UUID = UUID.randomUUID(),
                      taxTotal: Option[BigDecimal] = None,
                      taxTotalIncludingEYU: Option[BigDecimal] = None,
                      studentLoan: Option[BigDecimal] = None,
+                     studentLoanIncludingEYU: Option[BigDecimal] = None,
                      paymentDate: Option[LocalDate] = None,
                      earlierYearUpdates: List[EarlierYearUpdate])
 

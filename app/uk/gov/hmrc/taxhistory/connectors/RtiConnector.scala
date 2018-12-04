@@ -19,6 +19,7 @@ package uk.gov.hmrc.taxhistory.connectors
 import javax.inject.{Inject, Named}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
@@ -26,7 +27,7 @@ import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
-class RtiConnector @Inject()(val http: HttpGet,
+class RtiConnector @Inject()(val http: HttpClient,
                              val metrics: TaxHistoryMetrics,
                              @Named("des-base-url") val baseUrl: String,
                              @Named("microservice.services.des.authorizationToken") val authorizationToken: String,

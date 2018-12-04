@@ -35,6 +35,7 @@ case class RtiEmployment(sequenceNo: Int,
   def toPayAndTax: PayAndTax = {
     val eyus = earlierYearUpdates.map(_.toEarlierYearUpdate)
     val nonEmptyEyus = eyus.filter(eyu => eyu.taxablePayEYU != 0 && eyu.taxEYU != 0)
+    val studentLoanEyus = eyus.filter(eyu => eyu.studentLoanEYU.isDefined)
 
     payments match {
       case Nil => PayAndTax(earlierYearUpdates = nonEmptyEyus, taxablePayTotalIncludingEYU = None, taxTotalIncludingEYU = None)
@@ -47,11 +48,18 @@ case class RtiEmployment(sequenceNo: Int,
         val taxTotal = payment.totalTaxYTD
         val taxTotalIncludingEYU = taxTotal + nonEmptyEyus.map(_.taxEYU).sum
 
+        val studentLoan: Option[BigDecimal] = payment.studentLoansYTD
+        val studentLoanIncludingEYU: Option[BigDecimal] = (studentLoan :: studentLoanEyus.map(_.studentLoanEYU)).flatten match {
+          case Nil => None
+          case values => Some(values.sum)
+        }
+
         PayAndTax(taxablePayTotal = Some(taxablePayTotal),
           taxablePayTotalIncludingEYU = Some(taxablePayTotalIncludingEYU),
           taxTotal = Some(taxTotal),
           taxTotalIncludingEYU = Some(taxTotalIncludingEYU),
-          studentLoan = payment.studentLoansYTD,
+          studentLoan = studentLoan,
+          studentLoanIncludingEYU = studentLoanIncludingEYU,
           paymentDate = Some(payment.paidOnDate),
           earlierYearUpdates = nonEmptyEyus)
     }
@@ -68,12 +76,14 @@ case class RtiPayment(paidOnDate: LocalDate,
 
 case class RtiEarlierYearUpdate(taxablePayDelta: BigDecimal,
                                 totalTaxDelta: BigDecimal,
+                                studentLoanRecoveredDelta: Option[BigDecimal] = None,
                                 receivedDate: LocalDate) {
 
   def toEarlierYearUpdate: EarlierYearUpdate = {
     EarlierYearUpdate(
       taxablePayEYU = taxablePayDelta,
       taxEYU = totalTaxDelta,
+      studentLoanEYU = studentLoanRecoveredDelta,
       receivedDate = receivedDate
     )
   }
@@ -116,11 +126,13 @@ object RtiEarlierYearUpdate {
 
       val taxablePayDelta: BigDecimal = optionalAdjustmentAmountMap.getOrElse(Map.empty).getOrElse("TaxablePayDelta", 0.0)
       val totalTaxDelta: BigDecimal = optionalAdjustmentAmountMap.getOrElse(Map.empty).getOrElse("TotalTaxDelta", 0.0)
+      val studentLoanRecoveredDelta: Option[BigDecimal] = optionalAdjustmentAmountMap.getOrElse(Map.empty).get("StudentLoanRecoveredDelta")
       val receivedDate = (js \ "rcvdDate").as[LocalDate](JsonUtils.rtiDateFormat)
 
       JsSuccess(
         RtiEarlierYearUpdate(taxablePayDelta = taxablePayDelta,
           totalTaxDelta = totalTaxDelta,
+          studentLoanRecoveredDelta = studentLoanRecoveredDelta,
           receivedDate = receivedDate)
       )
     }

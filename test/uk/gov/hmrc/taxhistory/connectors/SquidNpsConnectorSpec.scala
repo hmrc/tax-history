@@ -24,9 +24,11 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+
 import scala.concurrent.Future
 
 class SquidNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
@@ -84,7 +86,7 @@ class SquidNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
   }
 
   lazy val testNpsConnector = new SquidNpsConnector(
-    http = mock[HttpGet],
+    http = mock[HttpClient],
     baseUrl = "/fake",
     metrics = mock[TaxHistoryMetrics],
     originatorId = "orgId"

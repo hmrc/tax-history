@@ -179,16 +179,17 @@ Gets pay and tax object containing a list of EYU's for a given nino, tax year an
         taxTotal: Option[BigDecimal],
         taxTotalIncludingEYU: Option[BigDecimal],
         studentLoan: Option[BigDecimal],
+        studentLoanIncludingEYU: Option[BigDecimal],
         paymentDate: Option[LocalDate],
-        earlierYearUpdates: List[EarlierYearUpdate]
-
-        ## - Above eyu list is of the below objects
-        EarlierYearUpdate{
-            earlierYearUpdateId: String UUID Format,
-            taxablePayEYU: BigDecimal,
-            taxEYU: BigDecimal,
-            receivedDate:LocalDate
-        }
+        earlierYearUpdates: List[
+            EarlierYearUpdate{
+                earlierYearUpdateId: String UUID Format,
+                taxablePayEYU: BigDecimal,
+                taxEYU: BigDecimal,
+                studentLoanEYU: Option[BigDecimal],
+                receivedDate: LocalDate
+            }
+        ]
     }
 ]
 ```
@@ -376,12 +377,14 @@ The logged in user must be either:
       "taxTotal" : Option[BigDecimal],
       "taxTotalIncludingEYU": Option[BigDecimal],
       "studentLoan" : Option[BigDecimal],
+      "studentLoanIncludingEYU" : Option[BigDecimal],
       "paymentDate" : Option[LocalDate],
       "earlierYearUpdates" : [
         EarlierYearUpdate{
           "earlierYearUpdateId" : String UUID,
           "taxablePayEYU" : BigDecimal,
           "taxEYU" : BigDecimal,
+          "studentLoanEYU" : Option[BigDecimal],
           "receivedDate" : LocalDate
         }
       ]
