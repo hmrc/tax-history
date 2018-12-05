@@ -100,6 +100,7 @@ class EmploymentSpec extends TestUtil with UnitSpec {
       val employmentNoStartDate = employment2.copy(startDate = None)
 
       employmentNoStartDateJson.as[Employment] shouldBe employmentNoStartDate
+      Json.toJson(employmentNoStartDate) shouldBe employmentNoStartDateJson
     }
     "enrich employment with URIs" in {
       val taxYear = 2016

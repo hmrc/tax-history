@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxhistory.model.nps
 
 import org.joda.time.LocalDate
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
@@ -61,6 +61,19 @@ class NpsEmploymentSpec extends TestUtil with UnitSpec {
       employment.startDate shouldBe Some(startDate)
       employment.endDate shouldBe Some(endDate)
       employment.employmentStatus shouldBe EmploymentStatus.Live
+    }
+
+    "deserialise NPS Employment Response Json" when {
+      "startDate is missing" in {
+        val employmentNoStartDateJson: JsObject = Json.parse(employmentResponse).as[JsObject] - "startDate"
+        val deserialised = employmentNoStartDateJson.as[NpsEmployment]
+        deserialised.startDate shouldBe None
+      }
+      "startDate is null" in {
+        val employmentNullStartDateJson: JsObject = Json.parse(employmentResponse).as[JsObject] + ("startDate" -> JsNull)
+        val deserialised = employmentNullStartDateJson.as[NpsEmployment]
+        deserialised.startDate shouldBe None
+      }
     }
 
     "Multiple NpsEmployments Json" should {
