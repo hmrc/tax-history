@@ -51,16 +51,11 @@ case class Employment(employmentId: UUID = UUID.randomUUID(),
 
 object Employment {
 
-  def noRecord(startDate: LocalDate, endDate: Option[LocalDate]): Employment = {
+  def noRecord(startDate: LocalDate, endDate: LocalDate): Employment = {
     val noRecord = "No record held"
 
     // Override the end date to be None if it represents the end of the current tax year
-    val overriddenEndDate =
-      if (endDate.getOrElse(TaxYear.taxYearFor(startDate).finishes).equals(TaxYear.current.finishes)) {
-        None
-      } else {
-      endDate
-    }
+    val overriddenEndDate = Some(endDate).filterNot(_.equals(TaxYear.current.finishes))
 
     Employment(
       startDate = Some(startDate),

@@ -493,5 +493,164 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       val employments = List(liveMidYearEmployment)
       testEmploymentHistoryService.addFillers(employments, TaxYear.current) map isNoRecordEmployment shouldBe Seq(true, false, true)
     }
+
+    def oneDayBefore(thisDay: Option[LocalDate]) = thisDay.map(_.minusDays(1))
+    def oneDayAfter(thisDay: Option[LocalDate]) = thisDay.map(_.plusDays(1))
+
+    "when original employment has no start date but has an end date, and there are no employments afterwards" in {
+      val employmentWithoutStartDate = liveMidYearEmployment.copy(startDate = None)
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(employmentWithoutStartDate), TaxYear.current)
+
+      val isOrderedFirstInList = filledEmployments.head == employmentWithoutStartDate
+      isOrderedFirstInList shouldBe true
+
+      filledEmployments map isNoRecordEmployment shouldBe Seq(false, true, true)
+
+      val firstGap = filledEmployments(1)
+      val secondGap = filledEmployments(2)
+      firstGap.startDate shouldBe Some(TaxYear.current.starts)
+      firstGap.endDate shouldBe oneDayBefore(employmentWithoutStartDate.endDate)
+
+      secondGap.startDate shouldBe oneDayAfter(employmentWithoutStartDate.endDate)
+      secondGap.endDate shouldBe None
+    }
+
+    "when original employment has no start date but has an end date, and the employment finishes at the end of the tax year" in {
+      val employmentWithoutStartDate = liveEndYearEmployment.copy(startDate = None)
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(employmentWithoutStartDate), TaxYear.current)
+
+      val isOrderedFirstInList = filledEmployments.head == employmentWithoutStartDate
+      isOrderedFirstInList shouldBe true
+
+      filledEmployments map isNoRecordEmployment shouldBe Seq(false, true)
+
+      val gap = filledEmployments(1)
+      gap.startDate shouldBe Some(TaxYear.current.starts)
+      gap.endDate shouldBe oneDayBefore(employmentWithoutStartDate.endDate)
+    }
+
+    "when original employment has no start date but has an end date, and the employment finishes on the first day of the tax year" in {
+      val employmentWithoutStartDate = liveOngoingEmployment.copy(startDate = None, endDate = Some(TaxYear.current.starts))
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(employmentWithoutStartDate), TaxYear.current)
+
+      val isOrderedFirstInList = filledEmployments.head == employmentWithoutStartDate
+      isOrderedFirstInList shouldBe true
+
+      filledEmployments map isNoRecordEmployment shouldBe Seq(false, true)
+
+      val gap = filledEmployments(1)
+      gap.startDate shouldBe oneDayAfter(employmentWithoutStartDate.endDate)
+      gap.endDate shouldBe None
+    }
+
+    "when original employment has no start date but has an end date, and there is another employment immediately afterwards" in {
+      val employmentWithoutStartDate = liveMidYearEmployment.copy(startDate = None)
+      val subsequentEmployment = liveMidYearEmployment.copy(
+        startDate = oneDayAfter(liveMidYearEmployment.endDate),
+        endDate = None
+      )
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(employmentWithoutStartDate, subsequentEmployment), TaxYear.current)
+
+      val isOrderedFirstInList = filledEmployments.head == employmentWithoutStartDate
+      isOrderedFirstInList shouldBe true
+
+      filledEmployments map isNoRecordEmployment shouldBe Seq(false, true, false)
+
+      val gap = filledEmployments(1)
+      gap.startDate shouldBe Some(TaxYear.current.starts)
+      gap.endDate shouldBe oneDayBefore(employmentWithoutStartDate.endDate)
+    }
+
+    "when original employment has no start date but has an end date, and there is another employment some days later" in {
+      val employmentWithoutStartDate = liveMidYearEmployment.copy(startDate = None)
+      val subsequentEmployment = liveMidYearEmployment.copy(
+        startDate = liveMidYearEmployment.endDate.map(_.plusDays(3)),
+        endDate = None
+      )
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(employmentWithoutStartDate, subsequentEmployment), TaxYear.current)
+
+      val isOrderedFirstInList = filledEmployments.head == employmentWithoutStartDate
+      isOrderedFirstInList shouldBe true
+
+      filledEmployments map isNoRecordEmployment shouldBe Seq(false, true, true, false)
+
+      val firstGap = filledEmployments(1)
+      firstGap.startDate shouldBe Some(TaxYear.current.starts)
+      firstGap.endDate shouldBe oneDayBefore(employmentWithoutStartDate.endDate)
+
+      val secondGap = filledEmployments(2)
+      secondGap.startDate shouldBe oneDayAfter(employmentWithoutStartDate.endDate)
+      secondGap.endDate shouldBe oneDayBefore(subsequentEmployment.startDate)
+    }
+
+    "when original employment has no start date but has an end date, and there is another employment immediately before (its end date)" in {
+      val preceedingEmployment = liveMidYearEmployment.copy(
+        startDate = Some(TaxYear.current.starts),
+        endDate = oneDayBefore(liveMidYearEmployment.endDate)
+      )
+      val employmentWithoutStartDate = liveMidYearEmployment.copy(startDate = None)
+
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(preceedingEmployment, employmentWithoutStartDate), TaxYear.current)
+
+      val isOrderedFirstInList = filledEmployments.head == employmentWithoutStartDate
+      isOrderedFirstInList shouldBe true
+
+      filledEmployments map isNoRecordEmployment shouldBe Seq(false, false, true)
+
+      val gap = filledEmployments(2)
+      gap.startDate shouldBe oneDayAfter(employmentWithoutStartDate.endDate)
+      gap.endDate shouldBe None
+    }
+
+    "when original employment has no start date but has an end date, and there is another employment some days before (its end date)" in {
+      val preceedingEmployment = liveMidYearEmployment.copy(
+        startDate = Some(TaxYear.current.starts),
+        endDate = liveMidYearEmployment.endDate.map(_.minusDays(3))
+      )
+      val employmentWithoutStartDate = liveMidYearEmployment.copy(startDate = None)
+
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(preceedingEmployment, employmentWithoutStartDate), TaxYear.current)
+
+      val isOrderedFirstInList = filledEmployments.head == employmentWithoutStartDate
+      isOrderedFirstInList shouldBe true
+
+      filledEmployments map isNoRecordEmployment shouldBe Seq(false, false, true, true)
+
+      val firstGap = filledEmployments(2)
+      firstGap.startDate shouldBe oneDayAfter(preceedingEmployment.endDate)
+      firstGap.endDate shouldBe oneDayBefore(employmentWithoutStartDate.endDate)
+
+      val secondGap = filledEmployments(3)
+      secondGap.startDate shouldBe oneDayAfter(employmentWithoutStartDate.endDate)
+      secondGap.endDate shouldBe None
+    }
+
+    "when original employment has no start date and has no end date, and there are no other employments" in {
+      val employmentNoDates = liveOngoingEmployment.copy(startDate = None, endDate = None)
+
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(employmentNoDates), TaxYear.current)
+
+      filledEmployments shouldBe List(employmentNoDates)
+    }
+
+    "when original employment has no start date and has no end date, and there is another employment" in {
+      val employmentNoDates = liveOngoingEmployment.copy(startDate = None, endDate = None)
+
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(employmentNoDates, liveMidYearEmployment), TaxYear.current)
+
+      val isOrderedFirstInList = filledEmployments.head == employmentNoDates
+      isOrderedFirstInList shouldBe true
+
+      filledEmployments map isNoRecordEmployment shouldBe Seq(false, false)
+    }
+
+    "when there are two employments without start dates but with end dates" in {
+      val employment1NoDates = liveOngoingEmployment.copy(startDate = None, endDate = None)
+      val employment2NoDates = liveOngoingEmployment.copy(startDate = None, endDate = None)
+
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(employment1NoDates, employment2NoDates), TaxYear.current)
+
+      filledEmployments map isNoRecordEmployment shouldBe Seq(false, false)
+    }
   }
 }
