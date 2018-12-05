@@ -42,8 +42,7 @@ object FillerState {
     The filler falls entirely within the bounds of the employment
    */
   private def encompassed(fillerStartDate: LocalDate, fillerEndDate: LocalDate, employmentStartDate: LocalDate, employmentEndDate: LocalDate): Option[FillerState] =
-    if ((fillerStartDate.isEqual(employmentStartDate) || fillerStartDate.isAfter(employmentStartDate)) &&
-      (fillerEndDate.equals(employmentEndDate) || fillerEndDate.isBefore(employmentEndDate))) {
+    if (fillerStartDate.isEqualOrAfter(employmentStartDate) && fillerEndDate.isEqualOrBefore(employmentEndDate)) {
       Some(EncompassedByEmployment)
     }
     else {
@@ -81,6 +80,14 @@ object FillerState {
     } else {
       None
     }
+  }
+
+  private[api] implicit class DateComparisonOps(someDate: LocalDate) {
+    def isEqualOrBefore(comparedToThisDate: LocalDate) =
+      someDate.isEqual(comparedToThisDate) || someDate.isBefore(comparedToThisDate)
+
+    def isEqualOrAfter(comparedToThisDate: LocalDate) =
+      someDate.isEqual(comparedToThisDate) || someDate.isAfter(comparedToThisDate)
   }
 }
 
