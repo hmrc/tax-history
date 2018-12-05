@@ -53,7 +53,7 @@ object FillerState {
     The filler straddles the start of the employment
    */
   private def overlapStart(fillerStartDate: LocalDate, fillerEndDate: LocalDate, employmentStartDate: LocalDate, employmentEndDate: LocalDate): Option[FillerState] =
-    if (fillerStartDate.isBefore(employmentStartDate) && fillerEndDate.isAfter(employmentStartDate)) {
+    if (fillerStartDate.isBefore(employmentStartDate) && fillerEndDate.isEqualOrAfter(employmentStartDate)) {
       Some(OverlapEmploymentStart)
     } else {
       None
@@ -63,7 +63,7 @@ object FillerState {
     The filler straddles the end of the employment
    */
   private def overlapEnd(fillerStartDate: LocalDate, fillerEndDate: LocalDate, employmentStartDate: LocalDate, employmentEndDate: LocalDate): Option[FillerState] =
-    if (fillerStartDate.isBefore(employmentEndDate) && fillerEndDate.isAfter(employmentEndDate)){
+    if (fillerStartDate.isEqualOrBefore(employmentEndDate) && fillerEndDate.isAfter(employmentEndDate)){
       Some(OverlapEmploymentEnd)
     } else {
       None

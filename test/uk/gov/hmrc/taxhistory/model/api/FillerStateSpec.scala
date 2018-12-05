@@ -209,6 +209,49 @@ class FillerStateSpec extends TestUtil with UnitSpec with PrivateMethodTester {
         }
       }
     }
+
+    "overlapCompletely is called" should {
+      val overlapCompletely: PrivateMethod[FillerState] = PrivateMethod[FillerState]('overlapCompletely)
+
+      "return Some(OverlapEmployment)" when {
+        "the filler starts before and ends after the employment" in {
+          val emplStart = LocalDate.parse("2010-10-10")
+          val emplEnd = LocalDate.parse("2010-10-20")
+          val fillerStart = emplStart.minusDays(1)
+          val fillerEnd = emplEnd.plusDays(1)
+          FillerState invokePrivate overlapCompletely(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe Some(OverlapEmployment)
+        }
+      }
+
+      "return None" when {
+        "the filler has the same start and end days as the employment" in {
+          val start = LocalDate.parse("2010-10-10")
+          val end = LocalDate.parse("2010-10-11")
+          FillerState invokePrivate overlapCompletely(start, end, start, end) shouldBe None
+        }
+        "the employment and filler's start and end days all lie on the same day" in {
+          val date = LocalDate.parse("2010-10-10")
+          FillerState invokePrivate overlapCompletely(date, date, date, date) shouldBe None
+        }
+        "the filler starts and ends within the employment" in {
+          val emplStart = LocalDate.parse("2010-10-10")
+          val emplEnd = LocalDate.parse("2010-10-20")
+
+          val fillerStart = emplStart.plusDays(1)
+          val fillerEnd = emplEnd.minusDays(1)
+          FillerState invokePrivate overlapCompletely(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe None
+        }
+        "the filler starts and ends before the employment starts" in {
+          val emplStart = LocalDate.parse("2010-10-10")
+          val emplEnd = LocalDate.parse("2010-10-20")
+
+          val fillerStart = emplStart.minusDays(2)
+          val fillerEnd = emplStart.minusDays(1)
+          FillerState invokePrivate overlapCompletely(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe None
+        }
+      }
+    }
+
   }
 
   "DateComparisonOps" when {
