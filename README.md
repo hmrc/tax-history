@@ -428,7 +428,9 @@ The logged in user must be either:
 
   "statePension" : Option[StatePension]{
     "grossAmount" : BigDecimal,
-    "typeDescription" : String
+    "typeDescription" : String,
+    "paymentFrequency" : Option[Int] (Weekly=1, Annual=5),
+    "startDate" : Option[LocalDate]
   }
 }
 ```

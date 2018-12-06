@@ -17,6 +17,9 @@
 package uk.gov.hmrc.taxhistory.model.nps
 
 
+import org.joda.time.LocalDate
+import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
+import play.api.Logger
 import play.api.libs.json._
 
 
@@ -123,9 +126,31 @@ case class Iabd(nino: String,
                 `type`: IabdType,
                 grossAmount : Option[BigDecimal] = None,
                 typeDescription : Option[String] = None,
-                source: Option[Int] = None) {
+                source: Option[Int] = None,
+                paymentFrequency: Option[Int],
+                startDate: Option[String]) {
 
-  def toStatePension = StatePension(grossAmount = grossAmount.getOrElse(0.0), typeDescription.getOrElse(""))
+  def toStatePension = {
+    val paymentStartDate: Option[LocalDate] = paymentFrequency match {
+      case Some(1) => // Weekly
+        startDate.map(date => LocalDate.parse(date, DateTimeFormat.forPattern("dd/MM/yyyy")))
+      case Some(5) => // Annual
+        None
+      case Some(unknownValue) => {
+        Logger.warn(s"Unknown value for IABD's 'paymentFrequency': $unknownValue")
+        None
+      }
+      case _ =>
+        None
+    }
+
+    StatePension(
+      grossAmount = grossAmount.getOrElse(0.0),
+      typeDescription.getOrElse(""),
+      paymentFrequency = paymentFrequency,
+      startDate = paymentStartDate
+    )
+  }
 }
 
 object Iabd {

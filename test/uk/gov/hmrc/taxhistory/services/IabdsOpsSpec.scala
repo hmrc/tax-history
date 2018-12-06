@@ -32,7 +32,7 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil {
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val testNino = randomNino()
 
-  val onlyIabdList:List[Iabd]= List(Iabd("QQ000003", Some(201700055), VanBenefit, Some(100), Some("Van Benefit"),Some(26)))
+  val onlyIabdList:List[Iabd]= List(Iabd("QQ000003", Some(201700055), VanBenefit, Some(100), Some("Van Benefit"),Some(26), None, None))
 
   val npsEmploymentResponse :List[NpsEmployment] = List(
     NpsEmployment(
