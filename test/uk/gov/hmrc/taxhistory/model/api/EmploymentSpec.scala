@@ -35,7 +35,7 @@ package uk.gov.hmrc.taxhistory.model.api
 import java.util.UUID
 
 import org.joda.time.LocalDate
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -48,7 +48,7 @@ class EmploymentSpec extends TestUtil with UnitSpec {
 
   lazy val employment1 = Employment(
     employmentId = UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
-    startDate = new LocalDate("2016-01-21"),
+    startDate = Some(new LocalDate("2016-01-21")),
     endDate = Some(new LocalDate("2017-01-01")),
     payeReference = "paye-1",
     employerName = "employer-1",
@@ -60,7 +60,7 @@ class EmploymentSpec extends TestUtil with UnitSpec {
     employmentId = UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
     payeReference = "paye-2",
     employerName = "employer-2",
-    startDate = new LocalDate("2016-02-22"),
+    startDate = Some(new LocalDate("2016-02-22")),
     employmentStatus = EmploymentStatus.Live,
     worksNumber = "00191048716"
   )
@@ -78,7 +78,7 @@ class EmploymentSpec extends TestUtil with UnitSpec {
     "generate employmentId when none is supplied" in {
       val emp = Employment(payeReference = "paye-1",
         employerName = "employer-1",
-        startDate = new LocalDate("2016-01-21"),
+        startDate = Some(new LocalDate("2016-01-21")),
         endDate = Some(new LocalDate("2017-01-01")),
         employmentStatus = EmploymentStatus.Live,
         worksNumber = "00191048716"
@@ -94,6 +94,13 @@ class EmploymentSpec extends TestUtil with UnitSpec {
     }
     "allow omission of endDate in json" in {
       employmentNoEndDateJson.as[Employment] shouldBe employment2
+    }
+    "allow omission of startDate in json" in {
+      val employmentNoStartDateJson = employmentNoEndDateJson.as[JsObject] - "startDate"
+      val employmentNoStartDate = employment2.copy(startDate = None)
+
+      employmentNoStartDateJson.as[Employment] shouldBe employmentNoStartDate
+      Json.toJson(employmentNoStartDate) shouldBe employmentNoStartDateJson
     }
     "enrich employment with URIs" in {
       val taxYear = 2016

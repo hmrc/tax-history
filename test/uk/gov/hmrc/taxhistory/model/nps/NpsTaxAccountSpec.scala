@@ -45,7 +45,7 @@ class NpsTaxAccountSpec extends TestUtil with UnitSpec {
     worksNumber = Some("6044041000000"),
     receivingJobSeekersAllowance = false,
     otherIncomeSourceIndicator = false,
-    startDate = new LocalDate("2015-01-21"),
+    startDate = Some(new LocalDate("2015-01-21")),
     endDate = None,
     receivingOccupationalPension = false,
     employmentStatus = Live
@@ -157,7 +157,7 @@ class NpsTaxAccountSpec extends TestUtil with UnitSpec {
       "return None when no employment and income source match" in {
         val npsEmployment = NpsEmployment(
           "AA000000", 6, "999", "AZ00010", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false,
-          otherIncomeSourceIndicator = false, new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live)
+          otherIncomeSourceIndicator = false, Some(new LocalDate("2015-01-21")), None, receivingOccupationalPension = false, Live)
 
         taxAccount.matchedIncomeSource(npsEmployment) shouldBe None
       }
@@ -166,7 +166,7 @@ class NpsTaxAccountSpec extends TestUtil with UnitSpec {
         val targetEmploymentId = 6
         val npsEmployment = NpsEmployment(
           "AA000000", targetEmploymentId, "961", "AZ00010", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false,
-          otherIncomeSourceIndicator = false, new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live)
+          otherIncomeSourceIndicator = false, Some(new LocalDate("2015-01-21")), None, receivingOccupationalPension = false, Live)
 
         taxAccount.matchedIncomeSource(npsEmployment).get.employmentId shouldBe targetEmploymentId
       }

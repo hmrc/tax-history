@@ -27,7 +27,7 @@ import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType._
 import uk.gov.hmrc.time.TaxYear
 
 case class Employment(employmentId: UUID = UUID.randomUUID(),
-                      startDate: LocalDate,
+                      startDate: Option[LocalDate],
                       endDate: Option[LocalDate] = None,
                       payeReference: String,
                       employerName: String,
@@ -51,25 +51,26 @@ case class Employment(employmentId: UUID = UUID.randomUUID(),
 
 object Employment {
 
-  def noRecord(startDate: LocalDate, endDate: Option[LocalDate]): Employment = {
+  def noRecord(startDate: LocalDate, endDate: LocalDate): Employment = {
     val noRecord = "No record held"
 
     // Override the end date to be None if it represents the end of the current tax year
-    val overriddenEndDate =
-      if (endDate.getOrElse(TaxYear.taxYearFor(startDate).finishes).equals(TaxYear.current.finishes)) {
-        None
-      } else {
-      endDate
-    }
+    val overriddenEndDate = Some(endDate).filterNot(_.equals(TaxYear.current.finishes))
 
-    Employment(startDate = startDate, endDate = overriddenEndDate, payeReference = noRecord, employerName = noRecord,
-      employmentPaymentType = None, employmentStatus = EmploymentStatus.Unknown,  worksNumber = noRecord)
-
+    Employment(
+      startDate = Some(startDate),
+      endDate = overriddenEndDate,
+      payeReference = noRecord,
+      employerName = noRecord,
+      employmentPaymentType = None,
+      employmentStatus = EmploymentStatus.Unknown,
+      worksNumber = noRecord
+    )
   }
 
   implicit val jsonReads: Reads[Employment] = (
     (__ \ "employmentId").read[UUID] and
-      (__ \ "startDate").read[LocalDate] and
+      (__ \ "startDate").readNullable[LocalDate] and
       (__ \ "endDate").readNullable[LocalDate] and
       (__ \ "payeReference").read[String] and
       (__ \ "employerName").read[String] and
@@ -84,7 +85,7 @@ object Employment {
 
   implicit val jsonWrites: Writes[Employment] = (
     (__ \ "employmentId").write[UUID] and
-      (__ \ "startDate").write[LocalDate] and
+      (__ \ "startDate").writeNullable[LocalDate] and
       (__ \ "endDate").writeNullable[LocalDate] and
       (__ \ "payeReference").write[String] and
       (__ \ "employerName").write[String] and

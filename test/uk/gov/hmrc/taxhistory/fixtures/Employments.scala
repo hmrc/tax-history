@@ -28,7 +28,7 @@ trait Employments {
 
   private def templateEmployment = Employment(
     employmentId = UUID.randomUUID(),
-    startDate = TaxYear.current.starts,
+    startDate = Some(TaxYear.current.starts),
     endDate = None,
     payeReference = "Nothing",
     employerName = "An Employer",
@@ -38,39 +38,39 @@ trait Employments {
 
   val liveOngoingEmployment = templateEmployment
 
-  val liveNoEndEmployment = templateEmployment.copy(startDate = TaxYear.current.starts.plusDays(30))
+  val liveNoEndEmployment = templateEmployment.copy(startDate = Some(TaxYear.current.starts.plusDays(30)))
 
   val liveStartYearEmployment = templateEmployment.copy(endDate = Some(TaxYear.current.starts.plusDays(10)))
 
   val liveMidYearEmployment = templateEmployment.copy(
-    startDate = TaxYear.current.starts.plusDays(40),
+    startDate = Some(TaxYear.current.starts.plusDays(40)),
     endDate = Some(TaxYear.current.finishes.minusDays(10))
   )
 
   val liveEndYearEmployment = templateEmployment.copy(
-    startDate = TaxYear.current.finishes.minusDays(10),
+    startDate = Some(TaxYear.current.finishes.minusDays(10)),
     endDate = Some(TaxYear.current.finishes)
   )
 
   val ceasedBeforeStartEmployment = templateEmployment.copy(
-    startDate = TaxYear.current.previous.starts.plusDays(5) ,
+    startDate = Some(TaxYear.current.previous.starts.plusDays(5)),
     endDate = Some(TaxYear.current.starts.plusDays(30)),
     employmentStatus = EmploymentStatus.Ceased
   )
 
   val ceasedNoEndEmployment = templateEmployment.copy(
-    startDate = TaxYear.current.starts.plusDays(90),
+    startDate = Some(TaxYear.current.starts.plusDays(90)),
     employmentStatus = EmploymentStatus.Ceased
   )
 
   val ceasedAfterEndEmployment = templateEmployment.copy(
-    startDate = TaxYear.current.starts.plusDays(60),
+    startDate = Some(TaxYear.current.starts.plusDays(60)),
     endDate = Some(TaxYear.current.next.starts.plusDays(30)),
     employmentStatus = EmploymentStatus.Ceased
   )
 
   val potentiallyCeasedEmployment = templateEmployment.copy(
-    startDate = TaxYear.current.starts.plusDays(90),
+    startDate = Some(TaxYear.current.starts.plusDays(90)),
     employmentStatus = EmploymentStatus.PotentiallyCeased
   )
 

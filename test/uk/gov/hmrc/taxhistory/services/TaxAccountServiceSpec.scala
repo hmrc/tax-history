@@ -44,7 +44,7 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
   val npsEmploymentResponse :List[NpsEmployment] = List(
     NpsEmployment(
       "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), false, false,
-      new LocalDate("2015-01-21"), None, true, Live))
+      Some(new LocalDate("2015-01-21")), None, true, Live))
 
 
   lazy val testNpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]

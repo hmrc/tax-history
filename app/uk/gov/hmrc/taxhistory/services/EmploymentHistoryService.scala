@@ -57,16 +57,27 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
     }
   }
 
-  def addFillers(employments: List[Employment], taxYear: TaxYear): List[Employment] =
-    (employments ++ getFillers(employments.filterNot(emp => emp.isOccupationalPension),
-      List(Employment.noRecord(taxYear.starts, Some(taxYear.finishes))), taxYear)) sortBy (_.startDate.toDate)
+  def addFillers(employments: List[Employment], taxYear: TaxYear): List[Employment] = {
+    val employmentsWithoutPensions = employments.filterNot(emp => emp.isOccupationalPension)
+    val employmentGapFiller = Employment.noRecord(taxYear.starts, taxYear.finishes)
+    val fillers = getFillers(employmentsWithoutPensions, List(employmentGapFiller), taxYear)
+
+    (employments ++ fillers) sortBy { employment =>
+      employment.startDate.getOrElse {
+        // This employment has no start date.
+        // Let it be ordered at the start of all employments.
+        taxYear.starts.minusDays(1)
+      }.toDate
+    }
+  }
 
   @tailrec
-  private def getFillers(employments: List[Employment], fillers: List[Employment], taxYear: TaxYear): List[Employment] =
+  private def getFillers(employments: List[Employment], employmentGapFillers: List[Employment], taxYear: TaxYear): List[Employment] =
     if (employments.nonEmpty) {
-      getFillers(employments.tail, fillers flatMap (filler => alignFillerDates(filler, employments.head, taxYear)), taxYear)
+      val dateAlignedFillers = employmentGapFillers flatMap (filler => alignFillerDates(filler, employments.head, taxYear))
+      getFillers(employments.tail, dateAlignedFillers, taxYear)
     } else {
-      fillers
+      employmentGapFillers
     }
 
   def getEmployment(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Employment] = {
@@ -302,24 +313,27 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
         Map("nino" -> nino, "payeRef" -> rE.payeRef, "officeNumber" -> rE.officeNumber, "currentPayId" -> rE.currentPayId.getOrElse("")))
     )
 
-  private def getFiller(previous: Option[Employment], nextE: Employment, taxYear: TaxYear): List[Employment] = {
-    previous match {
-      case Some(prevE) if prevE.endDate.getOrElse(taxYear.finishes).plusDays(1).isBefore(nextE.startDate) =>
-        val fillerStartDate = prevE.endDate.getOrElse(taxYear.finishes).plusDays(1)
-        val fillerEndDate = if (nextE.startDate.minusDays(1) == taxYear.finishes && taxYear == TaxYear.current) None else Some(nextE.startDate.minusDays(1))
-        List(Employment.noRecord(fillerStartDate, fillerEndDate), nextE) // gap
-      case _ => List(nextE) // no gap
-    }
-  }
-
   private def alignFillerDates(filler: Employment, employment: Employment, taxYear: TaxYear): List[Employment] = {
-    fillerState(filler, employment, taxYear) match {
-      case EncompassedByEmployment => List.empty // Discard
-      case OverlapEmployment => List(noRecord(filler.startDate, Some(employment.startDate.minusDays(1))),
-        noRecord(employment.endDate.getOrElse(taxYear.finishes.minusDays(1)).plusDays(1), filler.endDate)) // Split into two
-      case OverlapEmploymentStart => List(noRecord(filler.startDate, Some(employment.startDate.minusDays(1)))) // Align end date
-      case OverlapEmploymentEnd => List(noRecord(employment.endDate.getOrElse(taxYear.finishes.minusDays(1)).plusDays(1), filler.endDate)) // Align start date
-      case _ => List(filler) // Unchanged
+    val fillerEndDate = filler.endDate.getOrElse(taxYear.finishes)
+    val fillerStartDate = filler.startDate.getOrElse(fillerEndDate)
+
+    val assumedEmploymentStartDate = employment.startDate.getOrElse(employment.endDate.getOrElse(taxYear.starts))
+    val assumedEmploymentEndDate = employment.endDate.getOrElse(taxYear.finishes)
+
+    fillerState(fillerStartDate, fillerEndDate, assumedEmploymentStartDate, assumedEmploymentEndDate) match {
+      case EncompassedByEmployment => // Discard the employment gap
+        List.empty
+      case OverlapEmployment => // Split the employment gap into two gaps, a gap before and a gap after the actual employment
+        List(
+          noRecord(fillerStartDate, assumedEmploymentStartDate.minusDays(1)),
+          noRecord(employment.endDate.map(_.plusDays(1)).getOrElse(taxYear.finishes), fillerEndDate)
+        )
+      case OverlapEmploymentStart => // Align end date
+        List(noRecord(fillerStartDate, assumedEmploymentStartDate.minusDays(1)))
+      case OverlapEmploymentEnd => // Align start date
+        List(noRecord(employment.endDate.map(_.plusDays(1)).getOrElse(taxYear.finishes), fillerEndDate))
+      case _ => // Unchanged
+        List(filler)
     }
   }
 

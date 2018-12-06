@@ -50,33 +50,33 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
   val npsEmploymentResponse: List[NpsEmployment] = List(
     NpsEmployment(
       "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false,
-      otherIncomeSourceIndicator = false, new LocalDate("2015-01-21"), None, receivingOccupationalPension = true, Live))
+      otherIncomeSourceIndicator = false, Some(new LocalDate("2015-01-21")), None, receivingOccupationalPension = true, Live))
 
   val npsEmploymentWithJobSeekerAllowanceCY: List[NpsEmployment] = List(
     NpsEmployment(
       "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = true, otherIncomeSourceIndicator = false,
-      new LocalDate(s"${TaxYear.current.currentYear}-01-21"), None, receivingOccupationalPension = false, Live))
+      Some(new LocalDate(s"${TaxYear.current.currentYear}-01-21")), None, receivingOccupationalPension = false, Live))
 
   val npsEmploymentWithJobSeekerAllowanceCYMinus1: List[NpsEmployment] = List(
     NpsEmployment(
       "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = true, otherIncomeSourceIndicator = false,
-      new LocalDate(s"${TaxYear.current.previous.currentYear}-01-21"), None, receivingOccupationalPension = false, Live))
+      Some(new LocalDate(s"${TaxYear.current.previous.currentYear}-01-21")), None, receivingOccupationalPension = false, Live))
 
   val npsEmploymentWithOtherIncomeSourceIndicator: List[NpsEmployment] = List(
     NpsEmployment(
       "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = true,
-      new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live))
+      Some(new LocalDate("2015-01-21")), None, receivingOccupationalPension = false, Live))
 
 
   val npsEmploymentWithJustJobSeekerAllowance: List[NpsEmployment] = List(
     NpsEmployment(
       "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = true, otherIncomeSourceIndicator = false,
-      new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live))
+      Some(new LocalDate("2015-01-21")), None, receivingOccupationalPension = false, Live))
 
   val npsEmploymentWithJustOtherIncomeSourceIndicator: List[NpsEmployment] = List(
     NpsEmployment(
       "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = true,
-      new LocalDate("2015-01-21"), None, receivingOccupationalPension = false, Live))
+      Some(new LocalDate("2015-01-21")), None, receivingOccupationalPension = false, Live))
 
 
   lazy val testRtiData: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
@@ -155,7 +155,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       employments.size shouldBe 1
       employments.head.employerName shouldBe "Aldi"
       employments.head.payeReference shouldBe "531/J4816"
-      employments.head.startDate shouldBe startDate
+      employments.head.startDate shouldBe Some(startDate)
       employments.head.endDate shouldBe None
       employments.head.employmentPaymentType shouldBe Some(OccupationalPension)
 
@@ -208,7 +208,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
 
       employment.employerName shouldBe "Aldi"
       employment.payeReference shouldBe "531/J4816"
-      employment.startDate shouldBe startDate
+      employment.startDate shouldBe Some(startDate)
       employment.endDate shouldBe None
       employment.isOccupationalPension shouldBe true
       employment.employmentPaymentType shouldBe Some(OccupationalPension)
@@ -306,13 +306,13 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       val rtiEmployments = List(rtiEmployment1, rtiEmployment2, rtiEmployment3, rtiEmployment4)
 
       val npsEmployment1 = NpsEmployment(randomNino.toString(), 1, "offNo1", "ref1", "empname1", None,
-        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, LocalDate.now(), None,
+        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, Some(LocalDate.now()), None,
         receivingOccupationalPension = false, EmploymentStatus.Live)
       val npsEmployment2 = NpsEmployment(randomNino.toString(), 2, "offNo2", "ref2", "empname2", None,
-        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, LocalDate.now(), None,
+        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, Some(LocalDate.now()), None,
         receivingOccupationalPension = false, EmploymentStatus.Live)
       val npsEmployment3 = NpsEmployment(randomNino.toString(), 3, "offNo3", "ref3", "empname3", None,
-        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, LocalDate.now(), None,
+        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, Some(LocalDate.now()), None,
         receivingOccupationalPension = false, EmploymentStatus.Live)
 
       val npsEmployments = List(npsEmployment1, npsEmployment2, npsEmployment3)
@@ -330,13 +330,13 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       val rtiEmployments = List(rtiEmployment1, rtiEmployment2, rtiEmployment3)
 
       val npsEmployment1 = NpsEmployment(randomNino.toString(), 1, "offNo1", "ref1", "empname1", None,
-        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, LocalDate.now(), None,
+        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, Some(LocalDate.now()), None,
         receivingOccupationalPension = false, EmploymentStatus.Live)
       val npsEmployment2 = NpsEmployment(randomNino.toString(), 2, "offNo2", "ref2", "empname2", None,
-        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, LocalDate.now(), None,
+        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, Some(LocalDate.now()), None,
         receivingOccupationalPension = false, EmploymentStatus.Live)
       val npsEmployment3 = NpsEmployment(randomNino.toString(), 3, "offNo3", "ref3", "empname3", None,
-        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, LocalDate.now(), None,
+        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, Some(LocalDate.now()), None,
         receivingOccupationalPension = false, EmploymentStatus.Live)
 
       val npsEmployments = List(npsEmployment1, npsEmployment2, npsEmployment3)
@@ -354,14 +354,14 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
 
       val testEmployment2 =
         Employment(UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
-          locaDateCyMinus1("01", "21"), Some(locaDateCyMinus1("02", "21")), "paye-1", "employer-1",
+          Some(locaDateCyMinus1("01", "21")), Some(locaDateCyMinus1("02", "21")), "paye-1", "employer-1",
           Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),
           Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax"),
           Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
           None, Live, "00191048716")
 
       val testEmployment3 = Employment(UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
-        locaDateCyMinus1("02", "22"), None, "paye-2", "employer-2",
+        Some(locaDateCyMinus1("02", "22")), None, "paye-2", "employer-2",
         Some(s"/${taxYear.startYear}/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/company-benefits"),
         Some(s"/${taxYear.startYear}/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/pay-and-tax"),
         Some(s"/${taxYear.startYear}/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
@@ -373,7 +373,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       val employments = await(testEmploymentHistoryService.getEmployments(Nino("AA000000A"), taxYear))
       employments.head.employmentStatus shouldBe EmploymentStatus.Unknown
 
-      employments.head.startDate shouldBe taxYear.starts.withMonthOfYear(4).withDayOfMonth(6)
+      employments.head.startDate shouldBe Some(taxYear.starts.withMonthOfYear(4).withDayOfMonth(6))
       employments.head.endDate shouldBe Some(taxYear.finishes.withMonthOfYear(1).withDayOfMonth(20))
       employments should contain(testEmployment2)
       employments should contain(testEmployment3)
@@ -393,7 +393,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
 
       val testEmployment = Employment(UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
-        new LocalDate("2016-01-21"), Some(new LocalDate("2017-01-01")), "paye-1", "employer-1",
+        Some(new LocalDate("2016-01-21")), Some(new LocalDate("2017-01-01")), "paye-1", "employer-1",
         Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),
         Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax"),
         Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
@@ -492,6 +492,165 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
     "return a list with no gaps, when original employment has a gap at the start and end" in {
       val employments = List(liveMidYearEmployment)
       testEmploymentHistoryService.addFillers(employments, TaxYear.current) map isNoRecordEmployment shouldBe Seq(true, false, true)
+    }
+
+    def oneDayBefore(thisDay: Option[LocalDate]) = thisDay.map(_.minusDays(1))
+    def oneDayAfter(thisDay: Option[LocalDate]) = thisDay.map(_.plusDays(1))
+
+    "when original employment has no start date but has an end date, and there are no employments afterwards" in {
+      val employmentWithoutStartDate = liveMidYearEmployment.copy(startDate = None)
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(employmentWithoutStartDate), TaxYear.current)
+
+      val isOrderedFirstInList = filledEmployments.head == employmentWithoutStartDate
+      isOrderedFirstInList shouldBe true
+
+      filledEmployments map isNoRecordEmployment shouldBe Seq(false, true, true)
+
+      val firstGap = filledEmployments(1)
+      val secondGap = filledEmployments(2)
+      firstGap.startDate shouldBe Some(TaxYear.current.starts)
+      firstGap.endDate shouldBe oneDayBefore(employmentWithoutStartDate.endDate)
+
+      secondGap.startDate shouldBe oneDayAfter(employmentWithoutStartDate.endDate)
+      secondGap.endDate shouldBe None
+    }
+
+    "when original employment has no start date but has an end date, and the employment finishes at the end of the tax year" in {
+      val employmentWithoutStartDate = liveEndYearEmployment.copy(startDate = None)
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(employmentWithoutStartDate), TaxYear.current)
+
+      val isOrderedFirstInList = filledEmployments.head == employmentWithoutStartDate
+      isOrderedFirstInList shouldBe true
+
+      filledEmployments map isNoRecordEmployment shouldBe Seq(false, true)
+
+      val gap = filledEmployments(1)
+      gap.startDate shouldBe Some(TaxYear.current.starts)
+      gap.endDate shouldBe oneDayBefore(employmentWithoutStartDate.endDate)
+    }
+
+    "when original employment has no start date but has an end date, and the employment finishes on the first day of the tax year" in {
+      val employmentWithoutStartDate = liveOngoingEmployment.copy(startDate = None, endDate = Some(TaxYear.current.starts))
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(employmentWithoutStartDate), TaxYear.current)
+
+      val isOrderedFirstInList = filledEmployments.head == employmentWithoutStartDate
+      isOrderedFirstInList shouldBe true
+
+      filledEmployments map isNoRecordEmployment shouldBe Seq(false, true)
+
+      val gap = filledEmployments(1)
+      gap.startDate shouldBe oneDayAfter(employmentWithoutStartDate.endDate)
+      gap.endDate shouldBe None
+    }
+
+    "when original employment has no start date but has an end date, and there is another employment immediately afterwards" in {
+      val employmentWithoutStartDate = liveMidYearEmployment.copy(startDate = None)
+      val subsequentEmployment = liveMidYearEmployment.copy(
+        startDate = oneDayAfter(liveMidYearEmployment.endDate),
+        endDate = None
+      )
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(employmentWithoutStartDate, subsequentEmployment), TaxYear.current)
+
+      val isOrderedFirstInList = filledEmployments.head == employmentWithoutStartDate
+      isOrderedFirstInList shouldBe true
+
+      filledEmployments map isNoRecordEmployment shouldBe Seq(false, true, false)
+
+      val gap = filledEmployments(1)
+      gap.startDate shouldBe Some(TaxYear.current.starts)
+      gap.endDate shouldBe oneDayBefore(employmentWithoutStartDate.endDate)
+    }
+
+    "when original employment has no start date but has an end date, and there is another employment some days later" in {
+      val employmentWithoutStartDate = liveMidYearEmployment.copy(startDate = None)
+      val subsequentEmployment = liveMidYearEmployment.copy(
+        startDate = liveMidYearEmployment.endDate.map(_.plusDays(3)),
+        endDate = None
+      )
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(employmentWithoutStartDate, subsequentEmployment), TaxYear.current)
+
+      val isOrderedFirstInList = filledEmployments.head == employmentWithoutStartDate
+      isOrderedFirstInList shouldBe true
+
+      filledEmployments map isNoRecordEmployment shouldBe Seq(false, true, true, false)
+
+      val firstGap = filledEmployments(1)
+      firstGap.startDate shouldBe Some(TaxYear.current.starts)
+      firstGap.endDate shouldBe oneDayBefore(employmentWithoutStartDate.endDate)
+
+      val secondGap = filledEmployments(2)
+      secondGap.startDate shouldBe oneDayAfter(employmentWithoutStartDate.endDate)
+      secondGap.endDate shouldBe oneDayBefore(subsequentEmployment.startDate)
+    }
+
+    "when original employment has no start date but has an end date, and there is another employment immediately before (its end date)" in {
+      val preceedingEmployment = liveMidYearEmployment.copy(
+        startDate = Some(TaxYear.current.starts),
+        endDate = oneDayBefore(liveMidYearEmployment.endDate)
+      )
+      val employmentWithoutStartDate = liveMidYearEmployment.copy(startDate = None)
+
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(preceedingEmployment, employmentWithoutStartDate), TaxYear.current)
+
+      val isOrderedFirstInList = filledEmployments.head == employmentWithoutStartDate
+      isOrderedFirstInList shouldBe true
+
+      filledEmployments map isNoRecordEmployment shouldBe Seq(false, false, true)
+
+      val gap = filledEmployments(2)
+      gap.startDate shouldBe oneDayAfter(employmentWithoutStartDate.endDate)
+      gap.endDate shouldBe None
+    }
+
+    "when original employment has no start date but has an end date, and there is another employment some days before (its end date)" in {
+      val preceedingEmployment = liveMidYearEmployment.copy(
+        startDate = Some(TaxYear.current.starts),
+        endDate = liveMidYearEmployment.endDate.map(_.minusDays(3))
+      )
+      val employmentWithoutStartDate = liveMidYearEmployment.copy(startDate = None)
+
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(preceedingEmployment, employmentWithoutStartDate), TaxYear.current)
+
+      val isOrderedFirstInList = filledEmployments.head == employmentWithoutStartDate
+      isOrderedFirstInList shouldBe true
+
+      filledEmployments map isNoRecordEmployment shouldBe Seq(false, false, true, true)
+
+      val firstGap = filledEmployments(2)
+      firstGap.startDate shouldBe oneDayAfter(preceedingEmployment.endDate)
+      firstGap.endDate shouldBe oneDayBefore(employmentWithoutStartDate.endDate)
+
+      val secondGap = filledEmployments(3)
+      secondGap.startDate shouldBe oneDayAfter(employmentWithoutStartDate.endDate)
+      secondGap.endDate shouldBe None
+    }
+
+    "when original employment has no start date and has no end date, and there are no other employments" in {
+      val employmentNoDates = liveOngoingEmployment.copy(startDate = None, endDate = None)
+
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(employmentNoDates), TaxYear.current)
+
+      filledEmployments shouldBe List(employmentNoDates)
+    }
+
+    "when original employment has no start date and has no end date, and there is another employment" in {
+      val employmentNoDates = liveOngoingEmployment.copy(startDate = None, endDate = None)
+
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(employmentNoDates, liveMidYearEmployment), TaxYear.current)
+
+      val isOrderedFirstInList = filledEmployments.head == employmentNoDates
+      isOrderedFirstInList shouldBe true
+
+      filledEmployments map isNoRecordEmployment shouldBe Seq(false, false)
+    }
+
+    "when there are two employments without start dates but with end dates" in {
+      val employment1NoDates = liveOngoingEmployment.copy(startDate = None, endDate = None)
+      val employment2NoDates = liveOngoingEmployment.copy(startDate = None, endDate = None)
+
+      val filledEmployments = testEmploymentHistoryService.addFillers(List(employment1NoDates, employment2NoDates), TaxYear.current)
+
+      filledEmployments map isNoRecordEmployment shouldBe Seq(false, false)
     }
   }
 }
