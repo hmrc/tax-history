@@ -127,8 +127,8 @@ case class Iabd(nino: String,
                 grossAmount : Option[BigDecimal] = None,
                 typeDescription : Option[String] = None,
                 source: Option[Int] = None,
-                paymentFrequency: Option[Int],
-                startDate: Option[String]) {
+                paymentFrequency: Option[Int] = None,
+                startDate: Option[String] = None) {
 
   def toStatePension = {
     val paymentStartDate: Option[LocalDate] = paymentFrequency match {
