@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
-import play.api.libs.json.{JsValue, Json}
+import org.joda.time.LocalDate
+import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
@@ -37,7 +38,9 @@ class IabdSpec extends TestUtil with UnitSpec {
       |        "receiptDate": null,
       |        "captureDate": "10/04/2017",
       |        "typeDescription": "Total gift aid Payments",
-      |        "netAmount": 100
+      |        "netAmount": 100,
+      |        "paymentFrequency": 1,
+      |        "startDate": "23/02/2018"
       |
       |}
     """.stripMargin
@@ -51,7 +54,18 @@ class IabdSpec extends TestUtil with UnitSpec {
       iabd.`type` shouldBe EmployerProvidedServices
       iabd.grossAmount shouldBe Some(grossAmount)
       iabd.typeDescription shouldBe Some("Total gift aid Payments")
+      iabd.paymentFrequency shouldBe Some(1)
+      iabd.startDate shouldBe Some("23/02/2018")
+    }
 
+    "handle paymentFrequency with a null value" in {
+      val jsonWithNullPaymentFreq = Json.parse(iabdJsonResponse).as[JsObject] + ("paymentFrequency" -> JsNull)
+      jsonWithNullPaymentFreq.as[Iabd].paymentFrequency shouldBe None
+    }
+
+    "handle startDate with a null value" in {
+      val jsonWithNullStartDate = Json.parse(iabdJsonResponse).as[JsObject] + ("startDate" -> JsNull)
+      jsonWithNullStartDate.as[Iabd].startDate shouldBe None
     }
 
     "List of Iabds Json" should {
@@ -60,5 +74,44 @@ class IabdSpec extends TestUtil with UnitSpec {
       }
     }
 
+  }
+
+  "Iabd" when {
+    "toStatePension is called" should {
+      val testIabd = Json.parse(iabdJsonResponse).as[Iabd]
+
+      "return StatePension with same grossAmount and typeDescription" in {
+        val statePension = testIabd.toStatePension
+
+        statePension.grossAmount shouldBe testIabd.grossAmount.get
+        statePension.typeDescription shouldBe testIabd.typeDescription.get
+      }
+
+      "return StatePension's paymentFrequency and startDate" when {
+        "there is no paymentFrequency" in {
+          val iabdNoPaymentFreq = testIabd.copy(paymentFrequency = None, startDate = None)
+          val statePension = iabdNoPaymentFreq.toStatePension
+
+          statePension.paymentFrequency shouldBe None
+          statePension.startDate shouldBe None
+        }
+
+        "there a paymentFrequency of 1" in {
+          val iabdNoPaymentFreq = testIabd.copy(paymentFrequency = Some(1), startDate = Some("23/04/2018"))
+          val statePension = iabdNoPaymentFreq.toStatePension
+
+          statePension.paymentFrequency shouldBe Some(1)
+          statePension.startDate shouldBe Some(LocalDate.parse("2018-04-23"))
+        }
+
+        "there is a paymentFrequency of 5" in {
+          val iabdNoPaymentFreq = testIabd.copy(paymentFrequency = Some(5), startDate = Some("23/04/2018"))
+          val statePension = iabdNoPaymentFreq.toStatePension
+
+          statePension.paymentFrequency shouldBe Some(5)
+          statePension.startDate shouldBe None
+        }
+      }
+    }
   }
 }

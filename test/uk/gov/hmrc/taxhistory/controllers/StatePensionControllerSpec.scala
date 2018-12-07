@@ -43,7 +43,7 @@ class StatePensionControllerSpec extends UnitSpec with OneServerPerSuite with Mo
   private val ninoWithAgent = randomNino()
   private val ninoWithoutAgent = randomNino()
 
-  private val testStatePension = StatePension(BigDecimal(1023.33), "State Pension")
+  private val testStatePension = StatePension(BigDecimal(1023.33), "State Pension", None, None)
   private val testTaxYear = TaxYear.current.previous.currentYear
 
   override def beforeEach: Unit = {

@@ -351,13 +351,17 @@ class PayAsYouEarnSpec extends TestUtil with UnitSpec {
     "(de)serialising the 'statePension' field" should {
       val statePensionDeserialised = Some(StatePension(
         grossAmount = BigDecimal("1253"),
-        typeDescription = "State Pension"
+        typeDescription = "State Pension",
+        paymentFrequency = Some(1),
+        startDate = Some(LocalDate.parse("2018-01-23"))
       ))
       val statePensionSerialised = Json.parse(
         """
           |{
           |    "grossAmount": 1253,
-          |    "typeDescription": "State Pension"
+          |    "typeDescription": "State Pension",
+          |    "paymentFrequency": 1,
+          |    "startDate": "2018-01-23"
           |}
         """.stripMargin)
 

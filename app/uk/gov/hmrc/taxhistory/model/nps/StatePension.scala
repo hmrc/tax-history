@@ -17,8 +17,12 @@
 package uk.gov.hmrc.taxhistory.model.nps
 
 import play.api.libs.json.{Json, OFormat}
+import org.joda.time.LocalDate
 
-case class StatePension(grossAmount: BigDecimal, typeDescription: String)
+case class StatePension(grossAmount: BigDecimal,
+                        typeDescription: String,
+                        paymentFrequency: Option[Int],
+                        startDate: Option[LocalDate])
 
 object StatePension {
   implicit val formats: OFormat[StatePension] = Json.format[StatePension]
