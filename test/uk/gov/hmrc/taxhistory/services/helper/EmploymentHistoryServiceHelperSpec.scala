@@ -19,13 +19,13 @@ package uk.gov.hmrc.taxhistory.services.helper
 import org.joda.time.LocalDate
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment, RtiPayment}
 import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType.{JobseekersAllowance, OccupationalPension, StatePensionLumpSum}
 import uk.gov.hmrc.taxhistory.model.api._
-import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
+import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.{Ceased, Live}
 import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
+import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, EmploymentMatchingHelper}
 
 class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
 
@@ -232,6 +232,72 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       payAndTax.get.earlierYearUpdates.size mustBe 1
       val companyBenefits = payAsYouEarn.benefits.get(employment.employmentId.toString)
       companyBenefits mustBe None
+    }
+
+    import HelperTestData._
+
+    "Given 2 NPS and 2 RTI employments from the same employer, match those 2 NPS employments with the RTI employments" in {
+
+      val rtiRecords:List[RtiEmployment] = List(rti(Some("1234"), 3), rti(Some("5678"), 4))
+      val npsRecords: List[NpsEmployment] = List(nps(Some("1234"), 3), nps(Some("5678"), 4))
+
+      EmploymentMatchingHelper.matchedEmployments(npsRecords, rtiRecords).size must be(2)
+      EmploymentMatchingHelper.ambiguousEmploymentMatches(npsRecords,rtiRecords).isEmpty mustBe true
+      EmploymentMatchingHelper.unmatchedRtiEmployments(npsRecords, rtiRecords).isEmpty mustBe true
+
+    }
+
+    "Given 2 NPS and 1 RTI employments from the same employer, each NPS employment will be matched with the RTI " +
+      "and there is no ambiguity" in {
+
+      val rtiRecords:List[RtiEmployment] = List(rti(Some("1234"), 3))
+      val npsRecords: List[NpsEmployment] = List(nps(Some("1234"), 3), nps(Some("5678"), 4))
+
+      EmploymentMatchingHelper.matchedEmployments(npsRecords, rtiRecords).size must be(2)
+      EmploymentMatchingHelper.ambiguousEmploymentMatches(npsRecords,rtiRecords).isEmpty mustBe true
+      EmploymentMatchingHelper.unmatchedRtiEmployments(npsRecords, rtiRecords).isEmpty mustBe true
+
+    }
+
+    "Given 1 NPS and 2 RTI employments from the same employer, the correct RTI is matched and the other is discarded." +
+      "There is no ambiguity and the unmatched RTI is not reported." in {
+
+      val rtiRecords:List[RtiEmployment] = List(rti(Some("1234"), 3), rti(Some("5678"), 4))
+      val npsRecords: List[NpsEmployment] = List(nps(Some("5678"), 4))
+
+      val matched = EmploymentMatchingHelper.matchedEmployments(npsRecords, rtiRecords)
+
+      matched.size must be(1)
+
+      matched.get(nps(Some("5678"),4)) must be(Some(rti(Some("5678"),4)))
+      EmploymentMatchingHelper.ambiguousEmploymentMatches(npsRecords,rtiRecords).isEmpty mustBe true
+      EmploymentMatchingHelper.unmatchedRtiEmployments(npsRecords, rtiRecords).isEmpty mustBe true
+
+    }
+
+    "Given 1 NPS and 1 RTI employment from the same employer but the pid does not match, the employments are matched," +
+      " there is no ambiguity" in {
+
+      val rtiRecords:List[RtiEmployment] = List(rti(Some("1234"), 3))
+      val npsRecords: List[NpsEmployment] = List(nps(Some("5678"), 4))
+
+      EmploymentMatchingHelper.matchedEmployments(npsRecords, rtiRecords).size must be(1)
+      EmploymentMatchingHelper.ambiguousEmploymentMatches(npsRecords,rtiRecords).isEmpty mustBe true
+      EmploymentMatchingHelper.unmatchedRtiEmployments(npsRecords, rtiRecords).isEmpty mustBe true
+
+    }
+
+    "Given 2 NPS and 2 RTI employments from the same employer but the pid does not match on one, there is one correct match" +
+      "ambiguity is reported but the unmatched RTI is not reported" in {
+
+      val rtiRecords:List[RtiEmployment] = List(rti(Some("1234"), 3), rti(Some("5678"), 4))
+      val npsRecords: List[NpsEmployment] = List(nps(Some("5678"), 4), nps(Some("1111"), 4))
+
+      EmploymentMatchingHelper.matchedEmployments(npsRecords, rtiRecords).size must be(1)
+      EmploymentMatchingHelper.ambiguousEmploymentMatches(npsRecords,rtiRecords).size must be(1)
+      EmploymentMatchingHelper.unmatchedRtiEmployments(npsRecords, rtiRecords).isEmpty mustBe true
+
+
     }
 
     "Employments employmentPaymentType is determined from the NPS employment's properties" when {
