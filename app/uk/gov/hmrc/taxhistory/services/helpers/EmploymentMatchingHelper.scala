@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,11 +23,7 @@ import uk.gov.hmrc.taxhistory.utils.Logging
 
 object EmploymentMatchingHelper extends TaxHistoryHelper with Logging {
 
-  def isMatch(npsEmployment: NpsEmployment, rtiEmployment: RtiEmployment): Boolean =
-    (formatString(rtiEmployment.officeNumber) == formatString(npsEmployment.taxDistrictNumber)) &&
-      (rtiEmployment.payeRef == npsEmployment.payeNumber)
-
-  def isSubMatch(npsEmployment: NpsEmployment, rtiEmployment: RtiEmployment): Boolean = {
+  def matchOnPayrollId(npsEmployment: NpsEmployment, rtiEmployment: RtiEmployment): Boolean = {
     (for {
       currentPayId <- rtiEmployment.currentPayId
       worksNumber  <- npsEmployment.worksNumber
@@ -38,58 +34,29 @@ object EmploymentMatchingHelper extends TaxHistoryHelper with Logging {
     }
   }
 
-  /*
-   This function returns all matches between NPS employments and RTI employments, including ambiguous ones and empty ones.
-   It can be imagined as a simple 'left join' between NPS employments and RTI employments.
-   */
-  private def rawMatchedEmployments(npsEmployments: List[NpsEmployment], rtiEmployments: List[RtiEmployment]): Map[NpsEmployment, List[RtiEmployment]] = {
-    npsEmployments.map { npsEmployment =>
-      val matchingRtiEmployments = rtiEmployments.filter(isMatch(npsEmployment, _))
-      (npsEmployment, matchingRtiEmployments)
-    }.toMap
-  }
-
-  /**
-    * This function matches NpsEmployments to RtiEmployments, ensuring that we have only one RTI employment
-    * matching each NPS employment, and filters out any NPS employment for which there is no RTI counterpart
-    * of for which there is a non-resolvable ambiguity between two or more RTI employments.
-    */
-  def matchedEmployments(npsEmployments: List[NpsEmployment], rtiEmployments: List[RtiEmployment]): Map[NpsEmployment, RtiEmployment] = {
-    rawMatchedEmployments(npsEmployments, rtiEmployments).collect {
-      case (nps, Nil)                   => nps -> None            // - No RTI employments found for this NPS employment
-      case (nps, uniqueRti :: Nil)      => nps -> Some(uniqueRti) // - A single RTI employments found for this NPS employment (happy path)
-      case (nps, rti) if rti.length > 1 =>                        // - More than a RTI employment may be a match. We'll try to resolve the ambiguity.
-        val subMatches = rti.filter(EmploymentMatchingHelper.isSubMatch(nps, _))
-        subMatches match {
-          case unique :: Nil => nps -> Some(unique) // Ambiguity resolved
-          case _             => nps -> None         // Not resolved
-        }
-    }.collect {
-      case (nps, Some(rti)) => nps -> rti
+  private def matchRti(nps: NpsEmployment, rti: List[RtiEmployment]): Map[NpsEmployment,RtiEmployment] = {
+    rti.filter(matchOnPayrollId(nps, _)) match {
+      case hd :: Nil => Map(nps -> hd)
+      case _ => Map[NpsEmployment, RtiEmployment]()
     }
   }
 
-  /**
-    * Returns only those matches between NPS employments and RTI employments where there was ambiguity (non-unique match)
-    * and the ambiguity could not be resolved.
-    */
-  def ambiguousEmploymentMatches(npsEmployments: List[NpsEmployment], rtiEmployments: List[RtiEmployment]): Map[NpsEmployment, List[RtiEmployment]] = {
-    val rawMatches = rawMatchedEmployments(npsEmployments, rtiEmployments)
-    val normalisedMatches = matchedEmployments(npsEmployments, rtiEmployments)
-    rawMatches.filter { case (k, v) =>
-      (v.length > 1) && !normalisedMatches.keys.toList.contains(k) // if the normalised map omits the given key, it means it could not resolve the ambiguity.
+  private def matchEmploymentsFromSameEmployer(nps: List[NpsEmployment], rti: List[RtiEmployment]): Map[NpsEmployment, RtiEmployment] = {
+    if (nps.length == 1 && rti.length == 1) {
+      Map(nps.head -> rti.head)
+    }
+    else {
+      nps.flatMap(n => matchRti(n, rti)).toMap
     }
   }
 
-  /**
-    * Returns only those RTI employments which couldn't be matched to any NPS employments.
-    */
-  def unmatchedRtiEmployments(npsEmployments: List[NpsEmployment], rtiEmployments: List[RtiEmployment]): List[RtiEmployment] = {
-    val allEmployments: List[RtiEmployment]     = rtiEmployments
-    val matchedEmployments: List[RtiEmployment] = rawMatchedEmployments(npsEmployments, rtiEmployments).values.toList.flatten
-    (allEmployments.toSet -- matchedEmployments.toSet).toList
+   def matchEmployments(npsEmployments: List[NpsEmployment], rtiEmployments: List[RtiEmployment]): Map[NpsEmployment, RtiEmployment] = {
+    val npsByEmployer = npsEmployments.groupBy(nps => (nps.taxDistrictNumber, nps.payeNumber))
+    val rtiByEmployer = rtiEmployments.groupBy(rti => (rti.officeNumber, rti.payeRef))
+
+    npsByEmployer.collect{
+      case (k,v)  => rtiByEmployer.get(k)
+        .fold(Map[NpsEmployment,RtiEmployment]())(matchEmploymentsFromSameEmployer(v, _))
+    }.flatten.toMap
   }
-
-
-
 }

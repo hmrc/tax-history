@@ -1,3 +1,19 @@
+/*
+ * Copyright 2019 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package uk.gov.hmrc.taxhistory.services.helper
 
 import org.joda.time.LocalDate
@@ -7,9 +23,9 @@ import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 
 object HelperTestData {
 
-  def rti(currentPayId:Option[String], seq: Int)  = RtiEmployment(
-    payeRef = "U313",
-    officeNumber = "951",
+  def rti(payeRef: String = "U313", officeNumber: String = "951", currentPayId:Option[String], seq: Int)  = RtiEmployment(
+    payeRef = payeRef,
+    officeNumber = officeNumber,
     currentPayId = currentPayId,
     sequenceNo = seq,
     payments = List(
@@ -41,13 +57,13 @@ object HelperTestData {
     earlierYearUpdates = Nil
   )
 
-  def nps(worksNumber: Option[String], seq: Int) = NpsEmployment(
-    payeNumber = "U313",
-    taxDistrictNumber = "951",
+  def nps(payeNumber: String = "U313", taxDistrictNumber: String = "951", worksNumber: Option[String], seq: Int) = NpsEmployment(
+    payeNumber = payeNumber,
+    taxDistrictNumber = taxDistrictNumber,
     worksNumber = worksNumber,
     sequenceNumber = seq,
     nino = "AA000000A",
-    employerName = "Employer 1",
+    employerName = s"Employer $payeNumber",
     receivingJobSeekersAllowance = false,
     otherIncomeSourceIndicator = false,
     startDate = Some(LocalDate.parse("2014-04-28")),

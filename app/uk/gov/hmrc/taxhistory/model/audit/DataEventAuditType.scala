@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxhistory.model.audit
 
 trait DataEventAuditType
 case object OnlyInRti extends DataEventAuditType
+case object OnlyInNps extends DataEventAuditType
 case object NpsRtiMismatch extends DataEventAuditType
 case object AgentViewedClientEvent extends DataEventAuditType
 

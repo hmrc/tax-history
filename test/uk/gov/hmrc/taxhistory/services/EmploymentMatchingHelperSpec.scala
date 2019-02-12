@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ class EmploymentMatchingHelperSpec extends PlaySpec with TestUtil with BeforeAnd
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
 
       "there is a single match between the nps 'worksNumber' and rti 'currentPayId'" in {
-        val matches = EmploymentMatchingHelper.matchedEmployments(npsEmployments, rtiData.employments)
+        val matches = EmploymentMatchingHelper.matchEmployments(npsEmployments, rtiData.employments)
 
         matches.get(npsEmployments.head) must be(defined)
       }
@@ -54,7 +54,7 @@ class EmploymentMatchingHelperSpec extends PlaySpec with TestUtil with BeforeAnd
         npsWithoutWorksNumber.count(_.sequenceNumber == 1) must be(1)
         rtiWithoutCurrentPayId.count(_.sequenceNo == 1) must be(1)
 
-        val matches = EmploymentMatchingHelper.matchedEmployments(npsWithoutWorksNumber, rtiWithoutCurrentPayId)
+        val matches = EmploymentMatchingHelper.matchEmployments(npsWithoutWorksNumber, rtiWithoutCurrentPayId)
 
         matches.size must be(1)
         val optMatchingRtiEmpl = matches.get(npsWithoutWorksNumber.head)
@@ -66,29 +66,9 @@ class EmploymentMatchingHelperSpec extends PlaySpec with TestUtil with BeforeAnd
     "return Nil constructed list if there are zero matching rti employments for a single nps employment1" in {
       val rtiData = rtiNonMatchingEmploymentsResponse.as[RtiData]
       val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
-      val matches = EmploymentMatchingHelper.matchedEmployments(npsEmployments, rtiData.employments)
+      val matches = EmploymentMatchingHelper.matchEmployments(npsEmployments, rtiData.employments)
 
       matches.get(npsEmployments.head) must be (empty)
-    }
-
-    "get onlyRtiEmployments from List of Rti employments and List Nps Employments" in {
-      val rtiEmployments = List(rtiEmployment1,rtiEmployment2,rtiEmployment3,rtiEmployment4)
-      val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
-
-      val onlyInRti = EmploymentMatchingHelper.unmatchedRtiEmployments(npsEmployments, rtiEmployments)
-
-      onlyInRti.length must be (1)
-      onlyInRti.head must be (rtiEmployment4)
-
-    }
-
-    "get onlyRtiEmployments must be size 0 when all the Rti employments are matched to the Nps Employments" in {
-      val rtiEmployments = List(rtiEmployment1,rtiEmployment2,rtiEmployment3)
-      val npsEmployments = List(npsEmployment1,npsEmployment2,npsEmployment3)
-
-      val onlyInRti = EmploymentMatchingHelper.unmatchedRtiEmployments(npsEmployments, rtiEmployments)
-
-      onlyInRti must be (empty)
     }
   }
 }
