@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -294,56 +294,6 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
         .thenReturn(Future.failed(new NotFoundException("")))
 
       await(testEmploymentHistoryService.retrieveNpsTaxAccount(testNino, TaxYear(2016))) shouldBe None
-    }
-
-
-    "get onlyRtiEmployments from List of Rti employments and List Nps Employments" in {
-      val rtiEmployment1 = RtiEmployment(1, "offNo1", "ref1", None, Nil, Nil)
-      val rtiEmployment2 = RtiEmployment(5, "offNo5", "ref5", None, Nil, Nil)
-      val rtiEmployment3 = RtiEmployment(3, "offNo3", "ref3", None, Nil, Nil)
-      val rtiEmployment4 = RtiEmployment(4, "offNo4", "ref4", None, Nil, Nil)
-
-      val rtiEmployments = List(rtiEmployment1, rtiEmployment2, rtiEmployment3, rtiEmployment4)
-
-      val npsEmployment1 = NpsEmployment(randomNino.toString(), 1, "offNo1", "ref1", "empname1", None,
-        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, Some(LocalDate.now()), None,
-        receivingOccupationalPension = false, EmploymentStatus.Live)
-      val npsEmployment2 = NpsEmployment(randomNino.toString(), 2, "offNo2", "ref2", "empname2", None,
-        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, Some(LocalDate.now()), None,
-        receivingOccupationalPension = false, EmploymentStatus.Live)
-      val npsEmployment3 = NpsEmployment(randomNino.toString(), 3, "offNo3", "ref3", "empname3", None,
-        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, Some(LocalDate.now()), None,
-        receivingOccupationalPension = false, EmploymentStatus.Live)
-
-      val npsEmployments = List(npsEmployment1, npsEmployment2, npsEmployment3)
-
-      val onlyInRti = EmploymentMatchingHelper.unmatchedRtiEmployments(npsEmployments, rtiEmployments)
-
-      onlyInRti.nonEmpty shouldBe true
-    }
-
-    "get onlyRtiEmployments must be size 0 when all the Rti employments are matched to the Nps Employments" in {
-      val rtiEmployment1 = RtiEmployment(1, "offNo1", "ref1", None, Nil, Nil)
-      val rtiEmployment2 = RtiEmployment(2, "offNo2", "ref2", None, Nil, Nil)
-      val rtiEmployment3 = RtiEmployment(3, "offNo3", "ref3", None, Nil, Nil)
-
-      val rtiEmployments = List(rtiEmployment1, rtiEmployment2, rtiEmployment3)
-
-      val npsEmployment1 = NpsEmployment(randomNino.toString(), 1, "offNo1", "ref1", "empname1", None,
-        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, Some(LocalDate.now()), None,
-        receivingOccupationalPension = false, EmploymentStatus.Live)
-      val npsEmployment2 = NpsEmployment(randomNino.toString(), 2, "offNo2", "ref2", "empname2", None,
-        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, Some(LocalDate.now()), None,
-        receivingOccupationalPension = false, EmploymentStatus.Live)
-      val npsEmployment3 = NpsEmployment(randomNino.toString(), 3, "offNo3", "ref3", "empname3", None,
-        receivingJobSeekersAllowance = false, otherIncomeSourceIndicator = false, Some(LocalDate.now()), None,
-        receivingOccupationalPension = false, EmploymentStatus.Live)
-
-      val npsEmployments = List(npsEmployment1, npsEmployment2, npsEmployment3)
-
-      val onlyInRti = EmploymentMatchingHelper.unmatchedRtiEmployments(npsEmployments, rtiEmployments)
-
-      onlyInRti shouldBe empty
     }
 
     "fetch Employments successfully from cache" in {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import uk.gov.hmrc.taxhistory.connectors.{DesNpsConnector, RtiConnector, SquidNp
 import uk.gov.hmrc.taxhistory.model.api.Employment._
 import uk.gov.hmrc.taxhistory.model.api.FillerState._
 import uk.gov.hmrc.taxhistory.model.api._
-import uk.gov.hmrc.taxhistory.model.audit.{DataEventDetail, NpsRtiMismatch, OnlyInRti, PAYEForAgents}
+import uk.gov.hmrc.taxhistory.model.audit._
 import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, EmploymentMatchingHelper}
@@ -224,26 +224,16 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
 
     val (iabdsNoStatePensions, statePension) = filterStatePension(iabds)
 
-    val employmentMatches: Map[NpsEmployment, RtiEmployment] = EmploymentMatchingHelper.matchedEmployments(npsEmployments, rtiEmployments)
+    val employmentMatches: Map[NpsEmployment, RtiEmployment] = EmploymentMatchingHelper.matchEmployments(npsEmployments, rtiEmployments)
 
-    // Check for any RTI employment which doesn't match any NPS employment, and send an audit event if this is the case.
-    val onlyInRti = EmploymentMatchingHelper.unmatchedRtiEmployments(npsEmployments, rtiEmployments)
-    if (onlyInRti.nonEmpty) {
-      auditable.sendDataEvents(
-        transactionName = PAYEForAgents,
-        details = buildEmploymentDataEventDetails(nino.value, onlyInRti),
-        eventType = OnlyInRti)
-    }
+    val unMatchedNpsRecords = unmatchedEmployments(employmentMatches.keySet.toList, npsEmployments)
+      .map(nps => DataEventDetail(auditNpsEventHelper(nino.value, nps)))
 
-    // Send an audit event for each employment that we weren't able to match conclusively.
-    EmploymentMatchingHelper.ambiguousEmploymentMatches(npsEmployments, rtiEmployments).foreach { case (nps, rti) =>
-      logger.info(s"Some NPS employments have multiple matching RTI employments.")
-      auditable.sendDataEvents(
-        transactionName = PAYEForAgents,
-        details = buildEmploymentDataEventDetails(nino.value, rti),
-        eventType = NpsRtiMismatch
-      )
-    }
+    val unMatchedRtiRecords = unmatchedEmployments(employmentMatches.values.toList, rtiEmployments)
+      .map(rti => DataEventDetail(auditRtiEventHelper(nino.value, rti)))
+
+    sendDataEvents(unMatchedNpsRecords, OnlyInNps)
+    sendDataEvents(unMatchedRtiRecords, OnlyInRti)
 
     // One [[PayAsYouEarn]] instance will be produced for each npsEmployment.
     val payes: List[PayAsYouEarn] = npsEmployments.map { npsEmployment =>
@@ -304,14 +294,21 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
     desNpsConnector.getTaxAccount(nino, taxYear.currentYear).map(Some(_))
       .recover { case _ => None } // We want to present some information even if the retrieval of the tax account failed.
 
-  /*
-   A convenience method used when auditing.
-   */
-  private def buildEmploymentDataEventDetails(nino: String, rtiEmployments: List[RtiEmployment]): Seq[DataEventDetail] =
-    rtiEmployments.map(rE =>
-      DataEventDetail(
-        Map("nino" -> nino, "payeRef" -> rE.payeRef, "officeNumber" -> rE.officeNumber, "currentPayId" -> rE.currentPayId.getOrElse("")))
-    )
+  private def unmatchedEmployments[A](matched: List[A], raw: List[A]): List[A] = {
+    (raw.toSet -- matched.toSet).toList
+  }
+
+  private def auditRtiEventHelper(nino: String, rti: RtiEmployment): Map[String, String] =
+    Map("nino" -> nino, "payeRef" -> rti.payeRef, "officeNumber" -> rti.officeNumber,
+      "currentPayId" -> rti.currentPayId.getOrElse(""))
+
+  private def auditNpsEventHelper(nino: String, nps: NpsEmployment): Map[String, String] =
+    Map("nino" -> nino, "payeNumber" -> nps.payeNumber, "taxDistrictNumber" -> nps.taxDistrictNumber,
+      "worksNumber" -> nps.worksNumber.getOrElse(""))
+
+  private def sendDataEvents(records: List[DataEventDetail], auditType: DataEventAuditType)(implicit hc: HeaderCarrier) = {
+    if(records.nonEmpty) auditable.sendDataEvents(transactionName = PAYEForAgents, details = records, eventType = auditType)
+  }
 
   private def alignFillerDates(filler: Employment, employment: Employment, taxYear: TaxYear): List[Employment] = {
     val fillerEndDate = filler.endDate.getOrElse(taxYear.finishes)
