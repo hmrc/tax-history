@@ -51,7 +51,6 @@ case object Entertaining                                      extends BenefitInK
 case object ExpensesPay                                       extends BenefitInKind
 case object Mileage                                           extends BenefitInKind
 case object NonQualifyingRelocationExpense                    extends BenefitInKind
-case object NurseryPlaces                                     extends BenefitInKind
 case object OtherItems                                        extends BenefitInKind
 case object PaymentEmployeesBehalf                            extends BenefitInKind
 case object PersonalIncidentExpenses                          extends BenefitInKind
@@ -97,7 +96,6 @@ object IabdType {
     43  -> ExpensesPay,
     44  -> Mileage,
     45  -> NonQualifyingRelocationExpense,
-    46  -> NurseryPlaces,
     47  -> OtherItems,
     48  -> PaymentEmployeesBehalf,
     49  -> PersonalIncidentExpenses,
