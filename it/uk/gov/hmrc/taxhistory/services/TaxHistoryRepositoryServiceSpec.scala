@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import play.api.libs.json.Json
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
@@ -27,7 +26,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 
 class TaxHistoryRepositoryServiceSpec extends UnitSpec
-  with MockitoSugar
   with MongoSpecSupport
   with BeforeAndAfterAll
   with BeforeAndAfterEach
@@ -52,10 +50,8 @@ class TaxHistoryRepositoryServiceSpec extends UnitSpec
 
   private val expireAfterInSeconds = 60
 
-  private def repo(name: String, expiresAfter: Long = expireAfterInSeconds) = {
-    val instance = new CacheMongoRepository(name, expiresAfter)
-    await(instance.ensureIndexes)
-    instance
+  private def repo(name: String, expiresAfter: Long = expireAfterInSeconds) = new CacheMongoRepository(name, expiresAfter) {
+    await(super.ensureIndexes)
   }
 
   "TaxHistoryCacheService" should {
