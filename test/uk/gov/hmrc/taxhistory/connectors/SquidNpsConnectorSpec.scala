@@ -67,7 +67,8 @@ class SquidNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testemploymentsConnector.http.GET[List[NpsEmployment]](any())(any(), any(), any())).thenReturn(Future.successful(testNpsEmployment))
+        when(testemploymentsConnector.http.GET[List[NpsEmployment]](any())(any(), any(), any()))
+          .thenReturn(Future.successful(testNpsEmployment))
 
         val result = testemploymentsConnector.getEmployments(testNino, testYear)
 

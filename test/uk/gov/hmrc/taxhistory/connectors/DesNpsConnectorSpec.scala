@@ -113,6 +113,20 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testTaxAccountConnector.http.GET[NpsTaxAccount](any())(any(), any(), any()))
+          .thenReturn(Future.successful(testNpsTaxAccount))
+
+        val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
+
+        await(result) mustBe testNpsTaxAccount
+      }
+
+      "retrying after the first call fails and the second call succeeds" in {
+        implicit val hc = HeaderCarrier()
+        val testTaxAccountConnector = testDesNpsConnector
+
+        when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
+        when(testTaxAccountConnector.http.GET[NpsTaxAccount](any())(any(), any(), any()))
           .thenReturn(Future.failed(new Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
           .thenReturn(Future.successful(testNpsTaxAccount))
 

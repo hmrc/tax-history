@@ -70,7 +70,8 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         implicit val hc = HeaderCarrier()
         when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testRtiConnector.http.GET[RtiData](any())(any(), any(), any())).thenReturn(Future.successful(testRtiData))
+        when(testRtiConnector.http.GET[RtiData](any())(any(), any(), any()))
+          .thenReturn(Future.successful(testRtiData))
 
         val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
 
