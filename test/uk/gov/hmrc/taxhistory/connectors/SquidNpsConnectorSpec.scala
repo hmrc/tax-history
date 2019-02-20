@@ -74,6 +74,21 @@ class SquidNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         await(result) mustBe testNpsEmployment
       }
 
+      "retrying after the first call fails and the second call succeeds" in {
+        implicit val hc = HeaderCarrier()
+        val testemploymentsConnector = testNpsConnector
+
+        when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
+        when(testemploymentsConnector.http.GET[List[NpsEmployment]](any())(any(), any(), any()))
+          .thenReturn(Future.failed(new Upstream5xxResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
+          .thenReturn(Future.successful(testNpsEmployment))
+
+        val result = testemploymentsConnector.getEmployments(testNino, testYear)
+
+        await(result) mustBe testNpsEmployment
+      }
+
       "return and handle an error response" in {
         val expectedResponse = Json.parse( """{"reason": "Some thing went wrong"}""")
         implicit val hc = HeaderCarrier()

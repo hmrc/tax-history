@@ -71,6 +71,19 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         when(testDesNpsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testDesNpsConnector.http.GET[List[Iabd]](any())(any(), any(), any()))
+          .thenReturn(Future.successful(testIabds))
+
+        val result = testDesNpsConnector.getIabds(testNino, testYear)
+
+        await(result) mustBe testIabds
+      }
+
+      "retrying after the first call fails and the second call succeeds" in {
+        implicit val hc = HeaderCarrier()
+
+        when(testDesNpsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
+        when(testDesNpsConnector.http.GET[List[Iabd]](any())(any(), any(), any()))
           .thenReturn(Future.failed(new Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
           .thenReturn(Future.successful(testIabds))
 

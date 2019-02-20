@@ -55,7 +55,7 @@ class Module(val environment: Environment, val configuration: Configuration) ext
     bindConfigBoolean("featureFlags.currentYearFlag")
     bindConfigBoolean("featureFlags.statePensionFlag")
     bindConfigBoolean("featureFlags.jobSeekersAllowanceFlag")
-    
+
     bind(classOf[String]).annotatedWith(Names.named("nps-hod-base-url")).toProvider(provide(baseUrl("nps-hod")))
     bind(classOf[String]).annotatedWith(Names.named("des-base-url")).toProvider(provide(baseUrl("des")))
     bind(classOf[String]).annotatedWith(Names.named("citizen-details-base-url")).toProvider(provide(baseUrl("citizen-details")))

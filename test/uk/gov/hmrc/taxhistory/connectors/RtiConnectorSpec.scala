@@ -26,6 +26,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.tai.model.rti.RtiData
@@ -70,6 +71,19 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testRtiConnector.http.GET[RtiData](any())(any(), any(), any())).thenReturn(Future.successful(testRtiData))
+
+        val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
+
+        await(result) mustBe testRtiData
+      }
+
+      "retrying after the first call failed and the second call succeeds" in {
+        implicit val hc = HeaderCarrier()
+        when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
+        when(testRtiConnector.http.GET[RtiData](any())(any(), any(), any()))
+          .thenReturn(Future.failed(new Upstream5xxResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
+          .thenReturn(Future.successful(testRtiData))
 
         val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
 
