@@ -17,7 +17,7 @@
 import akka.actor.ActorSystem
 import com.google.inject.{AbstractModule, Provides}
 import com.google.inject.name.Names
-import javax.inject.Provider
+import javax.inject.{Named, Provider}
 import play.api.Mode.Mode
 import play.api.{Configuration, Environment}
 import play.modules.reactivemongo.MongoDbConnection
@@ -55,31 +55,33 @@ class Module(val environment: Environment, val configuration: Configuration) ext
     bindConfigBoolean("featureFlags.currentYearFlag")
     bindConfigBoolean("featureFlags.statePensionFlag")
     bindConfigBoolean("featureFlags.jobSeekersAllowanceFlag")
-
-
+    
     bind(classOf[String]).annotatedWith(Names.named("nps-hod-base-url")).toProvider(provide(baseUrl("nps-hod")))
     bind(classOf[String]).annotatedWith(Names.named("des-base-url")).toProvider(provide(baseUrl("des")))
     bind(classOf[String]).annotatedWith(Names.named("citizen-details-base-url")).toProvider(provide(baseUrl("citizen-details")))
-
-    bindRetryForService("des")
-    bindRetryForService("nps-hod")
-    bindRetryForService("citizen-details")
 
     bind(classOf[MongoDbConnection]).toProvider(provide(new MongoDbConnection {}))
 
     bind(classOf[String]).annotatedWith(Names.named("appName")).toProvider(AppNameProvider)
   }
 
-  private def provide[A](value: => A): Provider[A] = new Provider[A] {
-    def get(): A = value
+  @Provides
+  @Named("des") def providesRetryForDes(system: ActorSystem): Retry = newRetryInstance("des", system)
+
+  @Provides
+  @Named("nps-hod") def providesRetryForNps(system: ActorSystem): Retry = newRetryInstance("nps-hod", system)
+
+  @Provides
+  @Named("citizen-details") def providesRetryForCitizenDetails(system: ActorSystem): Retry = newRetryInstance("citizen-details", system)
+
+  private def newRetryInstance(name: String, actorSystem: ActorSystem): Retry = {
+    val times = getConfInt(s"$name.retry.times", 1)
+    val interval = getConfFiniteDuration(s"$name.retry.interval", 500 millis)
+    new Retry(times, interval, actorSystem)
   }
 
-  private def bindRetryForService(name: String, system: ActorSystem = ActorSystem("system")): Unit = {
-    bind(classOf[Retry])
-      .annotatedWith(Names.named(name))
-      .toInstance(
-        new Retry(getConfInt(s"$name.retry.times", 1),
-          getConfFiniteDuration(s"$name.retry.interval", 500 millis), system))
+  private def provide[A](value: => A): Provider[A] = new Provider[A] {
+    def get(): A = value
   }
 
   private def getConfFiniteDuration(key: String, default: FiniteDuration): FiniteDuration = {
