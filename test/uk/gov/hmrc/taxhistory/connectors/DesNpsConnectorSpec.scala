@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
+import java.util.concurrent.TimeUnit
+
+import akka.actor.ActorSystem
 import com.codahale.metrics.Timer
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
@@ -27,8 +30,10 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.Retry
 
 import scala.concurrent.Future
+import scala.concurrent.duration.FiniteDuration
 
 class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
@@ -118,12 +123,15 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   }
 
+  private val system = ActorSystem("test")
+  private val delay = FiniteDuration(1000, TimeUnit.MILLISECONDS)
+
   lazy val testDesNpsConnector = new DesNpsConnector(
     http = mock[HttpClient],
     baseUrl = "/fake",
     metrics = mock[TaxHistoryMetrics],
     authorizationToken = "someToken",
-    env = "test", retries = 2
+    env = "test", withRetry = new Retry(1, delay, system)
   ) {
     override val metrics = mock[TaxHistoryMetrics]
     val mockTimerContext = mock[Timer.Context]

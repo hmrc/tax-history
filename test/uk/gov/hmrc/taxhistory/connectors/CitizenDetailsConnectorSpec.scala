@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor.ActorSystem
 import com.codahale.metrics.Timer
 import org.mockito.Matchers.any
@@ -32,8 +34,8 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.Retry
-import scala.concurrent.duration._
 
+import scala.concurrent.duration._
 import scala.concurrent.Future
 
 
@@ -43,10 +45,14 @@ class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUt
   private val mockHttp = mock[HttpClient]
   private val mockMetrics = mock[TaxHistoryMetrics]
   private val mockTimerContext = mock[Timer.Context]
-  private val system = ActorSystem("")
-  private val duration: FiniteDuration = FiniteDuration(1, Duration(5,MILLISECONDS))
+  private val system = ActorSystem("test")
+  private val delay: FiniteDuration = FiniteDuration(100, TimeUnit.MILLISECONDS)
 
-  private val testConnector = new CitizenDetailsConnector(http = mockHttp, baseUrl = "/test", metrics = mockMetrics, withRetry = new Retry(1,))
+  private val testConnector = new CitizenDetailsConnector(
+    http = mockHttp,
+    baseUrl = "/test",
+    metrics = mockMetrics,
+    withRetry = new Retry(1,delay, system))
 
   override def beforeEach = {
     reset(mockHttp)

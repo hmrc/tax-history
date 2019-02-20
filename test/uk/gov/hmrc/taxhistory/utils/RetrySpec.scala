@@ -16,13 +16,22 @@
 
 package uk.gov.hmrc.taxhistory.utils
 
-import uk.gov.hmrc.http.{ BadGatewayException, GatewayTimeoutException }
+import java.util.concurrent.TimeUnit
+
+import akka.actor.ActorSystem
+import uk.gov.hmrc.http.{BadGatewayException, GatewayTimeoutException}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration.FiniteDuration
 
 class RetrySpec extends UnitSpec {
+
+
+  private val system = ActorSystem("test")
+  private val delay = FiniteDuration(1000, TimeUnit.MILLISECONDS)
+  private val retry = new Retry(2, delay, system)
 
   "RetrySpec" should {
     "return result when the operation succeeds" in {
@@ -30,7 +39,7 @@ class RetrySpec extends UnitSpec {
         100
       }
 
-      val result = await(Retry.retry(3)(op))
+      val result = await(retry(op))
 
       result shouldBe 100
     }
@@ -39,7 +48,7 @@ class RetrySpec extends UnitSpec {
       var tries = 0
 
       an[GatewayTimeoutException] should be thrownBy {
-        await(Retry.retry(3) {
+        await(retry {
           Future {
             tries = tries + 1
             throw new GatewayTimeoutException("Some error happened. Please try again later.")
@@ -53,7 +62,7 @@ class RetrySpec extends UnitSpec {
     "succeed on third trial after retrying twice" in {
       var tries = 0
 
-      val result = await(Retry.retry(3) {
+      val result = await(retry {
         Future {
           tries = tries + 1
           if (tries <= 2)
@@ -73,7 +82,7 @@ class RetrySpec extends UnitSpec {
       }
 
       an[BadGatewayException] should be thrownBy {
-        await(Retry.retry(3)(op))
+        await(retry(op))
       }
     }
 
@@ -81,7 +90,7 @@ class RetrySpec extends UnitSpec {
       var tries = 0
 
       an[IllegalStateException] should be thrownBy {
-        await(Retry.retry(3) {
+        await(retry {
           Future {
             tries = tries + 1
             throw new IllegalStateException("Some error happened. Please try again later.")
