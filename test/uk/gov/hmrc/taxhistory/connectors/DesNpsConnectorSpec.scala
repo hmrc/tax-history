@@ -117,7 +117,7 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
 
-        await(result) mustBe testNpsTaxAccount
+        await(result) mustBe Some(testNpsTaxAccount)
       }
 
       "retrying after the first call fails and the second call succeeds" in {
@@ -132,7 +132,7 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
 
-        await(result) mustBe testNpsTaxAccount
+        await(result) mustBe Some(testNpsTaxAccount)
       }
 
       "return and handle an error response" in {

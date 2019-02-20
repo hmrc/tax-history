@@ -158,7 +158,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
         .thenReturn(Future.successful(testRtiData))
       when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
-        .thenReturn(Future.successful(testNpsTaxAccount))
+        .thenReturn(Future.successful(Some(testNpsTaxAccount)))
 
       val paye = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)))
 
@@ -198,7 +198,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
     "successfully merge rti and nps employment1 data into employment1 list" in {
 
       when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
-        .thenReturn(Future.successful(testNpsTaxAccount))
+        .thenReturn(Future.successful(Some(testNpsTaxAccount)))
 
       val npsEmployments = npsEmploymentResponse
 

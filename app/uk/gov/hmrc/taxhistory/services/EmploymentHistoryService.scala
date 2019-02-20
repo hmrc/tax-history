@@ -292,7 +292,7 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
     Retrieve TaxAccount directly from DES.
    */
   def retrieveNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[NpsTaxAccount]] =
-    desNpsConnector.getTaxAccount(nino, taxYear.currentYear).map(Some(_))
+    desNpsConnector.getTaxAccount(nino, taxYear.currentYear)
 
   private def unmatchedEmployments[A](matched: List[A], raw: List[A]): List[A] = {
     (raw.toSet -- matched.toSet).toList

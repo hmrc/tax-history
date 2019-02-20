@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxhistory.connectors
 
 import javax.inject.{Inject, Named}
+import play.api.Logger
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -53,12 +54,17 @@ class DesNpsConnector @Inject()(val http: HttpClient,
     }
   }
 
-  def getTaxAccount(nino: Nino, year: Int): Future[NpsTaxAccount] = {
+  def getTaxAccount(nino: Nino, year: Int): Future[Option[NpsTaxAccount]] = {
     implicit val hc = basicDesHeaders(HeaderCarrier())
 
     withMetrics(MetricsEnum.NPS_GET_TAX_ACCOUNT) {
       withRetry {
-        http.GET[NpsTaxAccount](taxAccountUrl(nino, year))
+        http.GET[NpsTaxAccount](taxAccountUrl(nino, year)).map(Some(_))
+      }.recover{
+        case ex: NotFoundException => {
+          Logger.info(s"NPS getTaxAccount returned a 404 response: ${ex.message}")
+          None
+        }
       }
     }
   }

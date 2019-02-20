@@ -60,7 +60,7 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testEmploymentHistoryService.desNpsConnector.getIabds(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(iabdsResponse))
       when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(testNpsTaxAccount))
+        .thenReturn(Future.successful(Some(testNpsTaxAccount)))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(testRtiData))
 

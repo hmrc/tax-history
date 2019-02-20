@@ -63,7 +63,7 @@ class PayAndTaxServiceSpec extends UnitSpec with MockitoSugar with TestUtil {
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(rtiEmploymentResponse))
       when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(testNpsTaxAccount))
+        .thenReturn(Future.successful(Some(testNpsTaxAccount)))
       val payAsYouEarn = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino,TaxYear(2016)))
 
       val payAndTax = payAsYouEarn.payAndTax
