@@ -124,7 +124,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
     }
 
-    "return success status despite failing response from get Rti Employments api when there are nps employments" in {
+    "throw an exception when the call to get RTI employments fails" in {
       when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
@@ -134,9 +134,20 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
-      noException shouldBe thrownBy {
-        await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)))
-      }
+      intercept[BadRequestException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
+    }
+
+    "throw an exception when the call to get NPS tax account fails" in {
+      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
+        .thenReturn(Future.successful(npsEmploymentResponse))
+      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
+        .thenReturn(Future.successful(testRtiData))
+      when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
+        .thenReturn(Future.successful(testIabds))
+      when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
+        .thenReturn(Future.failed(new BadRequestException("")))
+
+      intercept[BadRequestException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
     }
 
     "return success response from get Employments" in {
@@ -147,7 +158,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
         .thenReturn(Future.successful(testRtiData))
       when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
-        .thenReturn(Future.failed(new BadRequestException("")))
+        .thenReturn(Future.successful(testNpsTaxAccount))
 
       val paye = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)))
 
@@ -273,7 +284,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
-      await(testEmploymentHistoryService.retrieveNpsIabds(testNino, TaxYear(2016))) shouldBe List.empty
+      intercept[BadRequestException](await(testEmploymentHistoryService.retrieveNpsIabds(testNino, TaxYear(2016))))
     }
 
     "return 404 Not Found for tax account details when" in {
@@ -286,14 +297,14 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
-      await(testEmploymentHistoryService.retrieveNpsTaxAccount(testNino, TaxYear(2016))) shouldBe None
+      intercept[BadRequestException](await(testEmploymentHistoryService.retrieveNpsTaxAccount(testNino, TaxYear(2016))))
     }
 
     "return None from get Nps Tax Account api for not found response " in {
       when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
         .thenReturn(Future.failed(new NotFoundException("")))
 
-      await(testEmploymentHistoryService.retrieveNpsTaxAccount(testNino, TaxYear(2016))) shouldBe None
+      intercept[NotFoundException](await(testEmploymentHistoryService.retrieveNpsTaxAccount(testNino, TaxYear(2016))))
     }
 
     "fetch Employments successfully from cache" in {

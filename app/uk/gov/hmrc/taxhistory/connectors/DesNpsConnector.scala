@@ -23,6 +23,7 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.utils.Retry
 
 import scala.concurrent.Future
 
@@ -30,7 +31,8 @@ class DesNpsConnector @Inject()(val http: HttpClient,
                              val metrics: TaxHistoryMetrics,
                              @Named("des-base-url") val baseUrl: String,
                              @Named("microservice.services.des.authorizationToken") val authorizationToken: String,
-                             @Named("microservice.services.des.env") val env: String) extends ConnectorMetrics {
+                             @Named("microservice.services.des.env") val env: String,
+                              @Named("des") val withRetry: Retry) extends ConnectorMetrics {
 
   private val servicePrefix = "/pay-as-you-earn"
   def iabdsUrl(nino: Nino, year: Int)      = s"$baseUrl$servicePrefix/individuals/${nino.value}/iabds/tax-year/$year"
@@ -45,7 +47,9 @@ class DesNpsConnector @Inject()(val http: HttpClient,
     implicit val hc = basicDesHeaders(HeaderCarrier())
 
     withMetrics(MetricsEnum.NPS_GET_IABDS) {
-      http.GET[List[Iabd]](iabdsUrl(nino, year))
+      withRetry {
+        http.GET[List[Iabd]](iabdsUrl(nino, year))
+      }
     }
   }
 
@@ -53,7 +57,9 @@ class DesNpsConnector @Inject()(val http: HttpClient,
     implicit val hc = basicDesHeaders(HeaderCarrier())
 
     withMetrics(MetricsEnum.NPS_GET_TAX_ACCOUNT) {
-      http.GET[NpsTaxAccount](taxAccountUrl(nino, year))
+      withRetry {
+        http.GET[NpsTaxAccount](taxAccountUrl(nino, year))
+      }
     }
   }
 }

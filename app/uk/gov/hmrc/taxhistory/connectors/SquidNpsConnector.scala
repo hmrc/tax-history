@@ -23,13 +23,15 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
+import uk.gov.hmrc.taxhistory.utils.Retry
 
 import scala.concurrent.Future
 
 class SquidNpsConnector @Inject()(val http: HttpClient,
                                   val metrics: TaxHistoryMetrics,
                                   @Named("nps-hod-base-url") val baseUrl: String,
-                                  @Named("microservice.services.nps-hod.originatorId") val originatorId: String) extends ConnectorMetrics {
+                                  @Named("microservice.services.nps-hod.originatorId") val originatorId: String,
+                                 @Named("nps-hod") val withRetry: Retry) extends ConnectorMetrics {
 
   private val servicePrefix = "nps-hod-service/services/nps"
 
@@ -43,7 +45,9 @@ class SquidNpsConnector @Inject()(val http: HttpClient,
     implicit val hc = basicNpsHeaders(HeaderCarrier())
 
     withMetrics(MetricsEnum.NPS_GET_EMPLOYMENTS) {
-      http.GET[List[NpsEmployment]](employmentUrl(nino, year))
+      withRetry {
+        http.GET[List[NpsEmployment]](employmentUrl(nino, year))
+      }
     }
   }
 }

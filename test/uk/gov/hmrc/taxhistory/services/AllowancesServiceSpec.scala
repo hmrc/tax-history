@@ -26,9 +26,10 @@ import org.scalatestplus.play.PlaySpec
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
+import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.api.{Allowance, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
-import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
+import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
@@ -50,6 +51,9 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   lazy val iabdsResponse = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
 
+  lazy val testNpsTaxAccount: NpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
+  lazy val testRtiData: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
+
 
   "Allowances" should {
     "successfully populated from iabds" in {
@@ -58,9 +62,9 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testEmploymentHistoryService.desNpsConnector.getIabds(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(iabdsResponse))
       when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
-        .thenReturn(Future.failed(new NotFoundException("")))
+        .thenReturn(Future.successful(testNpsTaxAccount))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
-        .thenReturn(Future.failed(new NotFoundException("")))
+        .thenReturn(Future.successful(testRtiData))
       val response =  await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino,TaxYear(2016)))
 
       val allowances = response.allowances

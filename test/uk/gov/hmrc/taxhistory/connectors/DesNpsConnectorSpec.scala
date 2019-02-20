@@ -65,7 +65,9 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         when(testDesNpsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testDesNpsConnector.http.GET[List[Iabd]](any())(any(), any(), any())).thenReturn(Future.successful(testIabds))
+        when(testDesNpsConnector.http.GET[List[Iabd]](any())(any(), any(), any()))
+          .thenReturn(Future.failed(new Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
+          .thenReturn(Future.successful(testIabds))
 
         val result = testDesNpsConnector.getIabds(testNino, testYear)
 
@@ -92,7 +94,9 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testTaxAccountConnector.http.GET[NpsTaxAccount](any())(any(), any(), any())).thenReturn(Future.successful(testNpsTaxAccount))
+        when(testTaxAccountConnector.http.GET[NpsTaxAccount](any())(any(), any(), any()))
+          .thenReturn(Future.failed(new Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
+          .thenReturn(Future.successful(testNpsTaxAccount))
 
         val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
 
@@ -119,7 +123,7 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     baseUrl = "/fake",
     metrics = mock[TaxHistoryMetrics],
     authorizationToken = "someToken",
-    env = "test"
+    env = "test", retries = 2
   ) {
     override val metrics = mock[TaxHistoryMetrics]
     val mockTimerContext = mock[Timer.Context]

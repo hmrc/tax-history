@@ -23,16 +23,21 @@ import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
+import uk.gov.hmrc.taxhistory.utils.Retry
 
 import scala.concurrent.Future
 
 class CitizenDetailsConnector @Inject()(val http: HttpClient,
                                         val metrics: TaxHistoryMetrics,
-                                        @Named("citizen-details-base-url") val baseUrl: String) extends ConnectorMetrics {
+                                        @Named("citizen-details-base-url") val baseUrl: String,
+                                        @Named("citizen-details") val withRetry: Retry)  extends ConnectorMetrics {
+
   def lookupSaUtr(nino: Nino)(implicit hc: HeaderCarrier): Future[Option[SaUtr]] = {
     withMetrics(MetricsEnum.CITIZEN_DETAILS) {
-      http.GET[JsValue](s"$baseUrl/citizen-details/nino/$nino").map { json =>
-        (json \ "ids" \ "sautr").asOpt[SaUtr]
+      withRetry {
+        http.GET[JsValue](s"$baseUrl/citizen-details/nino/$nino").map { json =>
+          (json \ "ids" \ "sautr").asOpt[SaUtr]
+        }
       }
     }.recover {
       case _: NotFoundException => None

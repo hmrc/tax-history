@@ -25,9 +25,10 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
+import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.api.{PayAsYouEarn, TaxAccount}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
-import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
@@ -49,16 +50,19 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   lazy val testNpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
 
+  lazy val iabdsResponse = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
+  lazy val testRtiData: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
+
   "TaxAccount" should {
     "successfully be populated from GetTaxAccount" in {
       when(testEmploymentHistoryService.squidNpsConnector.getEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
       when(testEmploymentHistoryService.desNpsConnector.getIabds(Matchers.any(), Matchers.any()))
-        .thenReturn(Future.failed(new NotFoundException("")))
+        .thenReturn(Future.successful(iabdsResponse))
       when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(testNpsTaxAccount))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
-        .thenReturn(Future.failed(new NotFoundException("")))
+        .thenReturn(Future.successful(testRtiData))
 
       val payAsYouEarn = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)))
 
