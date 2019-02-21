@@ -280,7 +280,7 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
     Retrieve RtiData directly from the RTI microservice.
    */
   def retrieveRtiData(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[RtiData]] =
-    rtiConnector.getRTIEmployments(nino, taxYear).map(Some(_))
+    rtiConnector.getRTIEmployments(nino, taxYear)
 
   /*
     Retrieve Iabds directly from DES.

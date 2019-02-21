@@ -112,7 +112,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
 
     "successfully get Rti Employments Data" in {
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
-        .thenReturn(Future.successful(testRtiData))
+        .thenReturn(Future.successful(Some(testRtiData)))
 
       val result = await(testEmploymentHistoryService.retrieveRtiData(testNino, TaxYear(2016)))
       result shouldBe Some(testRtiData)
@@ -141,7 +141,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
-        .thenReturn(Future.successful(testRtiData))
+        .thenReturn(Future.successful(Some(testRtiData)))
       when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
         .thenReturn(Future.successful(testIabds))
       when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
@@ -156,7 +156,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
         .thenReturn(Future.successful(testIabds))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
-        .thenReturn(Future.successful(testRtiData))
+        .thenReturn(Future.successful(Some(testRtiData)))
       when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
         .thenReturn(Future.successful(Some(testNpsTaxAccount)))
 
@@ -249,7 +249,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
         when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
           .thenReturn(Future.successful(testIabds))
         when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
-          .thenReturn(Future.successful(testRtiData))
+          .thenReturn(Future.successful(Some(testRtiData)))
 
         intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(TaxYear.current.currentYear))))
       }
@@ -260,7 +260,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
         when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
           .thenReturn(Future.successful(testIabds))
         when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
-          .thenReturn(Future.successful(testRtiData))
+          .thenReturn(Future.successful(Some(testRtiData)))
 
         intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
       }
@@ -274,7 +274,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
         when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
           .thenReturn(Future.successful(testIabds))
         when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
-          .thenReturn(Future.successful(testRtiData))
+          .thenReturn(Future.successful(Some(testRtiData)))
 
         intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
       }

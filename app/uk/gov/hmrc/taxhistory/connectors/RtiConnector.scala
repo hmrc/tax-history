@@ -46,12 +46,12 @@ class RtiConnector @Inject()(val http: HttpClient,
     Seq("Environment" -> environment,
       "Authorization" -> authorization))
 
-  def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[RtiData] = {
+  def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[Option[RtiData]] = {
     implicit val hc: HeaderCarrier = createHeader
 
     withMetrics(MetricsEnum.RTI_GET_EMPLOYMENTS) {
       withRetry {
-        http.GET[RtiData](rtiEmploymentsUrl(nino, taxYear))
+        http.GET[RtiData](rtiEmploymentsUrl(nino, taxYear)).map(Some(_))
       }
     }
   }
