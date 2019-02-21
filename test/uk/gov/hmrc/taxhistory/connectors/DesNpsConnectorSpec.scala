@@ -146,12 +146,23 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         intercept[BadRequestException](await(result))
       }
-    }
 
+      "return None if the response from DES is 404 (NotFound)" in {
+        implicit val hc = HeaderCarrier()
+        when(testDesNpsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
+        when(testDesNpsConnector.http.GET[HttpResponse](any())(any(), any(), any()))
+          .thenReturn(Future.failed(new NotFoundException("")))
+
+        val result = testDesNpsConnector.getTaxAccount(testNino, testYear)
+
+        await(result) mustBe None
+      }
+    }
   }
 
   private val system = ActorSystem("test")
-  private val delay = FiniteDuration(1000, TimeUnit.MILLISECONDS)
+  private val delay = FiniteDuration(500, TimeUnit.MILLISECONDS)
 
   lazy val testDesNpsConnector = new DesNpsConnector(
     http = mock[HttpClient],

@@ -26,7 +26,6 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
-import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.tai.model.rti.RtiData
@@ -107,7 +106,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
   }
 
   private val system = ActorSystem("test")
-  private val delay = FiniteDuration(1000, TimeUnit.MILLISECONDS)
+  private val delay = FiniteDuration(500, TimeUnit.MILLISECONDS)
 
   lazy val testRtiConnector = new RtiConnector(
     http = mock[HttpClient],

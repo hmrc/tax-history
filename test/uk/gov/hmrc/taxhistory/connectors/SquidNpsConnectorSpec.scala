@@ -107,7 +107,7 @@ class SquidNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
   }
 
   private val system = ActorSystem("test")
-  private val delay = FiniteDuration(1000, TimeUnit.MILLISECONDS)
+  private val delay = FiniteDuration(500, TimeUnit.MILLISECONDS)
 
   lazy val testNpsConnector = new SquidNpsConnector(
     http = mock[HttpClient],
