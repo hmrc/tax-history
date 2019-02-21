@@ -74,7 +74,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
 
-        await(result) mustBe testRtiData
+        await(result) mustBe Some(testRtiData)
       }
 
       "retrying after the first call failed and the second call succeeds" in {
@@ -87,7 +87,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
 
-        await(result) mustBe testRtiData
+        await(result) mustBe Some(testRtiData)
       }
 
       "return and handle an error response" in {

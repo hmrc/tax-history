@@ -62,7 +62,7 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(Some(testNpsTaxAccount)))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(testRtiData))
+        .thenReturn(Future.successful(Some(testRtiData)))
 
       val payAsYouEarn = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)))
 

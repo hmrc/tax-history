@@ -95,7 +95,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       .thenReturn(Future.successful(npsEmployments))
   }
 
-  private def stubRtiGetEmploymentsSucceeds(rtiEmployments: RtiData) = {
+  private def stubRtiGetEmploymentsSucceeds(rtiEmployments: Option[RtiData]) = {
     when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
       .thenReturn(Future.successful(rtiEmployments))
   }
@@ -133,7 +133,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
   class StubConnectors(npsGetEmployments: => OngoingStubbing[Future[List[NpsEmployment]]] = stubNpsGetEmploymentsSucceeds(npsEmploymentResponse),
                        npsGetTaxAccount: => OngoingStubbing[Future[Option[NpsTaxAccount]]] = stubNpsGetTaxAccountSucceeds(Some(testNpsTaxAccount)),
                        npsGetIabdDetails: => OngoingStubbing[Future[List[Iabd]]] = stubNpsGetIabdsSucceeds(testIabds),
-                       rti: => OngoingStubbing[Future[RtiData]] = stubRtiGetEmploymentsSucceeds(testRtiData)) {
+                       rti: => OngoingStubbing[Future[Option[RtiData]]] = stubRtiGetEmploymentsSucceeds(Some(testRtiData))) {
     npsGetEmployments
     npsGetTaxAccount
     npsGetIabdDetails
@@ -157,7 +157,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
     }
 
     "successfully get Rti Employments Data" in
-      new StubConnectors(rti = stubRtiGetEmploymentsSucceeds(testRtiData)) {
+      new StubConnectors(rti = stubRtiGetEmploymentsSucceeds(Some(testRtiData))) {
       await(testEmploymentHistoryService.retrieveRtiData(testNino, TaxYear(2016))) shouldBe Some(testRtiData)
     }
 
@@ -184,7 +184,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
     "return success response from get Employments" in {
       stubNpsGetEmploymentsSucceeds(npsEmploymentResponse)
       stubNpsGetIabdsSucceeds(testIabds)
-      stubRtiGetEmploymentsSucceeds(testRtiData)
+      stubRtiGetEmploymentsSucceeds(Some(testRtiData))
       stubNpsGetTaxAccountSucceeds(Some(testNpsTaxAccount))
 
       val paye = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)))

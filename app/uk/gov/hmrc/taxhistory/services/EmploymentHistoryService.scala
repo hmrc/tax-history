@@ -241,7 +241,7 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
     // One [[PayAsYouEarn]] instance will be produced for each npsEmployment.
     val payes: List[PayAsYouEarn] = npsEmployments.map { npsEmployment =>
 
-      val matchedIncomeSource = taxAccountOption.flatMap(_.matchedIncomeSource(npsEmployment))
+      val matchedIncomeSource: Option[IncomeSource] = taxAccountOption.flatMap(_.matchedIncomeSource(npsEmployment))
       
       if(matchedIncomeSource.isEmpty && taxYear == TaxYear.current) {
         logger.warn("No matched income source found for employment in current tax year")
@@ -280,7 +280,7 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
     Retrieve RtiData directly from the RTI microservice.
    */
   def retrieveRtiData(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[RtiData]] =
-    rtiConnector.getRTIEmployments(nino, taxYear).map(Some(_))
+    rtiConnector.getRTIEmployments(nino, taxYear)
 
   /*
     Retrieve Iabds directly from DES.
