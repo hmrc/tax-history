@@ -151,8 +151,11 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
 
       paye.statePension match {
         case Some(statePension) => Future.successful(
-          if (statePensionFlag) Some(statePension)
-          else None)
+          if (statePensionFlag) {
+            Some(statePension)
+          } else {
+            None
+          })
         case None => Future.failed(new NotFoundException(s"StatePension not found for NINO ${nino.value} and tax year ${taxYear.toString}"))
       }
     }
@@ -238,7 +241,7 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
     // One [[PayAsYouEarn]] instance will be produced for each npsEmployment.
     val payes: List[PayAsYouEarn] = npsEmployments.map { npsEmployment =>
 
-      val matchedIncomeSource = taxAccountOption.flatMap(_.matchedIncomeSource(npsEmployment))
+      val matchedIncomeSource: Option[IncomeSource] = taxAccountOption.flatMap(_.matchedIncomeSource(npsEmployment))
       
       if(matchedIncomeSource.isEmpty && taxYear == TaxYear.current) {
         logger.warn("No matched income source found for employment in current tax year")
@@ -264,35 +267,32 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
   def retrieveNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[NpsEmployment]] = {
     val passedInTaxYear = taxYear.currentYear
 
-    squidNpsConnector.getEmployments(nino, passedInTaxYear).map { employments =>
-      if (TaxYear.current.currentYear.equals(passedInTaxYear)) {
-        employments.filterNot(x => x.receivingJobSeekersAllowance | x.otherIncomeSourceIndicator)
-      } else {
-        employments.filterNot(_.otherIncomeSourceIndicator)
-      }
-    }.orNotFound(s"No NPS employments found for $nino $taxYear")
+      squidNpsConnector.getEmployments(nino, passedInTaxYear).map { employments =>
+        if (TaxYear.current.currentYear.equals(passedInTaxYear)) {
+          employments.filterNot(x => x.receivingJobSeekersAllowance | x.otherIncomeSourceIndicator)
+        } else {
+          employments.filterNot(_.otherIncomeSourceIndicator)
+        }
+      }.orNotFound(s"No NPS employments found for $nino $taxYear")
   }
 
   /*
     Retrieve RtiData directly from the RTI microservice.
    */
   def retrieveRtiData(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[RtiData]] =
-    rtiConnector.getRTIEmployments(nino, taxYear).map(Some(_))
-      .recover { case _ => None } // We want to present some information even if the retrieval from RTI failed.
+    rtiConnector.getRTIEmployments(nino, taxYear)
 
   /*
     Retrieve Iabds directly from DES.
    */
   def retrieveNpsIabds(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[Iabd]] =
     desNpsConnector.getIabds(nino, taxYear.currentYear)
-      .recover { case _ => Nil } // We want to present some information even if the retrieval of IABDs failed.
 
   /*
     Retrieve TaxAccount directly from DES.
    */
-  def retrieveNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[NpsTaxAccount]] =
-    desNpsConnector.getTaxAccount(nino, taxYear.currentYear).map(Some(_))
-      .recover { case _ => None } // We want to present some information even if the retrieval of the tax account failed.
+  private def retrieveNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[NpsTaxAccount]] =
+    desNpsConnector.getTaxAccount(nino, taxYear.currentYear)
 
   private def unmatchedEmployments[A](matched: List[A], raw: List[A]): List[A] = {
     (raw.toSet -- matched.toSet).toList

@@ -17,12 +17,14 @@
 package uk.gov.hmrc.taxhistory.connectors
 
 import javax.inject.{Inject, Named}
+import play.api.Logger
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.utils.Retry
 
 import scala.concurrent.Future
 
@@ -30,7 +32,8 @@ class DesNpsConnector @Inject()(val http: HttpClient,
                              val metrics: TaxHistoryMetrics,
                              @Named("des-base-url") val baseUrl: String,
                              @Named("microservice.services.des.authorizationToken") val authorizationToken: String,
-                             @Named("microservice.services.des.env") val env: String) extends ConnectorMetrics {
+                             @Named("microservice.services.des.env") val env: String,
+                              @Named("des") val withRetry: Retry) extends ConnectorMetrics {
 
   private val servicePrefix = "/pay-as-you-earn"
   def iabdsUrl(nino: Nino, year: Int)      = s"$baseUrl$servicePrefix/individuals/${nino.value}/iabds/tax-year/$year"
@@ -45,15 +48,24 @@ class DesNpsConnector @Inject()(val http: HttpClient,
     implicit val hc = basicDesHeaders(HeaderCarrier())
 
     withMetrics(MetricsEnum.NPS_GET_IABDS) {
-      http.GET[List[Iabd]](iabdsUrl(nino, year))
+      withRetry {
+        http.GET[List[Iabd]](iabdsUrl(nino, year))
+      }
     }
   }
 
-  def getTaxAccount(nino: Nino, year: Int): Future[NpsTaxAccount] = {
+  def getTaxAccount(nino: Nino, year: Int): Future[Option[NpsTaxAccount]] = {
     implicit val hc = basicDesHeaders(HeaderCarrier())
 
     withMetrics(MetricsEnum.NPS_GET_TAX_ACCOUNT) {
-      http.GET[NpsTaxAccount](taxAccountUrl(nino, year))
+      withRetry {
+        http.GET[NpsTaxAccount](taxAccountUrl(nino, year)).map(Some(_))
+      }.recover{
+        case ex: NotFoundException => {
+          Logger.info(s"NPS getTaxAccount returned a 404 response: ${ex.message}")
+          None
+        }
+      }
     }
   }
 }

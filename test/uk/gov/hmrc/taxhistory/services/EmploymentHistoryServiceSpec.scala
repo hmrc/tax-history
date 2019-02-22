@@ -21,6 +21,8 @@ import java.util.UUID
 import org.joda.time.LocalDate
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
+import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.domain.Nino
@@ -88,66 +90,102 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
 
   val startDate = new LocalDate("2015-01-21")
 
+  private def stubNpsGetEmploymentsSucceeds(npsEmployments: List[NpsEmployment]) = {
+    when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
+      .thenReturn(Future.successful(npsEmployments))
+  }
+
+  private def stubRtiGetEmploymentsSucceeds(rtiEmployments: Option[RtiData]) = {
+    when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
+      .thenReturn(Future.successful(rtiEmployments))
+  }
+
+  private def stubNpsGetTaxAccountSucceeds(optTaxAccount: Option[NpsTaxAccount]) = {
+    when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
+      .thenReturn(Future.successful(optTaxAccount))
+  }
+
+  private def stubNpsGetIabdsSucceeds(iabds: List[Iabd]) = {
+    when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
+      .thenReturn(Future.successful(iabds))
+  }
+
+  private def stubNpsGetEmploymentsFails(failure: Throwable) = {
+    when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
+      .thenReturn(Future.failed(failure))
+  }
+
+  private def stubNpsGetTaxAccountFails(failure: Throwable) = {
+    when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
+      .thenReturn(Future.failed(failure))
+  }
+
+  private def stubNpsGetIabdFails(failure: Throwable) = {
+    when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
+      .thenReturn(Future.failed(failure))
+  }
+
+  private def stubRtiGetEmploymentsFails(failure: Throwable) = {
+    when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
+      .thenReturn(Future.failed(failure))
+  }
+
+  class StubConnectors(npsGetEmployments: => OngoingStubbing[Future[List[NpsEmployment]]] = stubNpsGetEmploymentsSucceeds(npsEmploymentResponse),
+                       npsGetTaxAccount: => OngoingStubbing[Future[Option[NpsTaxAccount]]] = stubNpsGetTaxAccountSucceeds(Some(testNpsTaxAccount)),
+                       npsGetIabdDetails: => OngoingStubbing[Future[List[Iabd]]] = stubNpsGetIabdsSucceeds(testIabds),
+                       rti: => OngoingStubbing[Future[Option[RtiData]]] = stubRtiGetEmploymentsSucceeds(Some(testRtiData))) {
+    npsGetEmployments
+    npsGetTaxAccount
+    npsGetIabdDetails
+    rti
+  }
+
   "Employment Service" should {
-    "successfully get Nps Employments Data" in {
-      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
-        .thenReturn(Future.successful(npsEmploymentResponse))
-
+    "successfully get Nps Employments Data" in
+      new StubConnectors(npsGetEmployments = stubNpsGetEmploymentsSucceeds(npsEmploymentResponse)) {
       noException shouldBe thrownBy(await(testEmploymentHistoryService.retrieveNpsEmployments(testNino, TaxYear(2016))))
     }
 
-    "successfully get Nps Employments Data with jobseekers allowance for cy-1" in {
-      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
-        .thenReturn(Future.successful(npsEmploymentWithJobSeekerAllowanceCYMinus1))
-
+    "successfully get Nps Employments Data with jobseekers allowance for cy-1" in
+      new StubConnectors(npsGetEmployments = stubNpsGetEmploymentsSucceeds(npsEmploymentWithJobSeekerAllowanceCYMinus1)) {
       noException shouldBe thrownBy(await(testEmploymentHistoryService.retrieveNpsEmployments(testNino, TaxYear(2016))))
     }
 
-    "return any non success status response from get Nps Employments api" in {
-      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
-        .thenReturn(Future.failed(new BadRequestException("")))
-
+    "return any non success status response from get Nps Employments api" in
+      new StubConnectors(npsGetEmployments = stubNpsGetEmploymentsFails(new BadRequestException(""))) {
       intercept[BadRequestException](await(testEmploymentHistoryService.retrieveNpsEmployments(testNino, TaxYear(2016))))
     }
 
-    "successfully get Rti Employments Data" in {
-      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
-        .thenReturn(Future.successful(testRtiData))
-
-      val result = await(testEmploymentHistoryService.retrieveRtiData(testNino, TaxYear(2016)))
-      result shouldBe Some(testRtiData)
+    "successfully get Rti Employments Data" in
+      new StubConnectors(rti = stubRtiGetEmploymentsSucceeds(Some(testRtiData))) {
+      await(testEmploymentHistoryService.retrieveRtiData(testNino, TaxYear(2016))) shouldBe Some(testRtiData)
     }
 
-    "return not found status response from get Nps Employments api" in {
-      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
-        .thenReturn(Future.successful(Nil))
+    "fail with NotFoundException if the NPS Get Employments API was successful but returned zero employments" in
+      new StubConnectors(npsGetEmployments = stubNpsGetEmploymentsSucceeds(List.empty)) {
       intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
     }
 
-    "return success status despite failing response from get Rti Employments api when there are nps employments" in {
-      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
-        .thenReturn(Future.successful(npsEmploymentResponse))
-      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
-        .thenReturn(Future.failed(new BadRequestException("")))
-      when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
-        .thenReturn(Future.failed(new BadRequestException("")))
-      when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
-        .thenReturn(Future.failed(new BadRequestException("")))
-
-      noException shouldBe thrownBy {
-        await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)))
+    "fail with NotFoundException if the NPS Get Employments API failed with a NotFoundException" in
+      new StubConnectors(npsGetEmployments = stubNpsGetEmploymentsFails(new NotFoundException("NPS API returned 404"))) {
+        intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
       }
+
+    "throw an exception when the call to get RTI employments fails" in
+      new StubConnectors(rti = stubRtiGetEmploymentsFails(new BadRequestException(""))) {
+      intercept[BadRequestException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
+    }
+
+    "throw an exception when the call to get NPS tax account fails" in
+      new StubConnectors(npsGetTaxAccount = stubNpsGetTaxAccountFails(new BadRequestException(""))) {
+      intercept[BadRequestException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
     }
 
     "return success response from get Employments" in {
-      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
-        .thenReturn(Future.successful(npsEmploymentResponse))
-      when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
-        .thenReturn(Future.successful(testIabds))
-      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
-        .thenReturn(Future.successful(testRtiData))
-      when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
-        .thenReturn(Future.failed(new BadRequestException("")))
+      stubNpsGetEmploymentsSucceeds(npsEmploymentResponse)
+      stubNpsGetIabdsSucceeds(testIabds)
+      stubRtiGetEmploymentsSucceeds(Some(testRtiData))
+      stubNpsGetTaxAccountSucceeds(Some(testNpsTaxAccount))
 
       val paye = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)))
 
@@ -181,21 +219,14 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       benefits.head.amount shouldBe BigDecimal(100)
       benefits.last.iabdType shouldBe "VanBenefit"
       benefits.last.amount shouldBe BigDecimal(100)
-
     }
 
     "successfully merge rti and nps employment1 data into employment1 list" in {
-
-      when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
-        .thenReturn(Future.successful(testNpsTaxAccount))
-
-      val npsEmployments = npsEmploymentResponse
-
       val payAsYouEarn =
         testEmploymentHistoryService.mergeEmployments(
           nino = testNino,
           taxYear = TaxYear.current.previous,
-          npsEmployments = npsEmployments,
+          npsEmployments = npsEmploymentResponse,
           rtiEmployments = testRtiData.employments,
           taxAccountOption = Some(testNpsTaxAccount),
           iabds = testIabds
@@ -232,68 +263,42 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
 
     "successfully exclude nps employment1 data" when {
 
-      "nps receivingJobseekersAllowance is true for CY" in {
-        when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
-          .thenReturn(Future.successful(npsEmploymentWithJobSeekerAllowanceCY))
-        when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
-          .thenReturn(Future.successful(testIabds))
-        when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
-          .thenReturn(Future.successful(testRtiData))
-
+      "nps receivingJobseekersAllowance is true for CY" in
+        new StubConnectors(npsGetEmployments = stubNpsGetEmploymentsSucceeds(npsEmploymentWithJobSeekerAllowanceCY)) {
         intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(TaxYear.current.currentYear))))
       }
 
-      "otherIncomeSourceIndicator is true from list of employments" in {
-        when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
-          .thenReturn(Future.successful(npsEmploymentWithOtherIncomeSourceIndicator))
-        when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
-          .thenReturn(Future.successful(testIabds))
-        when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
-          .thenReturn(Future.successful(testRtiData))
-
+      "otherIncomeSourceIndicator is true from list of employments" in
+        new StubConnectors(npsGetEmployments = stubNpsGetEmploymentsSucceeds(npsEmploymentWithOtherIncomeSourceIndicator)) {
         intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
       }
     }
 
     "throw not found error" when {
 
-      "nps employments contain single element with npsEmploymentWithJustOtherIncomeSourceIndicator attribute is true" in {
-        when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
-          .thenReturn(Future.successful(npsEmploymentWithJustOtherIncomeSourceIndicator))
-        when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
-          .thenReturn(Future.successful(testIabds))
-        when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
-          .thenReturn(Future.successful(testRtiData))
-
+      "nps employments contain single element with npsEmploymentWithJustOtherIncomeSourceIndicator attribute is true" in
+        new StubConnectors(npsGetEmployments = stubNpsGetEmploymentsSucceeds(npsEmploymentWithJustOtherIncomeSourceIndicator)) {
         intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
       }
     }
 
-    "return an empty list from get Nps Iabds api for bad request response " in {
-      when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
-        .thenReturn(Future.failed(new BadRequestException("")))
-
-      await(testEmploymentHistoryService.retrieveNpsIabds(testNino, TaxYear(2016))) shouldBe List.empty
+    "propagate exception if NPS IABD API connector fails with an exception" in
+      new StubConnectors(npsGetIabdDetails = stubNpsGetIabdFails(new BadRequestException(""))) {
+      intercept[BadRequestException](await(testEmploymentHistoryService.retrieveNpsIabds(testNino, TaxYear(2016))))
     }
 
-    "return 404 Not Found for tax account details when" in {
-      intercept[NotFoundException]{
-        await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear(2015)))
-      }
+    "propagate exception if NPS Get Tax Account API connector fails with an exception" in
+      new StubConnectors(npsGetTaxAccount = stubNpsGetTaxAccountFails(new BadRequestException(""))) {
+      intercept[BadRequestException](await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear.current.previous)))
     }
 
-    "return None from get Nps Tax Account api for bad request response " in {
-      when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
-        .thenReturn(Future.failed(new BadRequestException("")))
-
-      await(testEmploymentHistoryService.retrieveNpsTaxAccount(testNino, TaxYear(2016))) shouldBe None
+    "fail with a NotFoundException if NPS Get Tax Account API connector returns None (i.e. the API returned a 404)" in
+      new StubConnectors(npsGetTaxAccount = stubNpsGetTaxAccountSucceeds(None)) {
+      intercept[NotFoundException](await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear.current.previous)))
     }
 
-    "return None from get Nps Tax Account api for not found response " in {
-      when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
-        .thenReturn(Future.failed(new NotFoundException("")))
-
-      await(testEmploymentHistoryService.retrieveNpsTaxAccount(testNino, TaxYear(2016))) shouldBe None
+    "fail with a NotFoundException if asked for TaxAccount for the current year" in new StubConnectors {
+      intercept[NotFoundException](await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear.current)))
     }
 
     "fetch Employments successfully from cache" in {

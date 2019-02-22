@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
+import java.util.concurrent.TimeUnit
+
+import akka.actor.ActorSystem
 import com.codahale.metrics.Timer
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{reset, verify, when}
@@ -30,7 +33,9 @@ import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.Retry
 
+import scala.concurrent.duration._
 import scala.concurrent.Future
 
 
@@ -40,8 +45,14 @@ class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUt
   private val mockHttp = mock[HttpClient]
   private val mockMetrics = mock[TaxHistoryMetrics]
   private val mockTimerContext = mock[Timer.Context]
+  private val system = ActorSystem("test")
+  private val delay: FiniteDuration = FiniteDuration(100, TimeUnit.MILLISECONDS)
 
-  private val testConnector = new CitizenDetailsConnector(http = mockHttp, baseUrl = "/test", metrics = mockMetrics)
+  private val testConnector = new CitizenDetailsConnector(
+    http = mockHttp,
+    baseUrl = "/test",
+    metrics = mockMetrics,
+    withRetry = new Retry(1,delay, system))
 
   override def beforeEach = {
     reset(mockHttp)
@@ -71,7 +82,15 @@ class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUt
         intercept[Upstream5xxResponse](await(testConnector.lookupSaUtr(Nino("AA000003D"))))
       }
 
-    "record metrics" when {
+    "will attempt a retry upon failure" in
+      new CitizenDetailsFailsOnceThenRespondsWithUtr(
+        new Upstream5xxResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR),
+        forThisNino = Nino("AA000003D")
+      ) {
+        await(testConnector.lookupSaUtr(forThisNino)) mustBe Some(expectedUtr)
+      }
+
+      "record metrics" when {
       "increment successful metric counter on successful call that returned a UTR" in
         new CitizenDetailsRespondsWithUtr(forThisNino = Nino("AA000003D")) {
           await(testConnector.lookupSaUtr(forThisNino))
@@ -116,23 +135,7 @@ class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUt
     val expectedUtr = SaUtr("1097133333")
     when(mockMetrics.startTimer(any())).thenReturn(mockTimerContext)
     when(mockHttp.GET[JsValue](any())(any(), any(), any()))
-      .thenReturn(Future.successful(Json.parse(
-        s"""
-           |{
-           |    "dateOfBirth": "23041948",
-           |    "ids": {
-           |        "nino": "${forThisNino.value}",
-           |        "sautr": "${expectedUtr.value}"
-           |    },
-           |    "name": {
-           |        "current": {
-           |            "firstName": "Jim",
-           |            "lastName": "Ferguson"
-           |        },
-           |        "previous": []
-           |    }
-           |}
-        """.stripMargin)))
+      .thenReturn(Future.successful(responseWithUtr(forThisNino, expectedUtr)))
   }
 
   class CitizenDetailsRespondsWithoutUtr(val forThisNino: Nino) {
@@ -162,5 +165,31 @@ class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUt
       .thenReturn(Future.failed(withThisException))
   }
 
+  class CitizenDetailsFailsOnceThenRespondsWithUtr(withThisException: Throwable, val forThisNino: Nino) {
+    val expectedUtr = SaUtr("1097133333")
+    when(mockMetrics.startTimer(any())).thenReturn(mockTimerContext)
+    when(mockHttp.GET[JsValue](any())(any(), any(), any()))
+      .thenReturn(Future.failed(withThisException))
+      .thenReturn(Future.successful(responseWithUtr(forThisNino, expectedUtr)))
+  }
 
+  private def responseWithUtr(forThisNino: Nino, expectedUtr: SaUtr) = {
+    Json.parse(
+      s"""
+         |{
+         |    "dateOfBirth": "23041948",
+         |    "ids": {
+         |        "nino": "${forThisNino.value}",
+         |        "sautr": "${expectedUtr.value}"
+         |    },
+         |    "name": {
+         |        "current": {
+         |            "firstName": "Jim",
+         |            "lastName": "Ferguson"
+         |        },
+         |        "previous": []
+         |    }
+         |}
+        """.stripMargin)
+  }
 }

@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import com.google.inject.AbstractModule
+import akka.actor.ActorSystem
+import com.google.inject.{AbstractModule, Provides}
 import com.google.inject.name.Names
-import javax.inject.Provider
+import javax.inject.{Named, Provider}
 import play.api.Mode.Mode
 import play.api.{Configuration, Environment}
 import play.modules.reactivemongo.MongoDbConnection
@@ -29,6 +30,9 @@ import uk.gov.hmrc.play.bootstrap.http.{DefaultHttpClient, HttpClient}
 import uk.gov.hmrc.play.config.{AppName, ServicesConfig}
 import uk.gov.hmrc.taxhistory._
 import uk.gov.hmrc.taxhistory.services.{PayeCacheService, TaxHistoryMongoCacheService}
+import uk.gov.hmrc.taxhistory.utils.Retry
+
+import scala.concurrent.duration._
 
 class Module(val environment: Environment, val configuration: Configuration) extends AbstractModule with ServicesConfig {
 
@@ -61,8 +65,29 @@ class Module(val environment: Environment, val configuration: Configuration) ext
     bind(classOf[String]).annotatedWith(Names.named("appName")).toProvider(AppNameProvider)
   }
 
+  @Provides
+  @Named("des") def providesRetryForDes(system: ActorSystem): Retry = newRetryInstance("des", system)
+
+  @Provides
+  @Named("nps-hod") def providesRetryForNps(system: ActorSystem): Retry = newRetryInstance("nps-hod", system)
+
+  @Provides
+  @Named("citizen-details") def providesRetryForCitizenDetails(system: ActorSystem): Retry = newRetryInstance("citizen-details", system)
+
+  private def newRetryInstance(name: String, actorSystem: ActorSystem): Retry = {
+    val times = getConfInt(s"$name.retry.times", 1)
+    val interval = getConfFiniteDuration(s"$name.retry.interval", 500 millis)
+    new Retry(times, interval, actorSystem)
+  }
+
   private def provide[A](value: => A): Provider[A] = new Provider[A] {
     def get(): A = value
+  }
+
+  private def getConfFiniteDuration(key: String, default: FiniteDuration): FiniteDuration = {
+    val d = getConfDuration(key, default)
+    require(d.isFinite(), s"not a finite duration: $key")
+    FiniteDuration(d.length, d.unit)
   }
 
   private object AppNameProvider extends Provider[String] {

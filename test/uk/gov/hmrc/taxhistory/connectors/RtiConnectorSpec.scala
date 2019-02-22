@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
+import java.util.concurrent.TimeUnit
+
+import akka.actor.ActorSystem
 import com.codahale.metrics.Timer
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
@@ -28,9 +31,11 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.Retry
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
+import scala.concurrent.duration.FiniteDuration
 
 
 class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
@@ -64,11 +69,25 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         implicit val hc = HeaderCarrier()
         when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testRtiConnector.http.GET[RtiData](any())(any(), any(), any())).thenReturn(Future.successful(testRtiData))
+        when(testRtiConnector.http.GET[RtiData](any())(any(), any(), any()))
+          .thenReturn(Future.successful(testRtiData))
 
         val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
 
-        await(result) mustBe testRtiData
+        await(result) mustBe Some(testRtiData)
+      }
+
+      "retrying after the first call failed and the second call succeeds" in {
+        implicit val hc = HeaderCarrier()
+        when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
+        when(testRtiConnector.http.GET[RtiData](any())(any(), any(), any()))
+          .thenReturn(Future.failed(new Upstream5xxResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
+          .thenReturn(Future.successful(testRtiData))
+
+        val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
+
+        await(result) mustBe Some(testRtiData)
       }
 
       "return and handle an error response" in {
@@ -86,12 +105,15 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     }
   }
 
+  private val system = ActorSystem("test")
+  private val delay = FiniteDuration(500, TimeUnit.MILLISECONDS)
+
   lazy val testRtiConnector = new RtiConnector(
     http = mock[HttpClient],
     baseUrl = "/test",
     metrics = mock[TaxHistoryMetrics],
     authorizationToken = "auth",
-    environment = "env"
+    environment = "env", withRetry = new Retry(1, delay, system)
   ) {
     override val metrics =  mock[TaxHistoryMetrics]
     val mockTimerContext = mock[Timer.Context]

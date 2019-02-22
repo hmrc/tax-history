@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
+import java.util.concurrent.TimeUnit
+
+import akka.actor.ActorSystem
 import com.codahale.metrics.Timer
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
@@ -27,8 +30,10 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.Retry
 
 import scala.concurrent.Future
+import scala.concurrent.duration.FiniteDuration
 
 class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
@@ -65,7 +70,22 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         when(testDesNpsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testDesNpsConnector.http.GET[List[Iabd]](any())(any(), any(), any())).thenReturn(Future.successful(testIabds))
+        when(testDesNpsConnector.http.GET[List[Iabd]](any())(any(), any(), any()))
+          .thenReturn(Future.successful(testIabds))
+
+        val result = testDesNpsConnector.getIabds(testNino, testYear)
+
+        await(result) mustBe testIabds
+      }
+
+      "retrying after the first call fails and the second call succeeds" in {
+        implicit val hc = HeaderCarrier()
+
+        when(testDesNpsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
+        when(testDesNpsConnector.http.GET[List[Iabd]](any())(any(), any(), any()))
+          .thenReturn(Future.failed(new Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
+          .thenReturn(Future.successful(testIabds))
 
         val result = testDesNpsConnector.getIabds(testNino, testYear)
 
@@ -92,11 +112,27 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testTaxAccountConnector.http.GET[NpsTaxAccount](any())(any(), any(), any())).thenReturn(Future.successful(testNpsTaxAccount))
+        when(testTaxAccountConnector.http.GET[NpsTaxAccount](any())(any(), any(), any()))
+          .thenReturn(Future.successful(testNpsTaxAccount))
 
         val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
 
-        await(result) mustBe testNpsTaxAccount
+        await(result) mustBe Some(testNpsTaxAccount)
+      }
+
+      "retrying after the first call fails and the second call succeeds" in {
+        implicit val hc = HeaderCarrier()
+        val testTaxAccountConnector = testDesNpsConnector
+
+        when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
+        when(testTaxAccountConnector.http.GET[NpsTaxAccount](any())(any(), any(), any()))
+          .thenReturn(Future.failed(new Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE)))
+          .thenReturn(Future.successful(testNpsTaxAccount))
+
+        val result = testTaxAccountConnector.getTaxAccount(testNino, testYear)
+
+        await(result) mustBe Some(testNpsTaxAccount)
       }
 
       "return and handle an error response" in {
@@ -110,16 +146,30 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
         intercept[BadRequestException](await(result))
       }
-    }
 
+      "return None if the response from DES is 404 (NotFound)" in {
+        implicit val hc = HeaderCarrier()
+        when(testDesNpsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
+        when(testDesNpsConnector.http.GET[HttpResponse](any())(any(), any(), any()))
+          .thenReturn(Future.failed(new NotFoundException("")))
+
+        val result = testDesNpsConnector.getTaxAccount(testNino, testYear)
+
+        await(result) mustBe None
+      }
+    }
   }
+
+  private val system = ActorSystem("test")
+  private val delay = FiniteDuration(500, TimeUnit.MILLISECONDS)
 
   lazy val testDesNpsConnector = new DesNpsConnector(
     http = mock[HttpClient],
     baseUrl = "/fake",
     metrics = mock[TaxHistoryMetrics],
     authorizationToken = "someToken",
-    env = "test"
+    env = "test", withRetry = new Retry(1, delay, system)
   ) {
     override val metrics = mock[TaxHistoryMetrics]
     val mockTimerContext = mock[Timer.Context]

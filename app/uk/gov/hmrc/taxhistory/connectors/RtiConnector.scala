@@ -23,6 +23,7 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
+import uk.gov.hmrc.taxhistory.utils.Retry
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
@@ -31,7 +32,7 @@ class RtiConnector @Inject()(val http: HttpClient,
                              val metrics: TaxHistoryMetrics,
                              @Named("des-base-url") val baseUrl: String,
                              @Named("microservice.services.des.authorizationToken") val authorizationToken: String,
-                             @Named("microservice.services.des.env") val environment: String
+                             @Named("microservice.services.des.env") val environment: String, @Named("des") val withRetry: Retry
                             ) extends ConnectorMetrics {
 
   lazy val authorization: String = s"Bearer $authorizationToken"
@@ -45,11 +46,13 @@ class RtiConnector @Inject()(val http: HttpClient,
     Seq("Environment" -> environment,
       "Authorization" -> authorization))
 
-  def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[RtiData] = {
+  def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[Option[RtiData]] = {
     implicit val hc: HeaderCarrier = createHeader
 
     withMetrics(MetricsEnum.RTI_GET_EMPLOYMENTS) {
-      http.GET[RtiData](rtiEmploymentsUrl(nino, taxYear))
+      withRetry {
+        http.GET[RtiData](rtiEmploymentsUrl(nino, taxYear)).map(Some(_))
+      }
     }
   }
 }
