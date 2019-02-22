@@ -90,21 +90,21 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
 
   "Employment Service" should {
     "successfully get Nps Employments Data" in {
-      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
+      when(testEmploymentHistoryService.desNpsConnector.getEmployments(any(), any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
 
       noException shouldBe thrownBy(await(testEmploymentHistoryService.retrieveNpsEmployments(testNino, TaxYear(2016))))
     }
 
     "successfully get Nps Employments Data with jobseekers allowance for cy-1" in {
-      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
+      when(testEmploymentHistoryService.desNpsConnector.getEmployments(any(), any()))
         .thenReturn(Future.successful(npsEmploymentWithJobSeekerAllowanceCYMinus1))
 
       noException shouldBe thrownBy(await(testEmploymentHistoryService.retrieveNpsEmployments(testNino, TaxYear(2016))))
     }
 
     "return any non success status response from get Nps Employments api" in {
-      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
+      when(testEmploymentHistoryService.desNpsConnector.getEmployments(any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
 
       intercept[BadRequestException](await(testEmploymentHistoryService.retrieveNpsEmployments(testNino, TaxYear(2016))))
@@ -119,13 +119,13 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
     }
 
     "return not found status response from get Nps Employments api" in {
-      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
+      when(testEmploymentHistoryService.desNpsConnector.getEmployments(any(), any()))
         .thenReturn(Future.successful(Nil))
       intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
     }
 
     "throw an exception when the call to get RTI employments fails" in {
-      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
+      when(testEmploymentHistoryService.desNpsConnector.getEmployments(any(), any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
         .thenReturn(Future.failed(new BadRequestException("")))
@@ -138,7 +138,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
     }
 
     "throw an exception when the call to get NPS tax account fails" in {
-      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
+      when(testEmploymentHistoryService.desNpsConnector.getEmployments(any(), any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
         .thenReturn(Future.successful(Some(testRtiData)))
@@ -151,7 +151,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
     }
 
     "return success response from get Employments" in {
-      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
+      when(testEmploymentHistoryService.desNpsConnector.getEmployments(any(), any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
       when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
         .thenReturn(Future.successful(testIabds))
@@ -244,7 +244,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
     "successfully exclude nps employment1 data" when {
 
       "nps receivingJobseekersAllowance is true for CY" in {
-        when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
+        when(testEmploymentHistoryService.desNpsConnector.getEmployments(any(), any()))
           .thenReturn(Future.successful(npsEmploymentWithJobSeekerAllowanceCY))
         when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
           .thenReturn(Future.successful(testIabds))
@@ -255,7 +255,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       }
 
       "otherIncomeSourceIndicator is true from list of employments" in {
-        when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
+        when(testEmploymentHistoryService.desNpsConnector.getEmployments(any(), any()))
           .thenReturn(Future.successful(npsEmploymentWithOtherIncomeSourceIndicator))
         when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
           .thenReturn(Future.successful(testIabds))
@@ -269,7 +269,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
     "throw not found error" when {
 
       "nps employments contain single element with npsEmploymentWithJustOtherIncomeSourceIndicator attribute is true" in {
-        when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
+        when(testEmploymentHistoryService.desNpsConnector.getEmployments(any(), any()))
           .thenReturn(Future.successful(npsEmploymentWithJustOtherIncomeSourceIndicator))
         when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
           .thenReturn(Future.successful(testIabds))

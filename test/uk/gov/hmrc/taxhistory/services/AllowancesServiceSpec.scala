@@ -57,7 +57,7 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   "Allowances" should {
     "successfully populated from iabds" in {
-      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.desNpsConnector.getEmployments(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
       when(testEmploymentHistoryService.desNpsConnector.getIabds(Matchers.any(), Matchers.any()))
         .thenReturn(Future.successful(iabdsResponse))
