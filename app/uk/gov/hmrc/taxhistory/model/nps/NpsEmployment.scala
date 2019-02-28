@@ -71,7 +71,7 @@ object NpsEmployment {
         NpsEmployment(
           nino = nino,
           sequenceNumber = sequenceNumber,
-          taxDistrictNumber = taxDistrictNumber,
+          taxDistrictNumber = withPadding(taxDistrictNumber),
           payeNumber = payeNumber,
           employerName = employerName,
           worksNumber = worksNumber,
@@ -86,4 +86,12 @@ object NpsEmployment {
     }
   }
   implicit val writer: OWrites[NpsEmployment] = Json.writes[NpsEmployment]
+
+  /*
+  in some seen cases taxDistrictNumber is two digits - we assume this is because the first digit was 0 and was
+  dropped since the field type in the NPS API is an integer. In such cases, pad to 3 digits.
+   */
+  private def withPadding(taxDistrictNumber: String): String = {
+    taxDistrictNumber.reverse.padTo(3,"0").reverse.mkString
+  }
 }
