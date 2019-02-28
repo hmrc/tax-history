@@ -108,22 +108,6 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
     result.keySet.toList.map(_.worksNumber.get).sorted must be(result.values.toList.map(_.currentPayId.get).sorted)
   }
 
-  "Given NPS employment with leading 0 dropped from officeNumber, do not match with corresponding (3 digit) RTI record" in {
-
-    val npsRecords: List[NpsEmployment] = List(
-      nps(taxDistrictNumber = "12", payeNumber = "xxx123456", worksNumber = Some("1234"), seq = 3),
-      nps(taxDistrictNumber = "12", payeNumber = "xxx123456", worksNumber = Some("5678"), seq = 4)
-    )
-
-    val rtiRecords: List[RtiEmployment] = List(
-      rti(officeNumber = "012", payeRef = "xxx123456", currentPayId = Some("5678"), seq = 4)
-    )
-
-    val result: Map[NpsEmployment, RtiEmployment] = EmploymentMatchingHelper.matchEmployments(npsRecords, rtiRecords)
-
-    result.isEmpty mustBe true
-  }
-
   "Given two NPS employments from the same employer but only one RTI, the RTI will be matched on both NPS employments" +
     "if the worksNumber/currentPayId are identical on both NPS records but seq numbers are unique" in {
 
