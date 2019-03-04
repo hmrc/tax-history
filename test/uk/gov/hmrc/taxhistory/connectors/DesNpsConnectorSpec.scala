@@ -92,6 +92,20 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         await(result) mustBe testIabds
       }
 
+      "return empty list when the call to get IABD returns 404 NotFoundException" in {
+        implicit val hc = HeaderCarrier()
+
+        when(testDesNpsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
+        when(testDesNpsConnector.http.GET[List[Iabd]](any())(any(), any(), any()))
+          .thenReturn(Future.failed(new NotFoundException("")))
+
+        val result = testDesNpsConnector.getIabds(testNino, testYear)
+
+        await(result).isEmpty mustBe true
+      }
+
+
       "return and handle an service unavailable error response " in {
         implicit val hc = HeaderCarrier()
         when(testDesNpsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())

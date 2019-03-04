@@ -90,6 +90,18 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         await(result) mustBe Some(testRtiData)
       }
 
+      "return None when the call to RTI fails with 404 NotFound" in {
+        implicit val hc = HeaderCarrier()
+        when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
+        when(testRtiConnector.http.GET[RtiData](any())(any(), any(), any()))
+          .thenReturn(Future.failed(new NotFoundException("")))
+
+        val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
+
+        await(result) mustBe None
+      }
+
       "return and handle an error response" in {
         val expectedResponse = Json.parse( """{"reason": "Internal Server Error"}""")
         implicit val hc = HeaderCarrier()

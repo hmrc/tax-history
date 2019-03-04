@@ -51,8 +51,12 @@ class RtiConnector @Inject()(val http: HttpClient,
 
     withMetrics(MetricsEnum.RTI_GET_EMPLOYMENTS) {
       withRetry {
-        http.GET[RtiData](rtiEmploymentsUrl(nino, taxYear)).map(Some(_))
+        http.GET[RtiData](rtiEmploymentsUrl(nino, taxYear))
+          .map(Some(_))
+      }.recover {
+        case _: NotFoundException => None
       }
+
     }
   }
 }
