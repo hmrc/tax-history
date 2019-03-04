@@ -161,6 +161,11 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       await(testEmploymentHistoryService.retrieveRtiData(testNino, TaxYear(2016))) shouldBe Some(testRtiData)
     }
 
+    "stub rti employments succeeds with a None" in
+    new StubConnectors(rti = stubRtiGetEmploymentsSucceeds(None)) {
+      await(testEmploymentHistoryService.retrieveRtiData(testNino, TaxYear(2016))) shouldBe None
+    }
+
     "fail with NotFoundException if the NPS Get Employments API was successful but returned zero employments" in
       new StubConnectors(npsGetEmployments = stubNpsGetEmploymentsSucceeds(List.empty)) {
       intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
@@ -175,6 +180,16 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       new StubConnectors(rti = stubRtiGetEmploymentsFails(new BadRequestException(""))) {
       intercept[BadRequestException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
     }
+
+    "succeeds when the RTI call fails with a 404 (i.e the RTI connector returns None)" in
+      new StubConnectors(rti = stubRtiGetEmploymentsSucceeds(None)) {
+        noException shouldBe thrownBy(await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
+      }
+
+    "succeeds when the get IABD call fails with a 404 (i.e the RTI connector returns None)" in
+      new StubConnectors(npsGetIabdDetails = stubNpsGetIabdsSucceeds(List())) {
+        noException shouldBe thrownBy(await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
+      }
 
     "throw an exception when the call to get NPS tax account fails" in
       new StubConnectors(npsGetTaxAccount = stubNpsGetTaxAccountFails(new BadRequestException(""))) {
