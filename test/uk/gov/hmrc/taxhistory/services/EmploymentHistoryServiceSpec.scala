@@ -161,7 +161,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       await(testEmploymentHistoryService.retrieveRtiData(testNino, TaxYear(2016))) shouldBe Some(testRtiData)
     }
 
-    "stub rti employments succeeds with a None" in
+    "successfully get no RTI employments data if RTI connector returns None" in
     new StubConnectors(rti = stubRtiGetEmploymentsSucceeds(None)) {
       await(testEmploymentHistoryService.retrieveRtiData(testNino, TaxYear(2016))) shouldBe None
     }
