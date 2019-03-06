@@ -32,6 +32,8 @@ object EmploymentMatchingHelper extends TaxHistoryHelper with Logging {
     val isPayrollIdPresent = optPayrollId.isDefined
     val hasOnlyOneEmployment = npsWithSamePayrollId.length == 1 && rtiWithSamePayrollId.length == 1
 
+    if(!isPayrollIdPresent) logger.warn("worksNumber/currentPayId is missing - will rely on sequenceNumber to match.")
+
     (for {
       nps <- npsWithSamePayrollId
       rti <- rtiWithSamePayrollId
