@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import org.mockito.Matchers
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
@@ -53,7 +53,7 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
   "getAllowances" must {
 
     "respond with OK for successful get" in {
-      when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getAllowances(any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(testAllowances))
 
       val result = testAllowanceController.getAllowances(ninoWithAgent.nino, 2016).apply(FakeRequest())
@@ -62,7 +62,7 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
 
     "propagate error responses from upstream microservices" in {
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-        when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(mockEmploymentHistoryService.getAllowances(any(), any())(any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
         val result = testAllowanceController.getAllowances(ninoWithAgent.nino, 2016).apply(FakeRequest())
         status(result) must be(expectedStatus)
@@ -70,7 +70,7 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
     }
 
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
-      when(mockEmploymentHistoryService.getAllowances(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getAllowances(any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(testAllowances))
       val result = testAllowanceController.getAllowances(ninoWithoutAgent.nino, 2016).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)

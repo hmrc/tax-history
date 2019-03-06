@@ -18,8 +18,7 @@ package uk.gov.hmrc.taxhistory.controllers
 
 import java.util.UUID
 
-import org.mockito.Matchers
-import org.mockito.Matchers._
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
@@ -70,7 +69,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
 
     "propagate error responses from upstream microservices" in {
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-        when(mockEmploymentHistoryService.getTaxAccount(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(mockEmploymentHistoryService.getTaxAccount(any(), any())(any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
         val result = testTaxAccountController.getTaxAccount(ninoWithAgent.nino, testTaxYear).apply(FakeRequest())
         status(result) shouldBe expectedStatus
@@ -101,7 +100,7 @@ class TaxAccountControllerSpec extends UnitSpec with OneServerPerSuite with Mock
 
     "propagate error responses from upstream microservices" in {
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-        when(mockEmploymentHistoryService.getIncomeSource(Matchers.any(), Matchers.any(), any[String])(Matchers.any[HeaderCarrier]))
+        when(mockEmploymentHistoryService.getIncomeSource(any(), any(), any[String])(any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
         val result = testTaxAccountController.getIncomeSource(ninoWithAgent.nino, testTaxYear, testEmnploymentId).apply(FakeRequest())
         status(result) shouldBe expectedStatus

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxhistory.controllers
 
 import org.joda.time.LocalDate
-import org.mockito.Matchers
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
@@ -58,7 +58,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
   "getEmployments" must {
 
     "respond with OK for successful get" in {
-      when(mockEmploymentHistoryService.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getEmployments(any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(testEmployments))
       val result = testEmploymentController.getEmployments(ninoWithAgent.nino, 2016).apply(FakeRequest())
       status(result) must be(OK)
@@ -66,7 +66,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
 
     "propagate error responses from upstream microservices" in {
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-        when(mockEmploymentHistoryService.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(mockEmploymentHistoryService.getEmployments(any(), any())(any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
         val result = testEmploymentController.getEmployments(ninoWithAgent.nino, 2015).apply(FakeRequest())
         status(result) must be(expectedStatus)
@@ -74,7 +74,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
     }
 
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
-      when(mockEmploymentHistoryService.getEmployments(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getEmployments(any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(testEmployments))
       val result = testEmploymentController.getEmployments(ninoWithoutAgent.nino, 2015).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
@@ -85,7 +85,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
   "getEmployment" must {
 
     "respond with OK for successful get" in {
-      when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getEmployment(any(), any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(testEmployment))
       val result = testEmploymentController.getEmployment(ninoWithAgent.nino, 2016,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
       status(result) must be(OK)
@@ -93,7 +93,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
 
     "propagate error responses from upstream microservices" in {
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-        when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(mockEmploymentHistoryService.getEmployment(any(), any(), any())(any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
         val result = testEmploymentController.getEmployment(ninoWithAgent.nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
         status(result) must be(expectedStatus)
@@ -101,7 +101,7 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
     }
 
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
-      when(mockEmploymentHistoryService.getEmployment(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getEmployment(any(), any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(testEmployment))
       val result = testEmploymentController.getEmployment(ninoWithoutAgent.nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
