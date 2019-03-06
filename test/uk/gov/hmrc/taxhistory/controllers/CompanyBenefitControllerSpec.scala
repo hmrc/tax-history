@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxhistory.controllers
 
 import java.util.UUID
 
-import org.mockito.Matchers
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
@@ -56,7 +56,7 @@ class CompanyBenefitControllerSpec extends PlaySpec with OneServerPerSuite with 
   "getBenefits" must {
 
     "respond with OK for successful get" in {
-      when(mockEmploymentHistoryService.getCompanyBenefits(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getCompanyBenefits(any(), any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(testCompanyBenefits))
       val result = testCompanyBenefitController.getCompanyBenefits(ninoWithAgent.nino, 2016, employmentId).apply(FakeRequest())
       status(result) must be(OK)
@@ -64,7 +64,7 @@ class CompanyBenefitControllerSpec extends PlaySpec with OneServerPerSuite with 
 
     "propagate error responses from upstream microservices" in {
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-        when(mockEmploymentHistoryService.getCompanyBenefits(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(mockEmploymentHistoryService.getCompanyBenefits(any(), any(), any())(any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
         val result = testCompanyBenefitController.getCompanyBenefits(ninoWithAgent.nino, 2016, employmentId).apply(FakeRequest())
         status(result) must be(expectedStatus)
@@ -72,7 +72,7 @@ class CompanyBenefitControllerSpec extends PlaySpec with OneServerPerSuite with 
     }
 
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
-      when(mockEmploymentHistoryService.getCompanyBenefits(Matchers.any(), Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getCompanyBenefits(any(), any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(testCompanyBenefits))
       val result = testCompanyBenefitController.getCompanyBenefits(ninoWithoutAgent.nino, 2016, employmentId).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)

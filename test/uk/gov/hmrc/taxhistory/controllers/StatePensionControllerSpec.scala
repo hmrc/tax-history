@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import org.mockito.Matchers
-import org.mockito.Matchers._
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
@@ -67,7 +66,7 @@ class StatePensionControllerSpec extends UnitSpec with OneServerPerSuite with Mo
 
     "propagate error responses from upstream microservices" in {
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-        when(mockEmploymentHistoryService.getStatePension(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]))
+        when(mockEmploymentHistoryService.getStatePension(any(), any())(any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
         val result = testStatePensionController.getStatePension(ninoWithAgent.nino, testTaxYear).apply(FakeRequest())
         status(result) shouldBe expectedStatus

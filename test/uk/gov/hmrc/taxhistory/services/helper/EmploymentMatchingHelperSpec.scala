@@ -26,62 +26,190 @@ import uk.gov.hmrc.taxhistory.services.helpers.EmploymentMatchingHelper
 
 class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
 
+  "Given 2 NPS and 2 RTI employments from the same employer, match those 2 NPS employments with the RTI employments" when {
+    "the worksNumber/currentPayId is present" in {
+      val rtiEmployment1 = rti(currentPayId = Some("1234"), seq = 3)
+      val rtiEmployment2 = rti(currentPayId = Some("5678"), seq = 4)
 
-  "Given 2 NPS and 2 RTI employments from the same employer, match those 2 NPS employments with the RTI employments" in {
+      val npsEmployment1 = nps(worksNumber = Some("1234"), seq = 3)
+      val npsEmployment2 = nps(worksNumber = Some("5678"), seq = 4)
 
-    val rtiRecords:List[RtiEmployment] =
-      List(rti(currentPayId = Some("1234"), seq = 3), rti(currentPayId = Some("5678"), seq = 4))
-    val npsRecords: List[NpsEmployment] =
-      List(nps(worksNumber = Some("1234"), seq = 3), nps(worksNumber = Some("5678"), seq = 4))
+      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
+        npsEmployments = List(npsEmployment1, npsEmployment2),
+        rtiEmployments = List(rtiEmployment1, rtiEmployment2)
+      ).toSeq
 
-    EmploymentMatchingHelper.matchEmployments(npsRecords, rtiRecords).size must be(2)
+      matchedEmployments must have length 2
+      matchedEmployments must contain (npsEmployment1, rtiEmployment1)
+      matchedEmployments must contain (npsEmployment2, rtiEmployment2)
+    }
+
+    "the worksNumber/currentPayId is missing" in {
+      val rtiEmployment1 = rti(currentPayId = None, seq = 3)
+      val rtiEmployment2 = rti(currentPayId = None, seq = 4)
+
+      val npsEmployment1 = nps(worksNumber = None, seq = 3)
+      val npsEmployment2 = nps(worksNumber = None, seq = 4)
+
+      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
+        npsEmployments = List(npsEmployment1, npsEmployment2),
+        rtiEmployments = List(rtiEmployment1, rtiEmployment2)
+      ).toSeq
+
+      matchedEmployments must have length 2
+      matchedEmployments must contain (npsEmployment1, rtiEmployment1)
+      matchedEmployments must contain (npsEmployment2, rtiEmployment2)
+    }
   }
 
-  "Given 2 NPS and 1 RTI employments from the same employer, match the RTI to the correct NPS" in {
+  "Given 2 NPS and 1 RTI employments from the same employer, match the RTI to the one correct NPS" when {
+    "the two NPS employments have a different worksNumber/currentPayId" in {
+      val rtiEmployment = rti(currentPayId = Some("1234"), seq = 3)
 
-    val rtiRecords:List[RtiEmployment] = List(rti(currentPayId = Some("1234"), seq = 3))
-    val npsRecords: List[NpsEmployment] = List(
-      nps(worksNumber = Some("1234"), seq = 3),
-      nps(worksNumber = Some("5678"), seq = 4))
+      val npsEmployment1 = nps(worksNumber = Some("1234"), seq = 3)
+      val npsEmployment2 = nps(worksNumber = Some("5678"), seq = 4)
 
-    val result = EmploymentMatchingHelper.matchEmployments(npsRecords, rtiRecords)
+      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
+        npsEmployments = List(npsEmployment1, npsEmployment2),
+        rtiEmployments = List(rtiEmployment)
+      ).toSeq
 
-    result.size must be(1)
-    result(result.keySet.head).currentPayId.get must be("1234")
+      matchedEmployments must have length 1
+      matchedEmployments must contain (npsEmployment1, rtiEmployment)
+    }
+
+    "the two NPS employments have the same worksNumber/currentPayId but a different sequenceNumber" in {
+      val rtiEmployment = rti(currentPayId = Some("456"), seq = 1)
+
+      val npsEmployment1 = nps(worksNumber = Some("456"), seq = 1)
+      val npsEmployment2 = nps(worksNumber = Some("456"), seq = 4)
+
+      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
+        npsEmployments = List(npsEmployment1, npsEmployment2),
+        rtiEmployments = List(rtiEmployment)
+      ).toSeq
+
+      matchedEmployments must have length 1
+      matchedEmployments must contain (npsEmployment1, rtiEmployment)
+    }
+
+    "the two NPS employments have a missing worksNumber/currentPayId" in {
+      val rtiEmployment = rti(currentPayId = None, seq = 1)
+
+      val npsEmployment1 = nps(worksNumber = None, seq = 1)
+      val npsEmployment2 = nps(worksNumber = None, seq = 4)
+
+      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
+        npsEmployments = List(npsEmployment1, npsEmployment2),
+        rtiEmployments = List(rtiEmployment)
+      ).toSeq
+
+      matchedEmployments must have length 1
+      matchedEmployments must contain (npsEmployment1, rtiEmployment)
+    }
   }
 
-  "Given 1 NPS and 2 RTI employments from the same employer, match the NPS to the correct RTI" in {
+  "Given 1 NPS and 2 RTI employments from the same employer, match the NPS to the correct RTI" when {
+    "the two RTI employments have a different worksNumber/currentPayId" in {
+      val rtiEmployment1 = rti(currentPayId = Some("1234"), seq = 3)
+      val rtiEmployment2 = rti(currentPayId = Some("5678"), seq = 4)
 
-    val rtiRecords:List[RtiEmployment] = List(
-      rti(currentPayId = Some("1234"), seq = 3),
-      rti(currentPayId = Some("5678"), seq = 4))
-    val npsRecords: List[NpsEmployment] = List(nps(worksNumber = Some("5678"), seq = 4))
+      val npsEmployment = nps(worksNumber = Some("5678"), seq = 4)
 
-    val result = EmploymentMatchingHelper.matchEmployments(npsRecords, rtiRecords)
+      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
+        npsEmployments = List(npsEmployment),
+        rtiEmployments = List(rtiEmployment1, rtiEmployment2)
+      ).toSeq
 
-    result.size must be(1)
-    result(result.keySet.head).currentPayId.get must be("5678")
+      matchedEmployments must have length 1
+      matchedEmployments must contain (npsEmployment, rtiEmployment2)
+    }
 
+    "the two RTI employments have the same worksNumber/currentPayId but different sequenceNumber" in {
+      val rtiEmployment1 = rti(currentPayId = Some("5678"), seq = 3)
+      val rtiEmployment2 = rti(currentPayId = Some("5678"), seq = 4)
+
+      val npsEmployment = nps(worksNumber = Some("5678"), seq = 4)
+
+      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
+        npsEmployments = List(npsEmployment),
+        rtiEmployments = List(rtiEmployment1, rtiEmployment2)
+      ).toSeq
+
+      matchedEmployments must have length 1
+      matchedEmployments must contain (npsEmployment, rtiEmployment2)
+    }
+
+    "the two RTI employments have a missing worksNumber/currentPayId" in {
+      val rtiEmployment1 = rti(currentPayId = None, seq = 3)
+      val rtiEmployment2 = rti(currentPayId = None, seq = 4)
+
+      val npsEmployment = nps(worksNumber = None, seq = 4)
+
+      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
+        npsEmployments = List(npsEmployment),
+        rtiEmployments = List(rtiEmployment1, rtiEmployment2)
+      ).toSeq
+
+      matchedEmployments must have length 1
+      matchedEmployments must contain (npsEmployment, rtiEmployment2)
+    }
   }
 
-  "Given 1 NPS and 1 RTI employment from the same employer but the pid does not match, the employments are matched," in {
+  "Given 1 NPS and 1 RTI employment from the same employer, the employments are matched only by taxOfficeNumber/payeRef" when {
+    "even if the worksNumber/currentPayId and sequence numbers do not match" in {
+      val rtiEmployment = rti(currentPayId = Some("1234"), seq = 3)
+      val npsEmployment = nps(worksNumber = Some("5678"), seq = 4)
 
-    val rtiRecords:List[RtiEmployment] = List(rti(currentPayId = Some("1234"), seq =3))
-    val npsRecords: List[NpsEmployment] = List(nps(worksNumber = Some("5678"), seq = 4))
+      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(List(npsEmployment), List(rtiEmployment)).toSeq
 
-    EmploymentMatchingHelper.matchEmployments(npsRecords, rtiRecords).size must be(1)
+      matchedEmployments must have length 1
+      matchedEmployments must contain (npsEmployment, rtiEmployment)
+    }
+
+    "even if the worksNumber/currentPayId is missing and the sequence numbers do not match" in {
+      val rtiEmployment = rti(currentPayId = None, seq = 3)
+      val npsEmployment = nps(worksNumber = None, seq = 4)
+
+      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(List(npsEmployment), List(rtiEmployment)).toSeq
+
+      matchedEmployments must have length 1
+      matchedEmployments must contain (npsEmployment, rtiEmployment)
+    }
   }
 
-  "Given 2 NPS and 2 RTI employments from the same employer but the pid does not match on one, there is one correct match" in {
+  "Given 2 NPS and 2 RTI employments from the same employer but there is only one matching pair, there is one correct match" when {
+    "the worksNumber/currentPayId is present but matches only on one pair" in {
+      val rtiEmployment1 = rti(currentPayId = Some("1234"), seq = 3)
+      val rtiEmployment2 = rti(currentPayId = Some("5678"), seq = 4)
 
-    val rtiRecords:List[RtiEmployment] = List(
-      rti(currentPayId = Some("1234"), seq = 3),
-      rti(currentPayId = Some("5678"), seq = 4))
-    val npsRecords: List[NpsEmployment] = List(
-      nps(worksNumber = Some("5678"), seq = 4),
-      nps(worksNumber = Some("1111"), seq = 4))
+      val npsEmployment1 = nps(worksNumber = Some("5678"), seq = 4)
+      val npsEmployment2 = nps(worksNumber = Some("1111"), seq = 4)
 
-    EmploymentMatchingHelper.matchEmployments(npsRecords, rtiRecords).size must be(1)
+      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
+        npsEmployments = List(npsEmployment1, npsEmployment2),
+        rtiEmployments = List(rtiEmployment1, rtiEmployment2)
+      ).toSeq
+
+      matchedEmployments must have length 1
+      matchedEmployments must contain (npsEmployment1, rtiEmployment2)
+    }
+
+    "the worksNumber/currentPayId is missing and the sequenceNumber matches only on one pair" in {
+      val rtiEmployment1 = rti(currentPayId = None, seq = 3)
+      val rtiEmployment2 = rti(currentPayId = None, seq = 4)
+
+      val npsEmployment1 = nps(worksNumber = None, seq = 4)
+      val npsEmployment2 = nps(worksNumber = None, seq = 5)
+
+      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
+        npsEmployments = List(npsEmployment1, npsEmployment2),
+        rtiEmployments = List(rtiEmployment1, rtiEmployment2)
+      ).toSeq
+
+      matchedEmployments must have length 1
+      matchedEmployments must contain (npsEmployment1, rtiEmployment2)
+    }
   }
 
   "Given multiple same employer employments, match the employments correctly" in {
@@ -106,24 +234,6 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
     result.size must be(5)
 
     result.keySet.toList.map(_.worksNumber.get).sorted must be(result.values.toList.map(_.currentPayId.get).sorted)
-  }
-
-  "Given two NPS employments from the same employer but only one RTI, the RTI will be matched on both NPS employments" +
-    "if the worksNumber/currentPayId are identical on both NPS records but seq numbers are unique" in {
-
-    val npsRecords: List[NpsEmployment] = List(
-      nps(taxDistrictNumber = "012", payeNumber = "xxx123456", worksNumber = Some("5678"), seq = 3),
-      nps(taxDistrictNumber = "012", payeNumber = "xxx123456", worksNumber = Some("5678"), seq = 4)
-    )
-
-    val rtiRecords: List[RtiEmployment] = List(
-      rti(officeNumber = "012", payeRef = "xxx123456", currentPayId = Some("5678"), seq = 4)
-    )
-
-    val result: Map[NpsEmployment, RtiEmployment] = EmploymentMatchingHelper.matchEmployments(npsRecords, rtiRecords)
-
-    result.size must be(2)
-
   }
 
   "Given a nonempty list of NPS employments and and empty list of RTI employments return an empty Map" in {

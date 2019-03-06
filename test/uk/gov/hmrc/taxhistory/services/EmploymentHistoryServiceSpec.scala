@@ -19,23 +19,21 @@ package uk.gov.hmrc.taxhistory.services
 import java.util.UUID
 
 import org.joda.time.LocalDate
-import org.mockito.Matchers.any
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
-import org.mockito.Mockito.verifyZeroInteractions
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
+import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.fixtures.Employments
 import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType.OccupationalPension
 import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.{PlaceHolder, TestUtil}
-import uk.gov.hmrc.taxhistory.services.helpers.EmploymentMatchingHelper
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 

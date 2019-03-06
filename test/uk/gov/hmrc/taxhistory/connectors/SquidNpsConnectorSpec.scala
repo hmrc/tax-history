@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
 import com.codahale.metrics.Timer
-import org.mockito.Matchers.any
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
