@@ -211,7 +211,6 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
       }
 
       "return and handle an error response" in {
-        val expectedResponse = Json.parse( """{"reason": "Some thing went wrong"}""")
         implicit val hc = HeaderCarrier()
         val testemploymentsConnector = testDesNpsConnector
         when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
