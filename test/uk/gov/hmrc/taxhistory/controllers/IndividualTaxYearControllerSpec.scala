@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import org.mockito.Matchers
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
@@ -54,7 +54,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
 
   "getTaxYears" must {
     "respond with OK for successful get" in {
-      when(mockEmploymentHistoryService.getTaxYears(Matchers.any()))
+      when(mockEmploymentHistoryService.getTaxYears(any()))
         .thenReturn(Future.successful(testTaxYears))
       val result = testIndividualTaxYearController.getTaxYears(ninoWithAgent.nino).apply(FakeRequest())
       status(result) must be(OK)
@@ -62,7 +62,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
 
     "propagate error responses from upstream microservices" in {
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-        when(mockEmploymentHistoryService.getTaxYears(Matchers.any()))
+        when(mockEmploymentHistoryService.getTaxYears(any()))
           .thenReturn(Future.failed(httpException))
         val result = testIndividualTaxYearController.getTaxYears(ninoWithAgent.nino).apply(FakeRequest())
         status(result) must be(expectedStatus)
@@ -70,7 +70,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
     }
 
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
-      when(mockEmploymentHistoryService.getTaxYears(Matchers.any()))
+      when(mockEmploymentHistoryService.getTaxYears(any()))
         .thenReturn(Future.successful(testTaxYears))
       val result = testIndividualTaxYearController.getTaxYears(ninoWithoutAgent.nino).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)

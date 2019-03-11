@@ -51,6 +51,8 @@ class DesNpsConnector @Inject()(val http: HttpClient,
     withMetrics(MetricsEnum.NPS_GET_IABDS) {
       withRetry {
         http.GET[List[Iabd]](iabdsUrl(nino, year))
+      }.recover{
+        case _:NotFoundException => List.empty
       }
     }
   }

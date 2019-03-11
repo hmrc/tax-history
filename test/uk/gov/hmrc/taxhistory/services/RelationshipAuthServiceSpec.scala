@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxhistory.services
 
 import org.scalatest.mockito.MockitoSugar
+import org.mockito.ArgumentMatchers.any
 import org.scalatestplus.play.PlaySpec
 import play.api.mvc.Results._
 import play.api.test.Helpers._
@@ -29,7 +30,6 @@ import scala.concurrent.Future
 
 class RelationshipAuthServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
-  import org.mockito.Matchers._
   import org.mockito.Mockito._
 
   implicit val hc: HeaderCarrier = HeaderCarrier()

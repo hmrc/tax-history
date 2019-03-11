@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
 import com.codahale.metrics.Timer
-import org.mockito.Matchers.any
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
@@ -88,6 +88,18 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
 
         await(result) mustBe Some(testRtiData)
+      }
+
+      "return None when the call to RTI fails with 404 NotFound" in {
+        implicit val hc = HeaderCarrier()
+        when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
+        when(testRtiConnector.http.GET[RtiData](any())(any(), any(), any()))
+          .thenReturn(Future.failed(new NotFoundException("")))
+
+        val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
+
+        await(result) mustBe None
       }
 
       "return and handle an error response" in {

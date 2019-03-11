@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxhistory.services
 import java.util.UUID
 
 import org.joda.time.LocalDate
-import org.mockito.Matchers
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
@@ -57,13 +57,13 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   "Allowances" should {
     "successfully populated from iabds" in {
-      when(testEmploymentHistoryService.desNpsConnector.getEmployments(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.desNpsConnector.getEmployments(any(), any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
-      when(testEmploymentHistoryService.desNpsConnector.getIabds(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
         .thenReturn(Future.successful(iabdsResponse))
-      when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
         .thenReturn(Future.successful(Some(testNpsTaxAccount)))
-      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(Matchers.any(), Matchers.any()))
+      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
         .thenReturn(Future.successful(Some(testRtiData)))
       val response =  await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino,TaxYear(2016)))
 

@@ -19,23 +19,21 @@ package uk.gov.hmrc.taxhistory.services
 import java.util.UUID
 
 import org.joda.time.LocalDate
-import org.mockito.Matchers.any
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
-import org.mockito.Mockito.verifyZeroInteractions
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
+import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.fixtures.Employments
 import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType.OccupationalPension
 import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.{PlaceHolder, TestUtil}
-import uk.gov.hmrc.taxhistory.services.helpers.EmploymentMatchingHelper
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 
@@ -162,6 +160,11 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       await(testEmploymentHistoryService.retrieveRtiData(testNino, TaxYear(2016))) shouldBe Some(testRtiData)
     }
 
+    "successfully get no RTI employments data if RTI connector returns None" in
+    new StubConnectors(rti = stubRtiGetEmploymentsSucceeds(None)) {
+      await(testEmploymentHistoryService.retrieveRtiData(testNino, TaxYear(2016))) shouldBe None
+    }
+
     "fail with NotFoundException if the NPS Get Employments API was successful but returned zero employments" in
       new StubConnectors(npsGetEmployments = stubNpsGetEmploymentsSucceeds(List.empty)) {
       intercept[NotFoundException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
@@ -176,6 +179,16 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       new StubConnectors(rti = stubRtiGetEmploymentsFails(new BadRequestException(""))) {
       intercept[BadRequestException](await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
     }
+
+    "succeeds when the RTI call fails with a 404 (i.e the RTI connector returns None)" in
+      new StubConnectors(rti = stubRtiGetEmploymentsSucceeds(None)) {
+        noException shouldBe thrownBy(await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
+      }
+
+    "succeeds when the get IABD call fails with a 404 (i.e the RTI connector returns None)" in
+      new StubConnectors(npsGetIabdDetails = stubNpsGetIabdsSucceeds(List())) {
+        noException shouldBe thrownBy(await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
+      }
 
     "throw an exception when the call to get NPS tax account fails" in
       new StubConnectors(npsGetTaxAccount = stubNpsGetTaxAccountFails(new BadRequestException(""))) {
