@@ -89,7 +89,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
   val startDate = new LocalDate("2015-01-21")
 
   private def stubNpsGetEmploymentsSucceeds(npsEmployments: List[NpsEmployment]) = {
-    when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
+    when(testEmploymentHistoryService.desNpsConnector.getEmployments(any(), any()))
       .thenReturn(Future.successful(npsEmployments))
   }
 
@@ -109,7 +109,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
   }
 
   private def stubNpsGetEmploymentsFails(failure: Throwable) = {
-    when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
+    when(testEmploymentHistoryService.desNpsConnector.getEmployments(any(), any()))
       .thenReturn(Future.failed(failure))
   }
 
@@ -141,7 +141,8 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
   "Employment Service" should {
     "successfully get Nps Employments Data" in
       new StubConnectors(npsGetEmployments = stubNpsGetEmploymentsSucceeds(npsEmploymentResponse)) {
-      noException shouldBe thrownBy(await(testEmploymentHistoryService.retrieveNpsEmployments(testNino, TaxYear(2016))))
+        noException shouldBe thrownBy(await(testEmploymentHistoryService.retrieveNpsEmployments(testNino, TaxYear(2016))))
+
     }
 
     "successfully get Nps Employments Data with jobseekers allowance for cy-1" in
@@ -305,13 +306,23 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       intercept[BadRequestException](await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear.current.previous)))
     }
 
-    "fail with a NotFoundException if NPS Get Tax Account API connector returns None (i.e. the API returned a 404)" in
-      new StubConnectors(npsGetTaxAccount = stubNpsGetTaxAccountSucceeds(None)) {
-      intercept[NotFoundException](await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear.current.previous)))
+    "fail with a NotFoundException if NPS Get Tax Account API connector returns None (i.e. the API returned a 404)" when {
+      "asking for current year" in
+        new StubConnectors(npsGetTaxAccount = stubNpsGetTaxAccountSucceeds(None)) {
+          intercept[NotFoundException](await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear.current)))
+        }
+
+      "asking for previous year" in
+        new StubConnectors(npsGetTaxAccount = stubNpsGetTaxAccountSucceeds(None)) {
+          intercept[NotFoundException](await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear.current.previous)))
+        }
     }
 
-    "fail with a NotFoundException if asked for TaxAccount for the current year" in new StubConnectors {
-      intercept[NotFoundException](await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear.current)))
+    "fail with a NotFoundException  from get Nps Tax Account api for not found response " in {
+      when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
+        .thenReturn(Future.failed(new NotFoundException("")))
+
+      intercept[NotFoundException](await(testEmploymentHistoryService.retrieveNpsTaxAccount(testNino, TaxYear(2016))))
     }
 
     "fetch Employments successfully from cache" in {

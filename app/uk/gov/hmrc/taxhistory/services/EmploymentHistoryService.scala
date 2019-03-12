@@ -23,7 +23,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.connectors.{DesNpsConnector, RtiConnector, SquidNpsConnector}
+import uk.gov.hmrc.taxhistory.connectors.{DesNpsConnector, RtiConnector}
 import uk.gov.hmrc.taxhistory.model.api.Employment._
 import uk.gov.hmrc.taxhistory.model.api.FillerState._
 import uk.gov.hmrc.taxhistory.model.api._
@@ -38,7 +38,6 @@ import scala.annotation.tailrec
 import scala.concurrent.Future
 
 class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
-                                         val squidNpsConnector: SquidNpsConnector,
                                          val rtiConnector: RtiConnector,
                                          val cacheService: PayeCacheService,
                                          val auditable: Auditable,
@@ -267,7 +266,7 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
   def retrieveNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[NpsEmployment]] = {
     val passedInTaxYear = taxYear.currentYear
 
-      squidNpsConnector.getEmployments(nino, passedInTaxYear).map { employments =>
+      desNpsConnector.getEmployments(nino, passedInTaxYear).map { employments =>
         if (TaxYear.current.currentYear.equals(passedInTaxYear)) {
           employments.filterNot(x => x.receivingJobSeekersAllowance | x.otherIncomeSourceIndicator)
         } else {
@@ -291,7 +290,7 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
   /*
     Retrieve TaxAccount directly from DES.
    */
-  private def retrieveNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[NpsTaxAccount]] =
+  def retrieveNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[NpsTaxAccount]] =
     desNpsConnector.getTaxAccount(nino, taxYear.currentYear)
 
   private def unmatchedEmployments[A](matched: List[A], raw: List[A]): List[A] = {
