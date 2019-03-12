@@ -312,7 +312,9 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       }
 
     "fail with a NotFoundException if asked for TaxAccount for the current year" in new StubConnectors {
-      intercept[NotFoundException](await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear.current)))
+      new StubConnectors(npsGetTaxAccount = stubNpsGetTaxAccountSucceeds(None)) {
+        intercept[NotFoundException](await(testEmploymentHistoryService.getTaxAccount(testNino, TaxYear.current)))
+      }
     }
 
     "return None from get Nps Tax Account api for not found response " in {

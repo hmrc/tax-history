@@ -75,7 +75,7 @@ class DesNpsConnector @Inject()(val http: HttpClient,
   def getEmployments(nino: Nino, year: Int): Future[List[NpsEmployment]] = {
     implicit val hc = basicDesHeaders(HeaderCarrier())
 
-    withMetrics(MetricsEnum.DES_NPS_GET_EMPLOYMENTS) {
+    withMetrics(MetricsEnum.NPS_GET_EMPLOYMENTS) {
       withRetry{
         http.GET[List[NpsEmployment]](employmentsUrl(nino, year))
       }

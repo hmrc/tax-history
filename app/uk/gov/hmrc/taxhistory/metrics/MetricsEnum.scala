@@ -25,5 +25,4 @@ object MetricsEnum extends Enumeration {
   val NPS_GET_IABDS = Value
   val NPS_GET_TAX_ACCOUNT = Value
   val CITIZEN_DETAILS = Value
-  val DES_NPS_GET_EMPLOYMENTS = Value
 }
