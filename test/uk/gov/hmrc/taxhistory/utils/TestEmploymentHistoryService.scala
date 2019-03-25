@@ -18,13 +18,14 @@ package uk.gov.hmrc.taxhistory.utils
 
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.connectors.{DesNpsConnector, RtiConnector}
+import uk.gov.hmrc.taxhistory.connectors.{DesNpsConnector, RtiConnector, SquidNpsConnector}
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 
 object TestEmploymentHistoryService extends AnyRef with MockitoSugar {
   def createNew(): EmploymentHistoryService =
     new EmploymentHistoryService(
       desNpsConnector = mock[DesNpsConnector],
+      squidNpsConnector = mock[SquidNpsConnector],
       rtiConnector = mock[RtiConnector],
       cacheService = TestPayeCacheService(),
       auditable = mock[Auditable],

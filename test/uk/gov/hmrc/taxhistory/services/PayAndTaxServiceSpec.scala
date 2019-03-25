@@ -23,7 +23,7 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier}
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.api.{PayAndTax, PayAsYouEarn}
@@ -56,7 +56,7 @@ class PayAndTaxServiceSpec extends UnitSpec with MockitoSugar with TestUtil {
 
   "PayAndTax" should {
     "successfully populated from rti" in {
-      when(testEmploymentHistoryService.desNpsConnector.getEmployments(any(), any()))
+      when(testEmploymentHistoryService.squidNpsConnector.getEmployments(any(), any()))
         .thenReturn(Future.successful(npsEmploymentResponse))
       when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
         .thenReturn(Future.successful(iabdsResponse))
