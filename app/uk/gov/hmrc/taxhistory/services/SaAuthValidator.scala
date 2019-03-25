@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxhistory.services
 
 import javax.inject.Inject
 import play.api.mvc.{ActionBuilder, Request, Result, Results}
+import uk.gov.hmrc.auth
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, AuthorisedFunctions, Enrolment, NoActiveSession, Nino => NinoPredicate}
 import uk.gov.hmrc.domain.{Nino, SaUtr}
@@ -63,17 +64,21 @@ trait SaAuthValidator extends AuthorisedFunctions with Results {
 class SaAuthorisationPredicateBuilder @Inject()(val citizenDetailsConnector: CitizenDetailsConnector) {
   def authorisationPredicate(nino: Nino)(implicit hc: HeaderCarrier): Future[Predicate] = {
 
-    val checkIndividualAuthorisation: Predicate =
-      NinoPredicate(hasNino = true, Some(nino.value))
+    val checkIndividual: Predicate = auth.core.Nino(hasNino = true, nino = Some(nino.value))
 
-    def checkAgentAuthorisation(saUtr: SaUtr): Predicate =
+    val checkAgentServicesWithDigitalHandshake: Predicate =
+      Enrolment("THIS-STRING-IS-NOT-RELEVANT")
+        .withIdentifier("NINO", nino.value)
+        .withDelegatedAuthRule("afi-auth")
+
+    def checkAgentAuthorisationWith648(saUtr: SaUtr): Predicate =
       Enrolment("IR-SA")
         .withIdentifier("UTR", saUtr.value)
         .withDelegatedAuthRule("sa-auth")
 
     citizenDetailsConnector.lookupSaUtr(nino).map {
-      case Some(utr) => checkIndividualAuthorisation or checkAgentAuthorisation(utr)
-      case None => checkIndividualAuthorisation
+      case Some(saUtr) => checkIndividual or checkAgentServicesWithDigitalHandshake or checkAgentAuthorisationWith648(saUtr)
+      case _ => checkIndividual or checkAgentServicesWithDigitalHandshake
     }
   }
 }
