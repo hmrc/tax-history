@@ -67,7 +67,7 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
     }
 
     "create the correct url for employment" in {
-      testDesNpsConnector.employmentsUrl(testNino, testYear) must be (s"/fake/pay-as-you-earn/individuals/$testNino/employment/$testYear")
+      testDesNpsConnector.employmentsUrl(testNino, testYear) must be (s"/fake/individuals/$testNino/employment/$testYear")
     }
 
     "get Iabds data " when {
