@@ -38,7 +38,7 @@ class DesNpsConnector @Inject()(val http: HttpClient,
   private val servicePrefix = "/pay-as-you-earn"
   def iabdsUrl(nino: Nino, year: Int)      = s"$baseUrl$servicePrefix/individuals/${nino.value}/iabds/tax-year/$year"
   def taxAccountUrl(nino: Nino, year: Int) = s"$baseUrl$servicePrefix/individuals/${nino.value}/tax-account/tax-year/$year"
-  def employmentsUrl(nino: Nino, year: Int)= s"$baseUrl$servicePrefix/individuals/${nino.value}/employment/$year"
+  def employmentsUrl(nino: Nino, year: Int)= s"$baseUrl/individuals/${nino.value}/employment/$year"
 
   def basicDesHeaders(hc: HeaderCarrier): HeaderCarrier = {
     hc.withExtraHeaders("Environment" -> env,
