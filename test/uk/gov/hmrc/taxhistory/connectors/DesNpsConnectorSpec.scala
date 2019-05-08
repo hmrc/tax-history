@@ -24,11 +24,12 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
+import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
-import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.Retry
 
@@ -39,6 +40,7 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   lazy val testIabds = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
   lazy val testNpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
+  lazy val testNpsEmployment = loadFile("/json/nps/response/employments.json").as[List[NpsEmployment]]
 
   val testNino = randomNino()
   val testYear = 2016
@@ -62,6 +64,10 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
     "create the correct url for taxAccount" in {
       testDesNpsConnector.taxAccountUrl(testNino, testYear) must be(s"/fake/pay-as-you-earn/individuals/$testNino/tax-account/tax-year/$testYear")
+    }
+
+    "create the correct url for employment" in {
+      testDesNpsConnector.employmentsUrl(testNino, testYear) must be (s"/fake/individuals/$testNino/employment/$testYear")
     }
 
     "get Iabds data " when {
@@ -173,6 +179,52 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         await(result) mustBe None
       }
     }
+
+    "get EmploymentData data" when {
+      "given a valid Nino and TaxYear" in {
+        implicit val hc = HeaderCarrier()
+        val testemploymentsConnector = testDesNpsConnector
+
+        when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
+        when(testemploymentsConnector.http.GET[List[NpsEmployment]](any())(any(), any(), any()))
+          .thenReturn(Future.successful(testNpsEmployment))
+
+        val result = testemploymentsConnector.getEmployments(testNino, testYear)
+
+        await(result) mustBe testNpsEmployment
+      }
+
+      "retrying after the first call fails and the second call succeeds" in {
+        implicit val hc = HeaderCarrier()
+        val testemploymentsConnector = testDesNpsConnector
+
+        when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
+        when(testemploymentsConnector.http.GET[List[NpsEmployment]](any())(any(), any(), any()))
+          .thenReturn(Future.failed(new Upstream5xxResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
+          .thenReturn(Future.successful(testNpsEmployment))
+
+        val result = testemploymentsConnector.getEmployments(testNino, testYear)
+
+        await(result) mustBe testNpsEmployment
+      }
+
+      "return and handle an error response" in {
+        implicit val hc = HeaderCarrier()
+        val testemploymentsConnector = testDesNpsConnector
+        when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
+        when(testemploymentsConnector.http.GET[List[NpsEmployment]](any())(any(), any(), any()))
+          .thenReturn(Future.failed(new BadRequestException("")))
+
+        val result = testemploymentsConnector.getEmployments(testNino, testYear)
+
+        intercept[BadRequestException](await(result))
+      }
+    }
+
+
   }
 
   private val system = ActorSystem("test")
