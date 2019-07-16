@@ -251,6 +251,13 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
         val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, Nil, Some(testIncomeSource), npsEmployment)
         payAsYouEarn.employments.head.employmentPaymentType mustBe Some(StatePensionLumpSum)
       }
+
+      "NPS employment has a recognised PAYE reference which is a Jobseekers allowance PAYE reference" in {
+        val npsEmployment = npsEmploymentResponseWithTaxDistrictNumber.head.copy(taxDistrictNumber = "475", payeNumber = "BB00987")
+        val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, Nil, Some(testIncomeSource), npsEmployment)
+        payAsYouEarn.employments.head.employmentPaymentType mustBe Some(JobseekersAllowance)
+      }
+
       "NPS employment has no properties that signal a special employment type" in {
         val npsEmployment = npsEmploymentResponseWithTaxDistrictNumber.head
         val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, Nil, Some(testIncomeSource), npsEmployment)

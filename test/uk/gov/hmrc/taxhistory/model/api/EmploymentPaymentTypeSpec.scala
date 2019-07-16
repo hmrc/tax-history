@@ -56,6 +56,11 @@ class EmploymentPaymentTypeSpec extends TestUtil with UnitSpec {
     "return JobSeekersAllowance if 'receivingJobseekersAllowance' flag is true" in {
       paymentType("123/AB123", false, receivingJobSeekersAllowance = true) shouldBe Some(JobseekersAllowance)
     }
+
+    "return JobSeekersAllowance if PAYE reference is 475/BB00987" in {
+      paymentType("475/BB00987", false) shouldBe Some(JobseekersAllowance)
+    }
+
     "return OccupationalPension if 'receivingOccupationalPension' flag is true" in {
       paymentType("123/AB123", receivingOccupationalPension = true, false) shouldBe Some(OccupationalPension)
     }

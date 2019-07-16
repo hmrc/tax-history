@@ -43,16 +43,19 @@ object EmploymentPaymentType {
 
   def paymentType(payeReference: String,
             receivingOccupationalPension: Boolean,
-            receivingJobSeekersAllowance: Boolean): Option[EmploymentPaymentType] = {
-    if(receivingOccupationalPension)
+            receivingJobSeekersAllowance: Boolean = false): Option[EmploymentPaymentType] = {
+    if(receivingOccupationalPension) {
       Some(OccupationalPension)
-    else if (receivingJobSeekersAllowance)
+    } else if (receivingJobSeekersAllowance) {
       Some(JobseekersAllowance)
-    else payeReference match {
-      case "892/BA500" => Some(IncapacityBenefit)
-      case "267/ESA500" => Some(EmploymentAndSupportAllowance)
-      case "267/LS500" => Some(StatePensionLumpSum)
-      case _ => None
+    } else {
+      payeReference match {
+        case "892/BA500" => Some(IncapacityBenefit)
+        case "267/ESA500" => Some(EmploymentAndSupportAllowance)
+        case "267/LS500" => Some(StatePensionLumpSum)
+        case "475/BB00987" => Some(JobseekersAllowance)
+        case _ => None
+      }
     }
   }
 
