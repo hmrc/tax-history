@@ -49,14 +49,12 @@ class Module(val environment: Environment, val configuration: Configuration) ext
 
     bindConfigInt("mongodb.cache.expire.seconds", default = Some(60 * 30))
     bindConfigString("mongodb.name")
-    bindConfigString("microservice.services.nps-hod.originatorId",       default = Some("HMRC_GDS"))
     bindConfigString("microservice.services.des.env",                default = Some("local"))
     bindConfigString("microservice.services.des.authorizationToken", default = Some("local"))
     bindConfigBoolean("featureFlags.currentYearFlag")
     bindConfigBoolean("featureFlags.statePensionFlag")
     bindConfigBoolean("featureFlags.jobSeekersAllowanceFlag")
 
-    bind(classOf[String]).annotatedWith(Names.named("nps-hod-base-url")).toProvider(provide(baseUrl("nps-hod")))
     bind(classOf[String]).annotatedWith(Names.named("des-base-url")).toProvider(provide(baseUrl("des")))
     bind(classOf[String]).annotatedWith(Names.named("citizen-details-base-url")).toProvider(provide(baseUrl("citizen-details")))
 
@@ -67,9 +65,6 @@ class Module(val environment: Environment, val configuration: Configuration) ext
 
   @Provides
   @Named("des") def providesRetryForDes(system: ActorSystem): Retry = newRetryInstance("des", system)
-
-  @Provides
-  @Named("nps-hod") def providesRetryForNps(system: ActorSystem): Retry = newRetryInstance("nps-hod", system)
 
   @Provides
   @Named("citizen-details") def providesRetryForCitizenDetails(system: ActorSystem): Retry = newRetryInstance("citizen-details", system)
