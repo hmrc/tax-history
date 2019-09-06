@@ -28,17 +28,17 @@ val appName = "tax-history"
 
 val compile = Seq(
   ws,
-  "uk.gov.hmrc" %% "bootstrap-play-25"     % "4.12.0",
+  "uk.gov.hmrc" %% "bootstrap-play-25"     % "4.16.0",
   "uk.gov.hmrc" %% "domain"                % "5.6.0-play-25",
   "uk.gov.hmrc" %% "agent-mtd-identifiers" % "0.15.0-play-25",
-  "uk.gov.hmrc" %% "tax-year"              % "0.4.0",
-  "uk.gov.hmrc" %% "auth-client"           % "2.21.0-play-25",
-  "uk.gov.hmrc" %% "mongo-caching"         % "6.4.0-play-25"
+  "uk.gov.hmrc" %% "tax-year"              % "0.6.0",
+  "uk.gov.hmrc" %% "auth-client"           % "2.28.0-play-25",
+  "uk.gov.hmrc" %% "mongo-caching"         % "6.6.0-play-25"
 )
 
 def test(scope: String = "test,it") = Seq(
-  "uk.gov.hmrc"            %% "hmrctest"           % "3.8.0-play-25" % scope,
-  "uk.gov.hmrc"            %% "reactivemongo-test" % "4.14.0-play-25" % scope,
+  "uk.gov.hmrc"            %% "hmrctest"           % "3.9.0-play-25" % scope,
+  "uk.gov.hmrc"            %% "reactivemongo-test" % "4.15.0-play-25" % scope,
   "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.1"         % scope,
   "org.mockito"            % "mockito-core"        % "2.27.0"        % scope
 )
