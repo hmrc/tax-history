@@ -201,11 +201,11 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
     */
   def retrieveAndBuildPaye(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[PayAsYouEarn] = {
     val paye = for {
-      npsEmployments <- retrieveNpsEmployments(nino, taxYear)
       rtiDataOpt <- retrieveRtiData(nino, taxYear)
       rtiEmployments = rtiDataOpt.map(_.employments).getOrElse(Nil)
       iabds <- retrieveNpsIabds(nino, taxYear)
       taxAccountOpt <- retrieveNpsTaxAccount(nino, taxYear)
+      npsEmployments <- retrieveNpsEmployments(nino, taxYear)
     } yield {
       mergeEmployments(nino, taxYear, npsEmployments, rtiEmployments, taxAccountOpt, iabds)
     }
