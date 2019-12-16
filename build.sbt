@@ -32,7 +32,7 @@ val compile = Seq(
   "uk.gov.hmrc" %% "domain"                % "5.6.0-play-25",
   "uk.gov.hmrc" %% "agent-mtd-identifiers" % "0.15.0-play-25",
   "uk.gov.hmrc" %% "tax-year"              % "0.6.0",
-  "uk.gov.hmrc" %% "auth-client"           % "2.31.0-play-25",
+  "uk.gov.hmrc" %% "auth-client"           % "2.32.0-play-25",
   "uk.gov.hmrc" %% "mongo-caching"         % "6.6.0-play-25"
 )
 
