@@ -33,7 +33,7 @@ val compile = Seq(
   "uk.gov.hmrc" %% "agent-mtd-identifiers" % "0.17.0-play-25",
   "uk.gov.hmrc" %% "tax-year"              % "1.0.0",
   "uk.gov.hmrc" %% "auth-client"           % "2.32.2-play-25",
-  "uk.gov.hmrc" %% "mongo-caching"         % "6.8.0-play-25"
+  "uk.gov.hmrc" %% "mongo-caching"         % "6.12.0-play-25"
 )
 
 def test(scope: String = "test,it") = Seq(
