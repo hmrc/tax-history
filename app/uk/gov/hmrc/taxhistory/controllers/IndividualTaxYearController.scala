@@ -16,23 +16,23 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import javax.inject.Inject
-
-import play.api.mvc.{Action, AnyContent, Result}
+import javax.inject.{Inject, Singleton}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.agentmtdidentifiers.model.Arn
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.audit.{AgentViewedClient, AgentViewedClientEvent, DataEventDetail}
 import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, RelationshipAuthService}
 import uk.gov.hmrc.taxhistory.utils.Logging
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
+@Singleton
 class IndividualTaxYearController @Inject()(val employmentHistoryService: EmploymentHistoryService,
                                             val relationshipAuthService: RelationshipAuthService,
-                                            val auditable: Auditable) extends TaxHistoryController with Logging {
+                                            val auditable: Auditable,
+                                            val cc: ControllerComponents)(implicit val ec: ExecutionContext) extends TaxHistoryController(cc) with Logging {
 
   def getTaxYears(nino: String): Action[AnyContent] = Action.async { implicit request =>
     relationshipAuthService.withAuthorisedRelationship(Nino(nino)) { arn =>

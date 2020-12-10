@@ -16,26 +16,31 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
-import javax.inject.{Inject, Named}
+import akka.actor.ActorSystem
+import javax.inject.{Inject, Singleton}
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
+import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.utils.Retry
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
+@Singleton
 class CitizenDetailsConnector @Inject()(val http: HttpClient,
                                         val metrics: TaxHistoryMetrics,
-                                        @Named("citizen-details-base-url") val baseUrl: String,
-                                        @Named("citizen-details") val withRetry: Retry)  extends ConnectorMetrics {
+                                        val config: AppConfig,
+                                        val system: ActorSystem)
+                                       (implicit executionContext: ExecutionContext)  extends ConnectorMetrics {
+
+  val withRetry: Retry = config.newRetryInstance("des", system)
 
   def lookupSaUtr(nino: Nino)(implicit hc: HeaderCarrier): Future[Option[SaUtr]] = {
     withMetrics(MetricsEnum.CITIZEN_DETAILS) {
       withRetry {
-        http.GET[JsValue](s"$baseUrl/citizen-details/nino/$nino").map { json =>
+        http.GET[JsValue](s"${config.citizenDetailsBaseUrl}/citizen-details/nino/$nino").map { json =>
           (json \ "ids" \ "sautr").asOpt[SaUtr]
         }
       }

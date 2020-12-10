@@ -16,15 +16,18 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
+import javax.inject.Singleton
 import play.api.libs.json.{Json, Writes}
-import play.api.mvc.Result
-import uk.gov.hmrc.http.{BadRequestException, NotFoundException, Upstream4xxResponse, Upstream5xxResponse}
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import play.api.mvc._
+import uk.gov.hmrc.http.{BadRequestException, NotFoundException, Upstream4xxResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import uk.gov.hmrc.taxhistory.utils.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait TaxHistoryController extends BaseController with Logging {
+@Singleton
+class TaxHistoryController(cc: ControllerComponents) extends BackendController(cc) with Logging {
+
   def toResult[A : Writes](fa: Future[A])(implicit ec: ExecutionContext): Future[Result] = {
     fa.map(value => Ok(Json.toJson(value))).recover {
       case e400: BadRequestException =>
@@ -36,15 +39,15 @@ trait TaxHistoryController extends BaseController with Logging {
       case e4xx: Upstream4xxResponse =>
         logger.warn(s"Service returned error ${e4xx.upstreamResponseCode}: ${e4xx.message}")
         Status(e4xx.upstreamResponseCode)
-      case e5xx: Upstream5xxResponse if e5xx.upstreamResponseCode == INTERNAL_SERVER_ERROR =>
+      case e5xx: UpstreamErrorResponse if e5xx.statusCode == INTERNAL_SERVER_ERROR =>
         logger.warn("Internal server error")
         InternalServerError
-      case e5xx: Upstream5xxResponse if e5xx.upstreamResponseCode == SERVICE_UNAVAILABLE =>
+      case e5xx: UpstreamErrorResponse if e5xx.statusCode == SERVICE_UNAVAILABLE =>
         logger.warn("Service unavailable")
         ServiceUnavailable
-      case e5xx: Upstream5xxResponse =>
-        logger.warn(s"Service returned error ${e5xx.upstreamResponseCode}: ${e5xx.message}")
-        Status(e5xx.upstreamResponseCode)
+      case e5xx: UpstreamErrorResponse =>
+        logger.warn(s"Service returned error ${e5xx.statusCode}: ${e5xx.message}")
+        Status(e5xx.statusCode)
       case ex @ _ =>
         logger.warn(s"Error: ${ex.toString} - ${ex.getMessage}")
         InternalServerError

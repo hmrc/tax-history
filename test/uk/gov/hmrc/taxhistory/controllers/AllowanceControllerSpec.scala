@@ -19,8 +19,10 @@ package uk.gov.hmrc.taxhistory.controllers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.mockito.MockitoSugar
-import org.scalatestplus.play.{OneServerPerSuite, PlaySpec}
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.mvc.ControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.agentmtdidentifiers.model.Arn
@@ -29,17 +31,22 @@ import uk.gov.hmrc.taxhistory.model.api.Allowance
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestRelationshipAuthService}
+import play.api.test.Helpers.stubControllerComponents
+import uk.gov.hmrc.domain.Nino
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
+class AllowanceControllerSpec extends PlaySpec with GuiceOneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
 
-  val mockEmploymentHistoryService = mock[EmploymentHistoryService]
+  val mockEmploymentHistoryService: EmploymentHistoryService = mock[EmploymentHistoryService]
 
-  val ninoWithAgent = randomNino()
-  val ninoWithoutAgent = randomNino()
+  val ninoWithAgent: Nino = randomNino()
+  val ninoWithoutAgent: Nino = randomNino()
 
   val testAllowances = List(Allowance(iabdType = "CarBenefit", amount = BigDecimal(100.00)))
+
+  val cc: ControllerComponents = stubControllerComponents()
+  implicit val executionContext: ExecutionContext = cc.executionContext
 
   override def beforeEach = {
     reset(mockEmploymentHistoryService)
@@ -47,7 +54,8 @@ class AllowanceControllerSpec extends PlaySpec with OneServerPerSuite with Mocki
 
   val testAllowanceController = new AllowanceController(
     employmentHistoryService = mockEmploymentHistoryService,
-    relationshipAuthService = TestRelationshipAuthService(Map(ninoWithAgent -> Arn("TestArn")))
+    relationshipAuthService = TestRelationshipAuthService(Map(ninoWithAgent -> Arn("TestArn"))),
+    cc = cc
   )
 
   "getAllowances" must {

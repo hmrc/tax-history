@@ -16,33 +16,35 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
-import javax.inject.{Inject, Named}
+import akka.actor.ActorSystem
+import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
+import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.utils.Retry
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
+@Singleton
 class DesNpsConnector @Inject()(val http: HttpClient,
-                             val metrics: TaxHistoryMetrics,
-                             @Named("des-base-url") val baseUrl: String,
-                             @Named("microservice.services.des.authorizationToken") val authorizationToken: String,
-                             @Named("microservice.services.des.env") val env: String,
-                              @Named("des") val withRetry: Retry) extends ConnectorMetrics {
+                                val metrics: TaxHistoryMetrics,
+                                val config: AppConfig,
+                                val system: ActorSystem)
+                                (implicit executionContext: ExecutionContext) extends ConnectorMetrics {
 
   private val servicePrefix = "/pay-as-you-earn"
-  def iabdsUrl(nino: Nino, year: Int)      = s"$baseUrl$servicePrefix/individuals/${nino.value}/iabds/tax-year/$year"
-  def taxAccountUrl(nino: Nino, year: Int) = s"$baseUrl$servicePrefix/individuals/${nino.value}/tax-account/tax-year/$year"
-  def employmentsUrl(nino: Nino, year: Int)= s"$baseUrl/individuals/${nino.value}/employment/$year"
+  val withRetry: Retry = config.newRetryInstance("des", system)
+  def iabdsUrl(nino: Nino, year: Int)      = s"${config.desBaseUrl}$servicePrefix/individuals/${nino.value}/iabds/tax-year/$year"
+  def taxAccountUrl(nino: Nino, year: Int) = s"${config.desBaseUrl}$servicePrefix/individuals/${nino.value}/tax-account/tax-year/$year"
+  def employmentsUrl(nino: Nino, year: Int)= s"${config.desBaseUrl}/individuals/${nino.value}/employment/$year"
 
   def basicDesHeaders(hc: HeaderCarrier): HeaderCarrier = {
-    hc.withExtraHeaders("Environment" -> env,
-      "Authorization" -> s"Bearer $authorizationToken")
+    hc.withExtraHeaders("Environment" -> {config.desEnv},
+      "Authorization" -> s"Bearer ${config.desAuth}")
   }
 
   def getIabds(nino: Nino, year: Int): Future[List[Iabd]] = {

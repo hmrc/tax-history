@@ -20,7 +20,7 @@ import play.api.libs.json.JsValue
 import uk.gov.hmrc.tai.model.rti.RtiEmployment
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-trait RtiEmployments extends AnyRef with TestUtil {
+trait RtiEmployments extends TestUtil {
 
   lazy val rtiEmploymentResponse: JsValue = loadFile("/json/rti/response/dummyRti.json")
   val rtiERTaxablePayTotal: BigDecimal = BigDecimal.valueOf(20000.00)

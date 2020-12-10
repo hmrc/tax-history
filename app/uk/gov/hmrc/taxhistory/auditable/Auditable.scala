@@ -16,25 +16,24 @@
 
 package uk.gov.hmrc.taxhistory.auditable
 
-import javax.inject.Named
-
 import com.google.inject.Inject
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.AuditExtensions
-import uk.gov.hmrc.play.audit.model.{Audit, DataEvent}
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.model.audit.{DataEventAuditType, DataEventDetail, DataEventTransaction}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class Auditable @Inject()(@Named("appName") val applicationName: String, val audit: Audit){
+class Auditable @Inject()(config: AppConfig, val audit: AuditConnector)(implicit executionContext: ExecutionContext){
 
   // This only has side-effects, making a fire and forget call to an external system
   def sendDataEvent(transactionName: DataEventTransaction, path: String = "N/A",
                     tags: Map[String, String] = Map.empty[String, String],
                     detail: DataEventDetail, eventType: DataEventAuditType)
                    (implicit hc: HeaderCarrier): Future[Unit] =
-    Future(audit.sendDataEvent(DataEvent(applicationName, auditType = eventType.toString,
+    Future(audit.sendEvent(DataEvent(config.appName, auditType = eventType.toString,
       tags = AuditExtensions.auditHeaderCarrier(hc).toAuditTags(transactionName.toString, path) ++ tags,
       detail = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails(detail.detail.toSeq: _*))))
 

@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import javax.inject.{Inject, Named}
-
+import javax.inject.Inject
 import play.api.libs.json.Json
-import play.modules.reactivemongo.MongoDbConnection
+import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.DB
 import uk.gov.hmrc.cache.model.{Cache, Id}
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
 import uk.gov.hmrc.taxhistory.utils.Logging
 import uk.gov.hmrc.time.TaxYear
@@ -33,14 +33,13 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Uses MongoDB to cache instances of `PayAsYouEarn` for a given NINO and year.
   */
-class TaxHistoryMongoCacheService @Inject()(
-                              val mongoDbConnection: MongoDbConnection,
-                              @Named("mongodb.cache.expire.seconds") expireAfterSeconds: Int,
-                              @Named("mongodb.name") mongoSource: String)(implicit ec: ExecutionContext) extends PayeCacheService with Logging {
+class TaxHistoryMongoCacheService @Inject()(mongoDb: ReactiveMongoComponent,
+                                            config: AppConfig)
+                                           (implicit ec: ExecutionContext) extends PayeCacheService with Logging {
 
-  implicit val mongo: () => DB = mongoDbConnection.db
+  implicit val mongo: () => DB = mongoDb.mongoConnector.db
 
-  val cacheRepository = new CacheMongoRepository(mongoSource, expireAfterSeconds, Cache.mongoFormats)
+  val cacheRepository = new CacheMongoRepository(config.mongoName, config.mongoExpiry, Cache.mongoFormats)
 
   def insertOrUpdate(key: (Nino, TaxYear), value: PayAsYouEarn): Future[Option[PayAsYouEarn]] = {
     val (nino, taxYear) = key

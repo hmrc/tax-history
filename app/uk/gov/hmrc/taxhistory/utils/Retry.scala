@@ -20,7 +20,7 @@ import akka.actor.ActorSystem
 import akka.pattern.after
 import javax.inject.Inject
 import play.api.Logger
-import uk.gov.hmrc.http.{BadGatewayException, GatewayTimeoutException, Upstream5xxResponse}
+import uk.gov.hmrc.http.{BadGatewayException, GatewayTimeoutException, UpstreamErrorResponse}
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,7 +44,7 @@ class Retry @Inject()(val times: Int, val delay: FiniteDuration, val system: Act
     def unapply(e: Exception): Option[Exception] = e match {
       case ex: GatewayTimeoutException => Some(ex)
       case ex: BadGatewayException => Some(ex)
-      case ex @ Upstream5xxResponse(_, _, _) => Some(ex)
+      case ex @ UpstreamErrorResponse(_, _, _, _) => Some(ex)
       case _ => None
     }
   }

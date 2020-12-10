@@ -19,6 +19,7 @@ package uk.gov.hmrc.taxhistory
 import javax.inject.{Inject, Named}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.Audit
+import uk.gov.hmrc.taxhistory.config.AppConfig
 
-class MicroserviceAudit @Inject()(@Named("appName") val applicationName: String,
-                                  val auditConnector: AuditConnector) extends Audit(applicationName, auditConnector)
+class MicroserviceAudit @Inject()(config: AppConfig,
+                                  val auditConnector: AuditConnector) extends Audit(config.appName, auditConnector)

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.mockito.ArgumentMatchers.any
 import org.scalatestplus.play.PlaySpec
 import play.api.mvc.Results._
@@ -27,6 +27,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class RelationshipAuthServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 

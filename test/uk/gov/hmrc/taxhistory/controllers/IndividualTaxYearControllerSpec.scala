@@ -19,28 +19,34 @@ package uk.gov.hmrc.taxhistory.controllers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.mockito.MockitoSugar
-import org.scalatestplus.play.{OneServerPerSuite, PlaySpec}
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.mvc.ControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.agentmtdidentifiers.model.Arn
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.model.api.IndividualTaxYear
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestRelationshipAuthService}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
+class IndividualTaxYearControllerSpec extends PlaySpec with GuiceOneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
 
-  val mockEmploymentHistoryService = mock[EmploymentHistoryService]
+  val mockEmploymentHistoryService: EmploymentHistoryService = mock[EmploymentHistoryService]
 
-  val ninoWithAgent = randomNino()
-  val ninoWithoutAgent = randomNino()
+  val ninoWithAgent: Nino = randomNino()
+  val ninoWithoutAgent: Nino = randomNino()
 
   private val mockAuditable = mock[Auditable]
   val testTaxYears = List(IndividualTaxYear(2018, "fakeUri", "fakeUri", "fakeUri"))
+
+  val cc: ControllerComponents = stubControllerComponents()
+  implicit val executionContext: ExecutionContext = cc.executionContext
 
   override def beforeEach = {
     reset(mockEmploymentHistoryService)
@@ -49,7 +55,8 @@ class IndividualTaxYearControllerSpec extends PlaySpec with OneServerPerSuite wi
   val testIndividualTaxYearController = new IndividualTaxYearController (
     employmentHistoryService = mockEmploymentHistoryService,
     relationshipAuthService = TestRelationshipAuthService(Map(ninoWithAgent -> Arn("TestArn"))),
-    auditable = mockAuditable
+    auditable = mockAuditable,
+    cc = cc
   )
 
   "getTaxYears" must {

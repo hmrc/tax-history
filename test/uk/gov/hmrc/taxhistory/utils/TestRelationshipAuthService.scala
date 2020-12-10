@@ -24,6 +24,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.services.RelationshipAuthService
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * A test version of RelationshipAuthService which reads off the Nino-Agent relationships from the given Map

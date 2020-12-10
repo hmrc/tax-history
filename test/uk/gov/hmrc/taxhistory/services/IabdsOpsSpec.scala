@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxhistory.services
 
 import org.joda.time.LocalDate
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.HeaderCarrier

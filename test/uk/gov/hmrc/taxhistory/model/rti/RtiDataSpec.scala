@@ -20,11 +20,10 @@ import java.util.UUID
 
 import org.joda.time.LocalDate
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
-import play.api.libs.json.Json.{fromJson, toJson}
+import play.api.libs.json.Json.fromJson
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEarlierYearUpdate}
-import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, Employment, EmploymentPaymentType, PayAsYouEarn}
-import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
+import uk.gov.hmrc.taxhistory.model.api.EarlierYearUpdate
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 class RtiDataSpec extends TestUtil with UnitSpec {

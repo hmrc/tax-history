@@ -16,18 +16,23 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, SaAuthService}
 import uk.gov.hmrc.time.TaxYear
 
-class PayAsYouEarnController @Inject()(employmentHistoryService: EmploymentHistoryService,
-                                       saAuthService: SaAuthService) extends TaxHistoryController {
+import scala.concurrent.ExecutionContext
 
-  def getPayAsYouEarn(nino: Nino, taxYear: TaxYear) = {
-    saAuthService.checkSaAuthorisation(nino).async { implicit request =>
+@Singleton
+class PayAsYouEarnController @Inject()(employmentHistoryService: EmploymentHistoryService,
+                                       saAuthService: SaAuthService,
+                                       val cc: ControllerComponents)(implicit val ec: ExecutionContext) extends TaxHistoryController(cc) {
+
+  def getPayAsYouEarn(nino: Nino, taxYear: TaxYear): Action[AnyContent] = Action.async { implicit request =>
+    saAuthService.withSaAuthorisation(nino) { _ =>
       toResult(employmentHistoryService.getFromCache(nino, taxYear))
     }
   }
+
 }

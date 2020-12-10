@@ -17,26 +17,25 @@
 package uk.gov.hmrc.taxhistory.services
 
 import javax.inject.Inject
-
 import play.api.mvc.{Result, Results}
 import uk.gov.hmrc.agentmtdidentifiers.model.Arn
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.auth.core.retrieve.Retrievals._
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, UnauthorizedException}
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.utils.Logging
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * This service provides a method to check whether an authorised relationship exists between a NINO and an Agent
   * before proceeding with a given code block.
   */
-class RelationshipAuthService @Inject() (val authConnector: AuthConnector) extends AnyRef with AuthorisedFunctions with Results with Logging {
+class RelationshipAuthService @Inject() (val authConnector: AuthConnector)(implicit executionContext: ExecutionContext)
+  extends AuthorisedFunctions with Results with Logging {
 
   lazy val affinityGroupAllEnrolls: Retrieval[Option[AffinityGroup] ~ Enrolments] = affinityGroup and allEnrolments
 
