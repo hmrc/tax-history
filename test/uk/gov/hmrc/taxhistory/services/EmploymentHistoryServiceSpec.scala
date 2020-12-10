@@ -22,7 +22,7 @@ import org.joda.time.LocalDate
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException}

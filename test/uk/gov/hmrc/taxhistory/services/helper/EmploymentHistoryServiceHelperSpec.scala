@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxhistory.services.helper
 
 import org.joda.time.LocalDate
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType.{JobseekersAllowance, OccupationalPension, StatePensionLumpSum}

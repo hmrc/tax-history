@@ -17,13 +17,13 @@
 package uk.gov.hmrc.taxhistory.utils
 
 import play.api.http.Status._
-import uk.gov.hmrc.http.{BadRequestException, NotFoundException, Upstream5xxResponse}
+import uk.gov.hmrc.http.{BadRequestException, NotFoundException, UpstreamErrorResponse}
 
 object HttpErrors {
   val toCheck: List[(Exception, Int)] = List(
     (new NotFoundException(""), NOT_FOUND),
     (new BadRequestException(""), BAD_REQUEST),
-    (new Upstream5xxResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE), SERVICE_UNAVAILABLE),
-    (new Upstream5xxResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR), INTERNAL_SERVER_ERROR)
+    (UpstreamErrorResponse("", SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE), SERVICE_UNAVAILABLE),
+    (UpstreamErrorResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR), INTERNAL_SERVER_ERROR)
   )
 }

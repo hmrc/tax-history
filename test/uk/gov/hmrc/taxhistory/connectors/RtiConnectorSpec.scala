@@ -16,39 +16,55 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
-import java.util.concurrent.TimeUnit
-
 import akka.actor.ActorSystem
 import com.codahale.metrics.Timer
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.Helpers._
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.utils.Retry
+
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
-class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
-  implicit val hc = HeaderCarrier()
+class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with GuiceOneAppPerSuite  {
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val testNino = randomNino()
-  val testNinoWithoutSuffix = testNino.withoutSuffix
-  lazy val testRtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
+  override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
+  val mockHttpClient: HttpClient = mock[HttpClient]
+  val mockAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
+  val mockTaxHistoryMetrics: TaxHistoryMetrics = mock[TaxHistoryMetrics]
+  val system: ActorSystem = ActorSystem("test")
+
+  val testRtiConnector: RtiConnector = new RtiConnector(
+    http = mockHttpClient,
+    metrics = mockTaxHistoryMetrics,
+    config = mockAppConfig,
+    system = system
+  )
+
+  val testNino: Nino = randomNino()
+  val testNinoWithoutSuffix: String = testNino.withoutSuffix
+  lazy val testRtiData: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
 
   "RtiConnector" should {
     "have the correct RTI employments url" when {
       "given a valid nino and tax year" in {
-        testRtiConnector.rtiEmploymentsUrl(testNino, TaxYear(2017)) mustBe s"/test/rti/individual/payments/nino/$testNinoWithoutSuffix/tax-year/17-18"
+        testRtiConnector.rtiEmploymentsUrl(testNino, TaxYear(2017)) mustBe s"http://localhost:9998/rti/individual/payments/nino/$testNinoWithoutSuffix/tax-year/17-18"
       }
     }
 
@@ -60,7 +76,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
 
     "create the correct headers" in {
       val headers = testRtiConnector.createHeader
-      headers.extraHeaders mustBe List(("Environment", "env"), ("Authorization", "Bearer auth"))
+      headers.extraHeaders mustBe List(("Environment", "local"), ("Authorization", "Bearer local"))
     }
 
     "get RTI data " when {
@@ -82,7 +98,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testRtiConnector.http.GET[RtiData](any())(any(), any(), any()))
-          .thenReturn(Future.failed(new Upstream5xxResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
+          .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
           .thenReturn(Future.successful(testRtiData))
 
         val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
@@ -108,26 +124,12 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil {
         when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testRtiConnector.http.GET[HttpResponse](any())(any(), any(), any()))
-          .thenReturn(Future.failed(new Upstream5xxResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
+          .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
 
         val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
 
-        intercept[Upstream5xxResponse](await(result))
+        intercept[UpstreamErrorResponse](await(result) mustBe expectedResponse)
       }
     }
-  }
-
-  private val system = ActorSystem("test")
-  private val delay = FiniteDuration(500, TimeUnit.MILLISECONDS)
-
-  lazy val testRtiConnector = new RtiConnector(
-    http = mock[HttpClient],
-    baseUrl = "/test",
-    metrics = mock[TaxHistoryMetrics],
-    authorizationToken = "auth",
-    environment = "env", withRetry = new Retry(1, delay, system)
-  ) {
-    override val metrics =  mock[TaxHistoryMetrics]
-    val mockTimerContext = mock[Timer.Context]
   }
 }

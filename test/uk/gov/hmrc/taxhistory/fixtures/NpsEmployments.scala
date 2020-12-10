@@ -21,7 +21,7 @@ import play.api.libs.json.JsValue
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-trait NpsEmployments extends AnyRef with TestUtil {
+trait NpsEmployments extends TestUtil {
 
   lazy val npsEmploymentResponse: JsValue =  loadFile("/json/nps/response/employment.json")
   lazy val npsTaxAccountResponse: JsValue = loadFile("/json/nps/response/GetTaxAccount.json")

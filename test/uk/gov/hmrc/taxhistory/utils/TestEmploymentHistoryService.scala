@@ -16,20 +16,26 @@
 
 package uk.gov.hmrc.taxhistory.utils
 
-import org.scalatest.mockito.MockitoSugar
+import org.mockito.Mockito.when
+import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.taxhistory.auditable.Auditable
+import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.connectors.{DesNpsConnector, RtiConnector}
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 
-object TestEmploymentHistoryService extends AnyRef with MockitoSugar {
+import scala.concurrent.ExecutionContext.Implicits.global
+
+object TestEmploymentHistoryService extends MockitoSugar  {
+
+  val mockAppConfig: AppConfig = mock[AppConfig]
+  when(mockAppConfig.currentYearFlag).thenReturn(true)
+
   def createNew(): EmploymentHistoryService =
     new EmploymentHistoryService(
       desNpsConnector = mock[DesNpsConnector],
       rtiConnector = mock[RtiConnector],
       cacheService = TestPayeCacheService(),
       auditable = mock[Auditable],
-      currentYearFlag = true,
-      statePensionFlag = true,
-      jobSeekersAllowanceFlag = true
+      config = mockAppConfig
     )
 }

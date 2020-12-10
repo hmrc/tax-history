@@ -16,19 +16,19 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import javax.inject.Inject
-
-import play.api.mvc.{Action, AnyContent, Result}
+import javax.inject.{Inject, Singleton}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, RelationshipAuthService}
 import uk.gov.hmrc.time.TaxYear
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
+@Singleton
 class StatePensionController @Inject()(val employmentHistoryService: EmploymentHistoryService,
-                                       val relationshipAuthService: RelationshipAuthService) extends TaxHistoryController {
+                                       val relationshipAuthService: RelationshipAuthService,
+                                       val cc: ControllerComponents)(implicit val ec: ExecutionContext) extends TaxHistoryController(cc) {
 
   def getStatePension(nino: String, taxYear: Int): Action[AnyContent] = Action.async { implicit request =>
     relationshipAuthService.withAuthorisedRelationship(Nino(nino)) { _ =>

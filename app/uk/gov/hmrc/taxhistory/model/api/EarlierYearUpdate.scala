@@ -19,7 +19,9 @@ package uk.gov.hmrc.taxhistory.model.api
 import java.util.UUID
 
 import org.joda.time.LocalDate
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.JodaWrites._
+import play.api.libs.json.JodaReads._
 
 case class EarlierYearUpdate(earlierYearUpdateId:UUID = UUID.randomUUID(),
                              taxablePayEYU: BigDecimal,
@@ -28,5 +30,5 @@ case class EarlierYearUpdate(earlierYearUpdateId:UUID = UUID.randomUUID(),
                              receivedDate:LocalDate)
 
 object EarlierYearUpdate {
-  implicit val formats = Json.format[EarlierYearUpdate]
+  implicit val formats: OFormat[EarlierYearUpdate] = Json.format[EarlierYearUpdate]
 }

@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxhistory.model.api
 
 import java.util.UUID
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 
 case class TaxAccount(taxAccountId: UUID = UUID.randomUUID(),
                       outstandingDebtRestriction: Option[BigDecimal] = None,
@@ -26,6 +26,6 @@ case class TaxAccount(taxAccountId: UUID = UUID.randomUUID(),
                       actualPUPCodedInCYPlusOneTaxYear: Option[BigDecimal] = None)
 
 object TaxAccount {
-  implicit val formats = Json.format[TaxAccount]
+  implicit val formats: OFormat[TaxAccount] = Json.format[TaxAccount]
 }
 

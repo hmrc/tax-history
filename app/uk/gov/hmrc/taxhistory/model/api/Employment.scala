@@ -21,10 +21,11 @@ import java.util.UUID
 import org.joda.time.LocalDate
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
-import play.api.libs.json.{__, Json, Reads, Writes}
+import play.api.libs.json.{Reads, Writes, __}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType._
 import uk.gov.hmrc.time.TaxYear
+import play.api.libs.json.JodaWrites._
 
 case class Employment(employmentId: UUID = UUID.randomUUID(),
                       startDate: Option[LocalDate],
@@ -51,6 +52,9 @@ case class Employment(employmentId: UUID = UUID.randomUUID(),
 
 object Employment {
 
+  import play.api.libs.json.JodaReads
+  implicit val dateJsReader = JodaReads.jodaLocalDateReads("yyyy-MM-dd")
+
   def noRecord(startDate: LocalDate, endDate: LocalDate): Employment = {
     val noRecord = "No record held"
 
@@ -70,8 +74,8 @@ object Employment {
 
   implicit val jsonReads: Reads[Employment] = (
     (__ \ "employmentId").read[UUID] and
-      (__ \ "startDate").readNullable[LocalDate] and
-      (__ \ "endDate").readNullable[LocalDate] and
+      (__ \ "startDate").readNullable[LocalDate](dateJsReader) and
+      (__ \ "endDate").readNullable[LocalDate](dateJsReader) and
       (__ \ "payeReference").read[String] and
       (__ \ "employerName").read[String] and
       (__ \ "companyBenefitsURI").readNullable[String] and

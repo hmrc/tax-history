@@ -16,14 +16,18 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.modules.reactivemongo.MongoDbConnection
+import play.api.Application
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.modules.reactivemongo.{MongoDbConnection, ReactiveMongoComponent}
 import reactivemongo.api.DefaultDB
 import uk.gov.hmrc.mongo.{MongoConnector, MongoSpecSupport}
 import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
+import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -34,19 +38,20 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
   with BeforeAndAfterAll
   with BeforeAndAfterEach
   with GuiceOneServerPerSuite
-  with MongoSpecSupport {
+  with MongoSpecSupport
+  with TestUtil
+   {
 
-  import ITestUtil._
+  override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
 
-  val testMongoDbConnection = new MongoDbConnection {
-    override implicit val db: () => DefaultDB = mongo // this value comes from the trait MongoSpecSupport
-    override lazy val mongoConnector: MongoConnector = mongoConnectorForTest // this value comes from the trait MongoSpecSupport
+  val mongoComponent: ReactiveMongoComponent = new ReactiveMongoComponent {
+    override def mongoConnector: MongoConnector = mongoConnectorForTest
   }
+  val mockAppConfig: AppConfig = mock[AppConfig]
 
   val testTaxHistoryCacheService = new TaxHistoryMongoCacheService(
-    mongoDbConnection = testMongoDbConnection,
-    expireAfterSeconds = 10,
-    mongoSource = "tax-history-test"
+    mongoComponent,
+    mockAppConfig
   )
 
   val testPaye = PayAsYouEarn()
@@ -55,7 +60,7 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
   val taxYear = TaxYear(2015)
 
   override def beforeEach() = {
-    testMongoDbConnection.mongoConnector.db().drop()
+    mongoComponent.mongoConnector.db().drop()
   }
 
   "TaxHistoryCacheService" should {
@@ -89,6 +94,6 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
   }
 
   override protected def afterAll() = {
-    testMongoDbConnection.mongoConnector.db().drop()
+    mongoComponent.mongoConnector.db().drop()
   }
 }

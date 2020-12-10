@@ -16,43 +16,47 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
-import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
 import com.codahale.metrics.Timer
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{reset, verify, when}
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.concurrent.Eventually._
 import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.utils.Retry
 
-import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with BeforeAndAfterEach {
+class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with BeforeAndAfterEach with GuiceOneAppPerSuite {
   implicit val hc = HeaderCarrier()
+
+  override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
 
   private val mockHttp = mock[HttpClient]
   private val mockMetrics = mock[TaxHistoryMetrics]
   private val mockTimerContext = mock[Timer.Context]
+  private val mockAppConfig = app.injector.instanceOf[AppConfig]
   private val system = ActorSystem("test")
-  private val delay: FiniteDuration = FiniteDuration(100, TimeUnit.MILLISECONDS)
 
   private val testConnector = new CitizenDetailsConnector(
     http = mockHttp,
-    baseUrl = "/test",
     metrics = mockMetrics,
-    withRetry = new Retry(1,delay, system))
+    config = mockAppConfig,
+    system = system)
 
   override def beforeEach = {
     reset(mockHttp)
@@ -77,14 +81,14 @@ class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUt
         await(testConnector.lookupSaUtr(Nino("AA000003D"))) mustBe None
       }
 
-    "return Upstream5xxResponse if citizen-details returns 5xx" in
-      new CitizenDetailsFails(new Upstream5xxResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)) {
-        intercept[Upstream5xxResponse](await(testConnector.lookupSaUtr(Nino("AA000003D"))))
+    "return UpstreamErrorResponse if citizen-details returns 5xx" in
+      new CitizenDetailsFails(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)) {
+        intercept[UpstreamErrorResponse](await(testConnector.lookupSaUtr(Nino("AA000003D"))))
       }
 
     "will attempt a retry upon failure" in
       new CitizenDetailsFailsOnceThenRespondsWithUtr(
-        new Upstream5xxResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR),
+        UpstreamErrorResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR),
         forThisNino = Nino("AA000003D")
       ) {
         await(testConnector.lookupSaUtr(forThisNino)) mustBe Some(expectedUtr)

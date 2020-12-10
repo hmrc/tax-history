@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
-import play.api.data.validation.ValidationError
 import play.api.libs.json._
 
 sealed trait EmploymentStatus
@@ -39,7 +38,7 @@ object EmploymentStatus {
       case PotentiallyCeasedCode => Reads(_ => JsSuccess(PotentiallyCeased))
       case CeasedCode            => Reads(_ => JsSuccess(Ceased))
       case UnknownCode           => Reads(_ => JsSuccess(Unknown))
-      case _                     => Reads(_ => JsError(JsPath \ "employmentStatus", ValidationError("Invalid EmploymentStatus")))
+      case _                     => Reads(_ => JsError(JsPath \ "employmentStatus", JsonValidationError("Invalid EmploymentStatus")))
     }
   }
 

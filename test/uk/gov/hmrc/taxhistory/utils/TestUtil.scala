@@ -55,6 +55,22 @@ trait TestUtil {
     if (TaxYear.taxYearFor(startYear) == taxYear) startYear else endYear
   }
 
+  val config: Map[String, Any] = Map(
+    "appName" -> "appName",
+    "mongoExpiry" -> (60 * 30),
+    "desEnv" -> "local",
+    "desAuth" -> "local",
+    "mongoName" -> "mongodb.name",
+    "currentYearFlag" -> true,
+    "featureFlags.currentYearFlag" -> true,
+    "statePensionFlag" -> true,
+    "jobSeekersAllowanceFlag" -> true,
+    "desBaseUrl" -> "http://localhost:9998",
+    "citizenDetailsBaseUrl" -> "citizen-details",
+    "microservice.services.des.authorizationToken" -> "local",
+    "microservice.services.des.env" -> "local"
+  )
+
 }
 
 case class PlaceHolder(regex: String, newValue: String)

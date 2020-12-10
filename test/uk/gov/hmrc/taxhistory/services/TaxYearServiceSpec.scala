@@ -16,21 +16,21 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 
-
-class TaxYearServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
+class TaxYearServiceSpec extends PlaySpec with MockitoSugar with GuiceOneAppPerSuite with TestUtil  {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val testNino = randomNino()
 
-  val testEmploymentHistoryService: EmploymentHistoryService = TestEmploymentHistoryService.createNew()
+  val testEmploymentHistoryService = TestEmploymentHistoryService.createNew()
 
   "get Individual Tax Years" should {
     "successfully return list of five tax years" in {

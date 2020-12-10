@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.taxhistory.model.nps.StatePension
+import play.api.libs.json.JodaWrites._
+import play.api.libs.json.JodaReads._
 
 
 case class PayAsYouEarn(employments: List[Employment] = Nil,
@@ -29,5 +31,5 @@ case class PayAsYouEarn(employments: List[Employment] = Nil,
                         statePension: Option[StatePension] = None)
 
 object PayAsYouEarn {
-  implicit val formats = Json.format[PayAsYouEarn]
+  implicit val formats: OFormat[PayAsYouEarn] = Json.format[PayAsYouEarn]
 }

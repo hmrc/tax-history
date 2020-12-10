@@ -21,6 +21,8 @@ import org.joda.time.LocalDate
 import play.api.libs.json._
 import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, PayAndTax}
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
+import play.api.libs.json.JodaWrites._
+import play.api.libs.json.JodaReads._
 
 case class RtiData(nino: String,
                    employments: List[RtiEmployment])

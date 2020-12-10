@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxhistory.model.nps
 
 import play.api.data.validation.ValidationError
-import play.api.libs.json.{JsError, JsPath, JsSuccess, Json}
+import play.api.libs.json.{JsError, JsPath, JsSuccess, Json, JsonValidationError}
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.{Ceased, Live, PotentiallyCeased}
 
@@ -32,8 +32,7 @@ class EmploymentStatusSpec extends UnitSpec {
 
     "throw error on invalid data" in {
       EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> 10)) shouldBe JsError(List((JsPath  \"employmentStatus",
-        List(ValidationError(List("Invalid EmploymentStatus"))))))
+        List(JsonValidationError(List("Invalid EmploymentStatus"))))))
     }
   }
-
 }

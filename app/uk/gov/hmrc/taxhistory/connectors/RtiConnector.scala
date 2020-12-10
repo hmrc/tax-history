@@ -16,34 +16,36 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
-import javax.inject.{Inject, Named}
+import akka.actor.ActorSystem
+import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.utils.Retry
 import uk.gov.hmrc.time.TaxYear
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
+@Singleton
 class RtiConnector @Inject()(val http: HttpClient,
                              val metrics: TaxHistoryMetrics,
-                             @Named("des-base-url") val baseUrl: String,
-                             @Named("microservice.services.des.authorizationToken") val authorizationToken: String,
-                             @Named("microservice.services.des.env") val environment: String, @Named("des") val withRetry: Retry
-                            ) extends ConnectorMetrics {
+                             val config: AppConfig,
+                             val system: ActorSystem)
+                             (implicit executionContext: ExecutionContext) extends ConnectorMetrics {
 
-  lazy val authorization: String = s"Bearer $authorizationToken"
+  lazy val authorization: String = s"Bearer ${config.desAuth}"
+  val withRetry: Retry = config.newRetryInstance("des", system)
 
   def rtiEmploymentsUrl(nino: Nino, taxYear: TaxYear): String = {
     val formattedTaxYear = s"${taxYear.startYear % 100}-${taxYear.finishYear % 100}"
-    s"$baseUrl/rti/individual/payments/nino/${nino.withoutSuffix}/tax-year/$formattedTaxYear"
+    s"${config.desBaseUrl}/rti/individual/payments/nino/${nino.withoutSuffix}/tax-year/$formattedTaxYear"
   }
 
   def createHeader: HeaderCarrier = HeaderCarrier(extraHeaders =
-    Seq("Environment" -> environment,
+    Seq("Environment" -> config.desEnv,
       "Authorization" -> authorization))
 
   def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[Option[RtiData]] = {

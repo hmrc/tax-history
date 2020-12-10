@@ -20,11 +20,14 @@ import org.joda.time.LocalDate
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.mockito.MockitoSugar
-import org.scalatestplus.play.{OneServerPerSuite, PlaySpec}
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.mvc.ControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.agentmtdidentifiers.model.Arn
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.model.api.Employment
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
@@ -32,19 +35,22 @@ import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestRelationshipAuthService}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
+class EmploymentControllerSpec extends PlaySpec with GuiceOneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
 
   val mockEmploymentHistoryService: EmploymentHistoryService = mock[EmploymentHistoryService]
 
-  val ninoWithAgent = randomNino()
-  val ninoWithoutAgent = randomNino()
+  val ninoWithAgent: Nino = randomNino()
+  val ninoWithoutAgent: Nino = randomNino()
 
-  val testEmployment = Employment(startDate = Some(LocalDate.now()),
+  val testEmployment: Employment = Employment(startDate = Some(LocalDate.now()),
     payeReference = "SOME_PAYE", employerName = "Megacorp Plc",
     employmentStatus = EmploymentStatus.Live, worksNumber = "00191048716")
   val testEmployments = List(testEmployment)
+
+  val cc: ControllerComponents = stubControllerComponents()
+  implicit val executionContext: ExecutionContext = cc.executionContext
 
   override def beforeEach = {
     reset(mockEmploymentHistoryService)
@@ -52,7 +58,8 @@ class EmploymentControllerSpec extends PlaySpec with OneServerPerSuite with Mock
 
   val testEmploymentController = new EmploymentController(
     employmentHistoryService = mockEmploymentHistoryService,
-    relationshipAuthService = TestRelationshipAuthService(Map(ninoWithAgent -> Arn("TestArn")))
+    relationshipAuthService = TestRelationshipAuthService(Map(ninoWithAgent -> Arn("TestArn"))),
+    cc = cc
   )
 
   "getEmployments" must {

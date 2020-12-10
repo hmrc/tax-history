@@ -1,6 +1,5 @@
-import play.routes.compiler.StaticRoutesGenerator
 import play.sbt.PlayImport.PlayKeys
-import play.sbt.routes.RoutesKeys.{routesGenerator, routesImport}
+import play.sbt.routes.RoutesKeys.routesImport
 import sbt.Keys._
 import sbt.Tests.{Group, SubProcess}
 import sbt._
@@ -28,20 +27,21 @@ val appName = "tax-history"
 
 val compile = Seq(
   ws,
-  "uk.gov.hmrc" %% "bootstrap-play-25"     % "5.4.0",
-  "uk.gov.hmrc" %% "domain"                % "5.10.0-play-25",
-  "uk.gov.hmrc" %% "agent-mtd-identifiers" % "0.19.0-play-25",
-  "uk.gov.hmrc" %% "tax-year"              % "1.1.0",
-  "uk.gov.hmrc" %% "auth-client"           % "3.2.0-play-25",
-  "uk.gov.hmrc" %% "simple-reactivemongo" % "7.30.0-play-25",
-  "uk.gov.hmrc" %% "mongo-caching"         % "6.15.0-play-25"
+  "uk.gov.hmrc" %% "bootstrap-play-26"     % "2.1.0",
+  "uk.gov.hmrc" %% "domain"                % "5.10.0-play-26",
+  "uk.gov.hmrc" %% "agent-mtd-identifiers"  % "0.19.0-play-26",
+  "uk.gov.hmrc" %% "tax-year"              % "1.1.0", // 1.2.0 moved to java.time instead of org.joda.time which we don't want
+  "uk.gov.hmrc" %% "auth-client"           % "3.2.0-play-26",
+  "uk.gov.hmrc" %% "simple-reactivemongo"  % "7.30.0-play-26",
+  "uk.gov.hmrc" %% "mongo-caching"         % "6.15.0-play-26",
+  "com.typesafe.play" %% "play-json-joda"  % "2.6.14"
 )
 
 def test(scope: String = "test,it") = Seq(
-  "uk.gov.hmrc"            %% "hmrctest"           % "3.9.0-play-25" % scope,
-  "uk.gov.hmrc"            %% "reactivemongo-test" % "4.21.0-play-25" % scope,
-  "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.1"         % scope,
-  "org.mockito"            % "mockito-core"        % "2.27.0"        % scope
+  "uk.gov.hmrc"            %% "hmrctest"           % "3.9.0-play-26"  % scope,
+  "uk.gov.hmrc"            %% "reactivemongo-test" % "4.21.0-play-26" % scope,
+  "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.3"          % scope,
+  "org.mockito"            %  "mockito-core"       % "2.28.2"         % scope
 )
 
 lazy val appDependencies: Seq[ModuleID] = compile ++ test()
@@ -61,11 +61,10 @@ lazy val microservice =
     .settings(defaultSettings(): _*)
     .settings(routesImport ++= Seq("uk.gov.hmrc.taxhistory.binders.PathBinders._"))
     .settings(
-      scalaVersion := "2.11.11",
+      scalaVersion := "2.12.12",
       libraryDependencies ++= appDependencies,
       retrieveManaged := true,
-      evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
-      routesGenerator := StaticRoutesGenerator
+      evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
     )
     .configs(IntegrationTest)
     .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)

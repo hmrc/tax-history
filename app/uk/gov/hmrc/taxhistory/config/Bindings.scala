@@ -14,15 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxhistory.model.api
+package uk.gov.hmrc.taxhistory.config
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.inject.{Binding, Module}
+import play.api.{Configuration, Environment}
+import uk.gov.hmrc.taxhistory.services.{PayeCacheService, TaxHistoryMongoCacheService}
 
-case class IndividualTaxYear(year:Int,
-                             allowancesURI:String,
-                             employmentsURI:String,
-                             taxAccountURI:String)
 
-object IndividualTaxYear {
-  implicit val formats: OFormat[IndividualTaxYear] = Json.format[IndividualTaxYear]
+class Bindings extends Module {
+  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
+    bindDeps()
+  }
+
+  private def bindDeps() = Seq(
+    bind(classOf[PayeCacheService]).to(classOf[TaxHistoryMongoCacheService])
+  )
+
 }

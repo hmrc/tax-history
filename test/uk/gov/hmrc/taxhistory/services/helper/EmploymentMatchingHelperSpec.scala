@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.services.helper
 
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import uk.gov.hmrc.tai.model.rti.RtiEmployment
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment

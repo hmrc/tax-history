@@ -20,9 +20,9 @@ package uk.gov.hmrc.taxhistory.services
 import javax.inject.{Inject, Named}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
+import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.connectors.{DesNpsConnector, RtiConnector}
 import uk.gov.hmrc.taxhistory.model.api.Employment._
 import uk.gov.hmrc.taxhistory.model.api.FillerState._
@@ -35,24 +35,22 @@ import uk.gov.hmrc.taxhistory.utils.Logging
 import uk.gov.hmrc.time.TaxYear
 
 import scala.annotation.tailrec
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
                                          val rtiConnector: RtiConnector,
                                          val cacheService: PayeCacheService,
                                          val auditable: Auditable,
-                                         @Named("featureFlags.currentYearFlag") val currentYearFlag: Boolean,
-                                         @Named("featureFlags.statePensionFlag") val statePensionFlag: Boolean,
-                                         @Named("featureFlags.jobSeekersAllowanceFlag") val jobSeekersAllowanceFlag: Boolean
-                                        ) extends Logging {
+                                         config: AppConfig)
+                                        (implicit executionContext: ExecutionContext)extends Logging {
 
   def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] = {
     getFromCache(nino, taxYear).map { es =>
       val employments = es.employments.map(_.enrichWithURIs(taxYear.startYear))
 
-      if(employments.forall(_.isOccupationalPension)) employments
-      else if (jobSeekersAllowanceFlag) addFillers(employments, taxYear)
-      else addFillers(employments, taxYear).filterNot(emp => emp.isJobseekersAllowance)
+      if (employments.forall(_.isOccupationalPension)) {employments}
+      else if (config.jobSeekersAllowanceFlag) {addFillers(employments, taxYear)}
+      else {addFillers(employments, taxYear).filterNot(emp => emp.isJobseekersAllowance)}
     }
   }
 
@@ -150,7 +148,7 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
 
       paye.statePension match {
         case Some(statePension) => Future.successful(
-          if (statePensionFlag) {
+          if (config.statePensionFlag) {
             Some(statePension)
           } else {
             None
@@ -175,13 +173,13 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
       TaxYear.current.back(3),
       TaxYear.current.back(4))
 
-    val completeTaxYearList = if (currentYearFlag) TaxYear.current +: taxYearList else taxYearList
+    val completeTaxYearList = if (config.currentYearFlag) TaxYear.current +: taxYearList else taxYearList
 
     val taxYears = completeTaxYearList.map(year => IndividualTaxYear(year = year.startYear,
       allowancesURI = s"/${year.startYear}/allowances",
       employmentsURI = s"/${year.startYear}/employments",
       taxAccountURI = s"/${year.startYear}/tax-account"))
-
+    println(config.currentYearFlag)
     Future.successful(taxYears)
   }
 
