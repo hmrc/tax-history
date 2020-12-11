@@ -19,15 +19,12 @@ package uk.gov.hmrc.taxhistory.services
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
-import play.modules.reactivemongo.{MongoDbConnection, ReactiveMongoComponent}
-import reactivemongo.api.DefaultDB
+
+import play.modules.reactivemongo.ReactiveMongoComponent
 import uk.gov.hmrc.mongo.{MongoConnector, MongoSpecSupport}
 import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -39,15 +36,14 @@ class TaxHistoryCacheServiceSpec extends UnitSpec
   with BeforeAndAfterEach
   with GuiceOneServerPerSuite
   with MongoSpecSupport
-  with TestUtil
    {
 
-  override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
+  import ITestUtil._
 
   val mongoComponent: ReactiveMongoComponent = new ReactiveMongoComponent {
     override def mongoConnector: MongoConnector = mongoConnectorForTest
   }
-  val mockAppConfig: AppConfig = mock[AppConfig]
+  val mockAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
   val testTaxHistoryCacheService = new TaxHistoryMongoCacheService(
     mongoComponent,

@@ -17,7 +17,11 @@ In order to run the microservice, you must have SBT installed. You should then b
 > The port used for this project is 9997
 
 > To run the tests for the application, you can run: ```sbt test```
-> or to view coverage run: ```sbt coverage test coverageReport```
+> or to view coverage run: \
+>```sbt coverage test coverageReport```
+
+> To run the integration tests use ```sbt it:test``` or to run all the tests at once use: \
+>```sbt it:test test```
 
 ## RESTful Service Endpoints
 We have adhered to a hypermedia [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS) design allowing the api to describe its own use at runtime by providing URI's to further api calls.
