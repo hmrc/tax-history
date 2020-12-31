@@ -1,4 +1,5 @@
 import play.sbt.PlayImport.PlayKeys
+import sbt.{ForkOptions, TestDefinition}
 import play.sbt.routes.RoutesKeys.routesImport
 import sbt.Keys._
 import sbt.Tests.{Group, SubProcess}
@@ -71,7 +72,7 @@ lazy val microservice =
     .settings(
       majorVersion := 3,
       Keys.fork in IntegrationTest := false,
-      unmanagedSourceDirectories in IntegrationTest <<= (baseDirectory in IntegrationTest)(base => Seq(base / "it")),
+      unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest)(base => Seq(base / "it")).value,
       addTestReportOption(IntegrationTest, "int-test-reports"),
       testGrouping in IntegrationTest := oneForkedJvmPerTest((definedTests in IntegrationTest).value),
       parallelExecution in IntegrationTest := false
@@ -82,7 +83,6 @@ lazy val microservice =
     ))
 
 def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] = tests map { test =>
-  Group(test.name, Seq(test), SubProcess(ForkOptions(
-    runJVMOptions = Seq("-Dtest.name=" + test.name))
-  ))
+  val forkOptions = ForkOptions().withRunJVMOptions(Vector("-Dtest.name=" + test.name))
+  Group(test.name, Seq(test), SubProcess(config = forkOptions))
 }
