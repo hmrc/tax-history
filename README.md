@@ -1,8 +1,5 @@
 # Tax History
 
-[ ![Download](https://api.bintray.com/packages/hmrc/releases/tax-history/images/download.svg) ](https://bintray.com/hmrc/releases/tax-history/_latestVersion)
-
-
 Source code for the back end microservice for the Income Record Viewer service
 
 ### License
