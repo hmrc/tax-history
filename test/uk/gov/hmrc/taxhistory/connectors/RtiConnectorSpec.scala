@@ -29,7 +29,7 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
@@ -42,6 +42,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 
 class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with GuiceOneAppPerSuite  {
+
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
@@ -49,6 +50,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with Gui
   val mockAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
   val mockTaxHistoryMetrics: TaxHistoryMetrics = mock[TaxHistoryMetrics]
   val system: ActorSystem = ActorSystem("test")
+  private val taxYear = 2016
 
   val testRtiConnector: RtiConnector = new RtiConnector(
     http = mockHttpClient,
@@ -75,58 +77,59 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with Gui
     }
 
     "create the correct headers" in {
-      val headers = testRtiConnector.createHeader
-      headers.extraHeaders mustBe List(("Environment", "local"), ("Authorization", "Bearer local"))
+      val headers = testRtiConnector.headers
+      headers mustBe List(("Environment", "local"), ("Authorization", "Bearer local"))
     }
 
     "get RTI data " when {
 
       "given a valid Nino and TaxYear" in {
-        implicit val hc = HeaderCarrier()
+
         when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testRtiConnector.http.GET[RtiData](any())(any(), any(), any()))
+        when(testRtiConnector.http.GET[RtiData](any(), any(), any())(any(), any(), any()))
           .thenReturn(Future.successful(testRtiData))
 
-        val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
+        val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(taxYear))
 
         await(result) mustBe Some(testRtiData)
       }
 
       "retrying after the first call failed and the second call succeeds" in {
-        implicit val hc = HeaderCarrier()
+
         when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testRtiConnector.http.GET[RtiData](any())(any(), any(), any()))
           .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
           .thenReturn(Future.successful(testRtiData))
 
-        val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
+        val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(taxYear))
 
         await(result) mustBe Some(testRtiData)
       }
 
       "return None when the call to RTI fails with 404 NotFound" in {
-        implicit val hc = HeaderCarrier()
+
         when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testRtiConnector.http.GET[RtiData](any())(any(), any(), any()))
-          .thenReturn(Future.failed(new NotFoundException("")))
+        when(testRtiConnector.http.GET[RtiData](any(), any(), any())(any(), any(), any()))
+          .thenReturn(Future.failed(UpstreamErrorResponse("Not found", NOT_FOUND, NOT_FOUND)))
 
-        val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
+        val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(taxYear))
 
         await(result) mustBe None
       }
 
       "return and handle an error response" in {
+
         val expectedResponse = Json.parse( """{"reason": "Internal Server Error"}""")
-        implicit val hc = HeaderCarrier()
+
         when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
-        when(testRtiConnector.http.GET[HttpResponse](any())(any(), any(), any()))
+        when(testRtiConnector.http.GET[HttpResponse](any(), any(), any())(any(), any(), any()))
           .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
 
-        val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(2016))
+        val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(taxYear))
 
         intercept[UpstreamErrorResponse](await(result) mustBe expectedResponse)
       }

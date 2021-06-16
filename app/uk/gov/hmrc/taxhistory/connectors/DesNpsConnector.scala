@@ -17,16 +17,17 @@
 package uk.gov.hmrc.taxhistory.connectors
 
 import akka.actor.ActorSystem
-import javax.inject.{Inject, Singleton}
 import play.api.Logger
+import play.api.http.Status.NOT_FOUND
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.{HttpClient, _}
 import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.utils.Retry
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -37,36 +38,36 @@ class DesNpsConnector @Inject()(val http: HttpClient,
                                 (implicit executionContext: ExecutionContext) extends ConnectorMetrics {
 
   private val servicePrefix = "/pay-as-you-earn"
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+
   val withRetry: Retry = config.newRetryInstance("des", system)
   def iabdsUrl(nino: Nino, year: Int)      = s"${config.desBaseUrl}$servicePrefix/individuals/${nino.value}/iabds/tax-year/$year"
   def taxAccountUrl(nino: Nino, year: Int) = s"${config.desBaseUrl}$servicePrefix/individuals/${nino.value}/tax-account/tax-year/$year"
   def employmentsUrl(nino: Nino, year: Int)= s"${config.desBaseUrl}/individuals/${nino.value}/employment/$year"
 
-  def basicDesHeaders(hc: HeaderCarrier): HeaderCarrier = {
-    hc.withExtraHeaders("Environment" -> {config.desEnv},
+  def headers(): Seq[(String, String)] = {
+    Seq("Environment" -> {config.desEnv},
       "Authorization" -> s"Bearer ${config.desAuth}")
   }
 
   def getIabds(nino: Nino, year: Int): Future[List[Iabd]] = {
-    implicit val hc = basicDesHeaders(HeaderCarrier())
 
     withMetrics(MetricsEnum.NPS_GET_IABDS) {
       withRetry {
-        http.GET[List[Iabd]](iabdsUrl(nino, year))
+        http.GET[List[Iabd]](iabdsUrl(nino, year), headers = headers())
       }.recover{
-        case _:NotFoundException => List.empty
+        case Upstream4xxResponse(_,NOT_FOUND , _, _) => List.empty
       }
     }
   }
 
   def getTaxAccount(nino: Nino, year: Int): Future[Option[NpsTaxAccount]] = {
-    implicit val hc = basicDesHeaders(HeaderCarrier())
 
     withMetrics(MetricsEnum.NPS_GET_TAX_ACCOUNT) {
       withRetry {
-        http.GET[NpsTaxAccount](taxAccountUrl(nino, year)).map(Some(_))
+        http.GET[NpsTaxAccount](taxAccountUrl(nino, year), headers = headers()).map(Some(_))
       }.recover{
-        case ex: NotFoundException => {
+        case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == 404 => {
           Logger.info(s"NPS getTaxAccount returned a 404 response: ${ex.message}")
           None
         }
@@ -75,11 +76,10 @@ class DesNpsConnector @Inject()(val http: HttpClient,
   }
 
   def getEmployments(nino: Nino, year: Int): Future[List[NpsEmployment]] = {
-    implicit val hc = basicDesHeaders(HeaderCarrier())
 
     withMetrics(MetricsEnum.NPS_GET_EMPLOYMENTS) {
       withRetry{
-        http.GET[List[NpsEmployment]](employmentsUrl(nino, year))
+        http.GET[List[NpsEmployment]](employmentsUrl(nino, year), headers = headers())
       }
     }
   }

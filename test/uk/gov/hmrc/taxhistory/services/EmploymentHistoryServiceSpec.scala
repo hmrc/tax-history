@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import java.util.UUID
-
 import org.joda.time.LocalDate
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
@@ -37,13 +35,15 @@ import uk.gov.hmrc.taxhistory.model.utils.{PlaceHolder, TestUtil}
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 
+import java.util.UUID
 import scala.concurrent.Future
 
 
 class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestUtil with Employments {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  val testNino = randomNino()
+  val testNino: Nino = randomNino()
+  val testtaxYear: TaxYear = TaxYear(2016)
 
   val testEmploymentHistoryService: EmploymentHistoryService = TestEmploymentHistoryService.createNew()
 
