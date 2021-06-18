@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxhistory.services
 
 
-import javax.inject.{Inject, Named}
+import javax.inject.Inject
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
@@ -261,7 +261,7 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
   /*
     Retrieve NpsEmployments directly from the NPS microservice.
    */
-  def retrieveNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[NpsEmployment]] = {
+  def retrieveNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[NpsEmployment]] = {
     val passedInTaxYear = taxYear.currentYear
 
       desNpsConnector.getEmployments(nino, passedInTaxYear).map { employments =>
@@ -282,13 +282,13 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
   /*
     Retrieve Iabds directly from DES.
    */
-  def retrieveNpsIabds(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[List[Iabd]] =
+  def retrieveNpsIabds(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Iabd]] =
     desNpsConnector.getIabds(nino, taxYear.currentYear)
 
   /*
     Retrieve TaxAccount directly from DES.
    */
-  def retrieveNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[NpsTaxAccount]] =
+  def retrieveNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[Option[NpsTaxAccount]] =
     desNpsConnector.getTaxAccount(nino, taxYear.currentYear)
 
   private def unmatchedEmployments[A](matched: List[A], raw: List[A]): List[A] = {

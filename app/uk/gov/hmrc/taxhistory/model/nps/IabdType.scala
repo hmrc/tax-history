@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxhistory.model.nps
 
 
 import org.joda.time.LocalDate
-import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
+import org.joda.time.format.DateTimeFormat
 import play.api.Logger
 import play.api.libs.json._
 

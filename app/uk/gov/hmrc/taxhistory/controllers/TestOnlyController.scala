@@ -26,7 +26,7 @@ import scala.concurrent.ExecutionContext
 class TestOnlyController @Inject()(val cacheService: TaxHistoryMongoCacheService,
                                    val cc: ControllerComponents)(implicit val ec: ExecutionContext) extends TaxHistoryController(cc) {
 
-  def clearCache: Action[AnyContent] = Action.async { implicit request =>
+  def clearCache: Action[AnyContent] = Action.async {
     cacheService.cacheRepository.drop.map(_ => Ok)
   }
 }

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory
 
-import javax.inject.{Inject, Named}
+import javax.inject.Inject
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.Audit
 import uk.gov.hmrc.taxhistory.config.AppConfig

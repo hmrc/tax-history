@@ -138,13 +138,13 @@ class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUt
   class CitizenDetailsRespondsWithUtr(val forThisNino: Nino) {
     val expectedUtr = SaUtr("1097133333")
     when(mockMetrics.startTimer(any())).thenReturn(mockTimerContext)
-    when(mockHttp.GET[JsValue](any())(any(), any(), any()))
+    when(mockHttp.GET[JsValue](any(), any(), any())(any(), any(), any()))
       .thenReturn(Future.successful(responseWithUtr(forThisNino, expectedUtr)))
   }
 
   class CitizenDetailsRespondsWithoutUtr(val forThisNino: Nino) {
     when(mockMetrics.startTimer(any())).thenReturn(mockTimerContext)
-    when(mockHttp.GET[JsValue](any())(any(), any(), any()))
+    when(mockHttp.GET[JsValue](any(), any(), any())(any(), any(), any()))
       .thenReturn(Future.successful(Json.parse(
         s"""
            |{
@@ -165,14 +165,14 @@ class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUt
 
   class CitizenDetailsFails(withThisException: Throwable) {
     when(mockMetrics.startTimer(any())).thenReturn(mockTimerContext)
-    when(mockHttp.GET[JsValue](any())(any(), any(), any()))
+    when(mockHttp.GET[JsValue](any(), any(), any())(any(), any(), any()))
       .thenReturn(Future.failed(withThisException))
   }
 
   class CitizenDetailsFailsOnceThenRespondsWithUtr(withThisException: Throwable, val forThisNino: Nino) {
     val expectedUtr = SaUtr("1097133333")
     when(mockMetrics.startTimer(any())).thenReturn(mockTimerContext)
-    when(mockHttp.GET[JsValue](any())(any(), any(), any()))
+    when(mockHttp.GET[JsValue](any(), any(), any())(any(), any(), any()))
       .thenReturn(Future.failed(withThisException))
       .thenReturn(Future.successful(responseWithUtr(forThisNino, expectedUtr)))
   }

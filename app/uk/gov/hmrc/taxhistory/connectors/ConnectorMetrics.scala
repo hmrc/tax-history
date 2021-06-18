@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
-import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
+import uk.gov.hmrc.http.NotFoundException
 import uk.gov.hmrc.taxhistory.metrics.MetricsEnum.MetricsEnum
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.utils.Logging
@@ -26,7 +26,7 @@ import scala.concurrent.{ExecutionContext, Future}
 protected trait ConnectorMetrics extends Logging {
   val metrics: TaxHistoryMetrics
 
-  protected def withMetrics[T](metric: MetricsEnum)(codeBlock: => Future[T])(implicit hc: HeaderCarrier, executionContext: ExecutionContext): Future[T] = {
+  protected def withMetrics[T](metric: MetricsEnum)(codeBlock: => Future[T])(implicit executionContext: ExecutionContext): Future[T] = {
     val timerContext = metrics.startTimer(metric)
 
     codeBlock.map{ result =>

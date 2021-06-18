@@ -20,7 +20,7 @@ import javax.inject.Singleton
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc._
 import uk.gov.hmrc.http.{BadRequestException, NotFoundException, Upstream4xxResponse, UpstreamErrorResponse}
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.taxhistory.utils.Logging
 
 import scala.concurrent.{ExecutionContext, Future}

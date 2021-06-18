@@ -17,16 +17,16 @@
 package uk.gov.hmrc.taxhistory.connectors
 
 import akka.actor.ActorSystem
-import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.{HttpClient, _}
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.utils.Retry
 import uk.gov.hmrc.time.TaxYear
-
+import play.api.http.Status.NOT_FOUND
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -44,19 +44,19 @@ class RtiConnector @Inject()(val http: HttpClient,
     s"${config.desBaseUrl}/rti/individual/payments/nino/${nino.withoutSuffix}/tax-year/$formattedTaxYear"
   }
 
-  def createHeader: HeaderCarrier = HeaderCarrier(extraHeaders =
-    Seq("Environment" -> config.desEnv,
-      "Authorization" -> authorization))
+  val headers = Seq("Environment" -> config.desEnv, "Authorization" -> authorization)
 
   def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[Option[RtiData]] = {
-    implicit val hc: HeaderCarrier = createHeader
+
+    implicit val hc: HeaderCarrier = HeaderCarrier()
 
     withMetrics(MetricsEnum.RTI_GET_EMPLOYMENTS) {
       withRetry {
-        http.GET[RtiData](rtiEmploymentsUrl(nino, taxYear))
+        http.GET[RtiData](rtiEmploymentsUrl(nino, taxYear),
+          headers = headers)
           .map(Some(_))
       }.recover {
-        case _: NotFoundException => None
+        case Upstream4xxResponse(_,NOT_FOUND , _, _)  => None
       }
 
     }
