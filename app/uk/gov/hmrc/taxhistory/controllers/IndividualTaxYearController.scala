@@ -42,7 +42,7 @@ class IndividualTaxYearController @Inject()(val employmentHistoryService: Employ
 
   private def retrieveTaxYears(nino: Nino, arn: Arn)(implicit hc: HeaderCarrier): Future[Result] = {
     val taxYears = employmentHistoryService.getTaxYears(nino)
-    taxYears.onComplete { case _ =>
+    taxYears.onComplete { _ =>
       auditable.sendDataEvent(transactionName = AgentViewedClient,
         path = "/tax-history/select-tax-year",
         detail = DataEventDetail(Map("agentReferenceNumber" -> arn.value, "nino" -> nino.value)),

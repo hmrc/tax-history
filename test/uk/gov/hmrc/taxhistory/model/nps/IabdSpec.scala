@@ -17,32 +17,32 @@
 package uk.gov.hmrc.taxhistory.model.nps
 
 import org.joda.time.LocalDate
+import org.scalatest.{Matchers, OptionValues, WordSpecLike}
 import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
-import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 
-class IabdSpec extends TestUtil with UnitSpec {
+class IabdSpec extends TestUtil with WordSpecLike with Matchers with OptionValues {
 
   lazy val employmentsResponse: JsValue = loadFile("/json/nps/response/iabds.json")
   private val grossAmount = 200
 
   val iabdJsonResponse: String =
     s"""{
-      |        "nino": "QQ00000AB",
-      |        "sequenceNumber": 201700001,
-      |        "taxYear": 2017,
-      |        "type": 8,
-      |        "source": 15,
-      |        "grossAmount": $grossAmount,
-      |        "receiptDate": null,
-      |        "captureDate": "10/04/2017",
-      |        "typeDescription": "Total gift aid Payments",
-      |        "netAmount": 100,
-      |        "paymentFrequency": 1,
-      |        "startDate": "23/02/2018"
-      |
-      |}
+       |        "nino": "QQ00000AB",
+       |        "sequenceNumber": 201700001,
+       |        "taxYear": 2017,
+       |        "type": 8,
+       |        "source": 15,
+       |        "grossAmount": $grossAmount,
+       |        "receiptDate": null,
+       |        "captureDate": "10/04/2017",
+       |        "typeDescription": "Total gift aid Payments",
+       |        "netAmount": 100,
+       |        "paymentFrequency": 1,
+       |        "startDate": "23/02/2018"
+       |
+       |}
     """.stripMargin
 
   "Iabd Json" should {
@@ -70,7 +70,7 @@ class IabdSpec extends TestUtil with UnitSpec {
 
     "List of Iabds Json" should {
       "transform List of Iabd" in {
-        noException shouldBe thrownBy (employmentsResponse.as[List[Iabd]])
+        noException shouldBe thrownBy(employmentsResponse.as[List[Iabd]])
       }
     }
 

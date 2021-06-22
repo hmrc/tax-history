@@ -17,15 +17,15 @@
 package uk.gov.hmrc.taxhistory.model.nps
 
 import org.joda.time.LocalDate
-import play.api.libs.json._
+import org.scalatest.{Matchers, OptionValues, WordSpecLike}
 import play.api.libs.json.Json.fromJson
+import play.api.libs.json._
 import uk.gov.hmrc.domain.TaxCode
-import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.api.IncomeSource
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-class NpsTaxAccountSpec extends TestUtil with UnitSpec {
+class NpsTaxAccountSpec extends TestUtil with WordSpecLike with Matchers with OptionValues {
 
   lazy val getTaxAcoountResponseURLDummy: JsValue = loadFile("/json/nps/response/GetTaxAccount.json")
 

@@ -20,11 +20,12 @@ import org.joda.time.LocalDate
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.{Matchers, OptionValues, WordSpecLike}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException}
-import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.fixtures.Employments
 import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType.OccupationalPension
@@ -34,12 +35,13 @@ import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, 
 import uk.gov.hmrc.taxhistory.model.utils.{PlaceHolder, TestUtil}
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
+import play.api.test.Helpers._
 
 import java.util.UUID
 import scala.concurrent.Future
 
 
-class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestUtil with Employments {
+class EmploymentHistoryServiceSpec extends WordSpecLike with Matchers with OptionValues with ScalaFutures with MockitoSugar with TestUtil with Employments {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val testNino: Nino = randomNino()
@@ -141,14 +143,13 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
   "Employment Service" should {
     "successfully get Nps Employments Data" in
       new StubConnectors(npsGetEmployments = stubNpsGetEmploymentsSucceeds(npsEmploymentResponse)) {
-        noException shouldBe thrownBy(await(testEmploymentHistoryService.retrieveNpsEmployments(testNino, TaxYear(2016))))
-
-    }
+        noException shouldBe thrownBy(testEmploymentHistoryService.retrieveNpsEmployments(testNino, TaxYear(2016)).futureValue)
+      }
 
     "successfully get Nps Employments Data with jobseekers allowance for cy-1" in
       new StubConnectors(npsGetEmployments = stubNpsGetEmploymentsSucceeds(npsEmploymentWithJobSeekerAllowanceCYMinus1)) {
-      noException shouldBe thrownBy(await(testEmploymentHistoryService.retrieveNpsEmployments(testNino, TaxYear(2016))))
-    }
+        noException shouldBe thrownBy(testEmploymentHistoryService.retrieveNpsEmployments(testNino, TaxYear(2016)).futureValue)
+      }
 
     "return any non success status response from get Nps Employments api" in
       new StubConnectors(npsGetEmployments = stubNpsGetEmploymentsFails(new BadRequestException(""))) {
@@ -157,13 +158,13 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
 
     "successfully get Rti Employments Data" in
       new StubConnectors(rti = stubRtiGetEmploymentsSucceeds(Some(testRtiData))) {
-      await(testEmploymentHistoryService.retrieveRtiData(testNino, TaxYear(2016))) shouldBe Some(testRtiData)
-    }
+        testEmploymentHistoryService.retrieveRtiData(testNino, TaxYear(2016)).futureValue shouldBe Some(testRtiData)
+      }
 
     "successfully get no RTI employments data if RTI connector returns None" in
-    new StubConnectors(rti = stubRtiGetEmploymentsSucceeds(None)) {
-      await(testEmploymentHistoryService.retrieveRtiData(testNino, TaxYear(2016))) shouldBe None
-    }
+      new StubConnectors(rti = stubRtiGetEmploymentsSucceeds(None)) {
+        testEmploymentHistoryService.retrieveRtiData(testNino, TaxYear(2016)).futureValue shouldBe None
+      }
 
     "fail with NotFoundException if the NPS Get Employments API was successful but returned zero employments" in
       new StubConnectors(npsGetEmployments = stubNpsGetEmploymentsSucceeds(List.empty)) {
@@ -182,12 +183,12 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
 
     "succeeds when the RTI call fails with a 404 (i.e the RTI connector returns None)" in
       new StubConnectors(rti = stubRtiGetEmploymentsSucceeds(None)) {
-        noException shouldBe thrownBy(await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
+        noException shouldBe thrownBy(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)).futureValue)
       }
 
     "succeeds when the get IABD call fails with a 404 (i.e the RTI connector returns None)" in
       new StubConnectors(npsGetIabdDetails = stubNpsGetIabdsSucceeds(List())) {
-        noException shouldBe thrownBy(await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016))))
+        noException shouldBe thrownBy(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)).futureValue)
       }
 
     "throw an exception when the call to get NPS tax account fails" in
@@ -201,7 +202,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       stubRtiGetEmploymentsSucceeds(Some(testRtiData))
       stubNpsGetTaxAccountSucceeds(Some(testNpsTaxAccount))
 
-      val paye = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)))
+      val paye = testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)).futureValue
 
       val employments = paye.employments
       employments.size shouldBe 1
@@ -321,7 +322,6 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
     "fail with a NotFoundException  from get Nps Tax Account api for not found response " in {
       when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
         .thenReturn(Future.failed(new NotFoundException("")))
-
       intercept[NotFoundException](await(testEmploymentHistoryService.retrieveNpsTaxAccount(testNino, TaxYear(2016))))
     }
 
@@ -347,9 +347,9 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
         None, Live, "00191048716")
 
       // Set up the test data in the cache
-      await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), taxYear), paye))
+      testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), taxYear), paye).futureValue
 
-      val employments = await(testEmploymentHistoryService.getEmployments(Nino("AA000000A"), taxYear))
+      val employments = testEmploymentHistoryService.getEmployments(Nino("AA000000A"), taxYear).futureValue
       employments.head.employmentStatus shouldBe EmploymentStatus.Unknown
 
       employments.head.startDate shouldBe Some(taxYear.starts.withMonthOfYear(4).withDayOfMonth(6))
@@ -361,9 +361,9 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
     "return an empty list when no employment(not including pensions) was returned from cache" in {
       val paye = PayAsYouEarn(employments = Nil)
 
-      await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye))
+      testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye).futureValue
 
-      val employments = await(testEmploymentHistoryService.getEmployments(Nino("AA000000A"), TaxYear(2014)))
+      val employments = testEmploymentHistoryService.getEmployments(Nino("AA000000A"), TaxYear(2014)).futureValue
       employments shouldBe List.empty
     }
 
@@ -378,9 +378,9 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
         Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
         None, Live, "00191048716")
 
-      await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye))
+      testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye).futureValue
 
-      val employment = await(testEmploymentHistoryService.getEmployment(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
+      val employment = testEmploymentHistoryService.getEmployment(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3").futureValue
       employment shouldBe testEmployment
     }
 
@@ -388,7 +388,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
     "get Employment return none" in {
       lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
 
-      await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye))
+      testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye).futureValue
 
       intercept[NotFoundException](await(testEmploymentHistoryService.getEmployment(
         Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae6")))
@@ -400,10 +400,10 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
       val testCompanyBenefits: List[CompanyBenefit] = List(CompanyBenefit(
         UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"), "companyBenefitType", 12))
 
-      await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye))
+      testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye).futureValue
 
-      val companyBenefits = await(testEmploymentHistoryService.getCompanyBenefits(
-        Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
+      val companyBenefits = testEmploymentHistoryService.getCompanyBenefits(
+        Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3").futureValue
 
       companyBenefits shouldBe testCompanyBenefits
     }
@@ -411,15 +411,15 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
     "return not found when no company benefits returned from cache" in {
       lazy val payeNoBenefits = loadFile("/json/model/api/payeNoCompanyBenefits.json").as[PayAsYouEarn]
 
-      await(testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), payeNoBenefits))
+      testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), payeNoBenefits).futureValue
 
       intercept[NotFoundException](await(testEmploymentHistoryService.getCompanyBenefits(
         Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3")))
     }
 
     "return no company benefits from cache for current year" in {
-      val taxAccount = await(testEmploymentHistoryService.getCompanyBenefits(
-        Nino("AA000000A"), TaxYear.current, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
+      val taxAccount = testEmploymentHistoryService.getCompanyBenefits(
+        Nino("AA000000A"), TaxYear.current, "01318d7c-bcd9-47e2-8c38-551e7ccdfae3").futureValue
       taxAccount shouldBe List.empty
     }
   }
@@ -446,7 +446,8 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
 
     "return a list with no gaps, when employments overlap and have gaps at the start" in {
       val employments = List(liveNoEndEmployment, liveMidYearEmployment)
-      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map isNoRecordEmployment shouldBe Seq(true, false, false)    }
+      testEmploymentHistoryService.addFillers(employments, TaxYear.current) map isNoRecordEmployment shouldBe Seq(true, false, false)
+    }
 
     "return a list with no gaps, when ceased employments overlap and have gaps" in {
       val employments = List(ceasedBeforeStartEmployment, ceasedNoEndEmployment, ceasedAfterEndEmployment)
@@ -474,6 +475,7 @@ class EmploymentHistoryServiceSpec extends UnitSpec with MockitoSugar with TestU
     }
 
     def oneDayBefore(thisDay: Option[LocalDate]) = thisDay.map(_.minusDays(1))
+
     def oneDayAfter(thisDay: Option[LocalDate]) = thisDay.map(_.plusDays(1))
 
     "when original employment has no start date but has an end date, and there are no employments afterwards" in {

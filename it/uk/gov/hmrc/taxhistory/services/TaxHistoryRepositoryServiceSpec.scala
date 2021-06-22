@@ -16,16 +16,17 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest._
 import play.api.libs.json.Json
+import play.api.test.Helpers._
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.mongo.{MongoSpecSupport, Saved}
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
-class TaxHistoryRepositoryServiceSpec extends UnitSpec
+class TaxHistoryRepositoryServiceSpec extends WordSpecLike with Matchers with OptionValues with ScalaFutures
   with MongoSpecSupport
   with BeforeAndAfterAll
   with BeforeAndAfterEach

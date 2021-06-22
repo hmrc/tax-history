@@ -21,7 +21,6 @@ import play.api.libs.json._
 import uk.gov.hmrc.taxhistory.model.api.{Employment, EmploymentPaymentType}
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
 import play.api.libs.json.JodaWrites._
-import play.api.libs.json.JodaReads._
 
 case class NpsEmployment(nino: String,
                          sequenceNumber: Int,
@@ -54,7 +53,7 @@ case class NpsEmployment(nino: String,
 }
 
 object NpsEmployment {
-  implicit val reader = new Reads[NpsEmployment] {
+  implicit val reader: Reads[NpsEmployment] = new Reads[NpsEmployment] {
     def reads(js: JsValue): JsResult[NpsEmployment] = {
       val startDate = (js \ "startDate").asOpt[LocalDate](JsonUtils.npsDateFormat)
       val endDate = (js \ "endDate").asOpt[LocalDate](JsonUtils.npsDateFormat)

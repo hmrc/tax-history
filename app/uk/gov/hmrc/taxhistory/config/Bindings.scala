@@ -20,14 +20,13 @@ import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.taxhistory.services.{PayeCacheService, TaxHistoryMongoCacheService}
 
-
 class Bindings extends Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
     bindDeps()
   }
 
   private def bindDeps() = Seq(
-    bind(classOf[PayeCacheService]).to(classOf[TaxHistoryMongoCacheService])
+    bind[PayeCacheService].to(classOf[TaxHistoryMongoCacheService])
   )
 
 }

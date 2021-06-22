@@ -16,16 +16,17 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
+import org.scalatest.{Matchers, OptionValues, WordSpecLike}
 import play.api.libs.json.Json._
-import play.api.libs.json.{JsObject, _}
-import uk.gov.hmrc.play.test.UnitSpec
+import play.api.libs.json._
 import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType._
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-class EmploymentPaymentTypeSpec extends TestUtil with UnitSpec {
+class EmploymentPaymentTypeSpec extends TestUtil with WordSpecLike with Matchers with OptionValues {
 
   case class TestObj(employmentPaymentType: Option[EmploymentPaymentType])
-  implicit val testObjFormat = Json.format[TestObj]
+
+  implicit val testObjFormat: OFormat[TestObj] = Json.format[TestObj]
 
   "EmploymentPaymentType" when {
     "(de)serialising an 'employmentPaymentType' field" should {

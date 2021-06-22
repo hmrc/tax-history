@@ -16,11 +16,9 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import java.util.UUID
-
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
-import org.scalatest.BeforeAndAfterEach
+import org.scalatest.{BeforeAndAfterEach, Matchers, OptionValues, WordSpecLike}
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.mvc.ControllerComponents
@@ -29,15 +27,16 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.agentmtdidentifiers.model.Arn
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.api.PayAndTax
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestRelationshipAuthService}
 
+import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
-class PayAndTaxControllerSpec extends UnitSpec with GuiceOneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
+class PayAndTaxControllerSpec extends WordSpecLike with Matchers with OptionValues
+  with GuiceOneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
 
   val mockEmploymentHistoryService: EmploymentHistoryService = mock[EmploymentHistoryService]
 
@@ -47,7 +46,7 @@ class PayAndTaxControllerSpec extends UnitSpec with GuiceOneServerPerSuite with 
   val taxYear = 2016
   val employmentId: String = UUID.randomUUID().toString
 
-  val testPayAndTax = PayAndTax(earlierYearUpdates = Nil)
+  val testPayAndTax: PayAndTax = PayAndTax(earlierYearUpdates = Nil)
   val testPayAndTaxMap = Map(s"${testPayAndTax.payAndTaxId}" -> testPayAndTax, s"${testPayAndTax.payAndTaxId}" -> testPayAndTax)
 
   val cc: ControllerComponents = stubControllerComponents()

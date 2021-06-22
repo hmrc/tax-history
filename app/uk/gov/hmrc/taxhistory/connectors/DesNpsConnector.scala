@@ -17,7 +17,6 @@
 package uk.gov.hmrc.taxhistory.connectors
 
 import akka.actor.ActorSystem
-import play.api.Logger
 import play.api.http.Status.NOT_FOUND
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -68,7 +67,7 @@ class DesNpsConnector @Inject()(val http: HttpClient,
         http.GET[NpsTaxAccount](taxAccountUrl(nino, year), headers = headers()).map(Some(_))
       }.recover{
         case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == 404 => {
-          Logger.info(s"NPS getTaxAccount returned a 404 response: ${ex.message}")
+          logger.info(s"NPS getTaxAccount returned a 404 response: ${ex.message}")
           None
         }
       }

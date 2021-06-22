@@ -32,21 +32,21 @@ package uk.gov.hmrc.taxhistory.model.api
  * limitations under the License.
  */
 
-import java.util.UUID
-
 import org.joda.time.LocalDate
+import org.scalatest.{Matchers, OptionValues, WordSpecLike}
 import play.api.libs.json.{JsObject, JsValue, Json}
-import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-class EmploymentSpec extends TestUtil with UnitSpec {
+import java.util.UUID
+
+class EmploymentSpec extends TestUtil with WordSpecLike with Matchers with OptionValues {
 
   lazy val employmentJson: JsValue = loadFile("/json/model/api/employment.json")
   lazy val employmentNoEndDateJson: JsValue = loadFile("/json/model/api/employmentNoEndDate.json")
   lazy val employmentListJson: JsValue = loadFile("/json/model/api/employments.json")
 
-  lazy val employment1 = Employment(
+  lazy val employment1: Employment = Employment(
     employmentId = UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
     startDate = Some(new LocalDate("2016-01-21")),
     endDate = Some(new LocalDate("2017-01-01")),
@@ -56,7 +56,7 @@ class EmploymentSpec extends TestUtil with UnitSpec {
     worksNumber = "00191048716"
   )
 
-  lazy val employment2 = Employment(
+  lazy val employment2: Employment = Employment(
     employmentId = UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
     payeReference = "paye-2",
     employerName = "employer-2",

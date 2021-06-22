@@ -32,13 +32,13 @@ package uk.gov.hmrc.taxhistory.model.api
  * limitations under the License.
  */
 
-import java.util.UUID
-
+import org.scalatest.{Matchers, OptionValues, WordSpecLike}
 import play.api.libs.json.{JsArray, JsBoolean, JsDefined, Json}
-import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-class CompanyBenefitSpec extends TestUtil with UnitSpec {
+import java.util.UUID
+
+class CompanyBenefitSpec extends TestUtil with WordSpecLike with Matchers with OptionValues {
 
   lazy val companyBenefitJson = Json.parse(
     """

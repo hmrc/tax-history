@@ -16,14 +16,13 @@
 
 package uk.gov.hmrc.taxhistory.model.rti
 
-import uk.gov.hmrc.play.test.UnitSpec
+import org.joda.time.LocalDate
+import org.scalatest.{Matchers, OptionValues, WordSpecLike}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEarlierYearUpdate, RtiEmployment, RtiPayment}
 import uk.gov.hmrc.taxhistory.fixtures.RtiEmployments
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import org.joda.time.LocalDate
-import uk.gov.hmrc.taxhistory.model.api.EarlierYearUpdate
 
-class RtiEmploymentSpec extends TestUtil with UnitSpec with RtiEmployments {
+class RtiEmploymentSpec extends TestUtil with WordSpecLike with Matchers with OptionValues with RtiEmployments {
 
   private val testEmploymentTaxablePayYTD = BigDecimal(1234)
   private val testEmploymentTotalTaxYTD = BigDecimal(5678)
@@ -48,10 +47,10 @@ class RtiEmploymentSpec extends TestUtil with UnitSpec with RtiEmployments {
       "convert itself to PayAndTax" in {
         val rtiData = rtiEmploymentResponse.as[RtiData]
         val payAndTax = rtiData.employments.head.toPayAndTax
-        payAndTax.taxablePayTotal should be (Some(rtiERTaxablePayTotal))
-        payAndTax.taxTotal should be (Some(rtiERTaxTotal))
-        payAndTax.studentLoan should be (Some(testEmploymentStudentLoansYTD))
-        payAndTax.earlierYearUpdates.size should be (1)
+        payAndTax.taxablePayTotal should be(Some(rtiERTaxablePayTotal))
+        payAndTax.taxTotal should be(Some(rtiERTaxTotal))
+        payAndTax.studentLoan should be(Some(testEmploymentStudentLoansYTD))
+        payAndTax.earlierYearUpdates.size should be(1)
       }
 
       "calculate taxablePayTotalIncludingEYU" when {
@@ -159,7 +158,5 @@ class RtiEmploymentSpec extends TestUtil with UnitSpec with RtiEmployments {
         }
       }
     }
-
   }
-
 }
