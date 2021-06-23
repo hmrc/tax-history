@@ -16,17 +16,18 @@
 
 package uk.gov.hmrc.taxhistory.utils
 
-import java.util.concurrent.TimeUnit
-
 import akka.actor.ActorSystem
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import play.api.test.Helpers._
 import uk.gov.hmrc.http.{BadGatewayException, GatewayTimeoutException}
-import uk.gov.hmrc.play.test.UnitSpec
 
+import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
-class RetrySpec extends UnitSpec {
+class RetrySpec extends WordSpecLike with Matchers with OptionValues with ScalaFutures {
 
 
   private val system = ActorSystem("test")
@@ -39,7 +40,7 @@ class RetrySpec extends UnitSpec {
         100
       }
 
-      val result = await(retry(op))
+      val result = retry(op).futureValue
 
       result shouldBe 100
     }

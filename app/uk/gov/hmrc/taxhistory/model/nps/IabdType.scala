@@ -19,9 +19,8 @@ package uk.gov.hmrc.taxhistory.model.nps
 
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json._
-
 
 sealed trait IabdType
 
@@ -69,7 +68,6 @@ case object EarlierYearsAdjustment    extends Allowances
 
 case object UnKnown extends IabdType
 
-
 object IabdType {
   val UnknownIabdTypeId: Int = -1000
 
@@ -112,12 +110,10 @@ object IabdType {
   )
 
   implicit val format = new Format[IabdType] {
-    def reads(json: JsValue) = JsSuccess(IabdType.apply(json.as[Int]))
+    def reads(json: JsValue): JsSuccess[IabdType] = JsSuccess(IabdType.apply(json.as[Int]))
     def writes(iabdType: IabdType) = JsNumber(IabdType.unapply(iabdType))
   }
-
 }
-
 
 case class Iabd(nino: String,
                 employmentSequenceNumber: Option[Int] = None,
@@ -126,16 +122,16 @@ case class Iabd(nino: String,
                 typeDescription : Option[String] = None,
                 source: Option[Int] = None,
                 paymentFrequency: Option[Int] = None,
-                startDate: Option[String] = None) {
+                startDate: Option[String] = None) extends Logging {
 
-  def toStatePension = {
+  def toStatePension: StatePension = {
     val paymentStartDate: Option[LocalDate] = paymentFrequency match {
       case Some(1) => // Weekly
         startDate.map(date => LocalDate.parse(date, DateTimeFormat.forPattern("dd/MM/yyyy")))
       case Some(5) => // Annual
         None
       case Some(unknownValue) => {
-        Logger.warn(s"Unknown value for IABD's 'paymentFrequency': $unknownValue")
+        logger.warn(s"Unknown value for IABD's 'paymentFrequency': $unknownValue")
         None
       }
       case _ =>
@@ -152,5 +148,5 @@ case class Iabd(nino: String,
 }
 
 object Iabd {
-  implicit val formats = Json.format[Iabd]
+  implicit val formats: OFormat[Iabd] = Json.format[Iabd]
 }

@@ -16,17 +16,16 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
-import java.util.UUID
-
 import org.joda.time.LocalDate
-import play.api.libs.json.JsObject
-import play.api.libs.json._
+import org.scalatest.{Matchers, OptionValues, WordSpecLike}
 import play.api.libs.json.Json._
-import uk.gov.hmrc.play.test.UnitSpec
+import play.api.libs.json.{JsObject, _}
 import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-class PayAsYouEarnSpec extends TestUtil with UnitSpec {
+import java.util.UUID
+
+class PayAsYouEarnSpec extends TestUtil with WordSpecLike with Matchers with OptionValues {
 
   private lazy val fullPayeJson: JsObject = loadFile("/json/model/api/paye.json").as[JsObject]
 
@@ -55,16 +54,16 @@ class PayAsYouEarnSpec extends TestUtil with UnitSpec {
       )
       val employments1Json = Json.parse(
         s"""
-          |    {
-          |      "employmentId": "$employment1Id",
-          |      "startDate": "2016-01-21",
-          |      "endDate": "2017-01-01",
-          |      "payeReference": "paye-1",
-          |      "employerName": "employer-1",
-          |      "employmentPaymentType": "IncapacityBenefit",
-          |      "employmentStatus": 1,
-          |      "worksNumber": "00191048716"
-          |    }
+           |    {
+           |      "employmentId": "$employment1Id",
+           |      "startDate": "2016-01-21",
+           |      "endDate": "2017-01-01",
+           |      "payeReference": "paye-1",
+           |      "employerName": "employer-1",
+           |      "employmentPaymentType": "IncapacityBenefit",
+           |      "employmentStatus": 1,
+           |      "worksNumber": "00191048716"
+           |    }
         """.stripMargin)
 
       val employment2 = Employment(

@@ -17,11 +17,11 @@
 package uk.gov.hmrc.taxhistory.model.nps
 
 import org.joda.time.LocalDate
+import org.scalatest.{Matchers, OptionValues, WordSpecLike}
 import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
-import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-class NpsEmploymentSpec extends TestUtil with UnitSpec {
+class NpsEmploymentSpec extends TestUtil with WordSpecLike with Matchers with OptionValues {
 
   lazy val employmentsResponse: JsValue = loadFile("/json/nps/response/employments.json")
 
@@ -101,7 +101,7 @@ class NpsEmploymentSpec extends TestUtil with UnitSpec {
 
     "Multiple NpsEmployments Json" should {
       "transform List of NpsEmployment Model " in {
-        noException shouldBe thrownBy (employmentsResponse.as[List[NpsEmployment]])
+        noException shouldBe thrownBy(employmentsResponse.as[List[NpsEmployment]])
       }
     }
   }

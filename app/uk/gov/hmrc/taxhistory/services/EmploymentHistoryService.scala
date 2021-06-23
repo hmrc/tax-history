@@ -17,7 +17,6 @@
 package uk.gov.hmrc.taxhistory.services
 
 
-import javax.inject.Inject
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
@@ -34,6 +33,7 @@ import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, 
 import uk.gov.hmrc.taxhistory.utils.Logging
 import uk.gov.hmrc.time.TaxYear
 
+import javax.inject.Inject
 import scala.annotation.tailrec
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -42,15 +42,21 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
                                          val cacheService: PayeCacheService,
                                          val auditable: Auditable,
                                          config: AppConfig)
-                                        (implicit executionContext: ExecutionContext)extends Logging {
+                                        (implicit executionContext: ExecutionContext) extends Logging {
 
   def getEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Employment]] = {
     getFromCache(nino, taxYear).map { es =>
       val employments = es.employments.map(_.enrichWithURIs(taxYear.startYear))
 
-      if (employments.forall(_.isOccupationalPension)) {employments}
-      else if (config.jobSeekersAllowanceFlag) {addFillers(employments, taxYear)}
-      else {addFillers(employments, taxYear).filterNot(emp => emp.isJobseekersAllowance)}
+      if (employments.forall(_.isOccupationalPension)) {
+        employments
+      }
+      else if (config.jobSeekersAllowanceFlag) {
+        addFillers(employments, taxYear)
+      }
+      else {
+        addFillers(employments, taxYear).filterNot(emp => emp.isJobseekersAllowance)
+      }
     }
   }
 
@@ -89,7 +95,6 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
     }
   }
 
-
   def getFromCache(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[PayAsYouEarn] = {
     cacheService.getOrElseInsert(nino, taxYear) {
       retrieveAndBuildPaye(nino, taxYear).map { h =>
@@ -115,7 +120,6 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
       })
     }
   }
-
 
   def getPayAndTax(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit headerCarrier: HeaderCarrier): Future[Option[PayAndTax]] = {
     getFromCache(nino, taxYear).map(_.payAndTax.get(employmentId))
@@ -179,7 +183,6 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
       allowancesURI = s"/${year.startYear}/allowances",
       employmentsURI = s"/${year.startYear}/employments",
       taxAccountURI = s"/${year.startYear}/tax-account"))
-    println(config.currentYearFlag)
     Future.successful(taxYears)
   }
 
@@ -239,8 +242,8 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
     val payes: List[PayAsYouEarn] = npsEmployments.map { npsEmployment =>
 
       val matchedIncomeSource: Option[IncomeSource] = taxAccountOption.flatMap(_.matchedIncomeSource(npsEmployment))
-      
-      if(matchedIncomeSource.isEmpty && taxYear == TaxYear.current) {
+
+      if (matchedIncomeSource.isEmpty && taxYear == TaxYear.current) {
         logger.warn("No matched income source found for employment in current tax year")
       }
 
@@ -261,34 +264,34 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
   /*
     Retrieve NpsEmployments directly from the NPS microservice.
    */
-  def retrieveNpsEmployments(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[NpsEmployment]] = {
+  def retrieveNpsEmployments(nino: Nino, taxYear: TaxYear): Future[List[NpsEmployment]] = {
     val passedInTaxYear = taxYear.currentYear
 
-      desNpsConnector.getEmployments(nino, passedInTaxYear).map { employments =>
-        if (TaxYear.current.currentYear.equals(passedInTaxYear)) {
-          employments.filterNot(x => x.receivingJobSeekersAllowance | x.otherIncomeSourceIndicator)
-        } else {
-          employments.filterNot(_.otherIncomeSourceIndicator)
-        }
-      }.orNotFound(s"No NPS employments found for $nino $taxYear")
+    desNpsConnector.getEmployments(nino, passedInTaxYear).map { employments =>
+      if (TaxYear.current.currentYear.equals(passedInTaxYear)) {
+        employments.filterNot(x => x.receivingJobSeekersAllowance | x.otherIncomeSourceIndicator)
+      } else {
+        employments.filterNot(_.otherIncomeSourceIndicator)
+      }
+    }.orNotFound(s"No NPS employments found for $nino $taxYear")
   }
 
   /*
     Retrieve RtiData directly from the RTI microservice.
    */
-  def retrieveRtiData(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Option[RtiData]] =
+  def retrieveRtiData(nino: Nino, taxYear: TaxYear): Future[Option[RtiData]] =
     rtiConnector.getRTIEmployments(nino, taxYear)
 
   /*
     Retrieve Iabds directly from DES.
    */
-  def retrieveNpsIabds(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[List[Iabd]] =
+  def retrieveNpsIabds(nino: Nino, taxYear: TaxYear): Future[List[Iabd]] =
     desNpsConnector.getIabds(nino, taxYear.currentYear)
 
   /*
     Retrieve TaxAccount directly from DES.
    */
-  def retrieveNpsTaxAccount(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[Option[NpsTaxAccount]] =
+  def retrieveNpsTaxAccount(nino: Nino, taxYear: TaxYear): Future[Option[NpsTaxAccount]] =
     desNpsConnector.getTaxAccount(nino, taxYear.currentYear)
 
   private def unmatchedEmployments[A](matched: List[A], raw: List[A]): List[A] = {
@@ -303,8 +306,8 @@ class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
     Map("nino" -> nino, "payeNumber" -> nps.payeNumber, "taxDistrictNumber" -> nps.taxDistrictNumber,
       "worksNumber" -> nps.worksNumber.getOrElse(""))
 
-  private def sendDataEvents(records: List[DataEventDetail], auditType: DataEventAuditType)(implicit hc: HeaderCarrier) = {
-    if(records.nonEmpty) auditable.sendDataEvents(transactionName = PAYEForAgents, details = records, eventType = auditType)
+  private def sendDataEvents(records: List[DataEventDetail], auditType: DataEventAuditType)(implicit hc: HeaderCarrier): Unit = {
+    if (records.nonEmpty) auditable.sendDataEvents(transactionName = PAYEForAgents, details = records, eventType = auditType)
   }
 
   private def alignFillerDates(filler: Employment, employment: Employment, taxYear: TaxYear): List[Employment] = {

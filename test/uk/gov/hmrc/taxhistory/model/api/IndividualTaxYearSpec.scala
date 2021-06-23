@@ -16,20 +16,20 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
-import play.api.libs.json.Json
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 
-class IndividualTaxYearSpec extends TestUtil with UnitSpec {
+class IndividualTaxYearSpec extends TestUtil with WordSpecLike with Matchers with OptionValues {
 
-  lazy val indiviualTaxYearJson = loadFile("/json/model/api/individual-tax-year.json")
-  lazy val indiviualTaxYearListJson = loadFile("/json/model/api/individual-tax-years.json")
+  lazy val indiviualTaxYearJson: JsValue = loadFile("/json/model/api/individual-tax-year.json")
+  lazy val indiviualTaxYearListJson: JsValue = loadFile("/json/model/api/individual-tax-years.json")
 
-  lazy val indivTaxYear1 = IndividualTaxYear(year = 2016, allowancesURI = "/2016/allowances", employmentsURI = "/2016/employments", taxAccountURI = "/2016/tax-account")
-  lazy val indivTaxYear2 = IndividualTaxYear(year = 2015, allowancesURI = "/2015/allowances", employmentsURI = "/2015/employments", taxAccountURI = "/2015/tax-account")
+  lazy val indivTaxYear1: IndividualTaxYear = IndividualTaxYear(year = 2016, allowancesURI = "/2016/allowances", employmentsURI = "/2016/employments", taxAccountURI = "/2016/tax-account")
+  lazy val indivTaxYear2: IndividualTaxYear = IndividualTaxYear(year = 2015, allowancesURI = "/2015/allowances", employmentsURI = "/2015/employments", taxAccountURI = "/2015/tax-account")
 
-  lazy val taxYearList = List(indivTaxYear1,indivTaxYear2)
+  lazy val taxYearList = List(indivTaxYear1, indivTaxYear2)
 
   "IndividualTaxYear" should {
     "transform into Json from object correctly " in {

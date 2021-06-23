@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxhistory.controllers
 
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
-import org.scalatest.BeforeAndAfterEach
+import org.scalatest.{BeforeAndAfterEach, Matchers, OptionValues, WordSpecLike}
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.mvc.ControllerComponents
@@ -27,7 +27,6 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.agentmtdidentifiers.model.Arn
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.nps.StatePension
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
@@ -36,7 +35,8 @@ import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class StatePensionControllerSpec extends UnitSpec with GuiceOneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
+class StatePensionControllerSpec extends WordSpecLike with Matchers with OptionValues
+  with GuiceOneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
 
   private val mockEmploymentHistoryService = mock[EmploymentHistoryService]
 

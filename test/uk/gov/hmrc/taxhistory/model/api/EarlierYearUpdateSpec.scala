@@ -32,30 +32,30 @@ package uk.gov.hmrc.taxhistory.model.api
  * limitations under the License.
  */
 
-import java.util.UUID
-
 import org.joda.time.LocalDate
-import play.api.libs.json.Json
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-class EarlierYearUpdateSpec extends TestUtil with UnitSpec {
+import java.util.UUID
 
-  lazy val earlierYearUpdateJson = loadFile("/json/model/api/earlierYearUpdate.json")
-  lazy val earlierYearUpdateListJson = loadFile("/json/model/api/earlierYearUpdates.json")
+class EarlierYearUpdateSpec extends TestUtil with WordSpecLike with Matchers with OptionValues {
 
-  lazy val earlierYearUpdate1 =  EarlierYearUpdate(
+  lazy val earlierYearUpdateJson: JsValue = loadFile("/json/model/api/earlierYearUpdate.json")
+  lazy val earlierYearUpdateListJson: JsValue = loadFile("/json/model/api/earlierYearUpdates.json")
+
+  lazy val earlierYearUpdate1: EarlierYearUpdate = EarlierYearUpdate(
     earlierYearUpdateId = UUID.fromString("cf1886e7-ae56-4ec2-84a6-926d64ace287"),
     taxablePayEYU = BigDecimal(6543.21),
     taxEYU = BigDecimal(123.45),
     receivedDate = new LocalDate("2016-06-26"))
 
-  lazy val earlierYearUpdate2 =  EarlierYearUpdate(
+  lazy val earlierYearUpdate2: EarlierYearUpdate = EarlierYearUpdate(
     earlierYearUpdateId = UUID.fromString("effa7845-aa97-454f-88da-ffa099eba7f2"),
     taxablePayEYU = BigDecimal(123.45),
     taxEYU = BigDecimal(67.89),
     receivedDate = new LocalDate("2015-05-29"))
-  lazy val earlierYearUpdateList = List(earlierYearUpdate1,earlierYearUpdate2)
+  lazy val earlierYearUpdateList = List(earlierYearUpdate1, earlierYearUpdate2)
 
   "EarlierYearUpdate" should {
 

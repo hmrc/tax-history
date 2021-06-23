@@ -16,15 +16,14 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import java.util.UUID
-
 import org.joda.time.LocalDate
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.{Matchers, OptionValues, WordSpecLike}
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.api.{PayAndTax, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
@@ -33,16 +32,17 @@ import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 
+import java.util.UUID
 import scala.concurrent.Future
 
 
-class PayAndTaxServiceSpec extends UnitSpec with MockitoSugar with TestUtil {
+class PayAndTaxServiceSpec extends WordSpecLike with Matchers with OptionValues with ScalaFutures with MockitoSugar with TestUtil {
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  val testNino = randomNino()
-  
+  val testNino: Nino = randomNino()
+
   val testEmploymentHistoryService: EmploymentHistoryService = TestEmploymentHistoryService.createNew()
 
-  val npsEmploymentResponse :List[NpsEmployment] = List(
+  val npsEmploymentResponse: List[NpsEmployment] = List(
     NpsEmployment(
       "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false,
       otherIncomeSourceIndicator = false, Some(new LocalDate("2015-01-21")), None, receivingOccupationalPension = false, Live))
@@ -64,7 +64,7 @@ class PayAndTaxServiceSpec extends UnitSpec with MockitoSugar with TestUtil {
         .thenReturn(Future.successful(Some(rtiEmploymentResponse)))
       when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
         .thenReturn(Future.successful(Some(testNpsTaxAccount)))
-      val payAsYouEarn = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino,TaxYear(2016)))
+      val payAsYouEarn = testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)).futureValue
 
       val payAndTax = payAsYouEarn.payAndTax
       payAndTax.size shouldBe 1
@@ -85,7 +85,7 @@ class PayAndTaxServiceSpec extends UnitSpec with MockitoSugar with TestUtil {
 
       testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye)
 
-      val payAndTax = await(testEmploymentHistoryService.getPayAndTax(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"))
+      val payAndTax = testEmploymentHistoryService.getPayAndTax(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3").futureValue
       payAndTax shouldBe testPayAndTax
     }
   }
@@ -108,7 +108,7 @@ class PayAndTaxServiceSpec extends UnitSpec with MockitoSugar with TestUtil {
 
       testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye)
 
-      val payAndTax: Map[String, PayAndTax] = await(testEmploymentHistoryService.getAllPayAndTax(Nino("AA000000A"), TaxYear(2014)))
+      val payAndTax: Map[String, PayAndTax] = testEmploymentHistoryService.getAllPayAndTax(Nino("AA000000A"), TaxYear(2014)).futureValue
       payAndTax shouldBe testPayAndTaxList
     }
   }

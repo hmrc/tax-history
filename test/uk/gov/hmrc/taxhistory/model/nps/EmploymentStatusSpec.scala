@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
-import play.api.data.validation.ValidationError
-import play.api.libs.json.{JsError, JsPath, JsSuccess, Json, JsonValidationError}
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import play.api.libs.json._
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.{Ceased, Live, PotentiallyCeased}
 
-class EmploymentStatusSpec extends UnitSpec {
+class EmploymentStatusSpec extends WordSpecLike with Matchers with OptionValues {
 
   "EmploymentStatus" must {
     "read and write json successfully" in {
@@ -31,7 +30,7 @@ class EmploymentStatusSpec extends UnitSpec {
     }
 
     "throw error on invalid data" in {
-      EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> 10)) shouldBe JsError(List((JsPath  \"employmentStatus",
+      EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> 10)) shouldBe JsError(List((JsPath \ "employmentStatus",
         List(JsonValidationError(List("Invalid EmploymentStatus"))))))
     }
   }

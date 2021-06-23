@@ -22,7 +22,6 @@ import play.api.libs.json._
 import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, PayAndTax}
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
 import play.api.libs.json.JodaWrites._
-import play.api.libs.json.JodaReads._
 
 case class RtiData(nino: String,
                    employments: List[RtiEmployment])
@@ -42,7 +41,7 @@ case class RtiEmployment(sequenceNo: Int,
     payments match {
       case Nil => PayAndTax(earlierYearUpdates = nonEmptyEyus, taxablePayTotalIncludingEYU = None, taxTotalIncludingEYU = None)
       case matchingPayments =>
-        val payment = matchingPayments.sorted.last
+        val payment = matchingPayments.max
 
         val taxablePayTotal = payment.taxablePayYTD
         val taxablePayTotalIncludingEYU = taxablePayTotal + nonEmptyEyus.map(_.taxablePayEYU).sum
@@ -66,7 +65,6 @@ case class RtiEmployment(sequenceNo: Int,
           earlierYearUpdates = nonEmptyEyus)
     }
   }
-
 }
 
 case class RtiPayment(paidOnDate: LocalDate,
@@ -91,11 +89,10 @@ case class RtiEarlierYearUpdate(taxablePayDelta: BigDecimal,
   }
 }
 
-
 object RtiPayment {
-  implicit val reader = new Reads[RtiPayment] {
+  implicit val reader: Reads[RtiPayment] = new Reads[RtiPayment] {
     def reads(js: JsValue): JsResult[RtiPayment] = {
-      implicit val stringMapFormat = JsonUtils.mapFormat[String, BigDecimal]("type", "amount")
+      implicit val stringMapFormat: Format[Map[String, BigDecimal]] = JsonUtils.mapFormat[String, BigDecimal]("type", "amount")
       val mandatoryMonetaryAmountMap: Option[Map[String, BigDecimal]] =
         (js \ "mandatoryMonetaryAmount").asOpt[Map[String, BigDecimal]]
 
@@ -116,13 +113,13 @@ object RtiPayment {
     }
   }
 
-  implicit val writer = Json.writes[RtiPayment]
+  implicit val writer: OWrites[RtiPayment] = Json.writes[RtiPayment]
 }
 
 object RtiEarlierYearUpdate {
-  implicit val reader = new Reads[RtiEarlierYearUpdate] {
+  implicit val reader: Reads[RtiEarlierYearUpdate] = new Reads[RtiEarlierYearUpdate] {
     def reads(js: JsValue): JsResult[RtiEarlierYearUpdate] = {
-      implicit val stringMapFormat = JsonUtils.mapFormat[String, BigDecimal]("type", "amount")
+      implicit val stringMapFormat: Format[Map[String, BigDecimal]] = JsonUtils.mapFormat[String, BigDecimal]("type", "amount")
       val optionalAdjustmentAmountMap: Option[Map[String, BigDecimal]] =
         (js \ "optionalAdjustmentAmount").asOpt[Map[String, BigDecimal]]
 
@@ -139,11 +136,11 @@ object RtiEarlierYearUpdate {
       )
     }
   }
-  implicit val writer = Json.writes[RtiEarlierYearUpdate]
+  implicit val writer: OWrites[RtiEarlierYearUpdate] = Json.writes[RtiEarlierYearUpdate]
 }
 
 object RtiEmployment {
-  implicit val reader = new Reads[RtiEmployment] {
+  implicit val reader: Reads[RtiEmployment] = new Reads[RtiEmployment] {
     def reads(js: JsValue): JsResult[RtiEmployment] = {
       for {
         sequenceNo <- (js \ "sequenceNumber").validate[Int]
@@ -164,11 +161,11 @@ object RtiEmployment {
       }
     }
   }
-  implicit val writer = Json.writes[RtiEmployment]
+  implicit val writer: OWrites[RtiEmployment] = Json.writes[RtiEmployment]
 }
 
 object RtiData {
-  implicit val reader = new Reads[RtiData] {
+  implicit val reader: Reads[RtiData] = new Reads[RtiData] {
     def reads(js: JsValue): JsResult[RtiData] = {
       for {
         nino <- (js \ "request" \ "nino").validate[String]
@@ -178,6 +175,6 @@ object RtiData {
       }
     }
   }
-  implicit val writer = Json.writes[RtiData]
+  implicit val writer: OWrites[RtiData] = Json.writes[RtiData]
 }
 

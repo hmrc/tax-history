@@ -32,18 +32,18 @@ package uk.gov.hmrc.taxhistory.model.api
  * limitations under the License.
  */
 
-import java.util.UUID
-
+import org.scalatest.{Matchers, OptionValues, WordSpecLike}
 import play.api.libs.json.{JsValue, Json}
-import uk.gov.hmrc.play.test.UnitSpec
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-class AllowanceSpec extends TestUtil with UnitSpec {
+import java.util.UUID
+
+class AllowanceSpec extends TestUtil with WordSpecLike with Matchers with OptionValues {
 
   lazy val allowanceJson: JsValue = loadFile("/json/model/api/allowance.json")
   lazy val allowanceListJson: JsValue = loadFile("/json/model/api/allowances.json")
 
-  lazy val allowance1 = Allowance(allowanceId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
+  lazy val allowance1: Allowance = Allowance(allowanceId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
                                   iabdType = "allowanceType",
                                   amount = BigDecimal(12.00))
 
