@@ -7,7 +7,13 @@
 
     <logger name="uk.gov" level="${logger.uk.gov:-INFO}"/>
 
-    <logger name="application" level="${logger.application:-INFO}"/>
+    <!--  uses the default "application" logger level: http://logback.qos.ch/manual/configuration.html#defaultValuesForVariables  -->
+    <logger name="application"  level="${logger.application:-INFO}"/>
+    <logger name="connectors"   level="${logger.application:-INFO}"/>
+    <logger name="controllers"  level="${logger.application:-INFO}"/>
+    <logger name="model"        level="${logger.application:-INFO}"/>
+    <logger name="services"     level="${logger.application:-INFO}"/>
+    <logger name="utils"        level="${logger.application:-INFO}"/>
 
     <logger name="com.ning.http.client" level="WARN"/>
 
@@ -17,7 +23,8 @@
 
     <logger name="play.core.netty" additivity="false" level="WARN"/>
 
-    <root level="${logger.application:-ERROR}">
+    <!--  use the root level from the default logback config? default to INFO  -->
+    <root level="${logger.root:-INFO}">
         <appender-ref ref="STDOUT"/>
     </root>
 </configuration>
