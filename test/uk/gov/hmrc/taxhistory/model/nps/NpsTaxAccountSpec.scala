@@ -17,7 +17,9 @@
 package uk.gov.hmrc.taxhistory.model.nps
 
 import org.joda.time.LocalDate
-import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import org.scalatest.OptionValues
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json.fromJson
 import play.api.libs.json._
 import uk.gov.hmrc.domain.TaxCode
@@ -25,7 +27,7 @@ import uk.gov.hmrc.taxhistory.model.api.IncomeSource
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-class NpsTaxAccountSpec extends TestUtil with WordSpecLike with Matchers with OptionValues {
+class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
 
   lazy val getTaxAcoountResponseURLDummy: JsValue = loadFile("/json/nps/response/GetTaxAccount.json")
 

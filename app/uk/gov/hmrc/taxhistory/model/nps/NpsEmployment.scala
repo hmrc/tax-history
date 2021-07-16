@@ -18,9 +18,10 @@ package uk.gov.hmrc.taxhistory.model.nps
 
 import org.joda.time.LocalDate
 import play.api.libs.json._
+import play.api.libs.json.JodaWrites._
+import play.api.libs.json.JodaReads._
 import uk.gov.hmrc.taxhistory.model.api.{Employment, EmploymentPaymentType}
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
-import play.api.libs.json.JodaWrites._
 
 case class NpsEmployment(nino: String,
                          sequenceNumber: Int,
@@ -53,37 +54,35 @@ case class NpsEmployment(nino: String,
 }
 
 object NpsEmployment {
-  implicit val reader: Reads[NpsEmployment] = new Reads[NpsEmployment] {
-    def reads(js: JsValue): JsResult[NpsEmployment] = {
-      val startDate = (js \ "startDate").asOpt[LocalDate](JsonUtils.npsDateFormat)
-      val endDate = (js \ "endDate").asOpt[LocalDate](JsonUtils.npsDateFormat)
-      for {
-        nino <- (js \ "nino").validate[String]
-        sequenceNumber <- (js \ "sequenceNumber").validate[Int]
-        taxDistrictNumber <- (js \ "taxDistrictNumber").validate[String]
-        payeNumber <- (js \ "payeNumber").validate[String]
-        employerName <- (js \ "employerName").validate[String]
-        worksNumber <- (js \ "worksNumber").validateOpt[String]
-        receivingJobSeekersAllowance <- (js \ "receivingJobseekersAllowance").validate[Boolean]
-        otherIncomeSourceIndicator <- (js \ "otherIncomeSourceIndicator").validate[Boolean]
-        receivingOccupationalPension <- (js \ "receivingOccupationalPension").validate[Boolean]
-        employmentStatus <- js.validate[EmploymentStatus]
-      } yield {
-        NpsEmployment(
-          nino = nino,
-          sequenceNumber = sequenceNumber,
-          taxDistrictNumber = withPadding(taxDistrictNumber),
-          payeNumber = payeNumber,
-          employerName = employerName,
-          worksNumber = worksNumber,
-          receivingJobSeekersAllowance = receivingJobSeekersAllowance,
-          otherIncomeSourceIndicator = otherIncomeSourceIndicator,
-          startDate = startDate,
-          endDate = endDate,
-          receivingOccupationalPension = receivingOccupationalPension,
-          employmentStatus = employmentStatus
-        )
-      }
+  implicit val reader: Reads[NpsEmployment] = (js: JsValue) => {
+    val startDate = (js \ "startDate").asOpt[LocalDate](JsonUtils.npsDateFormat)
+    val endDate = (js \ "endDate").asOpt[LocalDate](JsonUtils.npsDateFormat)
+    for {
+      nino <- (js \ "nino").validate[String]
+      sequenceNumber <- (js \ "sequenceNumber").validate[Int]
+      taxDistrictNumber <- (js \ "taxDistrictNumber").validate[String]
+      payeNumber <- (js \ "payeNumber").validate[String]
+      employerName <- (js \ "employerName").validate[String]
+      worksNumber <- (js \ "worksNumber").validateOpt[String]
+      receivingJobSeekersAllowance <- (js \ "receivingJobseekersAllowance").validate[Boolean]
+      otherIncomeSourceIndicator <- (js \ "otherIncomeSourceIndicator").validate[Boolean]
+      receivingOccupationalPension <- (js \ "receivingOccupationalPension").validate[Boolean]
+      employmentStatus <- js.validate[EmploymentStatus]
+    } yield {
+      NpsEmployment(
+        nino = nino,
+        sequenceNumber = sequenceNumber,
+        taxDistrictNumber = withPadding(taxDistrictNumber),
+        payeNumber = payeNumber,
+        employerName = employerName,
+        worksNumber = worksNumber,
+        receivingJobSeekersAllowance = receivingJobSeekersAllowance,
+        otherIncomeSourceIndicator = otherIncomeSourceIndicator,
+        startDate = startDate,
+        endDate = endDate,
+        receivingOccupationalPension = receivingOccupationalPension,
+        employmentStatus = employmentStatus
+      )
     }
   }
   implicit val writer: OWrites[NpsEmployment] = Json.writes[NpsEmployment]

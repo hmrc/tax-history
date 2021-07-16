@@ -33,14 +33,16 @@ package uk.gov.hmrc.taxhistory.model.api
  */
 
 import org.joda.time.LocalDate
-import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest. OptionValues
+import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.{JsObject, JsValue, Json}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 import java.util.UUID
 
-class EmploymentSpec extends TestUtil with WordSpecLike with Matchers with OptionValues {
+class EmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
 
   lazy val employmentJson: JsValue = loadFile("/json/model/api/employment.json")
   lazy val employmentNoEndDateJson: JsValue = loadFile("/json/model/api/employmentNoEndDate.json")

@@ -17,11 +17,13 @@
 package uk.gov.hmrc.taxhistory.config
 
 import akka.actor.ActorSystem
+
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.taxhistory.utils.Retry
 
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
+import scala.language.postfixOps
 
 @Singleton
 class AppConfig @Inject()(config: ServicesConfig) {

@@ -61,7 +61,7 @@ class PayAsYouEarnControllerSpec extends PlaySpec with GuiceOneServerPerSuite wi
   val unauthorisedNino: Nino = testSaAuthService.unauthorisedNino
   val forbiddenNino: Nino = testSaAuthService.forbiddenNino
 
-  override def beforeEach = {
+  override def beforeEach: Unit = {
     reset(mockEmploymentHistoryService)
   }
 
@@ -96,7 +96,7 @@ class PayAsYouEarnControllerSpec extends PlaySpec with GuiceOneServerPerSuite wi
           status(result) must be(UNAUTHORIZED)
 
           //verify(mockSaAuthService).saAuthValidator
-          verifyZeroInteractions(mockEmploymentHistoryService)
+          verifyNoInteractions(mockEmploymentHistoryService)
         }
       }
 
@@ -106,7 +106,7 @@ class PayAsYouEarnControllerSpec extends PlaySpec with GuiceOneServerPerSuite wi
           status(result) must be(FORBIDDEN)
 
           //verify(mockSaAuthService).saAuthValidator
-          verifyZeroInteractions(mockEmploymentHistoryService)
+          verifyNoInteractions(mockEmploymentHistoryService)
         }
       }
 

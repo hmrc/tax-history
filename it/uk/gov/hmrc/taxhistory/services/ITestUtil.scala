@@ -28,5 +28,5 @@ object ITestUtil {
     Json.parse(jsonString)
   }
 
-  val randomNino = () => Nino(new Generator(new Random()).nextNino.value.replaceFirst("MA", "AA"))
+  val randomNino: () => Nino = () => Nino(new Generator(new Random()).nextNino.value.replaceFirst("MA", "AA"))
 }

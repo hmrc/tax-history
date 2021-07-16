@@ -36,4 +36,3 @@ case class PayAndTax(payAndTaxId: UUID = UUID.randomUUID(),
 object PayAndTax {
   implicit val formats: OFormat[PayAndTax] = Json.format[PayAndTax]
 }
-

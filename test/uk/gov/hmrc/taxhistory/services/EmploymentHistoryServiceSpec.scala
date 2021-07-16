@@ -21,7 +21,9 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.OptionValues
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.domain.Nino
@@ -41,7 +43,7 @@ import java.util.UUID
 import scala.concurrent.Future
 
 
-class EmploymentHistoryServiceSpec extends WordSpecLike with Matchers with OptionValues with ScalaFutures with MockitoSugar with TestUtil with Employments {
+class EmploymentHistoryServiceSpec extends AnyWordSpecLike with Matchers with OptionValues with ScalaFutures with MockitoSugar with TestUtil with Employments {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val testNino: Nino = randomNino()

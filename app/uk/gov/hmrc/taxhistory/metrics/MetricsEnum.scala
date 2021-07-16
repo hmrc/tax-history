@@ -16,13 +16,15 @@
 
 package uk.gov.hmrc.taxhistory.metrics
 
+import uk.gov.hmrc.taxhistory.metrics
+
 
 object MetricsEnum extends Enumeration {
 
   type MetricsEnum = Value
-  val NPS_GET_EMPLOYMENTS = Value
-  val RTI_GET_EMPLOYMENTS = Value
-  val NPS_GET_IABDS = Value
-  val NPS_GET_TAX_ACCOUNT = Value
-  val CITIZEN_DETAILS = Value
+  val NPS_GET_EMPLOYMENTS: metrics.MetricsEnum.Value = Value
+  val RTI_GET_EMPLOYMENTS: metrics.MetricsEnum.Value = Value
+  val NPS_GET_IABDS: metrics.MetricsEnum.Value = Value
+  val NPS_GET_TAX_ACCOUNT: metrics.MetricsEnum.Value = Value
+  val CITIZEN_DETAILS: metrics.MetricsEnum.Value = Value
 }

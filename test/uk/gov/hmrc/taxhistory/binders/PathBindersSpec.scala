@@ -16,11 +16,13 @@
 
 package uk.gov.hmrc.taxhistory.binders
 
-import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest. OptionValues
+import org.scalatest.matchers.should.Matchers
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.time.TaxYear
 
-class PathBindersSpec extends WordSpecLike with Matchers with OptionValues {
+class PathBindersSpec extends AnyWordSpec with Matchers with OptionValues {
 
   "ninoBinder" must {
     "parse a valid nino" in {

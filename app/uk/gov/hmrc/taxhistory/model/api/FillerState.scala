@@ -82,10 +82,10 @@ object FillerState {
   }
 
   private[api] implicit class DateComparisonOps(someDate: LocalDate) {
-    def isEqualOrBefore(comparedToThisDate: LocalDate) =
+    def isEqualOrBefore(comparedToThisDate: LocalDate): Boolean =
       someDate.isEqual(comparedToThisDate) || someDate.isBefore(comparedToThisDate)
 
-    def isEqualOrAfter(comparedToThisDate: LocalDate) =
+    def isEqualOrAfter(comparedToThisDate: LocalDate): Boolean =
       someDate.isEqual(comparedToThisDate) || someDate.isAfter(comparedToThisDate)
   }
 }

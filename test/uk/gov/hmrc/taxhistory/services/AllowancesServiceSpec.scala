@@ -39,10 +39,10 @@ import scala.concurrent.Future
 
 class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
   val testNino = randomNino()
 
-  val testEmploymentHistoryService = TestEmploymentHistoryService.createNew()
+  val testEmploymentHistoryService: EmploymentHistoryService = TestEmploymentHistoryService.createNew()
 
   val npsEmploymentResponse :List[NpsEmployment] = List(
     NpsEmployment(

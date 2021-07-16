@@ -18,10 +18,13 @@ package uk.gov.hmrc.taxhistory.services
 
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest._
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.test.Helpers._
 import play.modules.reactivemongo.ReactiveMongoComponent
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mongo.{MongoConnector, MongoSpecSupport}
 import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
@@ -31,7 +34,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-class TaxHistoryCacheServiceSpec extends WordSpecLike with Matchers with OptionValues with ScalaFutures
+class TaxHistoryCacheServiceSpec extends AnyWordSpecLike with Matchers with OptionValues with ScalaFutures
   with MockitoSugar
   with BeforeAndAfterAll
   with BeforeAndAfterEach
@@ -51,12 +54,12 @@ class TaxHistoryCacheServiceSpec extends WordSpecLike with Matchers with OptionV
     mockAppConfig
   )
 
-  val testPaye = PayAsYouEarn()
+  val testPaye: PayAsYouEarn = PayAsYouEarn()
 
-  val nino = randomNino()
-  val taxYear = TaxYear(2015)
+  val nino: Nino = randomNino()
+  val taxYear: TaxYear = TaxYear(2015)
 
-  override def beforeEach() = {
+  override def beforeEach(): Unit = {
     mongoComponent.mongoConnector.db().drop()
   }
 
@@ -83,14 +86,14 @@ class TaxHistoryCacheServiceSpec extends WordSpecLike with Matchers with OptionV
       val cacheResult0 = await(testTaxHistoryCacheService.get((nino, taxYear)))
       cacheResult0 shouldBe None
       val cacheResult1 = await(testTaxHistoryCacheService.getOrElseInsert((nino, taxYear))(Future(testPaye)))
-      cacheResult1 shouldBe (testPaye)
+      cacheResult1 shouldBe testPaye
       // The cache should now contain the value.
       val cacheResult2 = await(testTaxHistoryCacheService.get((nino, taxYear)))
       cacheResult2 shouldBe Some(testPaye)
     }
   }
 
-  override protected def afterAll() = {
+  override protected def afterAll(): Unit = {
     mongoComponent.mongoConnector.db().drop()
   }
 }

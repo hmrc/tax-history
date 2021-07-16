@@ -17,12 +17,14 @@
 package uk.gov.hmrc.taxhistory.model.rti
 
 import org.joda.time.LocalDate
-import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.OptionValues
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEarlierYearUpdate, RtiEmployment, RtiPayment}
 import uk.gov.hmrc.taxhistory.fixtures.RtiEmployments
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-class RtiEmploymentSpec extends TestUtil with WordSpecLike with Matchers with OptionValues with RtiEmployments {
+class RtiEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with RtiEmployments {
 
   private val testEmploymentTaxablePayYTD = BigDecimal(1234)
   private val testEmploymentTotalTaxYTD = BigDecimal(5678)

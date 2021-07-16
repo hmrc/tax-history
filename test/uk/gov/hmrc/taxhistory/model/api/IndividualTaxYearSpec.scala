@@ -16,12 +16,14 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
-import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import org.scalatest.OptionValues
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 
-class IndividualTaxYearSpec extends TestUtil with WordSpecLike with Matchers with OptionValues {
+class IndividualTaxYearSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
 
   lazy val indiviualTaxYearJson: JsValue = loadFile("/json/model/api/individual-tax-year.json")
   lazy val indiviualTaxYearListJson: JsValue = loadFile("/json/model/api/individual-tax-years.json")

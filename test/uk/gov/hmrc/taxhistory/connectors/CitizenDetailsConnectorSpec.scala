@@ -32,7 +32,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
@@ -42,7 +42,7 @@ import scala.concurrent.Future
 
 
 class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with BeforeAndAfterEach with GuiceOneAppPerSuite {
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
 
@@ -58,7 +58,7 @@ class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUt
     config = mockAppConfig,
     system = system)
 
-  override def beforeEach = {
+  override def beforeEach: Unit = {
     reset(mockHttp)
     reset(mockMetrics)
     reset(mockTimerContext)
@@ -136,7 +136,7 @@ class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUt
   }
 
   class CitizenDetailsRespondsWithUtr(val forThisNino: Nino) {
-    val expectedUtr = SaUtr("1097133333")
+    val expectedUtr: SaUtr = SaUtr("1097133333")
     when(mockMetrics.startTimer(any())).thenReturn(mockTimerContext)
     when(mockHttp.GET[JsValue](any(), any(), any())(any(), any(), any()))
       .thenReturn(Future.successful(responseWithUtr(forThisNino, expectedUtr)))
@@ -170,7 +170,7 @@ class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUt
   }
 
   class CitizenDetailsFailsOnceThenRespondsWithUtr(withThisException: Throwable, val forThisNino: Nino) {
-    val expectedUtr = SaUtr("1097133333")
+    val expectedUtr: SaUtr = SaUtr("1097133333")
     when(mockMetrics.startTimer(any())).thenReturn(mockTimerContext)
     when(mockHttp.GET[JsValue](any(), any(), any())(any(), any(), any()))
       .thenReturn(Future.failed(withThisException))

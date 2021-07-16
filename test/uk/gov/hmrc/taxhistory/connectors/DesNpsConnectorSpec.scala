@@ -17,7 +17,6 @@
 package uk.gov.hmrc.taxhistory.connectors
 
 import java.util.concurrent.TimeUnit
-
 import akka.actor.ActorSystem
 import com.codahale.metrics.Timer
 import org.mockito.ArgumentMatchers.any
@@ -28,6 +27,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.taxhistory.config.AppConfig
@@ -44,9 +44,9 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with 
 
   override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
 
-  lazy val testIabds = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
-  lazy val testNpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
-  lazy val testNpsEmployment = loadFile("/json/nps/response/employments.json").as[List[NpsEmployment]]
+  lazy val testIabds: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
+  lazy val testNpsTaxAccount: NpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
+  lazy val testNpsEmployment: List[NpsEmployment] = loadFile("/json/nps/response/employments.json").as[List[NpsEmployment]]
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -63,7 +63,7 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with 
     system = system
   )
 
-  val testNino = randomNino()
+  val testNino: Nino = randomNino()
   val testYear = 2016
 
   "EmploymentConnector" should {

@@ -18,7 +18,9 @@ package uk.gov.hmrc.taxhistory.controllers
 
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
-import org.scalatest.{BeforeAndAfterEach, Matchers, OptionValues, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.{BeforeAndAfterEach, OptionValues}
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.mvc.ControllerComponents
@@ -35,7 +37,7 @@ import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class StatePensionControllerSpec extends WordSpecLike with Matchers with OptionValues
+class StatePensionControllerSpec extends AnyWordSpec with Matchers with OptionValues
   with GuiceOneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
 
   private val mockEmploymentHistoryService = mock[EmploymentHistoryService]

@@ -48,7 +48,7 @@ class IndividualTaxYearControllerSpec extends PlaySpec with GuiceOneServerPerSui
   val cc: ControllerComponents = stubControllerComponents()
   implicit val executionContext: ExecutionContext = cc.executionContext
 
-  override def beforeEach = {
+  override def beforeEach: Unit = {
     reset(mockEmploymentHistoryService)
   }
 
