@@ -25,7 +25,7 @@ case class TaDeduction(`type`:Int,
                        sourceAmount: Option[BigDecimal])
 
 object TaDeduction {
-  implicit val formats = Json.format[TaDeduction]
+  implicit val formats: OFormat[TaDeduction] = Json.format[TaDeduction]
 }
 
 case class TaAllowance(`type`:Int,
@@ -34,7 +34,7 @@ case class TaAllowance(`type`:Int,
                        sourceAmount: Option[BigDecimal])
 
 object TaAllowance {
-  implicit val formats = Json.format[TaAllowance]
+  implicit val formats: OFormat[TaAllowance] = Json.format[TaAllowance]
 }
 
 case class NpsIncomeSource(employmentId:Int,
@@ -66,7 +66,7 @@ case class NpsIncomeSource(employmentId:Int,
 }
 
 object NpsIncomeSource {
-  implicit val formats = Json.format[NpsIncomeSource]
+  implicit val formats: OFormat[NpsIncomeSource] = Json.format[NpsIncomeSource]
 }
 
 case class NpsTaxAccount(incomeSources: List[NpsIncomeSource]){
@@ -122,6 +122,6 @@ case class NpsTaxAccount(incomeSources: List[NpsIncomeSource]){
 }
 
 object NpsTaxAccount {
-  implicit val formats = Json.format[NpsTaxAccount]
+  implicit val formats: OFormat[NpsTaxAccount] = Json.format[NpsTaxAccount]
 }
 

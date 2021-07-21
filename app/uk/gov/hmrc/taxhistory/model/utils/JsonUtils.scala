@@ -24,7 +24,7 @@ import scala.util.matching.Regex
 
 object JsonUtils {
   def mapFormat[K, V](keyLabel: String, valueLabel: String)
-                     (implicit kf: Format[K], vf: Format[V]) =
+                     (implicit kf: Format[K], vf: Format[V]): Format[Map[K, V]] =
     new Format[Map[K, V]] {
       def writes(m: Map[K, V]): JsValue =
         JsArray(

@@ -109,9 +109,9 @@ object IabdType {
     66  -> StatePensions
   )
 
-  implicit val format = new Format[IabdType] {
+  implicit val format: Format[IabdType] = new Format[IabdType] {
     def reads(json: JsValue): JsSuccess[IabdType] = JsSuccess(IabdType.apply(json.as[Int]))
-    def writes(iabdType: IabdType) = JsNumber(IabdType.unapply(iabdType))
+    def writes(iabdType: IabdType): JsNumber = JsNumber(IabdType.unapply(iabdType))
   }
 }
 
@@ -130,10 +130,9 @@ case class Iabd(nino: String,
         startDate.map(date => LocalDate.parse(date, DateTimeFormat.forPattern("dd/MM/yyyy")))
       case Some(5) => // Annual
         None
-      case Some(unknownValue) => {
+      case Some(unknownValue) =>
         logger.warn(s"Unknown value for IABD's 'paymentFrequency': $unknownValue")
         None
-      }
       case _ =>
         None
     }

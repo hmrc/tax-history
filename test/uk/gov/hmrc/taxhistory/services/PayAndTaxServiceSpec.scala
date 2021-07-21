@@ -20,7 +20,9 @@ import org.joda.time.LocalDate
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.OptionValues
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
@@ -36,7 +38,7 @@ import java.util.UUID
 import scala.concurrent.Future
 
 
-class PayAndTaxServiceSpec extends WordSpecLike with Matchers with OptionValues with ScalaFutures with MockitoSugar with TestUtil {
+class PayAndTaxServiceSpec extends AnyWordSpecLike with Matchers with OptionValues with ScalaFutures with MockitoSugar with TestUtil {
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val testNino: Nino = randomNino()
 

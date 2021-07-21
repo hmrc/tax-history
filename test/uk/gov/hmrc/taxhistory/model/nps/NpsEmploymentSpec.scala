@@ -17,11 +17,13 @@
 package uk.gov.hmrc.taxhistory.model.nps
 
 import org.joda.time.LocalDate
-import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.OptionValues
+import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-class NpsEmploymentSpec extends TestUtil with WordSpecLike with Matchers with OptionValues {
+class NpsEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
 
   lazy val employmentsResponse: JsValue = loadFile("/json/nps/response/employments.json")
 

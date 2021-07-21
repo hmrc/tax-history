@@ -59,16 +59,12 @@ object EmploymentPaymentType {
     }
   }
 
-  private implicit val reads: Reads[EmploymentPaymentType] = new Reads[EmploymentPaymentType] {
-    override def reads(json: JsValue): JsResult[EmploymentPaymentType] = json match {
-      case JsString(value)  => Try(JsSuccess(EmploymentPaymentType(value))).getOrElse(JsError(s"Invalid EmploymentPaymentType $value"))
-      case invalid => JsError(s"Invalid EmploymentPaymentType $invalid")
-    }
+  private implicit val reads: Reads[EmploymentPaymentType] = {
+    case JsString(value) => Try(JsSuccess(EmploymentPaymentType(value))).getOrElse(JsError(s"Invalid EmploymentPaymentType $value"))
+    case invalid => JsError(s"Invalid EmploymentPaymentType $invalid")
   }
 
-  private implicit val writes: Writes[EmploymentPaymentType] = new Writes[EmploymentPaymentType] {
-    override def writes(o: EmploymentPaymentType): JsValue = JsString(o.name)
-  }
+  private implicit val writes: Writes[EmploymentPaymentType] = (o: EmploymentPaymentType) => JsString(o.name)
 
   implicit val format: Format[EmploymentPaymentType] = Format[EmploymentPaymentType](reads, writes)
 }

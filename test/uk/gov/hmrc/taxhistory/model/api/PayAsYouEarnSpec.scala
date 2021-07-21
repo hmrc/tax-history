@@ -17,7 +17,9 @@
 package uk.gov.hmrc.taxhistory.model.api
 
 import org.joda.time.LocalDate
-import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.OptionValues
+import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.Json._
 import play.api.libs.json.{JsObject, _}
 import uk.gov.hmrc.taxhistory.model.nps._
@@ -25,7 +27,7 @@ import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 import java.util.UUID
 
-class PayAsYouEarnSpec extends TestUtil with WordSpecLike with Matchers with OptionValues {
+class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
 
   private lazy val fullPayeJson: JsObject = loadFile("/json/model/api/paye.json").as[JsObject]
 

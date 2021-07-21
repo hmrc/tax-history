@@ -32,13 +32,15 @@ package uk.gov.hmrc.taxhistory.model.api
  * limitations under the License.
  */
 
-import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.OptionValues
+import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 import java.util.UUID
 
-class AllowanceSpec extends TestUtil with WordSpecLike with Matchers with OptionValues {
+class AllowanceSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
 
   lazy val allowanceJson: JsValue = loadFile("/json/model/api/allowance.json")
   lazy val allowanceListJson: JsValue = loadFile("/json/model/api/allowances.json")

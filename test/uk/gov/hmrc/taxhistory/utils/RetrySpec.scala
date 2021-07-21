@@ -18,7 +18,9 @@ package uk.gov.hmrc.taxhistory.utils
 
 import akka.actor.ActorSystem
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.OptionValues
+import org.scalatest.matchers.should.Matchers
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{BadGatewayException, GatewayTimeoutException}
 
@@ -27,7 +29,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
-class RetrySpec extends WordSpecLike with Matchers with OptionValues with ScalaFutures {
+class RetrySpec extends AnyWordSpec with Matchers with OptionValues with ScalaFutures {
 
 
   private val system = ActorSystem("test")

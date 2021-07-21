@@ -18,15 +18,18 @@ package uk.gov.hmrc.taxhistory.services
 
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest._
-import play.api.libs.json.Json
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mongo.{MongoSpecSupport, Saved}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
-class TaxHistoryRepositoryServiceSpec extends WordSpecLike with Matchers with OptionValues with ScalaFutures
+class TaxHistoryRepositoryServiceSpec extends AnyWordSpecLike with Matchers with OptionValues with ScalaFutures
   with MongoSpecSupport
   with BeforeAndAfterAll
   with BeforeAndAfterEach
@@ -34,7 +37,7 @@ class TaxHistoryRepositoryServiceSpec extends WordSpecLike with Matchers with Op
 
   import ITestUtil._
 
-  val someJson  =  Json.parse(""" [{
+  val someJson: JsValue =  Json.parse(""" [{
                              |    "nino": "AA000000",
                              |    "sequenceNumber": 1,
                              |    "worksNumber": "6044041000000",
@@ -47,7 +50,7 @@ class TaxHistoryRepositoryServiceSpec extends WordSpecLike with Matchers with Op
                              |    }]
                            """.stripMargin)
 
-  val nino = randomNino()
+  val nino: Nino = randomNino()
 
   private val expireAfterInSeconds = 60
 
@@ -73,7 +76,7 @@ class TaxHistoryRepositoryServiceSpec extends WordSpecLike with Matchers with Op
 
   }
 
-  override protected def beforeEach() = {
+  override protected def beforeEach(): Unit = {
     mongoConnectorForTest.db().drop
   }
 

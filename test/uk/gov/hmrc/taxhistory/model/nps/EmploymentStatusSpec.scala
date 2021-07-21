@@ -16,11 +16,13 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
-import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import org.scalatest.OptionValues
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json._
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.{Ceased, Live, PotentiallyCeased}
 
-class EmploymentStatusSpec extends WordSpecLike with Matchers with OptionValues {
+class EmploymentStatusSpec extends AnyWordSpec with Matchers with OptionValues {
 
   "EmploymentStatus" must {
     "read and write json successfully" in {

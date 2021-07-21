@@ -27,13 +27,13 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth
 import uk.gov.hmrc.auth.core
 import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{EmptyRetrieval, Retrieval, ~}
-import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthorisedFunctions, BearerTokenExpired, Enrolment, EnrolmentIdentifier, Enrolments, InsufficientEnrolments}
+import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
+import uk.gov.hmrc.auth.core.{ AuthConnector, BearerTokenExpired, Enrolment, EnrolmentIdentifier, InsufficientEnrolments}
 import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.connectors.CitizenDetailsConnector
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class SaAuthServiceSpec extends PlaySpec with MockitoSugar {

@@ -54,9 +54,8 @@ object EmploymentMatchingHelper extends TaxHistoryHelper with Logging {
         val optRtiWithSamePayrollId = rtiByPayrollId.get(optPayrollId)
 
         optRtiWithSamePayrollId match {
-          case Some(rtiSamePayrollId) => { // 1 or more RTI employments have the same payroll ID
+          case Some(rtiSamePayrollId) => // 1 or more RTI employments have the same payroll ID
             matchEmploymentsFromSameEmployerSamePayrollId(optPayrollId, npsWithSamePayrollId, rtiSamePayrollId)
-          }
           case None => Map.empty[NpsEmployment, RtiEmployment] // No RTI employments have same payroll ID
         }
       }
@@ -68,12 +67,11 @@ object EmploymentMatchingHelper extends TaxHistoryHelper with Logging {
     val rtiByEmployer: Map[(String, String), List[RtiEmployment]] = rtiEmployments.groupBy(rti => (rti.officeNumber, rti.payeRef))
 
     npsByEmployer.collect {
-      case (employerKey, npsSameEmployer) => {
+      case (employerKey, npsSameEmployer) =>
         rtiByEmployer.get(employerKey) match {
           case Some(rtiSameEmployer) => matchEmploymentsFromSameEmployer(npsSameEmployer, rtiSameEmployer)
           case None => Map.empty[NpsEmployment, RtiEmployment]
         }
-      }
     }.flatten.toMap
   }
 

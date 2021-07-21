@@ -33,10 +33,12 @@ package uk.gov.hmrc.taxhistory.model.api
  */
 
 import org.joda.time.LocalDate
-import org.scalatest.{Matchers, OptionValues, PrivateMethodTester, WordSpecLike}
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.{OptionValues, PrivateMethodTester}
+import org.scalatest.matchers.should.Matchers
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
-class FillerStateSpec extends TestUtil with WordSpecLike with Matchers with OptionValues with PrivateMethodTester {
+class FillerStateSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with PrivateMethodTester {
   "FillerState" when {
     "encompassed is called" should {
       val encompassed: PrivateMethod[FillerState] = PrivateMethod[FillerState]('encompassed)

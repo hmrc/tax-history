@@ -22,14 +22,13 @@ lazy val scoverageSettings = {
 }
 
 val appName = "tax-history"
-val silencerVersion = "1.7.0"
+val silencerVersion = "1.7.1"
 
 lazy val microservice =
   Project(appName, file("."))
     .enablePlugins(Seq(
       play.sbt.PlayScala,
-      SbtDistributablesPlugin,
-      SbtArtifactory): _*)
+      SbtDistributablesPlugin): _*)
     .settings(PlayKeys.playDefaultPort := 9997)
     .settings(scoverageSettings: _*)
     .settings(scalaSettings: _*)
@@ -40,7 +39,6 @@ lazy val microservice =
       scalaVersion := "2.12.12",
       libraryDependencies ++= AppDependencies(),
       retrieveManaged := true,
-      evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
       // ***************
       // Use the silencer plugin to suppress warnings
       // You may turn it on for `views` too to suppress warnings from unused imports in compiled twirl templates, but this will hide other warnings.

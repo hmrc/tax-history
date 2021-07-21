@@ -48,7 +48,7 @@ class AllowanceControllerSpec extends PlaySpec with GuiceOneServerPerSuite with 
   val cc: ControllerComponents = stubControllerComponents()
   implicit val executionContext: ExecutionContext = cc.executionContext
 
-  override def beforeEach = {
+  override def beforeEach: Unit = {
     reset(mockEmploymentHistoryService)
   }
 

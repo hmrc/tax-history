@@ -17,7 +17,9 @@
 package uk.gov.hmrc.taxhistory.model.rti
 
 import org.joda.time.LocalDate
-import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.OptionValues
 import play.api.libs.json.Json.fromJson
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEarlierYearUpdate}
@@ -26,7 +28,7 @@ import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 
 import java.util.UUID
 
-class RtiDataSpec extends TestUtil with WordSpecLike with Matchers with OptionValues {
+class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
 
   lazy val rtiSuccessfulResponseURLDummy: JsValue = loadFile("/json/rti/response/dummyRti.json")
 
