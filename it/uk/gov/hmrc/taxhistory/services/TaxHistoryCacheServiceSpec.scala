@@ -16,16 +16,16 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import org.scalatest.concurrent.ScalaFutures
 import org.scalatest._
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.test.Helpers._
-import play.modules.reactivemongo.ReactiveMongoComponent
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mongo.{MongoConnector, MongoSpecSupport}
+import uk.gov.hmrc.mongo.CurrentTimestampSupport
+import uk.gov.hmrc.mongo.test.MongoSupport
 import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
 import uk.gov.hmrc.time.TaxYear
@@ -33,25 +33,23 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-
 class TaxHistoryCacheServiceSpec extends AnyWordSpecLike with Matchers with OptionValues with ScalaFutures
   with MockitoSugar
   with BeforeAndAfterAll
   with BeforeAndAfterEach
   with GuiceOneServerPerSuite
-  with MongoSpecSupport
-   {
+  with MongoSupport {
 
   import ITestUtil._
 
-  val mongoComponent: ReactiveMongoComponent = new ReactiveMongoComponent {
-    override def mongoConnector: MongoConnector = mongoConnectorForTest
-  }
   val mockAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
+
+  val mockTimeStampSupport = new CurrentTimestampSupport()
 
   val testTaxHistoryCacheService = new TaxHistoryMongoCacheService(
     mongoComponent,
-    mockAppConfig
+    mockAppConfig,
+    mockTimeStampSupport
   )
 
   val testPaye: PayAsYouEarn = PayAsYouEarn()
@@ -60,7 +58,11 @@ class TaxHistoryCacheServiceSpec extends AnyWordSpecLike with Matchers with Opti
   val taxYear: TaxYear = TaxYear(2015)
 
   override def beforeEach(): Unit = {
-    mongoComponent.mongoConnector.db().drop()
+    testTaxHistoryCacheService.collection.drop()
+  }
+
+  override def afterEach(): Unit = {
+    testTaxHistoryCacheService.collection.drop()
   }
 
   "TaxHistoryCacheService" should {
@@ -94,6 +96,6 @@ class TaxHistoryCacheServiceSpec extends AnyWordSpecLike with Matchers with Opti
   }
 
   override protected def afterAll(): Unit = {
-    mongoComponent.mongoConnector.db().drop()
+    mongoComponent.database.drop()
   }
 }

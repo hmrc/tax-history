@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import java.util.UUID
-
 import org.joda.time.LocalDate
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito._
@@ -30,15 +28,16 @@ import play.api.mvc._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.domain.{Nino, SaUtr}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.connectors.CitizenDetailsConnector
-import uk.gov.hmrc.taxhistory.model.api.{Employment, PayAsYouEarn}
+import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, SaAuthService}
 import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestSaAuthService}
 import uk.gov.hmrc.time.TaxYear
 
+import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
 class PayAsYouEarnControllerSpec extends PlaySpec with GuiceOneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
@@ -65,15 +64,12 @@ class PayAsYouEarnControllerSpec extends PlaySpec with GuiceOneServerPerSuite wi
     reset(mockEmploymentHistoryService)
   }
 
-
   val testCtrlr = new PayAsYouEarnController(mockEmploymentHistoryService, testSaAuthService, cc)
 
-  def withSuccessfulGetFromCache(testCode: => Any) {
+  def withSuccessfulGetFromCache(testCode: => Any): Unit = {
     when(mockEmploymentHistoryService.getFromCache(any(), any())(any[HeaderCarrier]))
       .thenReturn(Future.successful(testPaye))
-
     testCode
-
   }
 
   def withFailedGetFromCache(httpException: Exception)(testCode: => Any): Unit = {
@@ -84,8 +80,6 @@ class PayAsYouEarnControllerSpec extends PlaySpec with GuiceOneServerPerSuite wi
       testCode
     }
   }
-
-
 
   "getAllDetails" must {
 
@@ -119,7 +113,7 @@ class PayAsYouEarnControllerSpec extends PlaySpec with GuiceOneServerPerSuite wi
     }
 
     "respond with OK for successful get" in {
-       {
+      {
         withSuccessfulGetFromCache {
           val result = testCtrlr.getPayAsYouEarn(validNino, TaxYear(2016)).apply(FakeRequest())
           status(result) must be(OK)

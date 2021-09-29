@@ -16,46 +16,48 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import javax.inject.Inject
-import play.api.libs.json.Json
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.DB
-import uk.gov.hmrc.cache.model.{Cache, Id}
-import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.mongo.cache.{CacheIdType, DataKey, MongoCacheRepository}
+import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
 import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
 import uk.gov.hmrc.taxhistory.utils.Logging
 import uk.gov.hmrc.time.TaxYear
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Uses MongoDB to cache instances of `PayAsYouEarn` for a given NINO and year.
   */
-class TaxHistoryMongoCacheService @Inject()(mongoDb: ReactiveMongoComponent,
-                                            config: AppConfig)
-                                           (implicit ec: ExecutionContext) extends PayeCacheService with Logging {
-
-  implicit val mongo: () => DB = mongoDb.mongoConnector.db
-
-  val cacheRepository = new CacheMongoRepository(config.mongoName, config.mongoExpiry, Cache.mongoFormats)
+class TaxHistoryMongoCacheService @Inject()(
+                                             mongoComponent: MongoComponent,
+                                             appConfig: AppConfig,
+                                             timestampSupport: TimestampSupport
+                                           )(implicit ec: ExecutionContext
+                                           ) extends MongoCacheRepository(
+  mongoComponent = mongoComponent,
+  collectionName = appConfig.mongoName,
+  ttl = appConfig.mongoExpiry,
+  timestampSupport = timestampSupport,
+  cacheIdType = CacheIdType.SimpleCacheId
+) with PayeCacheService with Logging {
 
   def insertOrUpdate(key: (Nino, TaxYear), value: PayAsYouEarn): Future[Option[PayAsYouEarn]] = {
     val (nino, taxYear) = key
     val mongoId = nino.value
     val mongoKey = taxYear.currentYear.toString
-    cacheRepository
-      .createOrUpdate(Id(mongoId), mongoKey, Json.toJson[PayAsYouEarn](value))
-      .map(_.updateType.savedValue.data.map(_ \ mongoKey).map(_.get.as[PayAsYouEarn]))
+    put(mongoId)(DataKey(mongoKey), value).map(_ => Some(value)).recoverWith {
+      case ex: Exception =>
+        logger.error(s"[TaxHistoryMongoCacheService][insertOrUpdate] failed with message: ${ex.getMessage}")
+        Future.successful(None)
+    }
   }
 
   private def getFromRepository(nino: Nino, taxYear: TaxYear): Future[Option[PayAsYouEarn]] = {
     val mongoId = nino.value
     val mongoKey = taxYear.currentYear.toString
-    cacheRepository
-      .findById(Id(mongoId))
-      .map(_.flatMap(_.data).map(_ \ mongoKey).flatMap(_.toOption).map(_.as[PayAsYouEarn]))
+    get[PayAsYouEarn](mongoId)(DataKey(mongoKey))
   }
 
   def get(key: (Nino, TaxYear)): Future[Option[PayAsYouEarn]] = {
@@ -63,14 +65,14 @@ class TaxHistoryMongoCacheService @Inject()(mongoDb: ReactiveMongoComponent,
     getFromRepository(nino, taxYear)
   }
 
-  def getOrElseInsert(key: (Nino, TaxYear))(defaultToInsert : => Future[PayAsYouEarn]): Future[PayAsYouEarn] = {
+  def getOrElseInsert(key: (Nino, TaxYear))(defaultToInsert: => Future[PayAsYouEarn]): Future[PayAsYouEarn] = {
 
     def insertDefault(): Future[PayAsYouEarn] = {
       for {
         toInsert <- defaultToInsert
         insertionResult <- insertOrUpdate(key, toInsert)
       } yield {
-        if (insertionResult.isEmpty) logger.warn(s"Cache insertion failed for $key")
+        if (insertionResult.isEmpty) logger.warn(s"[TaxHistoryMongoCacheService][insertDefault] Cache insertion failed for $key")
         toInsert
       }
     }
@@ -78,9 +80,9 @@ class TaxHistoryMongoCacheService @Inject()(mongoDb: ReactiveMongoComponent,
     for {
       cacheResult <- get(key)
       returnValue <- cacheResult match {
-                        case Some(hit) => Future.successful(hit)
-                        case None      => insertDefault()
-                      }
+        case Some(hit) => Future.successful(hit)
+        case None => insertDefault()
+      }
     } yield returnValue
   }
 }
