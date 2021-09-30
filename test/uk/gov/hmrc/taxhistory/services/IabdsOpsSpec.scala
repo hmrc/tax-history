@@ -20,7 +20,6 @@ import org.joda.time.LocalDate
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.JsValue
-import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, VanBenefit}
@@ -33,9 +32,9 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil {
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val testNino = randomNino()
 
-  val onlyIabdList:List[Iabd]= List(Iabd("QQ000003", Some(201700055), VanBenefit, Some(100), Some("Van Benefit"),Some(26)))
+  val onlyIabdList: List[Iabd] = List(Iabd("QQ000003", Some(201700055), VanBenefit, Some(100), Some("Van Benefit"), Some(26)))
 
-  val npsEmploymentResponse :List[NpsEmployment] = List(
+  val npsEmploymentResponse: List[NpsEmployment] = List(
     NpsEmployment(
       "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false,
       otherIncomeSourceIndicator = false, Some(new LocalDate("2015-01-21")), None, receivingOccupationalPension = false, Live))
@@ -52,7 +51,7 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil {
       allowances.size mustBe 1
     }
     "Return an empty list of allowances when only iabd is present" in {
-      val allowances =  onlyIabdList.allowances
+      val allowances = onlyIabdList.allowances
       allowances.size mustBe 0
     }
 
@@ -68,7 +67,7 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil {
 
       val iabds = iabdsBenfitInKindJsonResponse.as[List[Iabd]]
 
-      val companyBenefits=iabds.companyBenefits
+      val companyBenefits = iabds.companyBenefits
       companyBenefits.size mustBe 7
       val companyBenefit1 = companyBenefits.head
       companyBenefit1.source mustBe Some(26)
@@ -81,14 +80,14 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil {
       val iabds = iabdsTotalBenfitInKindJsonResponse.as[List[Iabd]]
 
       val companyBenefits = iabds.companyBenefits
-      companyBenefits.size mustBe  2
+      companyBenefits.size mustBe 2
     }
 
     "Total Benefit In Kind from Iabds list should return true if There is only BIK which is type 28" in {
       val iabds = iabdsTotalBenfitInKindJsonResponse.as[List[Iabd]]
 
       val bik = iabds.isTotalBenefitInKind
-      bik  mustBe  true
+      bik mustBe true
     }
 
     "Total Benefit In Kind from Iabds list should return false if There is any BIK which is not type 28" in {
@@ -101,7 +100,7 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil {
     "Return only Allowances from List of Nps Iabds" in {
       val allowances = iabdList.allowances
       allowances.size mustBe 1
-      allowances.toString() contains  "FlatRateJobExpenses" mustBe true
+      allowances.toString() contains "FlatRateJobExpenses" mustBe true
     }
 
   }

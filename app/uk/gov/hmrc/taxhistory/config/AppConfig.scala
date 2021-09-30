@@ -22,14 +22,15 @@ import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.taxhistory.utils.Retry
 
-import scala.concurrent.duration.{DurationInt, FiniteDuration}
+import java.util.concurrent.TimeUnit
+import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.language.postfixOps
 
 @Singleton
 class AppConfig @Inject()(config: ServicesConfig) {
 
   lazy val appName: String = config.getString("appName")
-  lazy val mongoExpiry: Int = config.getInt("mongodb.cache.expire.seconds")
+  lazy val mongoExpiry: Duration = Duration(config.getInt("mongodb.cache.expire.seconds"), TimeUnit.SECONDS)
   lazy val mongoName: String = config.getString("mongodb.name")
   lazy val desEnv: String = config.getConfString("des.env", "local")
   lazy val desAuth: String = config.getConfString("des.authorizationToken", "Local")

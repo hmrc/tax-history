@@ -19,13 +19,13 @@ package uk.gov.hmrc.taxhistory.services.helper
 import org.joda.time.LocalDate
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEmployment}
+import uk.gov.hmrc.tai.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType.{JobseekersAllowance, OccupationalPension, StatePensionLumpSum}
 import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.model.utils.TestUtil
-import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, EmploymentMatchingHelper}
+import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 
 class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
 

@@ -16,68 +16,54 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import org.scalatest.concurrent.ScalaFutures
 import org.scalatest._
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.libs.json.{JsValue, Json}
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.test.Helpers._
-import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mongo.{MongoSpecSupport, Saved}
+import uk.gov.hmrc.mongo.CurrentTimestampSupport
+import uk.gov.hmrc.mongo.test.MongoSupport
+import uk.gov.hmrc.taxhistory.config.AppConfig
+import uk.gov.hmrc.taxhistory.model.api.{Allowance, PayAsYouEarn}
+import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
 class TaxHistoryRepositoryServiceSpec extends AnyWordSpecLike with Matchers with OptionValues with ScalaFutures
-  with MongoSpecSupport
+  with MongoSupport
   with BeforeAndAfterAll
   with BeforeAndAfterEach
-  {
+  with GuiceOneServerPerSuite {
 
-  import ITestUtil._
+  val mockAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
+  val mockTimeStampSupport = new CurrentTimestampSupport()
+  val repository = new TaxHistoryMongoCacheService(mongoComponent, mockAppConfig, mockTimeStampSupport)
 
-  val someJson: JsValue =  Json.parse(""" [{
-                             |    "nino": "AA000000",
-                             |    "sequenceNumber": 1,
-                             |    "worksNumber": "6044041000000",
-                             |    "taxDistrictNumber": "531",
-                             |    "payeNumber": "J4816",
-                             |    "employerName": "Aldi",
-                             |    "receivingJobseekersAllowance" : false,
-                             |    "otherIncomeSourceIndicator" : false,
-                             |    "startDate": "21/01/2015"
-                             |    }]
-                           """.stripMargin)
+  override def beforeEach(): Unit = {
+    repository.collection.drop()
+  }
 
-  val nino: Nino = randomNino()
-
-  private val expireAfterInSeconds = 60
-
-  private def repo(name: String, expiresAfter: Long = expireAfterInSeconds) = new CacheMongoRepository(name, expiresAfter) {
-    await(super.ensureIndexes)
+  override def afterEach(): Unit = {
+    repository.collection.drop()
   }
 
   "TaxHistoryCacheService" should {
 
-    val repository = repo("taxhistory-test")
+    val payAsYouEarn = PayAsYouEarn(allowances = List(Allowance(iabdType = "a", amount = 100.0)))
 
     "successfully add the Data in cache" in {
-      val result = await(repository.createOrUpdate("AA000000","2015",someJson))
-      result.updateType shouldBe a[Saved[_]]
+      val result = await(repository.insertOrUpdate((Nino("AA000000A"), TaxYear(2015)), payAsYouEarn))
+      result shouldBe Some(payAsYouEarn)
     }
 
     "fetch from the cache by ID " in {
-      val result = await(repository.createOrUpdate("AA000000","2015",someJson))
-      val readbackData = await(repository.findById("AA000000"))
+      await(repository.insertOrUpdate((Nino("AA000000A"), TaxYear(2015)), payAsYouEarn))
+      val readbackData = await(repository.findById("AA000000A"))
       readbackData shouldBe defined
-      (readbackData.get.data.get \ "2015").get shouldBe someJson
+      (readbackData.get.data \ "2015").get.as[PayAsYouEarn] shouldBe payAsYouEarn
     }
-
   }
-
-  override protected def beforeEach(): Unit = {
-    mongoConnectorForTest.db().drop
-  }
-
 }

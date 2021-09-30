@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.taxhistory.services.TaxHistoryMongoCacheService
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
@@ -27,6 +27,7 @@ class TestOnlyController @Inject()(val cacheService: TaxHistoryMongoCacheService
                                    val cc: ControllerComponents)(implicit val ec: ExecutionContext) extends TaxHistoryController(cc) {
 
   def clearCache: Action[AnyContent] = Action.async {
-    cacheService.cacheRepository.drop.map(_ => Ok)
+    cacheService.collection.drop.toFuture().map(_ => Ok)
   }
 }
+
