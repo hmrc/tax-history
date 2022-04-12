@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,12 @@ package uk.gov.hmrc.taxhistory.services.helper
 import org.joda.time.LocalDate
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.taxhistory.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType.{JobseekersAllowance, OccupationalPension, StatePensionLumpSum}
 import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps._
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 
 class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
@@ -38,35 +38,35 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
   lazy val testRtiData: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
   lazy val testIabds: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
 
-  lazy val testIncomeSource = IncomeSource(1, 1, None, Nil, Nil, testTaxCode, None, 1, "")
+  lazy val testIncomeSource: IncomeSource = IncomeSource(1, 1, None, Nil, Nil, testTaxCode, None, 1, "")
 
   val startDate = new LocalDate("2015-01-21")
-  lazy val employment1 = Employment(payeReference = "1234",
+  lazy val employment1: Employment = Employment(payeReference = "1234",
     startDate = Some(new LocalDate("2016-10-20")),
     employerName = "AnEmployerName",
     employmentStatus = EmploymentStatus.Live, worksNumber = "00191048716")
 
-  lazy val employment2 = Employment(payeReference = "4321",
+  lazy val employment2: Employment = Employment(payeReference = "4321",
     startDate = Some(new LocalDate("2015-12-01")),
     employerName = "AnotherEmployerName",
     employmentStatus = EmploymentStatus.Live, worksNumber = "00191048716")
 
-  lazy val taxAccount = TaxAccount(
+  lazy val taxAccount: TaxAccount = TaxAccount(
     underpaymentAmount = Some(BigDecimal(11.11)),
     outstandingDebtRestriction = Some(BigDecimal(22.22)),
     actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal(33.33)))
 
-  lazy val companyBenefit = CompanyBenefit(iabdType = "type",
+  lazy val companyBenefit: CompanyBenefit = CompanyBenefit(iabdType = "type",
     amount = BigDecimal(123.00))
 
-  lazy val payAndTax = PayAndTax(
+  lazy val payAndTax: PayAndTax = PayAndTax(
     taxablePayTotal = Some(BigDecimal(2222.22)),
     taxablePayTotalIncludingEYU = Some(BigDecimal(2222.22)),
     taxTotal = Some(BigDecimal(111.11)),
     taxTotalIncludingEYU = Some(BigDecimal(111.11)),
     earlierYearUpdates = Nil)
 
-  lazy val payAsYouEarn1 = PayAsYouEarn(
+  lazy val payAsYouEarn1: PayAsYouEarn = PayAsYouEarn(
     employments = List(employment1),
     allowances = Nil,
     incomeSources = Map(employment1.employmentId.toString -> testIncomeSource),
@@ -74,7 +74,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     payAndTax = Map(employment1.employmentId.toString -> payAndTax),
     taxAccount = None)
 
-  lazy val payAsYouEarn2 = PayAsYouEarn(
+  lazy val payAsYouEarn2: PayAsYouEarn = PayAsYouEarn(
     employments = List(employment2),
     allowances = Nil,
     incomeSources = Map(employment2.employmentId.toString -> testIncomeSource),

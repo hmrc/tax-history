@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
 import uk.gov.hmrc.taxhistory.services.{CacheService, PayeCacheService}
 import uk.gov.hmrc.time.TaxYear
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

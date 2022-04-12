@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package uk.gov.hmrc.taxhistory.connectors
 
 import akka.actor.ActorSystem
-import play.api.http.Status.NOT_FOUND
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HttpClient, _}
@@ -55,7 +54,9 @@ class DesNpsConnector @Inject()(val http: HttpClient,
       withRetry {
         http.GET[List[Iabd]](iabdsUrl(nino, year), headers = headers())
       }.recover{
-        case Upstream4xxResponse(_,NOT_FOUND , _, _) => List.empty
+        case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == 404 =>
+          logger.warn(s"NPS getIabds returned a 404 response: ${ex.message}")
+          List.empty
       }
     }
   }
@@ -66,19 +67,21 @@ class DesNpsConnector @Inject()(val http: HttpClient,
       withRetry {
         http.GET[NpsTaxAccount](taxAccountUrl(nino, year), headers = headers()).map(Some(_))
       }.recover{
-        case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == 404 => {
-          logger.info(s"NPS getTaxAccount returned a 404 response: ${ex.message}")
+        case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == 404 =>
+          logger.warn(s"NPS getTaxAccount returned a 404 response: ${ex.message}")
           None
-        }
       }
     }
   }
 
   def getEmployments(nino: Nino, year: Int): Future[List[NpsEmployment]] = {
-
     withMetrics(MetricsEnum.NPS_GET_EMPLOYMENTS) {
       withRetry{
         http.GET[List[NpsEmployment]](employmentsUrl(nino, year), headers = headers())
+      }.recover {
+        case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == 404 =>
+          logger.warn(s"NPS getEmployments returned a 404 response: ${ex.message}")
+          List.empty
       }
     }
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,18 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.Helpers._
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 
 class TaxYearServiceSpec extends PlaySpec with MockitoSugar with GuiceOneAppPerSuite with TestUtil  {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  val testNino = randomNino()
+  val testNino: Nino = randomNino()
 
-  val testEmploymentHistoryService = TestEmploymentHistoryService.createNew()
+  val testEmploymentHistoryService: EmploymentHistoryService = TestEmploymentHistoryService.createNew()
 
   "get Individual Tax Years" should {
     "successfully return list of five tax years" in {

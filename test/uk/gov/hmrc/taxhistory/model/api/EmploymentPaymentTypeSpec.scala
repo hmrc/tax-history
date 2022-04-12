@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json._
 import play.api.libs.json._
 import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType._
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.TestUtil
 
 class EmploymentPaymentTypeSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
 
@@ -57,24 +57,24 @@ class EmploymentPaymentTypeSpec extends TestUtil with AnyWordSpecLike with Match
 
   "calling paymentType" should {
     "return JobSeekersAllowance if 'receivingJobseekersAllowance' flag is true" in {
-      paymentType("123/AB123", false, receivingJobSeekersAllowance = true) shouldBe Some(JobseekersAllowance)
+      paymentType("123/AB123", receivingOccupationalPension = false, receivingJobSeekersAllowance = true) shouldBe Some(JobseekersAllowance)
     }
 
     "return JobSeekersAllowance if PAYE reference is 475/BB00987" in {
-      paymentType("475/BB00987", false) shouldBe Some(JobseekersAllowance)
+      paymentType("475/BB00987", receivingOccupationalPension = false) shouldBe Some(JobseekersAllowance)
     }
 
     "return OccupationalPension if 'receivingOccupationalPension' flag is true" in {
-      paymentType("123/AB123", receivingOccupationalPension = true, false) shouldBe Some(OccupationalPension)
+      paymentType("123/AB123", receivingOccupationalPension = true) shouldBe Some(OccupationalPension)
     }
     "return IncapacityBenefit if PAYE reference is '892/BA500'" in {
-      paymentType("892/BA500", false, false) shouldBe Some(IncapacityBenefit)
+      paymentType("892/BA500", receivingOccupationalPension = false) shouldBe Some(IncapacityBenefit)
     }
     "return EmploymentAndSupportAllowance if PAYE reference is '267/ESA500'" in {
-      paymentType("267/ESA500", false, false) shouldBe Some(EmploymentAndSupportAllowance)
+      paymentType("267/ESA500", receivingOccupationalPension = false) shouldBe Some(EmploymentAndSupportAllowance)
     }
     "return StatePensionLumpSum if PAYE reference is '267/LS500'" in {
-      paymentType("267/LS500", false, false) shouldBe Some(StatePensionLumpSum)
+      paymentType("267/LS500", receivingOccupationalPension = false) shouldBe Some(StatePensionLumpSum)
     }
   }
 }

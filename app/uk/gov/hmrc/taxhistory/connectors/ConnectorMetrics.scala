@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,11 +37,12 @@ protected trait ConnectorMetrics extends Logging {
       case e : NotFoundException =>
         timerContext.stop()
         metrics.incrementSuccessCounter(metric)
+        logger.warn(s"NotFound Exception ${getClass.getSimpleName} connector (${metric.toString}) : ${e.getMessage}")
         throw e
       case e =>
         metrics.incrementFailedCounter(metric)
         timerContext.stop()
-        logger.warn(s"Error returned from ${getClass.getSimpleName} connector (${metric.toString}): ${e.toString}: ${e.getMessage}")
+        logger.error(s"[ConnectorMetrics][withMetrics] Error returned from ${getClass.getSimpleName} connector (${metric.toString}) : ${e.getMessage}")
         throw e
     }
   }

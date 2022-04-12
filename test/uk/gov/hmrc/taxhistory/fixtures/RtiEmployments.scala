@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 package uk.gov.hmrc.taxhistory.fixtures
 
 import play.api.libs.json.JsValue
-import uk.gov.hmrc.tai.model.rti.RtiEmployment
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.model.rti.RtiEmployment
+import uk.gov.hmrc.taxhistory.utils.TestUtil
 
 trait RtiEmployments extends TestUtil {
 
