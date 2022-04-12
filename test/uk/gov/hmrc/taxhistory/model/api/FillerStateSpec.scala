@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ import org.joda.time.LocalDate
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{OptionValues, PrivateMethodTester}
 import org.scalatest.matchers.should.Matchers
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.TestUtil
 
 class FillerStateSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with PrivateMethodTester {
   "FillerState" when {

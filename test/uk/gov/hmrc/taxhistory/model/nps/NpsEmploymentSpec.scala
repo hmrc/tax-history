@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.TestUtil
 
 class NpsEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
 

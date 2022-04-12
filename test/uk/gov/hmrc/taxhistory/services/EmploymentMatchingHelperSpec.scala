@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,16 +19,15 @@ package uk.gov.hmrc.taxhistory.services
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.PlaySpec
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.taxhistory.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.fixtures.{NpsEmployments, RtiEmployments}
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentMatchingHelper
 
 class EmploymentMatchingHelperSpec extends PlaySpec with TestUtil with BeforeAndAfterEach with NpsEmployments with RtiEmployments {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  private val testNino = randomNino()
 
   "EmploymentMatchingHelper" should {
     "successfully merge if there are multiple matching rti employments for a single nps employment1" when {

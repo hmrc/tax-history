@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,9 +48,9 @@ case class NpsIncomeSource(employmentId:Int,
                            employmentPayeRef: Option[String]
                        ) {
   def toIncomeSource: Option[IncomeSource] = {
-    if (taxCode.isEmpty || employmentType.isEmpty || employmentTaxDistrictNumber.isEmpty || employmentPayeRef.isEmpty)
+    if (taxCode.isEmpty || employmentType.isEmpty || employmentTaxDistrictNumber.isEmpty || employmentPayeRef.isEmpty) {
       None
-    else
+    } else {
       Some(IncomeSource(
         employmentId = this.employmentId,
         employmentType = this.employmentType.get,
@@ -62,6 +62,7 @@ case class NpsIncomeSource(employmentId:Int,
         employmentTaxDistrictNumber = this.employmentTaxDistrictNumber.get,
         employmentPayeRef = this.employmentPayeRef.get
       ))
+    }
   }
 }
 
@@ -111,11 +112,11 @@ case class NpsTaxAccount(incomeSources: List[NpsIncomeSource]){
       taxDistrictNumMatches && payeRefMatches
     }
 
-    val matchedNpsIncomeSource = if (iSs.lengthCompare(1) > 0)
+    val matchedNpsIncomeSource = if (iSs.lengthCompare(1) > 0) {
       iSs.find(iS => iS.employmentId == npsEmployment.sequenceNumber)
-    else
+    } else {
       iSs.headOption
-
+    }
     matchedNpsIncomeSource.flatMap(_.toIncomeSource)
   }
 
@@ -124,4 +125,3 @@ case class NpsTaxAccount(incomeSources: List[NpsIncomeSource]){
 object NpsTaxAccount {
   implicit val formats: OFormat[NpsTaxAccount] = Json.format[NpsTaxAccount]
 }
-

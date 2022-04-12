@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,20 +28,18 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{BadRequestException, HeaderCarrier, NotFoundException}
-import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.taxhistory.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.fixtures.Employments
 import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType.OccupationalPension
 import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
-import uk.gov.hmrc.taxhistory.model.utils.{PlaceHolder, TestUtil}
+import uk.gov.hmrc.taxhistory.utils.{PlaceHolder, TestUtil}
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 import play.api.test.Helpers._
-
 import java.util.UUID
 import scala.concurrent.Future
-
 
 class EmploymentHistoryServiceSpec extends AnyWordSpecLike with Matchers with OptionValues with ScalaFutures with MockitoSugar with TestUtil with Employments {
 

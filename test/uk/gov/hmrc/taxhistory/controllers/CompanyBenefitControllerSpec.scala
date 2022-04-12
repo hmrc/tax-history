@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import uk.gov.hmrc.agentmtdidentifiers.model.Arn
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.model.api.CompanyBenefit
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestRelationshipAuthService}
 
@@ -45,12 +45,12 @@ class CompanyBenefitControllerSpec extends PlaySpec with GuiceOneServerPerSuite 
 
   val testCompanyBenefits = List(CompanyBenefit(iabdType = "CarBenefit", amount = BigDecimal(100.00)))
 
-  val employmentId = UUID.randomUUID().toString
+  val employmentId: String = UUID.randomUUID().toString
 
   val cc: ControllerComponents = stubControllerComponents()
   implicit val executionContext: ExecutionContext = cc.executionContext
 
-  override def beforeEach = {
+  override def beforeEach: Unit = {
     reset(mockEmploymentHistoryService)
   }
 

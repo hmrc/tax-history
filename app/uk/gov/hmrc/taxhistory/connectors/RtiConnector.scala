@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,11 @@ import akka.actor.ActorSystem
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HttpClient, _}
-import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.taxhistory.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.utils.Retry
 import uk.gov.hmrc.time.TaxYear
-import play.api.http.Status.NOT_FOUND
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -56,9 +55,10 @@ class RtiConnector @Inject()(val http: HttpClient,
           headers = headers)
           .map(Some(_))
       }.recover {
-        case Upstream4xxResponse(_,NOT_FOUND , _, _)  => None
+        case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == 404 =>
+          logger.warn(s"RTIEmployments returned a 404 response: ${ex.message}")
+          None
       }
-
     }
   }
 }

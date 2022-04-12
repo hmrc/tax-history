@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,19 @@
 package uk.gov.hmrc.taxhistory.services
 
 import java.util.UUID
-
 import org.joda.time.LocalDate
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.test.Helpers._
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
-import uk.gov.hmrc.tai.model.rti.RtiData
+import uk.gov.hmrc.taxhistory.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.api.{PayAsYouEarn, TaxAccount}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 
@@ -37,10 +37,10 @@ import scala.concurrent.Future
 
 class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
-  implicit val hc = HeaderCarrier()
-  val testNino = randomNino()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+  val testNino: Nino = randomNino()
 
-  val testEmploymentHistoryService = TestEmploymentHistoryService.createNew()
+  val testEmploymentHistoryService: EmploymentHistoryService = TestEmploymentHistoryService.createNew()
 
   val npsEmploymentResponse :List[NpsEmployment] = List(
     NpsEmployment(
@@ -48,9 +48,9 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       Some(new LocalDate("2015-01-21")), None, true, Live))
 
 
-  lazy val testNpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
+  lazy val testNpsTaxAccount: NpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
 
-  lazy val iabdsResponse = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
+  lazy val iabdsResponse: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
   lazy val testRtiData: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
 
   "TaxAccount" should {

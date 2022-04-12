@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,13 @@
 package uk.gov.hmrc.taxhistory.services.helper
 
 import org.joda.time.LocalDate
-import uk.gov.hmrc.tai.model.rti.{RtiEmployment, RtiPayment}
+import uk.gov.hmrc.taxhistory.model.rti.{RtiEmployment, RtiPayment}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Ceased
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 
 object HelperTestData {
 
-  def rti(payeRef: String = "U313", officeNumber: String = "951", currentPayId:Option[String], seq: Int)  = RtiEmployment(
+  def rti(payeRef: String = "U313", officeNumber: String = "951", currentPayId:Option[String], seq: Int): RtiEmployment = RtiEmployment(
     payeRef = payeRef,
     officeNumber = officeNumber,
     currentPayId = currentPayId,
@@ -57,7 +57,7 @@ object HelperTestData {
     earlierYearUpdates = Nil
   )
 
-  def nps(payeNumber: String = "U313", taxDistrictNumber: String = "951", worksNumber: Option[String], seq: Int) = NpsEmployment(
+  def nps(payeNumber: String = "U313", taxDistrictNumber: String = "951", worksNumber: Option[String], seq: Int): NpsEmployment = NpsEmployment(
     payeNumber = payeNumber,
     taxDistrictNumber = taxDistrictNumber,
     worksNumber = worksNumber,

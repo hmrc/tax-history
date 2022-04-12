@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class SaAuthServiceSpec extends PlaySpec with MockitoSugar {
 
-  val validNino = Nino("AA000000A")
+  val validNino: Nino = Nino("AA000000A")
 
   "SaAuthorisationPredicateBuilder" should {
 

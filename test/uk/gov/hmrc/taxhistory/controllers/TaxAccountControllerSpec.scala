@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import uk.gov.hmrc.agentmtdidentifiers.model.Arn
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.model.api.{IncomeSource, TaxAccount}
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestRelationshipAuthService}
 import uk.gov.hmrc.time.TaxYear
@@ -93,14 +93,14 @@ class TaxAccountControllerSpec extends AnyWordSpec with Matchers with OptionValu
 
   "getIncomeSource" must {
 
-    val testEmnploymentId = UUID.randomUUID().toString
+    val testEmploymentId = UUID.randomUUID().toString
     val testIncomeSource = IncomeSource(1, 1, None, List.empty, List.empty, testTaxCode, None, 1, "")
 
     "respond with OK for successful get" in {
       when(mockEmploymentHistoryService.getIncomeSource(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(testIncomeSource)))
 
-      val result = testTaxAccountController.getIncomeSource(ninoWithAgent.nino, testTaxYear, testEmnploymentId).apply(FakeRequest())
+      val result = testTaxAccountController.getIncomeSource(ninoWithAgent.nino, testTaxYear, testEmploymentId).apply(FakeRequest())
       status(result) shouldBe OK
     }
 
@@ -108,7 +108,7 @@ class TaxAccountControllerSpec extends AnyWordSpec with Matchers with OptionValu
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
         when(mockEmploymentHistoryService.getIncomeSource(any(), any(), any[String])(any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
-        val result = testTaxAccountController.getIncomeSource(ninoWithAgent.nino, testTaxYear, testEmnploymentId).apply(FakeRequest())
+        val result = testTaxAccountController.getIncomeSource(ninoWithAgent.nino, testTaxYear, testEmploymentId).apply(FakeRequest())
         status(result) shouldBe expectedStatus
       }
     }
@@ -117,7 +117,7 @@ class TaxAccountControllerSpec extends AnyWordSpec with Matchers with OptionValu
       when(mockEmploymentHistoryService.getIncomeSource(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(testIncomeSource)))
 
-      val result = testTaxAccountController.getIncomeSource(ninoWithoutAgent.nino, testTaxYear, testEmnploymentId).apply(FakeRequest())
+      val result = testTaxAccountController.getIncomeSource(ninoWithoutAgent.nino, testTaxYear, testEmploymentId).apply(FakeRequest())
       status(result) shouldBe UNAUTHORIZED
     }
   }

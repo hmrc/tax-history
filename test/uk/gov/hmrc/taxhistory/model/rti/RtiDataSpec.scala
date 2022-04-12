@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,13 @@
 package uk.gov.hmrc.taxhistory.model.rti
 
 import org.joda.time.LocalDate
+import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.OptionValues
 import play.api.libs.json.Json.fromJson
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
-import uk.gov.hmrc.tai.model.rti.{RtiData, RtiEarlierYearUpdate}
 import uk.gov.hmrc.taxhistory.model.api.EarlierYearUpdate
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.TestUtil
 
 import java.util.UUID
 

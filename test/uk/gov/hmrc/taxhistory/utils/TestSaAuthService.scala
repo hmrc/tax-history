@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,21 @@
 
 package uk.gov.hmrc.taxhistory.utils
 
-import java.util.UUID
-
 import org.joda.time.LocalDate
 import org.mockito.Mockito
 import play.api.mvc.{AnyContent, Request, Result}
 import uk.gov.hmrc.auth
-import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment}
 import uk.gov.hmrc.auth.core.authorise.Predicate
+import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.connectors.CitizenDetailsConnector
 import uk.gov.hmrc.taxhistory.model.api.{Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
-import uk.gov.hmrc.taxhistory.model.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.SaAuthService
-
-import scala.concurrent.{ExecutionContext, Future}
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * A test version of SaAuthService which returns a predicate without calling citizenDetailsConnector
@@ -73,7 +70,8 @@ case class TestSaAuthService() extends SaAuthService(authConnector = Mockito.moc
     Future.successful(checkIndividual or checkAgentServicesWithDigitalHandshake)
   }
 
-  override def withSaAuthorisation(nino: Nino)(action: Request[AnyContent] => Future[Result])(implicit hc: HeaderCarrier, request: Request[AnyContent]): Future[Result] = {
+  override def withSaAuthorisation(nino: Nino)(action: Request[AnyContent] =>
+    Future[Result])(implicit hc: HeaderCarrier, request: Request[AnyContent]): Future[Result] = {
     nino.nino match {
       case validNino.nino => Future.successful(Ok(PayAsYouEarn.formats.writes(testPaye)))
       case unauthorisedNino.nino => Future.successful(Unauthorized)

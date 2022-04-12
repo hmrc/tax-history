@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tai.model.rti
+package uk.gov.hmrc.taxhistory.model.rti
 
 import com.github.nscala_time.time.Imports._
 import org.joda.time.LocalDate
 import play.api.libs.json._
 import play.api.libs.json.JodaWrites._
-import play.api.libs.json.JodaReads._
 import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, PayAndTax}
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
 
