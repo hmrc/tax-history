@@ -5,7 +5,7 @@ object AppDependencies {
 
   private val compile = Seq(
     ws,
-    "uk.gov.hmrc"         %% "bootstrap-backend-play-28" % "5.4.0",
+    "uk.gov.hmrc"         %% "bootstrap-backend-play-28" % "5.24.0",
     "uk.gov.hmrc"         %% "domain"                    % "6.1.0-play-28",
     "uk.gov.hmrc"         %% "agent-mtd-identifiers"     % "0.35.0-play-28",
     "uk.gov.hmrc"         %% "tax-year"                  % "1.1.0", // 1.2.0 moved to java.time instead of org.joda.time which we don't want
