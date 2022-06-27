@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
-import java.util.concurrent.TimeUnit
 import akka.actor.ActorSystem
 import com.codahale.metrics.Timer
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -28,71 +28,80 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http._
-import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.http.{HttpClient, _}
 import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.utils.TestUtil
-
-import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.ExecutionContext.Implicits.global
-
+import scala.concurrent.Future
 
 class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with GuiceOneAppPerSuite {
 
-  override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
+    override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
 
-  lazy val testIabds: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
-  lazy val testNpsTaxAccount: NpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
-  lazy val testNpsEmployment: List[NpsEmployment] = loadFile("/json/nps/response/employments.json").as[List[NpsEmployment]]
+    lazy val testIabds: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
+    lazy val testNpsTaxAccount: NpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
+    lazy val testNpsEmployment: List[NpsEmployment] = loadFile("/json/nps/response/employments.json").as[List[NpsEmployment]]
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+    implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  private val mockHttpClient = mock[HttpClient]
-  private val mockTaxHistoryMetrics = mock[TaxHistoryMetrics]
-  private val mockAppConfig = app.injector.instanceOf[AppConfig]
-  private val system = ActorSystem("test")
-  private val delay = FiniteDuration(500, TimeUnit.MILLISECONDS)
+    private val mockHttpClient = mock[HttpClient]
+    private val mockTaxHistoryMetrics = mock[TaxHistoryMetrics]
+    private val mockAppConfig = app.injector.instanceOf[AppConfig]
+    private val system = ActorSystem("test")
 
-  lazy val testDesNpsConnector = new DesNpsConnector(
-    http = mockHttpClient,
-    metrics = mockTaxHistoryMetrics,
-    config = mockAppConfig,
-    system = system
-  )
-
-  val testNino: Nino = randomNino()
-  val testYear = 2016
-
-  "EmploymentConnector" should {
-
-    "have withoutSuffix nino" when {
-      "given a valid nino" in {
-        testNino.withoutSuffix mustBe s"${testNino.value.take(8)}"
+    val uuid = "123f4567-g89c-42c3-b456-557742330000"
+    lazy val testDesNpsConnector = new DesNpsConnector(
+      http = mockHttpClient,
+      metrics = mockTaxHistoryMetrics,
+      config = mockAppConfig,
+      system = system) {
+        override def generateNewUUID: String = uuid
       }
+    val testNino: Nino = randomNino()
+    val testYear = 2016
+
+   "return new ID pre-appending the requestID when the requestID matches the format(8-4-4-4)" in {
+      val requestId = "dcba0000-ij12-df34-jk56"
+      testDesNpsConnector.getCorrelationId(HeaderCarrier(requestId = Some(RequestId(requestId)))) shouldBe
+        s"$requestId-${uuid.substring(24)}"
     }
 
-    "create the correct headers" in {
-      val headers = testDesNpsConnector.headers()
-      headers mustBe List(("Environment", "local"), ("Authorization", "Bearer local"))
+    "return new ID when the requestID does not match the format(8-4-4-4)" in {
+      val requestId = "1a2b-ij12-df34-jk56"
+      testDesNpsConnector.getCorrelationId(HeaderCarrier(requestId = Some(RequestId(requestId)))) shouldBe uuid
     }
 
-    "create the correct url for iabds" in {
+    "return the new uuid when requestID is not present in the headerCarrier" in  {
+        testDesNpsConnector.getCorrelationId(HeaderCarrier()) shouldBe uuid
+    }
+
+  "EmploymentConnector have withoutSuffix nino" when {
+        "given a valid nino" in  {
+          testNino.withoutSuffix mustBe s"${testNino.value.take(8)}"
+        }
+    }
+
+    "create the correct headers" in  {
+      val headers = testDesNpsConnector.buildHeaders(hc)
+      headers mustBe List(("Environment", "local"), ("Authorization", "Bearer local"), ("CorrelationId","123f4567-g89c-42c3-b456-557742330000"))
+    }
+
+    "create the correct url for iabds" in   {
       testDesNpsConnector.iabdsUrl(testNino, testYear) must be(s"http://localhost:9998/pay-as-you-earn/individuals/$testNino/iabds/tax-year/$testYear")
     }
 
-    "create the correct url for taxAccount" in {
+    "create the correct url for taxAccount" in  {
       testDesNpsConnector.taxAccountUrl(testNino, testYear) must be(s"http://localhost:9998/pay-as-you-earn/individuals/$testNino/tax-account/tax-year/$testYear")
     }
 
-    "create the correct url for employment" in {
+    "create the correct url for employment" in  {
       testDesNpsConnector.employmentsUrl(testNino, testYear) must be (s"http://localhost:9998/individuals/$testNino/employment/$testYear")
     }
 
     "get Iabds data " when {
-      "given a valid Nino and TaxYear" in {
+      "given a valid Nino and TaxYear" in  {
         when(testDesNpsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testDesNpsConnector.http.GET[List[Iabd]](any(), any(), any())(any(), any(), any()))
@@ -103,7 +112,7 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with 
         await(result) mustBe testIabds
       }
 
-      "retrying after the first call fails and the second call succeeds" in {
+      "retrying after the first call fails and the second call succeeds" in  {
         when(testDesNpsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testDesNpsConnector.http.GET[List[Iabd]](any(), any(), any())(any(), any(), any()))
@@ -126,7 +135,6 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with 
         await(result).isEmpty mustBe true
       }
 
-
       "return and handle an service unavailable error response " in {
         when(testDesNpsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
@@ -140,7 +148,7 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with 
     }
 
     "get Tax Account data " when {
-      "given a valid Nino and TaxYear" in {
+      "given a valid Nino and TaxYear" in  {
         val testTaxAccountConnector = testDesNpsConnector
 
         when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
@@ -153,7 +161,7 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with 
         await(result) mustBe Some(testNpsTaxAccount)
       }
 
-      "retrying after the first call fails and the second call succeeds" in {
+      "retrying after the first call fails and the second call succeeds" in  {
         val testTaxAccountConnector = testDesNpsConnector
 
         when(testTaxAccountConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
@@ -167,7 +175,7 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with 
         await(result) mustBe Some(testNpsTaxAccount)
       }
 
-      "return and handle an error response" in {
+      "return and handle an error response" in  {
         
         when(testDesNpsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
@@ -179,7 +187,7 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with 
         intercept[BadRequestException](await(result))
       }
 
-      "return None if the response from DES is 404 (NotFound)" in {
+      "return None if the response from DES is 404 (NotFound)" in  {
         
         when(testDesNpsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
@@ -194,7 +202,7 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with 
 
     "get EmploymentData data" when {
       "given a valid Nino and TaxYear" in {
-        
+
         val testemploymentsConnector = testDesNpsConnector
 
         when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
@@ -208,7 +216,7 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with 
       }
 
       "retrying after the first call fails and the second call succeeds" in {
-        
+
         val testemploymentsConnector = testDesNpsConnector
 
         when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
@@ -223,7 +231,7 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with 
       }
 
       "return and handle an error response" in {
-        
+
         val testemploymentsConnector = testDesNpsConnector
         when(testemploymentsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
@@ -235,5 +243,4 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with 
         intercept[BadRequestException](await(result))
       }
     }
-  }
 }

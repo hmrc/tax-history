@@ -20,6 +20,7 @@ import akka.actor.ActorSystem
 import com.codahale.metrics.Timer
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -35,37 +36,54 @@ import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 import uk.gov.hmrc.time.TaxYear
+
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
 class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with GuiceOneAppPerSuite  {
 
+  override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
   val mockHttpClient: HttpClient = mock[HttpClient]
   val mockAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
   val mockTaxHistoryMetrics: TaxHistoryMetrics = mock[TaxHistoryMetrics]
   val system: ActorSystem = ActorSystem("test")
   private val taxYear = 2016
 
+  val uuid = "123f4567-g89c-42c3-b456-557742330000"
   val testRtiConnector: RtiConnector = new RtiConnector(
     http = mockHttpClient,
     metrics = mockTaxHistoryMetrics,
     config = mockAppConfig,
     system = system
-  )
+  ){
+    override def generateNewUUID: String = uuid
+  }
 
   val testNino: Nino = randomNino()
   val testNinoWithoutSuffix: String = testNino.withoutSuffix
   lazy val testRtiData: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
 
-  "RtiConnector" should {
-    "have the correct RTI employments url" when {
-      "given a valid nino and tax year" in {
-        testRtiConnector.rtiEmploymentsUrl(testNino, TaxYear(2017)) mustBe s"http://localhost:9998/rti/individual/payments/nino/$testNinoWithoutSuffix/tax-year/17-18"
-      }
+  "return new ID pre-appending the requestID when the requestID matches the format(8-4-4-4)" in {
+    val requestId = "dcba0000-ij12-df34-jk56"
+    testRtiConnector.getCorrelationId(HeaderCarrier(requestId = Some(RequestId(requestId)))) shouldBe
+      s"$requestId-${uuid.substring(24)}"
+  }
+
+  "return new ID when the requestID does not match the format(8-4-4-4)" in {
+    val requestId = "1a2b-ij12-df34-jk56"
+    testRtiConnector.getCorrelationId(HeaderCarrier(requestId = Some(RequestId(requestId)))) shouldBe uuid
+  }
+
+  "return the new uuid when requestID is not present in the headerCarrier" in  {
+    testRtiConnector.getCorrelationId(HeaderCarrier()) shouldBe uuid
+  }
+
+  "RtiConnector should have the correct RTI employments url" when {
+    "given a valid nino and tax year" in {
+      testRtiConnector.rtiEmploymentsUrl(testNino, TaxYear(2017)) mustBe s"http://localhost:9998/rti/individual/payments/nino/$testNinoWithoutSuffix/tax-year/17-18"
     }
 
     "have withoutSuffix nino" when {
@@ -75,14 +93,12 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with Gui
     }
 
     "create the correct headers" in {
-      val headers = testRtiConnector.headers
-      headers mustBe List(("Environment", "local"), ("Authorization", "Bearer local"))
+      val headers = testRtiConnector.buildHeaders(hc)
+      headers mustBe List(("Environment", "local"), ("Authorization", "Bearer local"), ("CorrelationId","123f4567-g89c-42c3-b456-557742330000"))
     }
 
     "get RTI data " when {
-
       "given a valid Nino and TaxYear" in {
-
         when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 
         when(testRtiConnector.http.GET[RtiData](any(), any(), any())(any(), any(), any()))
