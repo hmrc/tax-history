@@ -37,8 +37,6 @@ class DesNpsConnector @Inject()(val http: HttpClient,
                                 (implicit executionContext: ExecutionContext) extends ConnectorMetrics {
 
   private val servicePrefix = "/pay-as-you-earn"
-  val CORRELATION_HEADER = "CorrelationId"
-  val CorrelationIdPattern = """.*([A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}).*""".r
 
   val withRetry: Retry = config.newRetryInstance("des", system)
   def iabdsUrl(nino: Nino, year: Int)      = s"${config.desBaseUrl}$servicePrefix/individuals/${nino.value}/iabds/tax-year/$year"
@@ -50,19 +48,6 @@ class DesNpsConnector @Inject()(val http: HttpClient,
       "Authorization" -> s"Bearer ${config.desAuth}",
       CORRELATION_HEADER -> getCorrelationId(hc)
     )
-  }
-
-  def generateNewUUID : String = randomUUID.toString
-
-  def getCorrelationId(hc: HeaderCarrier): String = {
-    hc.requestId match {
-      case Some(requestId) =>
-        requestId.value match {
-          case CorrelationIdPattern(prefix) => prefix + "-" + generateNewUUID.toString.substring(24)
-          case _                            => generateNewUUID
-        }
-      case _ => generateNewUUID
-    }
   }
 
   def getIabds(nino: Nino, year: Int): Future[List[Iabd]] = {

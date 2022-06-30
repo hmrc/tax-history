@@ -39,8 +39,6 @@ class RtiConnector @Inject()(val http: HttpClient,
 
   lazy val authorization: String = s"Bearer ${config.desAuth}"
   val withRetry: Retry = config.newRetryInstance("des", system)
-  val CORRELATION_HEADER = "CorrelationId"
-  val CorrelationIdPattern = """.*([A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}).*""".r
 
   def rtiEmploymentsUrl(nino: Nino, taxYear: TaxYear): String = {
     val formattedTaxYear = s"${taxYear.startYear % 100}-${taxYear.finishYear % 100}"
@@ -52,19 +50,6 @@ class RtiConnector @Inject()(val http: HttpClient,
       "Authorization" -> s"Bearer ${config.desAuth}",
       CORRELATION_HEADER -> getCorrelationId(hc)
     )
-  }
-
-  def generateNewUUID : String = randomUUID.toString
-
-  def getCorrelationId(hc: HeaderCarrier): String = {
-    hc.requestId match {
-      case Some(requestId) =>
-        requestId.value match {
-          case CorrelationIdPattern(prefix) => prefix + "-" + generateNewUUID.toString.substring(24)
-          case _                            => generateNewUUID
-        }
-      case _ => generateNewUUID
-    }
   }
 
   def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[Option[RtiData]] = {
