@@ -37,7 +37,8 @@ import javax.inject.Inject
 import scala.annotation.tailrec
 import scala.concurrent.{ExecutionContext, Future}
 
-class EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
+class
+EmploymentHistoryService @Inject()(val desNpsConnector: DesNpsConnector,
                                          val rtiConnector: RtiConnector,
                                          val cacheService: PayeCacheService,
                                          val auditable: Auditable,

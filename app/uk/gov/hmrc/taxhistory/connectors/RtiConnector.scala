@@ -25,6 +25,8 @@ import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.utils.Retry
 import uk.gov.hmrc.time.TaxYear
+
+import java.util.UUID.randomUUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -43,16 +45,19 @@ class RtiConnector @Inject()(val http: HttpClient,
     s"${config.desBaseUrl}/rti/individual/payments/nino/${nino.withoutSuffix}/tax-year/$formattedTaxYear"
   }
 
-  val headers = Seq("Environment" -> config.desEnv, "Authorization" -> authorization)
+  def buildHeaders(implicit hc:HeaderCarrier): Seq[(String, String)] = {
+    Seq("Environment" -> {config.desEnv},
+      "Authorization" -> s"Bearer ${config.desAuth}",
+      CORRELATION_HEADER -> getCorrelationId(hc)
+    )
+  }
 
   def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[Option[RtiData]] = {
-
     implicit val hc: HeaderCarrier = HeaderCarrier()
-
     withMetrics(MetricsEnum.RTI_GET_EMPLOYMENTS) {
       withRetry {
         http.GET[RtiData](rtiEmploymentsUrl(nino, taxYear),
-          headers = headers)
+          headers = buildHeaders(hc))
           .map(Some(_))
       }.recover {
         case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == 404 =>
@@ -61,4 +66,5 @@ class RtiConnector @Inject()(val http: HttpClient,
       }
     }
   }
+
 }

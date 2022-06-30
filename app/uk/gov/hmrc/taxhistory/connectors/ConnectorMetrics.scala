@@ -23,7 +23,7 @@ import uk.gov.hmrc.taxhistory.utils.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 
-protected trait ConnectorMetrics extends Logging {
+protected trait ConnectorMetrics extends ConnectorCorrelationId with Logging {
   val metrics: TaxHistoryMetrics
 
   protected def withMetrics[T](metric: MetricsEnum)(codeBlock: => Future[T])(implicit executionContext: ExecutionContext): Future[T] = {
