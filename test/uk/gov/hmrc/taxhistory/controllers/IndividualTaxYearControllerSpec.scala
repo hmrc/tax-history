@@ -35,24 +35,30 @@ import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestRelationshipAuthService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class IndividualTaxYearControllerSpec extends PlaySpec with GuiceOneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
+class IndividualTaxYearControllerSpec
+    extends PlaySpec
+    with GuiceOneServerPerSuite
+    with MockitoSugar
+    with TestUtil
+    with BeforeAndAfterEach {
 
   val mockEmploymentHistoryService: EmploymentHistoryService = mock[EmploymentHistoryService]
 
-  val ninoWithAgent: Nino = randomNino()
+  val ninoWithAgent: Nino    = randomNino()
   val ninoWithoutAgent: Nino = randomNino()
 
-  private val mockAuditable = mock[Auditable]
-  val testTaxYears = List(IndividualTaxYear(2018, "fakeUri", "fakeUri", "fakeUri"))
+  private val taxYear = 2018
 
-  val cc: ControllerComponents = stubControllerComponents()
+  private val mockAuditable = mock[Auditable]
+  val testTaxYears          = List(IndividualTaxYear(taxYear, "fakeUri", "fakeUri", "fakeUri"))
+
+  val cc: ControllerComponents                    = stubControllerComponents()
   implicit val executionContext: ExecutionContext = cc.executionContext
 
-  override def beforeEach: Unit = {
+  override def beforeEach: Unit =
     reset(mockEmploymentHistoryService)
-  }
 
-  val testIndividualTaxYearController = new IndividualTaxYearController (
+  val testIndividualTaxYearController = new IndividualTaxYearController(
     employmentHistoryService = mockEmploymentHistoryService,
     relationshipAuthService = TestRelationshipAuthService(Map(ninoWithAgent -> Arn("TestArn"))),
     auditable = mockAuditable,

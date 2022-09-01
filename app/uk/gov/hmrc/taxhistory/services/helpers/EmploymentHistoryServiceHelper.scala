@@ -18,33 +18,34 @@ package uk.gov.hmrc.taxhistory.services.helpers
 
 import uk.gov.hmrc.taxhistory.model.rti.RtiEmployment
 import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, IncomeSource, PayAndTax, PayAsYouEarn}
-import uk.gov.hmrc.taxhistory.model.nps.{NpsEmployment, Iabd}
+import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
 import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 import uk.gov.hmrc.taxhistory.utils.Logging
 
 object EmploymentHistoryServiceHelper extends TaxHistoryHelper with Logging {
 
-  def combinePAYEs(payAsYouEarnList: List[PayAsYouEarn]): PayAsYouEarn = {
+  def combinePAYEs(payAsYouEarnList: List[PayAsYouEarn]): PayAsYouEarn =
     // `reduce` will cause an exception if the list of PayAsYouEarn is empty.
-    payAsYouEarnList.reduce((p1, p2) => {
+    payAsYouEarnList.reduce { (p1, p2) =>
       PayAsYouEarn(
         employments = p1.employments ::: p2.employments,
-        benefits    = p1.benefits ++ p2.benefits,
-        payAndTax   = p1.payAndTax ++ p2.payAndTax,
+        benefits = p1.benefits ++ p2.benefits,
+        payAndTax = p1.payAndTax ++ p2.payAndTax,
         incomeSources = p1.incomeSources ++ p2.incomeSources
       )
-    })
-  }
+    }
 
-  def buildPAYE(rtiEmployment: Option[RtiEmployment],
-                iabds: List[Iabd],
-                incomeSource: Option[IncomeSource],
-                npsEmployment: NpsEmployment): PayAsYouEarn = {
+  def buildPAYE(
+    rtiEmployment: Option[RtiEmployment],
+    iabds: List[Iabd],
+    incomeSource: Option[IncomeSource],
+    npsEmployment: NpsEmployment
+  ): PayAsYouEarn = {
 
     val employment = npsEmployment.toEmployment
 
     val payAndTax: Map[String, PayAndTax] = rtiEmployment match {
-      case None                => Map.empty
+      case None         => Map.empty
       case Some(rtiEmp) => Map(employment.employmentId.toString -> rtiEmp.toPayAndTax)
     }
 

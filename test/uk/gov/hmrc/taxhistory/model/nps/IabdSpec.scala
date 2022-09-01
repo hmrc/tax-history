@@ -23,11 +23,10 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 
-
 class IabdSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
 
   lazy val employmentsResponse: JsValue = loadFile("/json/nps/response/iabds.json")
-  private val grossAmount = 200
+  private val grossAmount               = 200
 
   val iabdJsonResponse: String =
     s"""{
@@ -50,14 +49,14 @@ class IabdSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionVa
   "Iabd Json" should {
     "transform Iabds Response Json correctly to Employment Model " in {
       val iabd = Json.parse(iabdJsonResponse).as[Iabd]
-      iabd shouldBe a[Iabd]
-      iabd.nino shouldBe "QQ00000AB"
-      iabd.`type` shouldBe a[CompanyBenefits]
-      iabd.`type` shouldBe EmployerProvidedServices
-      iabd.grossAmount shouldBe Some(grossAmount)
-      iabd.typeDescription shouldBe Some("Total gift aid Payments")
+      iabd                  shouldBe a[Iabd]
+      iabd.nino             shouldBe "QQ00000AB"
+      iabd.`type`           shouldBe a[CompanyBenefits]
+      iabd.`type`           shouldBe EmployerProvidedServices
+      iabd.grossAmount      shouldBe Some(grossAmount)
+      iabd.typeDescription  shouldBe Some("Total gift aid Payments")
       iabd.paymentFrequency shouldBe Some(1)
-      iabd.startDate shouldBe Some("23/02/2018")
+      iabd.startDate        shouldBe Some("23/02/2018")
     }
 
     "handle paymentFrequency with a null value" in {
@@ -85,33 +84,37 @@ class IabdSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionVa
       "return StatePension with same grossAmount and typeDescription" in {
         val statePension = testIabd.toStatePension
 
-        statePension.grossAmount shouldBe testIabd.grossAmount.get
+        statePension.grossAmount     shouldBe testIabd.grossAmount.get
         statePension.typeDescription shouldBe testIabd.typeDescription.get
       }
 
       "return StatePension's paymentFrequency and startDate" when {
         "there is no paymentFrequency" in {
           val iabdNoPaymentFreq = testIabd.copy(paymentFrequency = None, startDate = None)
-          val statePension = iabdNoPaymentFreq.toStatePension
+          val statePension      = iabdNoPaymentFreq.toStatePension
 
           statePension.paymentFrequency shouldBe None
-          statePension.startDate shouldBe None
+          statePension.startDate        shouldBe None
         }
 
         "there a paymentFrequency of 1" in {
-          val iabdNoPaymentFreq = testIabd.copy(paymentFrequency = Some(1), startDate = Some("23/04/2018"))
-          val statePension = iabdNoPaymentFreq.toStatePension
+          val paymentFrequency  = 1
+          val iabdNoPaymentFreq =
+            testIabd.copy(paymentFrequency = Some(paymentFrequency), startDate = Some("23/04/2018"))
+          val statePension      = iabdNoPaymentFreq.toStatePension
 
           statePension.paymentFrequency shouldBe Some(1)
-          statePension.startDate shouldBe Some(LocalDate.parse("2018-04-23"))
+          statePension.startDate        shouldBe Some(LocalDate.parse("2018-04-23"))
         }
 
         "there is a paymentFrequency of 5" in {
-          val iabdNoPaymentFreq = testIabd.copy(paymentFrequency = Some(5), startDate = Some("23/04/2018"))
-          val statePension = iabdNoPaymentFreq.toStatePension
+          val paymentFrequency  = 5
+          val iabdNoPaymentFreq =
+            testIabd.copy(paymentFrequency = Some(paymentFrequency), startDate = Some("23/04/2018"))
+          val statePension      = iabdNoPaymentFreq.toStatePension
 
-          statePension.paymentFrequency shouldBe Some(5)
-          statePension.startDate shouldBe None
+          statePension.paymentFrequency shouldBe Some(paymentFrequency)
+          statePension.startDate        shouldBe None
         }
       }
     }

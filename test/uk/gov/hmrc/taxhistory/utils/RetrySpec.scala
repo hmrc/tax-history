@@ -31,20 +31,21 @@ import scala.concurrent.duration.FiniteDuration
 
 class RetrySpec extends AnyWordSpec with Matchers with OptionValues with ScalaFutures {
 
-
-  private val system = ActorSystem("test")
-  private val delay = FiniteDuration(1000, TimeUnit.MILLISECONDS)
-  private val retry = new Retry(2, delay, system)
+  private val lengthOfTime = 1000
+  private val system       = ActorSystem("test")
+  private val delay        = FiniteDuration(lengthOfTime, TimeUnit.MILLISECONDS)
+  private val retry        = new Retry(2, delay, system)
 
   "RetrySpec" should {
     "return result when the operation succeeds" in {
-      def op = Future {
-        100
+      val futureInt       = 100
+      def op: Future[Int] = Future {
+        futureInt
       }
 
       val result = retry(op).futureValue
 
-      result shouldBe 100
+      result shouldBe futureInt
     }
 
     "retry 3 times the given the operation fails all the time" in {
@@ -63,24 +64,26 @@ class RetrySpec extends AnyWordSpec with Matchers with OptionValues with ScalaFu
     }
 
     "succeed on third trial after retrying twice" in {
-      var tries = 0
+      var tries      = 0
+      val oneHundred = 100
 
       val result = await(retry {
         Future {
           tries = tries + 1
-          if (tries <= 2)
+          if (tries <= 2) {
             throw new BadGatewayException("Some error happened. Please try again later.")
-          else
-            100
+          } else {
+            oneHundred
+          }
         }
       })
 
       result shouldBe 100
-      tries shouldBe 3
+      tries  shouldBe 3
     }
 
     "return exception after retrying 3 times the given operation always returns exception" in {
-      def op = Future {
+      def op: Future[Nothing] = Future {
         throw new BadGatewayException("Some error happened. Please try again later.")
       }
 

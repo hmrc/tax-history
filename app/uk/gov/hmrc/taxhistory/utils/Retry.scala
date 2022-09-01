@@ -24,26 +24,24 @@ import javax.inject.Inject
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
-class Retry @Inject()(val times: Int, val delay: FiniteDuration, val system: ActorSystem) extends Logging {
+class Retry @Inject() (val times: Int, val delay: FiniteDuration, val system: ActorSystem) extends Logging {
 
-  private def apply[A](n: Int = times)(f: => Future[A])(implicit ec: ExecutionContext): Future[A] = {
+  private def apply[A](n: Int = times)(f: => Future[A])(implicit ec: ExecutionContext): Future[A] =
     f.recoverWith {
       case ShouldRetryAfter(e) if n > 0 =>
         logger.warn(s"Retrying after failure $e")
         after(delay, system.scheduler)(apply(n - 1)(f))
     }
-  }
 
-  def apply[A](f: => Future[A])(implicit ec: ExecutionContext): Future[A] = {
+  def apply[A](f: => Future[A])(implicit ec: ExecutionContext): Future[A] =
     apply(times)(f)
-  }
 
   private object ShouldRetryAfter {
     def unapply(e: Exception): Option[Exception] = e match {
-      case ex: GatewayTimeoutException => Some(ex)
-      case ex: BadGatewayException => Some(ex)
-      case ex@UpstreamErrorResponse(_, _, _, _) => Some(ex)
-      case _ => None
+      case ex: GatewayTimeoutException            => Some(ex)
+      case ex: BadGatewayException                => Some(ex)
+      case ex @ UpstreamErrorResponse(_, _, _, _) => Some(ex)
+      case _                                      => None
     }
   }
 }

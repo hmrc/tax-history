@@ -25,9 +25,12 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class PayAsYouEarnController @Inject()(employmentHistoryService: EmploymentHistoryService,
-                                       saAuthService: SaAuthService,
-                                       val cc: ControllerComponents)(implicit val ec: ExecutionContext) extends TaxHistoryController(cc) {
+class PayAsYouEarnController @Inject() (
+  employmentHistoryService: EmploymentHistoryService,
+  saAuthService: SaAuthService,
+  val cc: ControllerComponents
+)(implicit val ec: ExecutionContext)
+    extends TaxHistoryController(cc) {
 
   def getPayAsYouEarn(nino: Nino, taxYear: TaxYear): Action[AnyContent] = Action.async { implicit request =>
     saAuthService.withSaAuthorisation(nino) { _ =>

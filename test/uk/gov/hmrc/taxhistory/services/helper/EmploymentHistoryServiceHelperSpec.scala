@@ -29,42 +29,62 @@ import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 
 class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
 
+  private val sequenceNumber                                          = 6
   val npsEmploymentResponseWithTaxDistrictNumber: List[NpsEmployment] = List(
     NpsEmployment(
-      "AA000000", 6, "0531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false,
-      otherIncomeSourceIndicator = false, Some(new LocalDate("2015-01-21")), None, receivingOccupationalPension = false, Live))
+      "AA000000",
+      sequenceNumber,
+      "0531",
+      "J4816",
+      "Aldi",
+      Some("6044041000000"),
+      receivingJobSeekersAllowance = false,
+      otherIncomeSourceIndicator = false,
+      Some(new LocalDate("2015-01-21")),
+      None,
+      receivingOccupationalPension = false,
+      Live
+    )
+  )
 
-  val testTaxCode = "1150L"
-  lazy val testRtiData: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
+  val testTaxCode                = "1150L"
+  lazy val testRtiData: RtiData  = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
   lazy val testIabds: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
 
   lazy val testIncomeSource: IncomeSource = IncomeSource(1, 1, None, Nil, Nil, testTaxCode, None, 1, "")
 
-  val startDate = new LocalDate("2015-01-21")
-  lazy val employment1: Employment = Employment(payeReference = "1234",
+  val startDate                    = new LocalDate("2015-01-21")
+  lazy val employment1: Employment = Employment(
+    payeReference = "1234",
     startDate = Some(new LocalDate("2016-10-20")),
     employerName = "AnEmployerName",
-    employmentStatus = EmploymentStatus.Live, worksNumber = "00191048716")
+    employmentStatus = EmploymentStatus.Live,
+    worksNumber = "00191048716"
+  )
 
-  lazy val employment2: Employment = Employment(payeReference = "4321",
+  lazy val employment2: Employment = Employment(
+    payeReference = "4321",
     startDate = Some(new LocalDate("2015-12-01")),
     employerName = "AnotherEmployerName",
-    employmentStatus = EmploymentStatus.Live, worksNumber = "00191048716")
+    employmentStatus = EmploymentStatus.Live,
+    worksNumber = "00191048716"
+  )
 
   lazy val taxAccount: TaxAccount = TaxAccount(
     underpaymentAmount = Some(BigDecimal(11.11)),
     outstandingDebtRestriction = Some(BigDecimal(22.22)),
-    actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal(33.33)))
+    actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal(33.33))
+  )
 
-  lazy val companyBenefit: CompanyBenefit = CompanyBenefit(iabdType = "type",
-    amount = BigDecimal(123.00))
+  lazy val companyBenefit: CompanyBenefit = CompanyBenefit(iabdType = "type", amount = BigDecimal(123.00))
 
   lazy val payAndTax: PayAndTax = PayAndTax(
     taxablePayTotal = Some(BigDecimal(2222.22)),
     taxablePayTotalIncludingEYU = Some(BigDecimal(2222.22)),
     taxTotal = Some(BigDecimal(111.11)),
     taxTotalIncludingEYU = Some(BigDecimal(111.11)),
-    earlierYearUpdates = Nil)
+    earlierYearUpdates = Nil
+  )
 
   lazy val payAsYouEarn1: PayAsYouEarn = PayAsYouEarn(
     employments = List(employment1),
@@ -72,7 +92,8 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     incomeSources = Map(employment1.employmentId.toString -> testIncomeSource),
     benefits = Map(employment1.employmentId.toString -> List(companyBenefit)),
     payAndTax = Map(employment1.employmentId.toString -> payAndTax),
-    taxAccount = None)
+    taxAccount = None
+  )
 
   lazy val payAsYouEarn2: PayAsYouEarn = PayAsYouEarn(
     employments = List(employment2),
@@ -80,11 +101,14 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     incomeSources = Map(employment2.employmentId.toString -> testIncomeSource),
     benefits = Map(employment2.employmentId.toString -> List(companyBenefit)),
     payAndTax = Map(employment2.employmentId.toString -> payAndTax),
-    taxAccount = Some(taxAccount))
+    taxAccount = Some(taxAccount)
+  )
 
   "EmploymentHistoryServiceHelper" should {
     "merge from two payAsYouEarn objects into one" in {
-      val merged = EmploymentHistoryServiceHelper.combinePAYEs(List(payAsYouEarn1, payAsYouEarn2)).copy(allowances = Nil, taxAccount = Some(taxAccount))
+      val merged = EmploymentHistoryServiceHelper
+        .combinePAYEs(List(payAsYouEarn1, payAsYouEarn2))
+        .copy(allowances = Nil, taxAccount = Some(taxAccount))
       merged.employments.size mustBe 2
       merged.employments must contain(employment1)
       merged.employments must contain(employment2)
@@ -122,7 +146,8 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     }
 
     "merge from one payAsYouEarn objects into one" in {
-      val merged = EmploymentHistoryServiceHelper.combinePAYEs(List(payAsYouEarn1)).copy(allowances = Nil, taxAccount = None)
+      val merged =
+        EmploymentHistoryServiceHelper.combinePAYEs(List(payAsYouEarn1)).copy(allowances = Nil, taxAccount = None)
       merged.employments.size mustBe 1
       merged.employments must contain(employment1)
 
@@ -147,15 +172,21 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
 
     "Build pay as you earn using empty tax account" in {
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
-      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(None, Nil, Some(testIncomeSource), npsEmployments.head)
+      val payAsYouEarn   =
+        EmploymentHistoryServiceHelper.buildPAYE(None, Nil, Some(testIncomeSource), npsEmployments.head)
       payAsYouEarn.taxAccount mustBe None
     }
 
     "Build employment1 from rti, nps employment1, Iabd and income source data" in {
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
 
-      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, testIabds, Some(testIncomeSource), npsEmployments.head)
-      val employment = payAsYouEarn.employments.head
+      val payAsYouEarn    = EmploymentHistoryServiceHelper.buildPAYE(
+        testRtiData.employments.headOption,
+        testIabds,
+        Some(testIncomeSource),
+        npsEmployments.head
+      )
+      val employment      = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
       val Some(payAndTax) = payAsYouEarn.payAndTax.get(employment.employmentId.toString)
@@ -172,13 +203,13 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     "Build employment1 when there is no  data for rti, Iabd and income source" in {
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
 
-      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(None, Nil, None, npsEmployments.head)
-      val employment = payAsYouEarn.employments.head
+      val payAsYouEarn    = EmploymentHistoryServiceHelper.buildPAYE(None, Nil, None, npsEmployments.head)
+      val employment      = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
       employment.startDate mustBe Some(startDate)
       employment.endDate mustBe None
-      val payAndTax = payAsYouEarn.payAndTax.get(employment.employmentId.toString)
+      val payAndTax       = payAsYouEarn.payAndTax.get(employment.employmentId.toString)
       payAndTax mustBe None
       val companyBenefits = payAsYouEarn.benefits.get(employment.employmentId.toString)
       companyBenefits mustBe None
@@ -188,13 +219,14 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     "Build employment1 when there is data for rti is Nil" in {
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
 
-      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(None, testIabds, Some(testIncomeSource), npsEmployments.head)
-      val employment = payAsYouEarn.employments.head
+      val payAsYouEarn    =
+        EmploymentHistoryServiceHelper.buildPAYE(None, testIabds, Some(testIncomeSource), npsEmployments.head)
+      val employment      = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
       employment.startDate mustBe Some(startDate)
       employment.endDate mustBe None
-      val payAndTax = payAsYouEarn.payAndTax.get(employment.employmentId.toString)
+      val payAndTax       = payAsYouEarn.payAndTax.get(employment.employmentId.toString)
       payAndTax mustBe None
       val companyBenefits = payAsYouEarn.benefits.get(employment.employmentId.toString)
       companyBenefits.get.size mustBe 9
@@ -203,13 +235,18 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     "Build employment1 when there is data for Iabd is None or Null" in {
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
 
-      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, Nil, Some(testIncomeSource), npsEmployments.head)
-      val employment = payAsYouEarn.employments.head
+      val payAsYouEarn    = EmploymentHistoryServiceHelper.buildPAYE(
+        testRtiData.employments.headOption,
+        Nil,
+        Some(testIncomeSource),
+        npsEmployments.head
+      )
+      val employment      = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
       employment.startDate mustBe Some(startDate)
       employment.endDate mustBe None
-      val payAndTax = payAsYouEarn.payAndTax.get(employment.employmentId.toString)
+      val payAndTax       = payAsYouEarn.payAndTax.get(employment.employmentId.toString)
       payAndTax.get.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       payAndTax.get.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       payAndTax.get.earlierYearUpdates.size mustBe 1
@@ -220,13 +257,18 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     "Build employment1 when there is no data for Iabd" in {
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
 
-      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, Nil, Some(testIncomeSource), npsEmployments.head)
-      val employment = payAsYouEarn.employments.head
+      val payAsYouEarn    = EmploymentHistoryServiceHelper.buildPAYE(
+        testRtiData.employments.headOption,
+        Nil,
+        Some(testIncomeSource),
+        npsEmployments.head
+      )
+      val employment      = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
       employment.startDate mustBe Some(startDate)
       employment.endDate mustBe None
-      val payAndTax = payAsYouEarn.payAndTax.get(employment.employmentId.toString)
+      val payAndTax       = payAsYouEarn.payAndTax.get(employment.employmentId.toString)
       payAndTax.get.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       payAndTax.get.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       payAndTax.get.earlierYearUpdates.size mustBe 1
@@ -237,30 +279,57 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     "Employments employmentPaymentType is determined from the NPS employment's properties" when {
       "NPS employment has receivingJobseekersAllowance flag set to true" in {
         val npsEmployment = npsEmploymentResponseWithTaxDistrictNumber.head.copy(receivingJobSeekersAllowance = true)
-        val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, Nil, Some(testIncomeSource), npsEmployment)
+        val payAsYouEarn  = EmploymentHistoryServiceHelper.buildPAYE(
+          testRtiData.employments.headOption,
+          Nil,
+          Some(testIncomeSource),
+          npsEmployment
+        )
         payAsYouEarn.employments.head.employmentPaymentType mustBe Some(JobseekersAllowance)
 
       }
       "NPS employment has receivingOccupantionalPension flag set to true" in {
         val npsEmployment = npsEmploymentResponseWithTaxDistrictNumber.head.copy(receivingOccupationalPension = true)
-        val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, Nil, Some(testIncomeSource), npsEmployment)
+        val payAsYouEarn  = EmploymentHistoryServiceHelper.buildPAYE(
+          testRtiData.employments.headOption,
+          Nil,
+          Some(testIncomeSource),
+          npsEmployment
+        )
         payAsYouEarn.employments.head.employmentPaymentType mustBe Some(OccupationalPension)
       }
       "NPS employment has a recognised PAYE reference" in {
-        val npsEmployment = npsEmploymentResponseWithTaxDistrictNumber.head.copy(taxDistrictNumber = "267", payeNumber = "LS500")
-        val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, Nil, Some(testIncomeSource), npsEmployment)
+        val npsEmployment =
+          npsEmploymentResponseWithTaxDistrictNumber.head.copy(taxDistrictNumber = "267", payeNumber = "LS500")
+        val payAsYouEarn  = EmploymentHistoryServiceHelper.buildPAYE(
+          testRtiData.employments.headOption,
+          Nil,
+          Some(testIncomeSource),
+          npsEmployment
+        )
         payAsYouEarn.employments.head.employmentPaymentType mustBe Some(StatePensionLumpSum)
       }
 
       "NPS employment has a recognised PAYE reference which is a Jobseekers allowance PAYE reference" in {
-        val npsEmployment = npsEmploymentResponseWithTaxDistrictNumber.head.copy(taxDistrictNumber = "475", payeNumber = "BB00987")
-        val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, Nil, Some(testIncomeSource), npsEmployment)
+        val npsEmployment =
+          npsEmploymentResponseWithTaxDistrictNumber.head.copy(taxDistrictNumber = "475", payeNumber = "BB00987")
+        val payAsYouEarn  = EmploymentHistoryServiceHelper.buildPAYE(
+          testRtiData.employments.headOption,
+          Nil,
+          Some(testIncomeSource),
+          npsEmployment
+        )
         payAsYouEarn.employments.head.employmentPaymentType mustBe Some(JobseekersAllowance)
       }
 
       "NPS employment has no properties that signal a special employment type" in {
         val npsEmployment = npsEmploymentResponseWithTaxDistrictNumber.head
-        val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(testRtiData.employments.headOption, Nil, Some(testIncomeSource), npsEmployment)
+        val payAsYouEarn  = EmploymentHistoryServiceHelper.buildPAYE(
+          testRtiData.employments.headOption,
+          Nil,
+          Some(testIncomeSource),
+          npsEmployment
+        )
         payAsYouEarn.employments.head.employmentPaymentType mustBe None
       }
     }

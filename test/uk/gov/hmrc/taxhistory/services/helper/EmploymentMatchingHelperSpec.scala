@@ -26,6 +26,7 @@ import uk.gov.hmrc.taxhistory.services.helpers.EmploymentMatchingHelper
 
 class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
 
+  // scalastyle:off magic.number
   "Given 2 NPS and 2 RTI employments from the same employer, match those 2 NPS employments with the RTI employments" when {
     "the worksNumber/currentPayId is present" in {
       val rtiEmployment1 = rti(currentPayId = Some("1234"), seq = 3)
@@ -34,14 +35,16 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
       val npsEmployment1 = nps(worksNumber = Some("1234"), seq = 3)
       val npsEmployment2 = nps(worksNumber = Some("5678"), seq = 4)
 
-      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
-        npsEmployments = List(npsEmployment1, npsEmployment2),
-        rtiEmployments = List(rtiEmployment1, rtiEmployment2)
-      ).toSeq
+      val matchedEmployments = EmploymentMatchingHelper
+        .matchEmployments(
+          npsEmployments = List(npsEmployment1, npsEmployment2),
+          rtiEmployments = List(rtiEmployment1, rtiEmployment2)
+        )
+        .toSeq
 
       matchedEmployments must have length 2
-      matchedEmployments must contain (npsEmployment1, rtiEmployment1)
-      matchedEmployments must contain (npsEmployment2, rtiEmployment2)
+      matchedEmployments must contain(npsEmployment1, rtiEmployment1)
+      matchedEmployments must contain(npsEmployment2, rtiEmployment2)
     }
 
     "the worksNumber/currentPayId is missing" in {
@@ -51,14 +54,16 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
       val npsEmployment1 = nps(worksNumber = None, seq = 3)
       val npsEmployment2 = nps(worksNumber = None, seq = 4)
 
-      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
-        npsEmployments = List(npsEmployment1, npsEmployment2),
-        rtiEmployments = List(rtiEmployment1, rtiEmployment2)
-      ).toSeq
+      val matchedEmployments = EmploymentMatchingHelper
+        .matchEmployments(
+          npsEmployments = List(npsEmployment1, npsEmployment2),
+          rtiEmployments = List(rtiEmployment1, rtiEmployment2)
+        )
+        .toSeq
 
       matchedEmployments must have length 2
-      matchedEmployments must contain (npsEmployment1, rtiEmployment1)
-      matchedEmployments must contain (npsEmployment2, rtiEmployment2)
+      matchedEmployments must contain(npsEmployment1, rtiEmployment1)
+      matchedEmployments must contain(npsEmployment2, rtiEmployment2)
     }
   }
 
@@ -69,13 +74,15 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
       val npsEmployment1 = nps(worksNumber = Some("1234"), seq = 3)
       val npsEmployment2 = nps(worksNumber = Some("5678"), seq = 4)
 
-      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
-        npsEmployments = List(npsEmployment1, npsEmployment2),
-        rtiEmployments = List(rtiEmployment)
-      ).toSeq
+      val matchedEmployments = EmploymentMatchingHelper
+        .matchEmployments(
+          npsEmployments = List(npsEmployment1, npsEmployment2),
+          rtiEmployments = List(rtiEmployment)
+        )
+        .toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain (npsEmployment1, rtiEmployment)
+      matchedEmployments must contain(npsEmployment1, rtiEmployment)
     }
 
     "the two NPS employments have the same worksNumber/currentPayId but a different sequenceNumber" in {
@@ -84,13 +91,15 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
       val npsEmployment1 = nps(worksNumber = Some("456"), seq = 1)
       val npsEmployment2 = nps(worksNumber = Some("456"), seq = 4)
 
-      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
-        npsEmployments = List(npsEmployment1, npsEmployment2),
-        rtiEmployments = List(rtiEmployment)
-      ).toSeq
+      val matchedEmployments = EmploymentMatchingHelper
+        .matchEmployments(
+          npsEmployments = List(npsEmployment1, npsEmployment2),
+          rtiEmployments = List(rtiEmployment)
+        )
+        .toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain (npsEmployment1, rtiEmployment)
+      matchedEmployments must contain(npsEmployment1, rtiEmployment)
     }
 
     "the two NPS employments have a missing worksNumber/currentPayId" in {
@@ -99,13 +108,15 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
       val npsEmployment1 = nps(worksNumber = None, seq = 1)
       val npsEmployment2 = nps(worksNumber = None, seq = 4)
 
-      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
-        npsEmployments = List(npsEmployment1, npsEmployment2),
-        rtiEmployments = List(rtiEmployment)
-      ).toSeq
+      val matchedEmployments = EmploymentMatchingHelper
+        .matchEmployments(
+          npsEmployments = List(npsEmployment1, npsEmployment2),
+          rtiEmployments = List(rtiEmployment)
+        )
+        .toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain (npsEmployment1, rtiEmployment)
+      matchedEmployments must contain(npsEmployment1, rtiEmployment)
     }
   }
 
@@ -116,13 +127,15 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
 
       val npsEmployment = nps(worksNumber = Some("5678"), seq = 4)
 
-      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
-        npsEmployments = List(npsEmployment),
-        rtiEmployments = List(rtiEmployment1, rtiEmployment2)
-      ).toSeq
+      val matchedEmployments = EmploymentMatchingHelper
+        .matchEmployments(
+          npsEmployments = List(npsEmployment),
+          rtiEmployments = List(rtiEmployment1, rtiEmployment2)
+        )
+        .toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain (npsEmployment, rtiEmployment2)
+      matchedEmployments must contain(npsEmployment, rtiEmployment2)
     }
 
     "the two RTI employments have the same worksNumber/currentPayId but different sequenceNumber" in {
@@ -131,13 +144,15 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
 
       val npsEmployment = nps(worksNumber = Some("5678"), seq = 4)
 
-      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
-        npsEmployments = List(npsEmployment),
-        rtiEmployments = List(rtiEmployment1, rtiEmployment2)
-      ).toSeq
+      val matchedEmployments = EmploymentMatchingHelper
+        .matchEmployments(
+          npsEmployments = List(npsEmployment),
+          rtiEmployments = List(rtiEmployment1, rtiEmployment2)
+        )
+        .toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain (npsEmployment, rtiEmployment2)
+      matchedEmployments must contain(npsEmployment, rtiEmployment2)
     }
 
     "the two RTI employments have a missing worksNumber/currentPayId" in {
@@ -146,13 +161,15 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
 
       val npsEmployment = nps(worksNumber = None, seq = 4)
 
-      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
-        npsEmployments = List(npsEmployment),
-        rtiEmployments = List(rtiEmployment1, rtiEmployment2)
-      ).toSeq
+      val matchedEmployments = EmploymentMatchingHelper
+        .matchEmployments(
+          npsEmployments = List(npsEmployment),
+          rtiEmployments = List(rtiEmployment1, rtiEmployment2)
+        )
+        .toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain (npsEmployment, rtiEmployment2)
+      matchedEmployments must contain(npsEmployment, rtiEmployment2)
     }
   }
 
@@ -164,7 +181,7 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
       val matchedEmployments = EmploymentMatchingHelper.matchEmployments(List(npsEmployment), List(rtiEmployment)).toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain (npsEmployment, rtiEmployment)
+      matchedEmployments must contain(npsEmployment, rtiEmployment)
     }
 
     "even if the worksNumber/currentPayId is missing and the sequence numbers do not match" in {
@@ -174,7 +191,7 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
       val matchedEmployments = EmploymentMatchingHelper.matchEmployments(List(npsEmployment), List(rtiEmployment)).toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain (npsEmployment, rtiEmployment)
+      matchedEmployments must contain(npsEmployment, rtiEmployment)
     }
   }
 
@@ -186,13 +203,15 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
       val npsEmployment1 = nps(worksNumber = Some("5678"), seq = 4)
       val npsEmployment2 = nps(worksNumber = Some("1111"), seq = 4)
 
-      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
-        npsEmployments = List(npsEmployment1, npsEmployment2),
-        rtiEmployments = List(rtiEmployment1, rtiEmployment2)
-      ).toSeq
+      val matchedEmployments = EmploymentMatchingHelper
+        .matchEmployments(
+          npsEmployments = List(npsEmployment1, npsEmployment2),
+          rtiEmployments = List(rtiEmployment1, rtiEmployment2)
+        )
+        .toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain (npsEmployment1, rtiEmployment2)
+      matchedEmployments must contain(npsEmployment1, rtiEmployment2)
     }
 
     "the worksNumber/currentPayId is missing and the sequenceNumber matches only on one pair" in {
@@ -202,19 +221,21 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
       val npsEmployment1 = nps(worksNumber = None, seq = 4)
       val npsEmployment2 = nps(worksNumber = None, seq = 5)
 
-      val matchedEmployments = EmploymentMatchingHelper.matchEmployments(
-        npsEmployments = List(npsEmployment1, npsEmployment2),
-        rtiEmployments = List(rtiEmployment1, rtiEmployment2)
-      ).toSeq
+      val matchedEmployments = EmploymentMatchingHelper
+        .matchEmployments(
+          npsEmployments = List(npsEmployment1, npsEmployment2),
+          rtiEmployments = List(rtiEmployment1, rtiEmployment2)
+        )
+        .toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain (npsEmployment1, rtiEmployment2)
+      matchedEmployments must contain(npsEmployment1, rtiEmployment2)
     }
   }
 
   "Given multiple same employer employments, match the employments correctly" in {
 
-    val rtiRecords:List[RtiEmployment] = List(
+    val rtiRecords: List[RtiEmployment] = List(
       rti(officeNumber = "123", payeRef = "xxx123456", currentPayId = Some("1234"), seq = 3),
       rti(officeNumber = "888", payeRef = "xxx888888", currentPayId = Some("7654"), seq = 8),
       rti(officeNumber = "888", payeRef = "xxx888888", currentPayId = Some("7764"), seq = 9),
@@ -255,7 +276,7 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
 
   "Given a nonempty list of RTI employments and and empty list of NPS employments return an empty Map" in {
 
-    val rtiRecords:List[RtiEmployment] = List(
+    val rtiRecords: List[RtiEmployment] = List(
       rti(officeNumber = "123", payeRef = "xxx123456", currentPayId = Some("1234"), seq = 3),
       rti(officeNumber = "888", payeRef = "xxx888888", currentPayId = Some("7654"), seq = 8),
       rti(officeNumber = "888", payeRef = "xxx888888", currentPayId = Some("7764"), seq = 9),
@@ -269,6 +290,5 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
 
     result.isEmpty mustBe true
   }
-
 
 }

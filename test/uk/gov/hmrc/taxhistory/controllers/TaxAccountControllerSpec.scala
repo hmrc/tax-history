@@ -38,24 +38,29 @@ import uk.gov.hmrc.time.TaxYear
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
-class TaxAccountControllerSpec extends AnyWordSpec with Matchers with OptionValues
-  with GuiceOneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
+class TaxAccountControllerSpec
+    extends AnyWordSpec
+    with Matchers
+    with OptionValues
+    with GuiceOneServerPerSuite
+    with MockitoSugar
+    with TestUtil
+    with BeforeAndAfterEach {
 
   private val mockEmploymentHistoryService = mock[EmploymentHistoryService]
 
-  private val ninoWithAgent = randomNino()
+  private val ninoWithAgent    = randomNino()
   private val ninoWithoutAgent = randomNino()
 
   private val testTaxAccount = TaxAccount()
-  private val testTaxYear = TaxYear.current.previous.currentYear
-  private val testTaxCode = "1150L"
+  private val testTaxYear    = TaxYear.current.previous.currentYear
+  private val testTaxCode    = "1150L"
 
-  val cc: ControllerComponents = stubControllerComponents()
+  val cc: ControllerComponents                    = stubControllerComponents()
   implicit val executionContext: ExecutionContext = cc.executionContext
 
-  override def beforeEach: Unit = {
+  override def beforeEach: Unit =
     reset(mockEmploymentHistoryService)
-  }
 
   val testTaxAccountController = new TaxAccountController(
     employmentHistoryService = mockEmploymentHistoryService,
@@ -100,7 +105,8 @@ class TaxAccountControllerSpec extends AnyWordSpec with Matchers with OptionValu
       when(mockEmploymentHistoryService.getIncomeSource(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(testIncomeSource)))
 
-      val result = testTaxAccountController.getIncomeSource(ninoWithAgent.nino, testTaxYear, testEmploymentId).apply(FakeRequest())
+      val result =
+        testTaxAccountController.getIncomeSource(ninoWithAgent.nino, testTaxYear, testEmploymentId).apply(FakeRequest())
       status(result) shouldBe OK
     }
 
@@ -108,7 +114,9 @@ class TaxAccountControllerSpec extends AnyWordSpec with Matchers with OptionValu
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
         when(mockEmploymentHistoryService.getIncomeSource(any(), any(), any[String])(any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
-        val result = testTaxAccountController.getIncomeSource(ninoWithAgent.nino, testTaxYear, testEmploymentId).apply(FakeRequest())
+        val result = testTaxAccountController
+          .getIncomeSource(ninoWithAgent.nino, testTaxYear, testEmploymentId)
+          .apply(FakeRequest())
         status(result) shouldBe expectedStatus
       }
     }
@@ -117,7 +125,9 @@ class TaxAccountControllerSpec extends AnyWordSpec with Matchers with OptionValu
       when(mockEmploymentHistoryService.getIncomeSource(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(testIncomeSource)))
 
-      val result = testTaxAccountController.getIncomeSource(ninoWithoutAgent.nino, testTaxYear, testEmploymentId).apply(FakeRequest())
+      val result = testTaxAccountController
+        .getIncomeSource(ninoWithoutAgent.nino, testTaxYear, testEmploymentId)
+        .apply(FakeRequest())
       status(result) shouldBe UNAUTHORIZED
     }
   }

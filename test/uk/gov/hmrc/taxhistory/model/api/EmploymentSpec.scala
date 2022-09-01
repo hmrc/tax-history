@@ -34,7 +34,7 @@ package uk.gov.hmrc.taxhistory.model.api
 
 import org.joda.time.LocalDate
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest. OptionValues
+import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.{JsObject, JsValue, Json}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
@@ -44,9 +44,9 @@ import java.util.UUID
 
 class EmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
 
-  lazy val employmentJson: JsValue = loadFile("/json/model/api/employment.json")
+  lazy val employmentJson: JsValue          = loadFile("/json/model/api/employment.json")
   lazy val employmentNoEndDateJson: JsValue = loadFile("/json/model/api/employmentNoEndDate.json")
-  lazy val employmentListJson: JsValue = loadFile("/json/model/api/employments.json")
+  lazy val employmentListJson: JsValue      = loadFile("/json/model/api/employments.json")
 
   lazy val employment1: Employment = Employment(
     employmentId = UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
@@ -78,7 +78,8 @@ class EmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with Op
       employmentJson.as[Employment] shouldBe employment1
     }
     "generate employmentId when none is supplied" in {
-      val emp = Employment(payeReference = "paye-1",
+      val emp = Employment(
+        payeReference = "paye-1",
         employerName = "employer-1",
         startDate = Some(new LocalDate("2016-01-21")),
         endDate = Some(new LocalDate("2017-01-01")),
@@ -86,7 +87,7 @@ class EmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with Op
         worksNumber = "00191048716"
       )
       emp.employmentId.toString.nonEmpty shouldBe true
-      emp.employmentId shouldNot be(employment1.employmentId)
+      emp.employmentId                  shouldNot be(employment1.employmentId)
     }
     "transform into Json from object list correctly " in {
       Json.toJson(employmentList) shouldBe employmentListJson
@@ -99,26 +100,24 @@ class EmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with Op
     }
     "allow omission of startDate in json" in {
       val employmentNoStartDateJson = employmentNoEndDateJson.as[JsObject] - "startDate"
-      val employmentNoStartDate = employment2.copy(startDate = None)
+      val employmentNoStartDate     = employment2.copy(startDate = None)
 
       employmentNoStartDateJson.as[Employment] shouldBe employmentNoStartDate
-      Json.toJson(employmentNoStartDate) shouldBe employmentNoStartDateJson
+      Json.toJson(employmentNoStartDate)       shouldBe employmentNoStartDateJson
     }
     "enrich employment with URIs" in {
-      val taxYear = 2016
+      val taxYear            = 2016
       val enrichedEmployment = employment1.enrichWithURIs(taxYear = taxYear)
       employment1.companyBenefitsURI shouldBe None
-      employment1.employmentURI shouldBe None
-      employment1.payAndTaxURI shouldBe None
+      employment1.employmentURI      shouldBe None
+      employment1.payAndTaxURI       shouldBe None
 
       val employmentURI = s"/$taxYear/employments/${employment1.employmentId.toString}"
 
-      enrichedEmployment.employmentURI shouldBe Some(employmentURI)
+      enrichedEmployment.employmentURI      shouldBe Some(employmentURI)
       enrichedEmployment.companyBenefitsURI shouldBe Some(employmentURI + "/company-benefits")
-      enrichedEmployment.payAndTaxURI shouldBe Some(employmentURI + "/pay-and-tax")
+      enrichedEmployment.payAndTaxURI       shouldBe Some(employmentURI + "/pay-and-tax")
     }
 
   }
 }
-
-

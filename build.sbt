@@ -2,7 +2,7 @@ import play.sbt.PlayImport.PlayKeys
 import play.sbt.routes.RoutesKeys.routesImport
 import sbt.Keys._
 import sbt.Tests.{Group, SubProcess}
-import sbt.{ForkOptions, TestDefinition, _}
+import sbt._
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
@@ -12,23 +12,21 @@ lazy val scoverageSettings = {
   import scoverage.ScoverageKeys
   Seq(
     // Semicolon-separated list of regexs matching classes to exclude
-    ScoverageKeys.coverageExcludedPackages := "<empty>;Reverse.*;.*AuthService.*;modgiels/.data/..*;uk.gov.hmrc.taxhistory.auditable;uk.gov.hmrc.taxhistory.metrics;view.*;controllers.auth.*;filters.*;forms.*;config.*;" +
+    ScoverageKeys.coverageExcludedPackages := "<empty>;Reverse.*;.*AuthService.*;modgiels/.data/..*;" +
+      "uk.gov.hmrc.taxhistory.auditable;uk.gov.hmrc.taxhistory.metrics;view.*;controllers.auth.*;filters.*;forms.*;config.*;" +
       ".*BuildInfo.*;prod.Routes;app.Routes;testOnlyDoNotUseInAppConf.Routes;controllers.ExampleController;controllers.testonly.TestOnlyController",
-    ScoverageKeys.coverageMinimum := 90.00,
+    ScoverageKeys.coverageMinimumStmtTotal := 90.00,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true,
-    parallelExecution in Test := false
+    Test / parallelExecution := false
   )
 }
 
 val appName = "tax-history"
-val silencerVersion = "1.7.1"
 
 lazy val microservice =
   Project(appName, file("."))
-    .enablePlugins(Seq(
-      play.sbt.PlayScala,
-      SbtDistributablesPlugin): _*)
+    .enablePlugins(Seq(play.sbt.PlayScala, SbtDistributablesPlugin): _*)
     .settings(PlayKeys.playDefaultPort := 9997)
     .settings(scoverageSettings: _*)
     .settings(scalaSettings: _*)
@@ -36,7 +34,7 @@ lazy val microservice =
     .settings(defaultSettings(): _*)
     .settings(routesImport ++= Seq("uk.gov.hmrc.taxhistory.binders.PathBinders._"))
     .settings(
-      scalaVersion := "2.12.12",
+      scalaVersion := "2.12.16",
       libraryDependencies ++= AppDependencies(),
       retrieveManaged := true,
       // ***************
@@ -47,26 +45,25 @@ lazy val microservice =
       // Make sure you only exclude warnings for the project directories, i.e. make builds reproducible
       scalacOptions += s"-P:silencer:sourceRoots=${baseDirectory.value.getCanonicalPath}",
       // Suppress warnings due to mongo dates using `$date` in their Json representation
-      scalacOptions += "-P:silencer:globalFilters=possible missing interpolator: detected interpolated identifier `\\$date`",
-      libraryDependencies ++= Seq(
-        compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
-        "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
-      )
+      scalacOptions += "-P:silencer:globalFilters=possible missing interpolator: detected interpolated identifier `\\$date`"
       // ***************
     )
     .configs(IntegrationTest)
     .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
     .settings(
       majorVersion := 3,
-      Keys.fork in IntegrationTest := false,
-      unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest)(base => Seq(base / "it")).value,
+      IntegrationTest / Keys.fork := false,
+      IntegrationTest / unmanagedSourceDirectories := (IntegrationTest / baseDirectory)(base => Seq(base / "it")).value,
       addTestReportOption(IntegrationTest, "int-test-reports"),
-      testGrouping in IntegrationTest := oneForkedJvmPerTest((definedTests in IntegrationTest).value),
-      parallelExecution in IntegrationTest := false
+      IntegrationTest / testGrouping := oneForkedJvmPerTest((IntegrationTest / definedTests).value),
+      IntegrationTest / parallelExecution := false
     )
-    .settings( resolvers += Resolver.jcenterRepo )
+    .settings(resolvers += Resolver.jcenterRepo)
 
 def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] = tests map { test =>
   val forkOptions = ForkOptions().withRunJVMOptions(Vector("-Dtest.name=" + test.name))
   Group(test.name, Seq(test), SubProcess(config = forkOptions))
 }
+
+addCommandAlias("scalafmtAll", "all scalafmtSbt scalafmt test:scalafmt")
+addCommandAlias("scalastyleAll", "all scalastyle test:scalastyle")

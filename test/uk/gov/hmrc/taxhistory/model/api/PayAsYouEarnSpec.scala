@@ -31,7 +31,12 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
 
   private lazy val fullPayeJson: JsObject = loadFile("/json/model/api/paye.json").as[JsObject]
 
-  private val employment1Id = "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"
+  private val employment1Id                   = "01318d7c-bcd9-47e2-8c38-551e7ccdfae3"
+  private val incomeSource1DeserialisedEmpTDN = 126
+  private val taAllowanceType                 = 11
+  private val taDeductionType1                = 7
+  private val taDeductionType2                = 8
+  private val taDeductionType3                = 13
 
   "PayAsYouEarn" when {
     "(de)serialising all the PayAsYouEarn details" should {
@@ -44,7 +49,7 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
     }
 
     "(de)serialising the 'employments' field" should {
-      val employment1 = Employment(
+      val employment1      = Employment(
         employmentId = UUID.fromString(employment1Id),
         startDate = Some(new LocalDate("2016-01-21")),
         endDate = Some(new LocalDate("2017-01-01")),
@@ -54,8 +59,7 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
         employmentPaymentType = Some(EmploymentPaymentType.IncapacityBenefit),
         worksNumber = "00191048716"
       )
-      val employments1Json = Json.parse(
-        s"""
+      val employments1Json = Json.parse(s"""
            |    {
            |      "employmentId": "$employment1Id",
            |      "startDate": "2016-01-21",
@@ -68,7 +72,7 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
            |    }
         """.stripMargin)
 
-      val employment2 = Employment(
+      val employment2      = Employment(
         employmentId = UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
         startDate = Some(new LocalDate("2016-02-22")),
         endDate = None,
@@ -78,8 +82,7 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
         employmentPaymentType = None,
         worksNumber = "00191048716"
       )
-      val employments2Json = Json.parse(
-        """
+      val employments2Json = Json.parse("""
           |    {
           |      "employmentId": "019f5fee-d5e4-4f3e-9569-139b8ad81a87",
           |      "startDate": "2016-02-22",
@@ -91,7 +94,7 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
         """.stripMargin)
 
       val employmentsDeserialised = List(employment1, employment2)
-      val employmentsSerialised = JsArray(Seq(employments1Json, employments2Json))
+      val employmentsSerialised   = JsArray(Seq(employments1Json, employments2Json))
 
       "serialise to an empty json array when there are no employments" in {
         val payeNoEmployments = PayAsYouEarn(employments = Nil)
@@ -119,8 +122,7 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
           amount = BigDecimal("12.00")
         )
       )
-      val allowancesSerialised = Json.parse(
-        """
+      val allowancesSerialised   = Json.parse("""
           |  [
           |    {
           |      "allowanceId": "c9923a63-4208-4e03-926d-7c7c88adc7ee",
@@ -149,15 +151,14 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
     }
 
     "(de)serialising the 'benefits' field" should {
-      val benefit1 = CompanyBenefit(
+      val benefit1             = CompanyBenefit(
         companyBenefitId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
         iabdType = "companyBenefitType",
         amount = BigDecimal("12.00"),
         source = None
       )
       val benefitsDeserialised = Map(employment1Id -> List(benefit1))
-      val benefitsSerialised = Json.parse(
-        s"""
+      val benefitsSerialised   = Json.parse(s"""
            |  {
            |    "$employment1Id": [
            |      {
@@ -189,7 +190,7 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
     }
 
     "(de)serialising the 'payAndTax' field" should {
-      val payAndTax1 = PayAndTax(
+      val payAndTax1            = PayAndTax(
         payAndTaxId = UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"),
         taxablePayTotal = Some(BigDecimal("2222.22")),
         taxablePayTotalIncludingEYU = Some(BigDecimal("2222.23")),
@@ -200,8 +201,7 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
         earlierYearUpdates = Nil
       )
       val payAndTaxDeserialised = Map(employment1Id -> payAndTax1)
-      val payAndTaxSerialised = Json.parse(
-        s"""
+      val payAndTaxSerialised   = Json.parse(s"""
            |  {
            |    "$employment1Id": {
            |      "payAndTaxId": "2e2abe0a-8c4f-49fc-bdd2-cc13054e7172",
@@ -235,26 +235,45 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
     }
 
     "(de)serialising the 'incomeSources' field" should {
-      val incomeSource1 = IncomeSource(
+      val incomeSource1             = IncomeSource(
         employmentId = 1,
         employmentType = 1,
         actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal("0")),
         taxCode = "227L",
         basisOperation = Some(2),
-        employmentTaxDistrictNumber = 126,
+        employmentTaxDistrictNumber = incomeSource1DeserialisedEmpTDN,
         employmentPayeRef = "P32",
         allowances = List(
-          TaAllowance(`type` = 11, npsDescription = "personal allowance", amount = BigDecimal("11000"), sourceAmount = Some(BigDecimal("11000")))
+          TaAllowance(
+            `type` = taAllowanceType,
+            npsDescription = "personal allowance",
+            amount = BigDecimal("11000"),
+            sourceAmount = Some(BigDecimal("11000"))
+          )
         ),
         deductions = List(
-          TaDeduction(`type` = 7, npsDescription = "employer benefits ", amount = BigDecimal("65"), sourceAmount = Some(BigDecimal("65"))),
-          TaDeduction(`type` = 8, npsDescription = "car benefit", amount = BigDecimal("8026"), sourceAmount = Some(BigDecimal("8026"))),
-          TaDeduction(`type` = 13, npsDescription = "medical insurance", amount = BigDecimal("637"), sourceAmount = Some(BigDecimal("637")))
+          TaDeduction(
+            `type` = taDeductionType1,
+            npsDescription = "employer benefits ",
+            amount = BigDecimal("65"),
+            sourceAmount = Some(BigDecimal("65"))
+          ),
+          TaDeduction(
+            `type` = taDeductionType2,
+            npsDescription = "car benefit",
+            amount = BigDecimal("8026"),
+            sourceAmount = Some(BigDecimal("8026"))
+          ),
+          TaDeduction(
+            `type` = taDeductionType3,
+            npsDescription = "medical insurance",
+            amount = BigDecimal("637"),
+            sourceAmount = Some(BigDecimal("637"))
+          )
         )
       )
       val incomeSourcesDeserialised = Map(employment1Id -> incomeSource1)
-      val incomeSourcesSerialised = Json.parse(
-        s"""
+      val incomeSourcesSerialised   = Json.parse(s"""
            |   {
            |      "$employment1Id": {
            |        "employmentId": 1,
@@ -315,14 +334,15 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
     }
 
     "(de)serialising the 'taxAccount' field" should {
-      val taxAccountDeserialised = Some(TaxAccount(
-        taxAccountId = UUID.fromString("3923afda-41ee-4226-bda5-e39cc4c82934"),
-        outstandingDebtRestriction = Some(BigDecimal("22.22")),
-        underpaymentAmount = Some(BigDecimal("11.11")),
-        actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal("33.33"))
-      ))
-      val taxAccountSerialised = Json.parse(
-        """
+      val taxAccountDeserialised = Some(
+        TaxAccount(
+          taxAccountId = UUID.fromString("3923afda-41ee-4226-bda5-e39cc4c82934"),
+          outstandingDebtRestriction = Some(BigDecimal("22.22")),
+          underpaymentAmount = Some(BigDecimal("11.11")),
+          actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal("33.33"))
+        )
+      )
+      val taxAccountSerialised   = Json.parse("""
           |  {
           |    "taxAccountId": "3923afda-41ee-4226-bda5-e39cc4c82934",
           |    "outstandingDebtRestriction": 22.22,
@@ -350,14 +370,15 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
     }
 
     "(de)serialising the 'statePension' field" should {
-      val statePensionDeserialised = Some(StatePension(
-        grossAmount = BigDecimal("1253"),
-        typeDescription = "State Pension",
-        paymentFrequency = Some(1),
-        startDate = Some(LocalDate.parse("2018-01-23"))
-      ))
-      val statePensionSerialised = Json.parse(
-        """
+      val statePensionDeserialised = Some(
+        StatePension(
+          grossAmount = BigDecimal("1253"),
+          typeDescription = "State Pension",
+          paymentFrequency = Some(1),
+          startDate = Some(LocalDate.parse("2018-01-23"))
+        )
+      )
+      val statePensionSerialised   = Json.parse("""
           |{
           |    "grossAmount": 1253,
           |    "typeDescription": "State Pension",
@@ -385,5 +406,3 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
     }
   }
 }
-
-

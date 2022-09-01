@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-
 import javax.inject.Inject
 import play.api.mvc.{AnyContent, Request, Result, Results}
 import uk.gov.hmrc.auth
@@ -30,15 +29,16 @@ import uk.gov.hmrc.taxhistory.utils.Logging
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
- * Checks if a logged in user is either:
- * - An individual who has a NINO that matches the requested NINO in the URL
- * - An agent with an IR-SA-AGENT enrolment and who has a delegated IR-SA enrolment for the client identified by the
- * requested NINO (where the IR-SA enrolment's UTR matches the client's SA UTR)
- */
-class SaAuthService @Inject()(val authConnector: AuthConnector,
-                              val citizenDetailsConnector: CitizenDetailsConnector)
-                             (implicit val ec: ExecutionContext)
-  extends AuthorisedFunctions with Results with Logging {
+  * Checks if a logged in user is either:
+  * - An individual who has a NINO that matches the requested NINO in the URL
+  * - An agent with an IR-SA-AGENT enrolment and who has a delegated IR-SA enrolment for the client identified by the
+  * requested NINO (where the IR-SA enrolment's UTR matches the client's SA UTR)
+  */
+class SaAuthService @Inject() (val authConnector: AuthConnector, val citizenDetailsConnector: CitizenDetailsConnector)(
+  implicit val ec: ExecutionContext
+) extends AuthorisedFunctions
+    with Results
+    with Logging {
 
   def authorisationPredicate(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Predicate] = {
 
@@ -55,24 +55,26 @@ class SaAuthService @Inject()(val authConnector: AuthConnector,
         .withDelegatedAuthRule("sa-auth")
 
     citizenDetailsConnector.lookupSaUtr(nino).map {
-      case Some(saUtr) => checkIndividual or checkAgentServicesWithDigitalHandshake or checkAgentAuthorisationWith648(saUtr)
-      case _ => checkIndividual or checkAgentServicesWithDigitalHandshake
+      case Some(saUtr) =>
+        checkIndividual or checkAgentServicesWithDigitalHandshake or checkAgentAuthorisationWith648(saUtr)
+      case _           => checkIndividual or checkAgentServicesWithDigitalHandshake
     }
   }
 
   /**
-   * A code block wrapped in this function will only be executed if the logged in NINO matches the request NINO or
-   * there exists an authorised relationship between the given NINO and an Agent.
-   */
-  def withSaAuthorisation(nino: Nino)(action: Request[AnyContent] => Future[Result])(implicit hc: HeaderCarrier, request: Request[AnyContent]): Future[Result] = {
+    * A code block wrapped in this function will only be executed if the logged in NINO matches the request NINO or
+    * there exists an authorised relationship between the given NINO and an Agent.
+    */
+  def withSaAuthorisation(nino: Nino)(
+    action: Request[AnyContent] => Future[Result]
+  )(implicit hc: HeaderCarrier, request: Request[AnyContent]): Future[Result] =
     authorisationPredicate(nino).flatMap { pred =>
       authorised(pred) {
         action(request)
       } recover {
-      case _: NoActiveSession => Unauthorized
-      case _: AuthorisationException => Forbidden
+        case _: NoActiveSession        => Unauthorized
+        case _: AuthorisationException => Forbidden
+      }
     }
-    }
-  }
 
 }

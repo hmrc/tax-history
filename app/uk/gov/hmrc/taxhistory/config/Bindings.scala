@@ -21,9 +21,8 @@ import play.api.{Configuration, Environment}
 import uk.gov.hmrc.taxhistory.services.{PayeCacheService, TaxHistoryMongoCacheService}
 
 class Bindings extends Module {
-  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
+  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
     bindDeps()
-  }
 
   private def bindDeps() = Seq(
     bind[PayeCacheService].to(classOf[TaxHistoryMongoCacheService])

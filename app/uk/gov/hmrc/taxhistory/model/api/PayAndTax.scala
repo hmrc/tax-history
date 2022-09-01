@@ -23,15 +23,17 @@ import play.api.libs.json.{Json, OFormat}
 import play.api.libs.json.JodaWrites._
 import play.api.libs.json.JodaReads._
 
-case class PayAndTax(payAndTaxId: UUID = UUID.randomUUID(),
-                     taxablePayTotal: Option[BigDecimal] = None,
-                     taxablePayTotalIncludingEYU: Option[BigDecimal] = None,
-                     taxTotal: Option[BigDecimal] = None,
-                     taxTotalIncludingEYU: Option[BigDecimal] = None,
-                     studentLoan: Option[BigDecimal] = None,
-                     studentLoanIncludingEYU: Option[BigDecimal] = None,
-                     paymentDate: Option[LocalDate] = None,
-                     earlierYearUpdates: List[EarlierYearUpdate])
+case class PayAndTax(
+  payAndTaxId: UUID = UUID.randomUUID(),
+  taxablePayTotal: Option[BigDecimal] = None,
+  taxablePayTotalIncludingEYU: Option[BigDecimal] = None,
+  taxTotal: Option[BigDecimal] = None,
+  taxTotalIncludingEYU: Option[BigDecimal] = None,
+  studentLoan: Option[BigDecimal] = None,
+  studentLoanIncludingEYU: Option[BigDecimal] = None,
+  paymentDate: Option[LocalDate] = None,
+  earlierYearUpdates: List[EarlierYearUpdate]
+)
 
 object PayAndTax {
   implicit val formats: OFormat[PayAndTax] = Json.format[PayAndTax]

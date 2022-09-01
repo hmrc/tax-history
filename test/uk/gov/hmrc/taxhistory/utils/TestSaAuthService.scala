@@ -33,20 +33,30 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
- * A test version of SaAuthService which returns a predicate without calling citizenDetailsConnector
- * rather than interrogating a real auth service.
- */
-case class TestSaAuthService() extends SaAuthService(authConnector = Mockito.mock(classOf[AuthConnector]), citizenDetailsConnector = Mockito.mock(classOf[CitizenDetailsConnector])) with TestUtil {
+  * A test version of SaAuthService which returns a predicate without calling citizenDetailsConnector
+  * rather than interrogating a real auth service.
+  */
+case class TestSaAuthService()
+    extends SaAuthService(
+      authConnector = Mockito.mock(classOf[AuthConnector]),
+      citizenDetailsConnector = Mockito.mock(classOf[CitizenDetailsConnector])
+    )
+    with TestUtil {
 
-  val testEmploymentId: UUID = java.util.UUID.randomUUID
+  val testEmploymentId: UUID   = java.util.UUID.randomUUID
   val testStartDate: LocalDate = LocalDate.now()
-  val testPaye: PayAsYouEarn =
+  val testPaye: PayAsYouEarn   =
     PayAsYouEarn(
-      employments = List(Employment(
-        employmentId = testEmploymentId,
-        startDate = Some(testStartDate),
-        payeReference = "SOME_PAYE", employerName = "Megacorp Plc",
-        employmentStatus = EmploymentStatus.Live, worksNumber = "00191048716")),
+      employments = List(
+        Employment(
+          employmentId = testEmploymentId,
+          startDate = Some(testStartDate),
+          payeReference = "SOME_PAYE",
+          employerName = "Megacorp Plc",
+          employmentStatus = EmploymentStatus.Live,
+          worksNumber = "00191048716"
+        )
+      ),
       allowances = List.empty,
       incomeSources = Map.empty,
       benefits = Map.empty,
@@ -54,11 +64,13 @@ case class TestSaAuthService() extends SaAuthService(authConnector = Mockito.moc
       taxAccount = None,
       statePension = None
     )
-  val validNino: Nino = randomNino()
-  val unauthorisedNino: Nino = randomNino()
-  val forbiddenNino: Nino = randomNino()
+  val validNino: Nino          = randomNino()
+  val unauthorisedNino: Nino   = randomNino()
+  val forbiddenNino: Nino      = randomNino()
 
-  override def authorisationPredicate(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Predicate] = {
+  override def authorisationPredicate(
+    nino: Nino
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Predicate] = {
 
     val checkIndividual: Predicate = auth.core.Nino(hasNino = true, nino = Some(nino.value))
 
@@ -70,14 +82,13 @@ case class TestSaAuthService() extends SaAuthService(authConnector = Mockito.moc
     Future.successful(checkIndividual or checkAgentServicesWithDigitalHandshake)
   }
 
-  override def withSaAuthorisation(nino: Nino)(action: Request[AnyContent] =>
-    Future[Result])(implicit hc: HeaderCarrier, request: Request[AnyContent]): Future[Result] = {
+  override def withSaAuthorisation(nino: Nino)(
+    action: Request[AnyContent] => Future[Result]
+  )(implicit hc: HeaderCarrier, request: Request[AnyContent]): Future[Result] =
     nino.nino match {
-      case validNino.nino => Future.successful(Ok(PayAsYouEarn.formats.writes(testPaye)))
+      case validNino.nino        => Future.successful(Ok(PayAsYouEarn.formats.writes(testPaye)))
       case unauthorisedNino.nino => Future.successful(Unauthorized)
-      case forbiddenNino.nino => Future.successful(Forbidden)
+      case forbiddenNino.nino    => Future.successful(Forbidden)
     }
-
-  }
 
 }

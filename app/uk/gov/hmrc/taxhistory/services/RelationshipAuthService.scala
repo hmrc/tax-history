@@ -35,7 +35,9 @@ import scala.concurrent.{ExecutionContext, Future}
   * before proceeding with a given code block.
   */
 class RelationshipAuthService @Inject() (val authConnector: AuthConnector)(implicit executionContext: ExecutionContext)
-  extends AuthorisedFunctions with Results with Logging {
+    extends AuthorisedFunctions
+    with Results
+    with Logging {
 
   lazy val affinityGroupAllEnrolls: Retrieval[Option[AffinityGroup] ~ Enrolments] = affinityGroup and allEnrolments
 
@@ -47,40 +49,43 @@ class RelationshipAuthService @Inject() (val authConnector: AuthConnector)(impli
     arn        <- agentEnrol.getIdentifier("AgentReferenceNumber")
   } yield Arn(arn.value)
 
-  def retrieveArnFor(nino: Nino)(implicit hc: HeaderCarrier): Future[Option[Arn]] = {
-    authorised(AgentEnrolmentForPAYE.withIdentifier("MTDITID", nino.value) and AuthProviders(GovernmentGateway)).retrieve(affinityGroupAllEnrolls) {
-      case affinityG ~ allEnrols =>
-        (affinityG, extractArn(allEnrols)) match {
-          case (Some(Agent), Some(arn)) => Future.successful(Some(arn))
-          case _ => Future.successful(None)
-        }
-      case _ =>
-        logger.debug("Failed to retrieve affinity group or enrolments")
-        Future.failed(new UnauthorizedException("Failed to retrieve affinity group or enrolments"))
-    }
-  }
+  def retrieveArnFor(nino: Nino)(implicit hc: HeaderCarrier): Future[Option[Arn]] =
+    authorised(AgentEnrolmentForPAYE.withIdentifier("MTDITID", nino.value) and AuthProviders(GovernmentGateway))
+      .retrieve(affinityGroupAllEnrolls) {
+        case affinityG ~ allEnrols =>
+          (affinityG, extractArn(allEnrols)) match {
+            case (Some(Agent), Some(arn)) => Future.successful(Some(arn))
+            case _                        => Future.successful(None)
+          }
+        case _                     =>
+          logger.debug("Failed to retrieve affinity group or enrolments")
+          Future.failed(new UnauthorizedException("Failed to retrieve affinity group or enrolments"))
+      }
 
   /**
     * A code block wrapped in this function will only be executed if there exists an authorised relationship
     * between the given NINO and an Agent.
     */
-  def withAuthorisedRelationship(nino: Nino)(action: Arn => Future[Result])(implicit hc: HeaderCarrier): Future[Result] = {
-    retrieveArnFor(nino).flatMap {
-      case Some(arn) => action(arn)
-      case None      =>
-        logger.info(s"No ARN found for $nino")
-        Future.successful(Unauthorized)
-    }.recoverWith {
-      case e: UnauthorizedException =>
-        logger.info("Unauthorized: " + e.getMessage)
-        Future.successful(Unauthorized(e.getMessage))
-      case e: InsufficientEnrolments =>
-        logger.info("InsufficientEnrolments: " + e.getMessage)
-        Future.successful(Unauthorized(e.getMessage))
-      case e =>
-        logger.info("Error thrown :" + e.getMessage)
-        Future.successful(InternalServerError(e.getMessage))
-    }
-  }
+  def withAuthorisedRelationship(
+    nino: Nino
+  )(action: Arn => Future[Result])(implicit hc: HeaderCarrier): Future[Result] =
+    retrieveArnFor(nino)
+      .flatMap {
+        case Some(arn) => action(arn)
+        case None      =>
+          logger.info(s"No ARN found for $nino")
+          Future.successful(Unauthorized)
+      }
+      .recoverWith {
+        case e: UnauthorizedException  =>
+          logger.info("Unauthorized: " + e.getMessage)
+          Future.successful(Unauthorized(e.getMessage))
+        case e: InsufficientEnrolments =>
+          logger.info("InsufficientEnrolments: " + e.getMessage)
+          Future.successful(Unauthorized(e.getMessage))
+        case e                         =>
+          logger.info("Error thrown :" + e.getMessage)
+          Future.successful(InternalServerError(e.getMessage))
+      }
 
 }

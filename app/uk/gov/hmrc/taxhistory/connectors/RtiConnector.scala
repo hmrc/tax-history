@@ -25,39 +25,39 @@ import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.utils.Retry
 import uk.gov.hmrc.time.TaxYear
-
-import java.util.UUID.randomUUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class RtiConnector @Inject()(val http: HttpClient,
-                             val metrics: TaxHistoryMetrics,
-                             val config: AppConfig,
-                             val system: ActorSystem)
-                             (implicit executionContext: ExecutionContext) extends ConnectorMetrics {
+class RtiConnector @Inject() (
+  val http: HttpClient,
+  val metrics: TaxHistoryMetrics,
+  val config: AppConfig,
+  val system: ActorSystem
+)(implicit executionContext: ExecutionContext)
+    extends ConnectorMetrics {
 
   lazy val authorization: String = s"Bearer ${config.desAuth}"
-  val withRetry: Retry = config.newRetryInstance("des", system)
+  val withRetry: Retry           = config.newRetryInstance("des", system)
 
   def rtiEmploymentsUrl(nino: Nino, taxYear: TaxYear): String = {
     val formattedTaxYear = s"${taxYear.startYear % 100}-${taxYear.finishYear % 100}"
     s"${config.desBaseUrl}/rti/individual/payments/nino/${nino.withoutSuffix}/tax-year/$formattedTaxYear"
   }
 
-  def buildHeaders(implicit hc:HeaderCarrier): Seq[(String, String)] = {
-    Seq("Environment" -> {config.desEnv},
-      "Authorization" -> s"Bearer ${config.desAuth}",
+  def buildHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
+    Seq(
+      "Environment"      -> { config.desEnv },
+      "Authorization"    -> s"Bearer ${config.desAuth}",
       CORRELATION_HEADER -> getCorrelationId(hc)
     )
-  }
 
   def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[Option[RtiData]] = {
     implicit val hc: HeaderCarrier = HeaderCarrier()
     withMetrics(MetricsEnum.RTI_GET_EMPLOYMENTS) {
       withRetry {
-        http.GET[RtiData](rtiEmploymentsUrl(nino, taxYear),
-          headers = buildHeaders(hc))
+        http
+          .GET[RtiData](rtiEmploymentsUrl(nino, taxYear), headers = buildHeaders(hc))
           .map(Some(_))
       }.recover {
         case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == 404 =>

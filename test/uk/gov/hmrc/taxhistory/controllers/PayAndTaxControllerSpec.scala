@@ -37,26 +37,32 @@ import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestRelationshipAuthService}
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
-class PayAndTaxControllerSpec extends AnyWordSpecLike with Matchers with OptionValues
-  with GuiceOneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
+class PayAndTaxControllerSpec
+    extends AnyWordSpecLike
+    with Matchers
+    with OptionValues
+    with GuiceOneServerPerSuite
+    with MockitoSugar
+    with TestUtil
+    with BeforeAndAfterEach {
 
   val mockEmploymentHistoryService: EmploymentHistoryService = mock[EmploymentHistoryService]
 
-  val ninoWithAgent: Nino = randomNino()
+  val ninoWithAgent: Nino    = randomNino()
   val ninoWithoutAgent: Nino = randomNino()
 
-  val taxYear = 2016
+  val taxYear              = 2016
   val employmentId: String = UUID.randomUUID().toString
 
-  val testPayAndTax: PayAndTax = PayAndTax(earlierYearUpdates = Nil)
-  val testPayAndTaxMap = Map(s"${testPayAndTax.payAndTaxId}" -> testPayAndTax, s"${testPayAndTax.payAndTaxId}" -> testPayAndTax)
+  val testPayAndTax: PayAndTax                    = PayAndTax(earlierYearUpdates = Nil)
+  val testPayAndTaxMap                            =
+    Map(s"${testPayAndTax.payAndTaxId}" -> testPayAndTax, s"${testPayAndTax.payAndTaxId}" -> testPayAndTax)
 
-  val cc: ControllerComponents = stubControllerComponents()
+  val cc: ControllerComponents                    = stubControllerComponents()
   implicit val executionContext: ExecutionContext = cc.executionContext
 
-  override def beforeEach: Unit = {
+  override def beforeEach: Unit =
     reset(mockEmploymentHistoryService)
-  }
 
   val testPayAndTaxController = new PayAndTaxController(
     employmentHistoryService = mockEmploymentHistoryService,
@@ -76,7 +82,8 @@ class PayAndTaxControllerSpec extends AnyWordSpecLike with Matchers with OptionV
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
         when(mockEmploymentHistoryService.getPayAndTax(any(), any(), any())(any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
-        val result = testPayAndTaxController.getPayAndTax(ninoWithAgent.nino, taxYear, employmentId).apply(FakeRequest())
+        val result =
+          testPayAndTaxController.getPayAndTax(ninoWithAgent.nino, taxYear, employmentId).apply(FakeRequest())
         status(result) shouldBe expectedStatus
       }
     }
@@ -84,7 +91,8 @@ class PayAndTaxControllerSpec extends AnyWordSpecLike with Matchers with OptionV
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
       when(mockEmploymentHistoryService.getPayAndTax(any(), any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(testPayAndTax)))
-      val result = testPayAndTaxController.getPayAndTax(ninoWithoutAgent.nino, taxYear, employmentId).apply(FakeRequest())
+      val result =
+        testPayAndTaxController.getPayAndTax(ninoWithoutAgent.nino, taxYear, employmentId).apply(FakeRequest())
       status(result) shouldBe UNAUTHORIZED
     }
   }
@@ -109,7 +117,8 @@ class PayAndTaxControllerSpec extends AnyWordSpecLike with Matchers with OptionV
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
       when(mockEmploymentHistoryService.getAllPayAndTax(any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(testPayAndTaxMap))
-      val result = testPayAndTaxController.getPayAndTax(ninoWithoutAgent.nino, taxYear, employmentId).apply(FakeRequest())
+      val result =
+        testPayAndTaxController.getPayAndTax(ninoWithoutAgent.nino, taxYear, employmentId).apply(FakeRequest())
       status(result) shouldBe UNAUTHORIZED
     }
   }

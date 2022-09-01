@@ -2,17 +2,14 @@
 
 !.gitignore
 !.github
+!.scalafmt.conf
 
-.cache
 /.classpath
 db
 dist
-.DS_Store
 **/*.DS_Store
 eclipse
 *.eml
-.history
-.idea
 /.idea_modules
 *.iml
 lib
@@ -32,5 +29,4 @@ target
 .target
 test-result
 tmp
-.idea_modules
 bin

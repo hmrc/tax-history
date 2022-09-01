@@ -19,15 +19,17 @@ package uk.gov.hmrc.taxhistory.model.api
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.taxhistory.model.nps.{TaAllowance, TaDeduction}
 
-case class IncomeSource(employmentId: Int,
-                        employmentType: Int,
-                        actualPUPCodedInCYPlusOneTaxYear: Option[BigDecimal],
-                        deductions: List[TaDeduction],
-                        allowances: List[TaAllowance],
-                        taxCode: String,
-                        basisOperation: Option[Int],
-                        employmentTaxDistrictNumber: Int,
-                        employmentPayeRef: String)
+case class IncomeSource(
+  employmentId: Int,
+  employmentType: Int,
+  actualPUPCodedInCYPlusOneTaxYear: Option[BigDecimal],
+  deductions: List[TaDeduction],
+  allowances: List[TaAllowance],
+  taxCode: String,
+  basisOperation: Option[Int],
+  employmentTaxDistrictNumber: Int,
+  employmentPayeRef: String
+)
 
 object IncomeSource {
   implicit val formats: OFormat[IncomeSource] = Json.format[IncomeSource]

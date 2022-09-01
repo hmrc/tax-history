@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.utils
 
-
 import org.joda.time.LocalDate
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.domain.{Generator, Nino}
@@ -29,45 +28,49 @@ trait TestUtil {
 
   val randomNino: () => Nino = () => Nino(new Generator(new Random()).nextNino.value.replaceFirst("MA", "AA"))
 
-  def loadFile(path:String): JsValue = {
+  def loadFile(path: String): JsValue = {
     val jsonString = Source.fromURL(getClass.getResource(path)).mkString
     Json.parse(jsonString)
   }
 
-  def loadFile(path:String, placeholders: Seq[PlaceHolder]): JsValue = {
+  def loadFile(path: String, placeholders: Seq[PlaceHolder]): JsValue = {
     val jsonStringWithPlaceholders = Source.fromURL(getClass.getResource(path)).mkString
-    val jsonString = replacePlaceholder(jsonStringWithPlaceholders, placeholders)
+    val jsonString                 = replacePlaceholder(jsonStringWithPlaceholders, placeholders)
     Json.parse(jsonString)
   }
 
   @tailrec
   private def replacePlaceholder(string: String, pHs: Seq[PlaceHolder]): String =
-    if (pHs.nonEmpty) replacePlaceholder(string.replaceAllLiterally(pHs.head.regex, pHs.head.newValue), pHs.tail) else string
+    if (pHs.nonEmpty) {
+      replacePlaceholder(string.replaceAllLiterally(pHs.head.regex, pHs.head.newValue), pHs.tail)
+    } else {
+      string
+    }
 
-  def locaDateCy (mm: String, dd: String): LocalDate = localDateInTaxYear(TaxYear.current, mm, dd)
+  def locaDateCy(mm: String, dd: String): LocalDate = localDateInTaxYear(TaxYear.current, mm, dd)
 
-  def locaDateCyMinus1 (mm: String, dd: String): LocalDate = localDateInTaxYear(TaxYear.current.previous, mm, dd)
+  def locaDateCyMinus1(mm: String, dd: String): LocalDate = localDateInTaxYear(TaxYear.current.previous, mm, dd)
 
-  private def localDateInTaxYear (taxYear: TaxYear, mm: String, dd: String): LocalDate = {
+  private def localDateInTaxYear(taxYear: TaxYear, mm: String, dd: String): LocalDate = {
     val startYear = new LocalDate(s"${taxYear.startYear}-$mm-$dd")
-    val endYear = new LocalDate(s"${taxYear.finishYear}-$mm-$dd")
+    val endYear   = new LocalDate(s"${taxYear.finishYear}-$mm-$dd")
     if (TaxYear.taxYearFor(startYear) == taxYear) startYear else endYear
   }
 
   val config: Map[String, Any] = Map(
-    "appName" -> "appName",
-    "mongoExpiry" -> (60 * 30),
-    "desEnv" -> "local",
-    "desAuth" -> "local",
-    "mongoName" -> "mongodb.name",
-    "currentYearFlag" -> true,
-    "featureFlags.currentYearFlag" -> true,
-    "statePensionFlag" -> true,
-    "jobSeekersAllowanceFlag" -> true,
-    "desBaseUrl" -> "http://localhost:9998",
-    "citizenDetailsBaseUrl" -> "citizen-details",
+    "appName"                                      -> "appName",
+    "mongoExpiry"                                  -> (60 * 30),
+    "desEnv"                                       -> "local",
+    "desAuth"                                      -> "local",
+    "mongoName"                                    -> "mongodb.name",
+    "currentYearFlag"                              -> true,
+    "featureFlags.currentYearFlag"                 -> true,
+    "statePensionFlag"                             -> true,
+    "jobSeekersAllowanceFlag"                      -> true,
+    "desBaseUrl"                                   -> "http://localhost:9998",
+    "citizenDetailsBaseUrl"                        -> "citizen-details",
     "microservice.services.des.authorizationToken" -> "local",
-    "microservice.services.des.env" -> "local"
+    "microservice.services.des.env"                -> "local"
   )
 
 }

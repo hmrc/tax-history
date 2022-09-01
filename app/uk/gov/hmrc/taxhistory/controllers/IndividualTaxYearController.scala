@@ -29,10 +29,14 @@ import uk.gov.hmrc.taxhistory.utils.Logging
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class IndividualTaxYearController @Inject()(val employmentHistoryService: EmploymentHistoryService,
-                                            val relationshipAuthService: RelationshipAuthService,
-                                            val auditable: Auditable,
-                                            val cc: ControllerComponents)(implicit val ec: ExecutionContext) extends TaxHistoryController(cc) with Logging {
+class IndividualTaxYearController @Inject() (
+  val employmentHistoryService: EmploymentHistoryService,
+  val relationshipAuthService: RelationshipAuthService,
+  val auditable: Auditable,
+  val cc: ControllerComponents
+)(implicit val ec: ExecutionContext)
+    extends TaxHistoryController(cc)
+    with Logging {
 
   def getTaxYears(nino: String): Action[AnyContent] = Action.async { implicit request =>
     relationshipAuthService.withAuthorisedRelationship(Nino(nino)) { arn =>
@@ -43,7 +47,8 @@ class IndividualTaxYearController @Inject()(val employmentHistoryService: Employ
   private def retrieveTaxYears(nino: Nino, arn: Arn)(implicit hc: HeaderCarrier): Future[Result] = {
     val taxYears = employmentHistoryService.getTaxYears(nino)
     taxYears.onComplete { _ =>
-      auditable.sendDataEvent(transactionName = AgentViewedClient,
+      auditable.sendDataEvent(
+        transactionName = AgentViewedClient,
         path = "/tax-history/select-tax-year",
         detail = DataEventDetail(Map("agentReferenceNumber" -> arn.value, "nino" -> nino.value)),
         eventType = AgentViewedClientEvent

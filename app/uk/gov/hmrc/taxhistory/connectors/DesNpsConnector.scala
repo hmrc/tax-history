@@ -24,38 +24,40 @@ import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.utils.Retry
-
-import java.util.UUID.randomUUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class DesNpsConnector @Inject()(val http: HttpClient,
-                                val metrics: TaxHistoryMetrics,
-                                val config: AppConfig,
-                                val system: ActorSystem)
-                                (implicit executionContext: ExecutionContext) extends ConnectorMetrics {
+class DesNpsConnector @Inject() (
+  val http: HttpClient,
+  val metrics: TaxHistoryMetrics,
+  val config: AppConfig,
+  val system: ActorSystem
+)(implicit executionContext: ExecutionContext)
+    extends ConnectorMetrics {
 
   private val servicePrefix = "/pay-as-you-earn"
 
-  val withRetry: Retry = config.newRetryInstance("des", system)
-  def iabdsUrl(nino: Nino, year: Int)      = s"${config.desBaseUrl}$servicePrefix/individuals/${nino.value}/iabds/tax-year/$year"
-  def taxAccountUrl(nino: Nino, year: Int) = s"${config.desBaseUrl}$servicePrefix/individuals/${nino.value}/tax-account/tax-year/$year"
-  def employmentsUrl(nino: Nino, year: Int)= s"${config.desBaseUrl}/individuals/${nino.value}/employment/$year"
+  val withRetry: Retry                              = config.newRetryInstance("des", system)
+  def iabdsUrl(nino: Nino, year: Int): String       =
+    s"${config.desBaseUrl}$servicePrefix/individuals/${nino.value}/iabds/tax-year/$year"
+  def taxAccountUrl(nino: Nino, year: Int): String  =
+    s"${config.desBaseUrl}$servicePrefix/individuals/${nino.value}/tax-account/tax-year/$year"
+  def employmentsUrl(nino: Nino, year: Int): String = s"${config.desBaseUrl}/individuals/${nino.value}/employment/$year"
 
-  def buildHeaders(implicit hc:HeaderCarrier): Seq[(String, String)] = {
-    Seq("Environment" -> {config.desEnv},
-      "Authorization" -> s"Bearer ${config.desAuth}",
+  def buildHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
+    Seq(
+      "Environment"      -> { config.desEnv },
+      "Authorization"    -> s"Bearer ${config.desAuth}",
       CORRELATION_HEADER -> getCorrelationId(hc)
     )
-  }
 
   def getIabds(nino: Nino, year: Int): Future[List[Iabd]] = {
     implicit val hc: HeaderCarrier = HeaderCarrier()
     withMetrics(MetricsEnum.NPS_GET_IABDS) {
       withRetry {
         http.GET[List[Iabd]](iabdsUrl(nino, year), headers = buildHeaders(hc))
-      }.recover{
+      }.recover {
         case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == 404 =>
           logger.warn(s"NPS getIabds returned a 404 response: ${ex.message}")
           List.empty
@@ -68,7 +70,7 @@ class DesNpsConnector @Inject()(val http: HttpClient,
     withMetrics(MetricsEnum.NPS_GET_TAX_ACCOUNT) {
       withRetry {
         http.GET[NpsTaxAccount](taxAccountUrl(nino, year), headers = buildHeaders(hc)).map(Some(_))
-      }.recover{
+      }.recover {
         case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == 404 =>
           logger.warn(s"NPS getTaxAccount returned a 404 response: ${ex.message}")
           None
@@ -79,7 +81,7 @@ class DesNpsConnector @Inject()(val http: HttpClient,
   def getEmployments(nino: Nino, year: Int): Future[List[NpsEmployment]] = {
     implicit val hc: HeaderCarrier = HeaderCarrier()
     withMetrics(MetricsEnum.NPS_GET_EMPLOYMENTS) {
-      withRetry{
+      withRetry {
         http.GET[List[NpsEmployment]](employmentsUrl(nino, year), headers = buildHeaders(hc))
       }.recover {
         case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == 404 =>

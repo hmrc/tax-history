@@ -42,12 +42,14 @@ import java.util.UUID
 
 class AllowanceSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
 
-  lazy val allowanceJson: JsValue = loadFile("/json/model/api/allowance.json")
+  lazy val allowanceJson: JsValue     = loadFile("/json/model/api/allowance.json")
   lazy val allowanceListJson: JsValue = loadFile("/json/model/api/allowances.json")
 
-  lazy val allowance1: Allowance = Allowance(allowanceId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
-                                  iabdType = "allowanceType",
-                                  amount = BigDecimal(12.00))
+  lazy val allowance1: Allowance = Allowance(
+    allowanceId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
+    iabdType = "allowanceType",
+    amount = BigDecimal(12.00)
+  )
 
   lazy val allowanceList = List(allowance1)
 
@@ -61,7 +63,7 @@ class AllowanceSpec extends TestUtil with AnyWordSpecLike with Matchers with Opt
     "generate allowanceId when none is supplied" in {
       val allowance = Allowance(iabdType = "otherAllowanceType", amount = BigDecimal(10.00))
       allowance.allowanceId.toString.nonEmpty shouldBe true
-      allowance.allowanceId shouldNot be(allowance1.allowanceId)
+      allowance.allowanceId                  shouldNot be(allowance1.allowanceId)
     }
     "transform into Json from object list correctly " in {
       Json.toJson(allowanceList) shouldBe allowanceListJson
@@ -71,5 +73,3 @@ class AllowanceSpec extends TestUtil with AnyWordSpecLike with Matchers with Opt
     }
   }
 }
-
-

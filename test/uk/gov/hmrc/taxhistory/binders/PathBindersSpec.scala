@@ -17,12 +17,14 @@
 package uk.gov.hmrc.taxhistory.binders
 
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest. OptionValues
+import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.time.TaxYear
 
 class PathBindersSpec extends AnyWordSpec with Matchers with OptionValues {
+
+  private lazy val taxYear = 2018
 
   "ninoBinder" must {
     "parse a valid nino" in {
@@ -37,7 +39,7 @@ class PathBindersSpec extends AnyWordSpec with Matchers with OptionValues {
 
   "taxYearBinder" must {
     "parse a valid tax year" in {
-      PathBinders.taxYearBinder.bind("someKey", "2018").right.get shouldBe TaxYear(2018)
+      PathBinders.taxYearBinder.bind("someKey", "2018").right.get shouldBe TaxYear(taxYear)
     }
 
     "not parse an invalid tax year" in {
@@ -46,4 +48,3 @@ class PathBindersSpec extends AnyWordSpec with Matchers with OptionValues {
     }
   }
 }
-

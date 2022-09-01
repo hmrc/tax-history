@@ -19,14 +19,15 @@ package uk.gov.hmrc.taxhistory.model.api
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.taxhistory.model.nps.StatePension
 
-
-case class PayAsYouEarn(employments: List[Employment] = Nil,
-                        allowances: List[Allowance] = Nil,
-                        incomeSources: Map[String, IncomeSource] = Map.empty,
-                        benefits: Map[String, List[CompanyBenefit]] = Map.empty,
-                        payAndTax: Map[String, PayAndTax] = Map.empty,
-                        taxAccount: Option[TaxAccount] = None,
-                        statePension: Option[StatePension] = None)
+case class PayAsYouEarn(
+  employments: List[Employment] = Nil,
+  allowances: List[Allowance] = Nil,
+  incomeSources: Map[String, IncomeSource] = Map.empty,
+  benefits: Map[String, List[CompanyBenefit]] = Map.empty,
+  payAndTax: Map[String, PayAndTax] = Map.empty,
+  taxAccount: Option[TaxAccount] = None,
+  statePension: Option[StatePension] = None
+)
 
 object PayAsYouEarn {
   implicit val formats: OFormat[PayAsYouEarn] = Json.format[PayAsYouEarn]

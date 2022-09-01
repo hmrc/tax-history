@@ -25,21 +25,21 @@ import uk.gov.hmrc.taxhistory.metrics.MetricsEnum.MetricsEnum
 
 class TaxHistoryMetrics @Inject() (val metrics: Metrics) {
   val registry: MetricRegistry = metrics.defaultRegistry
-  val timers = Map(
+  val timers                   = Map(
     MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.timer("nps-get-employments-response-timer"),
     MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.timer("rti-get-employments-response-timer"),
     MetricsEnum.NPS_GET_IABDS       -> registry.timer("nps-get-iabds-response-timer"),
     MetricsEnum.NPS_GET_TAX_ACCOUNT -> registry.timer("nps-get-tax-account-response-timer"),
     MetricsEnum.CITIZEN_DETAILS     -> registry.timer("citizen-details-response-timer")
   )
-  val successCounters = Map(
+  val successCounters          = Map(
     MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.counter("rti-get-employments-success-counter"),
     MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.counter("nps-get-employments-success-counter"),
     MetricsEnum.NPS_GET_IABDS       -> registry.counter("nps-get-iabds-success-counter"),
     MetricsEnum.NPS_GET_TAX_ACCOUNT -> registry.counter("nps-get-tax-account-success-counter"),
     MetricsEnum.CITIZEN_DETAILS     -> registry.counter("citizen-details-success-counter")
   )
-  val failedCounters = Map(
+  val failedCounters           = Map(
     MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.counter("nps-get-employments-failed-counter"),
     MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.counter("rti-get-employments-failed-counter"),
     MetricsEnum.NPS_GET_IABDS       -> registry.counter("nps-get-iabds-failed-counter"),

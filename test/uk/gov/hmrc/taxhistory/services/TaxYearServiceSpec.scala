@@ -26,10 +26,10 @@ import uk.gov.hmrc.taxhistory.utils.TestUtil
 import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
 import uk.gov.hmrc.time.TaxYear
 
-class TaxYearServiceSpec extends PlaySpec with MockitoSugar with GuiceOneAppPerSuite with TestUtil  {
+class TaxYearServiceSpec extends PlaySpec with MockitoSugar with GuiceOneAppPerSuite with TestUtil {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  val testNino: Nino = randomNino()
+  val testNino: Nino             = randomNino()
 
   val testEmploymentHistoryService: EmploymentHistoryService = TestEmploymentHistoryService.createNew()
 
@@ -38,7 +38,7 @@ class TaxYearServiceSpec extends PlaySpec with MockitoSugar with GuiceOneAppPerS
       val taxYears = await(testEmploymentHistoryService.getTaxYears(testNino))
 
       taxYears.size mustBe 5
-
+      // scalastyle:off magic.number
       val cy = TaxYear.current
       taxYears.head.year mustBe cy.startYear
       taxYears.head.allowancesURI mustBe s"/${cy.startYear}/allowances"

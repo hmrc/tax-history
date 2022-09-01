@@ -40,36 +40,37 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-
-class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with GuiceOneAppPerSuite  {
+class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with GuiceOneAppPerSuite {
 
   override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  implicit val hc: HeaderCarrier     = HeaderCarrier()
 
-  val mockHttpClient: HttpClient = mock[HttpClient]
-  val mockAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
+  val mockHttpClient: HttpClient               = mock[HttpClient]
+  val mockAppConfig: AppConfig                 = app.injector.instanceOf[AppConfig]
   val mockTaxHistoryMetrics: TaxHistoryMetrics = mock[TaxHistoryMetrics]
-  val system: ActorSystem = ActorSystem("test")
-  private val taxYear = 2016
+  val system: ActorSystem                      = ActorSystem("test")
+  private val taxYear                          = 2016
+  private val taxYearPlusOne                   = 2017
 
-  val uuid = "123f4567-g89c-42c3-b456-557742330000"
+  val uuid                           = "123f4567-g89c-42c3-b456-557742330000"
   val testRtiConnector: RtiConnector = new RtiConnector(
     http = mockHttpClient,
     metrics = mockTaxHistoryMetrics,
     config = mockAppConfig,
     system = system
-  ){
+  ) {
     override def generateNewUUID: String = uuid
   }
 
-  val testNino: Nino = randomNino()
+  val testNino: Nino                = randomNino()
   val testNinoWithoutSuffix: String = testNino.withoutSuffix
-  lazy val testRtiData: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
+  lazy val testRtiData: RtiData     = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
 
   "return new ID pre-appending the requestID when the requestID matches the format(8-4-4-4)" in {
-    val requestId = "dcba0000-ij12-df34-jk56"
+    val requestId  = "dcba0000-ij12-df34-jk56"
+    val beginIndex = 24
     testRtiConnector.getCorrelationId(HeaderCarrier(requestId = Some(RequestId(requestId)))) shouldBe
-      s"$requestId-${uuid.substring(24)}"
+      s"$requestId-${uuid.substring(beginIndex)}"
   }
 
   "return new ID when the requestID does not match the format(8-4-4-4)" in {
@@ -77,13 +78,16 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with Gui
     testRtiConnector.getCorrelationId(HeaderCarrier(requestId = Some(RequestId(requestId)))) shouldBe uuid
   }
 
-  "return the new uuid when requestID is not present in the headerCarrier" in  {
+  "return the new uuid when requestID is not present in the headerCarrier" in {
     testRtiConnector.getCorrelationId(HeaderCarrier()) shouldBe uuid
   }
 
   "RtiConnector should have the correct RTI employments url" when {
     "given a valid nino and tax year" in {
-      testRtiConnector.rtiEmploymentsUrl(testNino, TaxYear(2017)) mustBe s"http://localhost:9998/rti/individual/payments/nino/$testNinoWithoutSuffix/tax-year/17-18"
+      testRtiConnector.rtiEmploymentsUrl(
+        testNino,
+        TaxYear(taxYearPlusOne)
+      ) mustBe s"http://localhost:9998/rti/individual/payments/nino/$testNinoWithoutSuffix/tax-year/17-18"
     }
 
     "have withoutSuffix nino" when {
@@ -94,7 +98,11 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with Gui
 
     "create the correct headers" in {
       val headers = testRtiConnector.buildHeaders(hc)
-      headers mustBe List(("Environment", "local"), ("Authorization", "Bearer local"), ("CorrelationId","123f4567-g89c-42c3-b456-557742330000"))
+      headers mustBe List(
+        ("Environment", "local"),
+        ("Authorization", "Bearer local"),
+        ("CorrelationId", "123f4567-g89c-42c3-b456-557742330000")
+      )
     }
 
     "get RTI data " when {
@@ -136,7 +144,7 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with Gui
 
       "return and handle an error response" in {
 
-        val expectedResponse = Json.parse( """{"reason": "Internal Server Error"}""")
+        val expectedResponse = Json.parse("""{"reason": "Internal Server Error"}""")
 
         when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
 

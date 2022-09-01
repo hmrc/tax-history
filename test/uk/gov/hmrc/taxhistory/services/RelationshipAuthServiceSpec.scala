@@ -35,39 +35,57 @@ class RelationshipAuthServiceSpec extends PlaySpec with MockitoSugar with TestUt
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val mockAuthConnector = mock[AuthConnector]
+  val mockAuthConnector           = mock[AuthConnector]
   val testRelationshipAuthService = new RelationshipAuthService(mockAuthConnector)
 
   val ninoWithAgent = randomNino()
 
-  val newEnrolments = Set(
-    Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), state="",delegatedAuthRule = None)
+  val newEnrolments               = Set(
+    Enrolment(
+      "HMRC-AS-AGENT",
+      Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")),
+      state = "",
+      delegatedAuthRule = None
+    )
   )
   val UnAuthorisedAgentEnrolments = Set(
-    Enrolment("HMRC-AS-UNAUTHORISED-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), state = "", delegatedAuthRule = None)
+    Enrolment(
+      "HMRC-AS-UNAUTHORISED-AGENT",
+      Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")),
+      state = "",
+      delegatedAuthRule = None
+    )
   )
-  
+
   "RelationshipAuthService" should {
     "authorise when a correct relationship is present" in {
       when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(any(), any()))
-        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(newEnrolments))))
+        .thenReturn(
+          Future.successful(
+            new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(newEnrolments))
+          )
+        )
 
       val result = testRelationshipAuthService.withAuthorisedRelationship(ninoWithAgent) { arn =>
         Future.successful(Ok("Some content"))
       }
 
-      status(result) must be (OK)
+      status(result) must be(OK)
     }
 
     "respond with UNAUTHORIZED for enrolments which are not HMRC Agents" in {
       when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(any(), any()))
-        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(UnAuthorisedAgentEnrolments))))
+        .thenReturn(
+          Future.successful(
+            new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(UnAuthorisedAgentEnrolments))
+          )
+        )
 
       val result = testRelationshipAuthService.withAuthorisedRelationship(ninoWithAgent) { arn =>
         Future.successful(Ok("Some content"))
       }
 
-      status(result) must be (UNAUTHORIZED)
+      status(result) must be(UNAUTHORIZED)
     }
 
     "respond with UNAUTHORIZED where the affinity group is not retrieved" in {
@@ -78,7 +96,7 @@ class RelationshipAuthServiceSpec extends PlaySpec with MockitoSugar with TestUt
         Future.successful(Ok("Some content"))
       }
 
-      status(result) must be (UNAUTHORIZED)
+      status(result) must be(UNAUTHORIZED)
     }
 
     "respond with UNAUTHORIZED when the user is not logged in" in {
@@ -89,7 +107,7 @@ class RelationshipAuthServiceSpec extends PlaySpec with MockitoSugar with TestUt
         Future.successful(Ok("Some content"))
       }
 
-      status(result) must be (UNAUTHORIZED)
+      status(result) must be(UNAUTHORIZED)
     }
 
     "respond with INTERNAL_SERVER_ERROR when there is an auth error" in {
@@ -100,7 +118,7 @@ class RelationshipAuthServiceSpec extends PlaySpec with MockitoSugar with TestUt
         Future.successful(Ok("Some content"))
       }
 
-      status(result) must be (INTERNAL_SERVER_ERROR)
+      status(result) must be(INTERNAL_SERVER_ERROR)
     }
   }
 

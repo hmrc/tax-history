@@ -27,22 +27,22 @@ import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.language.postfixOps
 
 @Singleton
-class AppConfig @Inject()(config: ServicesConfig) {
+class AppConfig @Inject() (config: ServicesConfig) {
 
-  lazy val appName: String = config.getString("appName")
-  lazy val mongoExpiry: Duration = Duration(config.getInt("mongodb.cache.expire.seconds"), TimeUnit.SECONDS)
-  lazy val mongoName: String = config.getString("mongodb.name")
-  lazy val desEnv: String = config.getConfString("des.env", "local")
-  lazy val desAuth: String = config.getConfString("des.authorizationToken", "Local")
-  lazy val currentYearFlag: Boolean = config.getBoolean("featureFlags.currentYearFlag")
-  lazy val statePensionFlag: Boolean = config.getBoolean("featureFlags.statePensionFlag")
+  lazy val appName: String                  = config.getString("appName")
+  lazy val mongoExpiry: Duration            = Duration(config.getInt("mongodb.cache.expire.seconds"), TimeUnit.SECONDS)
+  lazy val mongoName: String                = config.getString("mongodb.name")
+  lazy val desEnv: String                   = config.getConfString("des.env", "local")
+  lazy val desAuth: String                  = config.getConfString("des.authorizationToken", "Local")
+  lazy val currentYearFlag: Boolean         = config.getBoolean("featureFlags.currentYearFlag")
+  lazy val statePensionFlag: Boolean        = config.getBoolean("featureFlags.statePensionFlag")
   lazy val jobSeekersAllowanceFlag: Boolean = config.getBoolean("featureFlags.jobSeekersAllowanceFlag")
 
-  lazy val desBaseUrl: String = config.baseUrl("des")
+  lazy val desBaseUrl: String            = config.baseUrl("des")
   lazy val citizenDetailsBaseUrl: String = config.baseUrl("citizen-details")
 
   def newRetryInstance(name: String, actorSystem: ActorSystem): Retry = {
-    val times = config.getInt(s"microservice.services.$name.retry.times")
+    val times    = config.getInt(s"microservice.services.$name.retry.times")
     val interval = getConfFiniteDuration(s"microservice.services.$name.retry.interval", 500 millis)
     new Retry(times, interval, actorSystem)
   }

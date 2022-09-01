@@ -43,15 +43,18 @@ import java.util.UUID
 
 class PayAndTaxSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
 
-  lazy val payAndTaxNoEyuJson: JsValue = loadFile("/json/model/api/payAndTaxNoEyu.json")
-  lazy val payAndTaxWithEyuJson: JsValue = loadFile("/json/model/api/payAndTaxWithEyu.json")
+  lazy val payAndTaxNoEyuJson: JsValue      = loadFile("/json/model/api/payAndTaxNoEyu.json")
+  lazy val payAndTaxWithEyuJson: JsValue    = loadFile("/json/model/api/payAndTaxWithEyu.json")
   lazy val payAndTaxValuesNoneJson: JsValue = loadFile("/json/model/api/payAndTaxValuesNone.json")
 
-  lazy val eyuList = List(EarlierYearUpdate(
-    earlierYearUpdateId = UUID.fromString("e6926848-818b-4d01-baa1-02111eb0f514"),
-    taxablePayEYU = BigDecimal(123.45),
-    taxEYU = BigDecimal(67.89),
-    receivedDate = new LocalDate("2015-05-29")))
+  lazy val eyuList = List(
+    EarlierYearUpdate(
+      earlierYearUpdateId = UUID.fromString("e6926848-818b-4d01-baa1-02111eb0f514"),
+      taxablePayEYU = BigDecimal(123.45),
+      taxEYU = BigDecimal(67.89),
+      receivedDate = new LocalDate("2015-05-29")
+    )
+  )
 
   lazy val payAndTaxNoEyu: PayAndTax = PayAndTax(
     payAndTaxId = UUID.fromString("7407debb-5aa2-445d-8633-1875a2ebf559"),
@@ -60,7 +63,8 @@ class PayAndTaxSpec extends TestUtil with AnyWordSpecLike with Matchers with Opt
     taxTotal = Some(BigDecimal(6666.66)),
     taxTotalIncludingEYU = Some(BigDecimal(6666.66)),
     earlierYearUpdates = Nil,
-    paymentDate = Some(new LocalDate("2016-02-20")))
+    paymentDate = Some(new LocalDate("2016-02-20"))
+  )
 
   lazy val payAndTaxValuesNone: PayAndTax = PayAndTax(
     payAndTaxId = UUID.fromString("2dd8910e-95a4-4ede-b8af-977ca27b4a78"),
@@ -69,7 +73,8 @@ class PayAndTaxSpec extends TestUtil with AnyWordSpecLike with Matchers with Opt
     taxTotal = None,
     taxTotalIncludingEYU = None,
     earlierYearUpdates = Nil,
-    paymentDate = None)
+    paymentDate = None
+  )
 
   lazy val payAndTaxWithEyu: PayAndTax = PayAndTax(
     payAndTaxId = UUID.fromString("bb1c1ea4-04d0-4285-a2e6-4ade1e57f12a"),
@@ -78,7 +83,8 @@ class PayAndTaxSpec extends TestUtil with AnyWordSpecLike with Matchers with Opt
     taxTotal = Some(BigDecimal(2222.22)),
     taxTotalIncludingEYU = Some(BigDecimal(2290.11)),
     earlierYearUpdates = eyuList,
-    paymentDate = Some(new LocalDate("2016-02-20")))
+    paymentDate = Some(new LocalDate("2016-02-20"))
+  )
 
   "PayAndTax" should {
 
@@ -107,11 +113,10 @@ class PayAndTaxSpec extends TestUtil with AnyWordSpecLike with Matchers with Opt
       val payAndTax = PayAndTax(
         taxablePayTotal = Some(BigDecimal(1212.12)),
         taxTotal = Some(BigDecimal(34.34)),
-        earlierYearUpdates = Nil)
+        earlierYearUpdates = Nil
+      )
       payAndTax.payAndTaxId.toString.nonEmpty shouldBe true
-      payAndTax.payAndTaxId shouldNot be(payAndTaxNoEyu.payAndTaxId)
+      payAndTax.payAndTaxId                  shouldNot be(payAndTaxNoEyu.payAndTaxId)
     }
   }
 }
-
-

@@ -25,7 +25,7 @@ import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object TestEmploymentHistoryService extends MockitoSugar  {
+object TestEmploymentHistoryService extends MockitoSugar {
 
   val mockAppConfig: AppConfig = mock[AppConfig]
   when(mockAppConfig.currentYearFlag).thenReturn(true)

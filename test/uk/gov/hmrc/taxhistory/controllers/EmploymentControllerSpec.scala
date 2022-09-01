@@ -37,24 +37,35 @@ import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestRelationshipAuthService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class EmploymentControllerSpec extends PlaySpec with GuiceOneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
+class EmploymentControllerSpec
+    extends PlaySpec
+    with GuiceOneServerPerSuite
+    with MockitoSugar
+    with TestUtil
+    with BeforeAndAfterEach {
 
   val mockEmploymentHistoryService: EmploymentHistoryService = mock[EmploymentHistoryService]
 
-  val ninoWithAgent: Nino = randomNino()
+  val ninoWithAgent: Nino    = randomNino()
   val ninoWithoutAgent: Nino = randomNino()
 
-  val testEmployment: Employment = Employment(startDate = Some(LocalDate.now()),
-    payeReference = "SOME_PAYE", employerName = "Megacorp Plc",
-    employmentStatus = EmploymentStatus.Live, worksNumber = "00191048716")
-  val testEmployments = List(testEmployment)
+  private lazy val taxYear1 = 2015
+  private lazy val taxYear2 = 2016
 
-  val cc: ControllerComponents = stubControllerComponents()
+  val testEmployment: Employment = Employment(
+    startDate = Some(LocalDate.now()),
+    payeReference = "SOME_PAYE",
+    employerName = "Megacorp Plc",
+    employmentStatus = EmploymentStatus.Live,
+    worksNumber = "00191048716"
+  )
+  val testEmployments            = List(testEmployment)
+
+  val cc: ControllerComponents                    = stubControllerComponents()
   implicit val executionContext: ExecutionContext = cc.executionContext
 
-  override def beforeEach: Unit = {
+  override def beforeEach: Unit =
     reset(mockEmploymentHistoryService)
-  }
 
   val testEmploymentController = new EmploymentController(
     employmentHistoryService = mockEmploymentHistoryService,
@@ -67,7 +78,7 @@ class EmploymentControllerSpec extends PlaySpec with GuiceOneServerPerSuite with
     "respond with OK for successful get" in {
       when(mockEmploymentHistoryService.getEmployments(any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(testEmployments))
-      val result = testEmploymentController.getEmployments(ninoWithAgent.nino, 2016).apply(FakeRequest())
+      val result = testEmploymentController.getEmployments(ninoWithAgent.nino, taxYear2).apply(FakeRequest())
       status(result) must be(OK)
     }
 
@@ -75,7 +86,7 @@ class EmploymentControllerSpec extends PlaySpec with GuiceOneServerPerSuite with
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
         when(mockEmploymentHistoryService.getEmployments(any(), any())(any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
-        val result = testEmploymentController.getEmployments(ninoWithAgent.nino, 2015).apply(FakeRequest())
+        val result = testEmploymentController.getEmployments(ninoWithAgent.nino, taxYear1).apply(FakeRequest())
         status(result) must be(expectedStatus)
       }
     }
@@ -83,7 +94,7 @@ class EmploymentControllerSpec extends PlaySpec with GuiceOneServerPerSuite with
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
       when(mockEmploymentHistoryService.getEmployments(any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(testEmployments))
-      val result = testEmploymentController.getEmployments(ninoWithoutAgent.nino, 2015).apply(FakeRequest())
+      val result = testEmploymentController.getEmployments(ninoWithoutAgent.nino, taxYear1).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
 
@@ -94,7 +105,9 @@ class EmploymentControllerSpec extends PlaySpec with GuiceOneServerPerSuite with
     "respond with OK for successful get" in {
       when(mockEmploymentHistoryService.getEmployment(any(), any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(testEmployment))
-      val result = testEmploymentController.getEmployment(ninoWithAgent.nino, 2016,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
+      val result = testEmploymentController
+        .getEmployment(ninoWithAgent.nino, taxYear2, "ba047b92-6899-4bf8-819a-820fc0dd2703")
+        .apply(FakeRequest())
       status(result) must be(OK)
     }
 
@@ -102,7 +115,9 @@ class EmploymentControllerSpec extends PlaySpec with GuiceOneServerPerSuite with
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
         when(mockEmploymentHistoryService.getEmployment(any(), any(), any())(any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
-        val result = testEmploymentController.getEmployment(ninoWithAgent.nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
+        val result = testEmploymentController
+          .getEmployment(ninoWithAgent.nino, taxYear1, "ba047b92-6899-4bf8-819a-820fc0dd2703")
+          .apply(FakeRequest())
         status(result) must be(expectedStatus)
       }
     }
@@ -110,7 +125,9 @@ class EmploymentControllerSpec extends PlaySpec with GuiceOneServerPerSuite with
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
       when(mockEmploymentHistoryService.getEmployment(any(), any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(testEmployment))
-      val result = testEmploymentController.getEmployment(ninoWithoutAgent.nino, 2015,"ba047b92-6899-4bf8-819a-820fc0dd2703").apply(FakeRequest())
+      val result = testEmploymentController
+        .getEmployment(ninoWithoutAgent.nino, taxYear1, "ba047b92-6899-4bf8-819a-820fc0dd2703")
+        .apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
   }
