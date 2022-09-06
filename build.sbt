@@ -26,7 +26,7 @@ val appName = "tax-history"
 
 lazy val microservice =
   Project(appName, file("."))
-    .enablePlugins(Seq(play.sbt.PlayScala, SbtDistributablesPlugin): _*)
+    .enablePlugins(SbtAutoBuildPlugin, play.sbt.PlayScala, SbtDistributablesPlugin)
     .settings(PlayKeys.playDefaultPort := 9997)
     .settings(scoverageSettings: _*)
     .settings(scalaSettings: _*)

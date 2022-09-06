@@ -9,7 +9,7 @@ object AppDependencies {
   //TODO migrate from jodaTime to JavaTime
   private val compile = Seq(
     ws,
-    "uk.gov.hmrc"       %% "bootstrap-backend-play-28" % "7.1.0",
+    "uk.gov.hmrc"       %% "bootstrap-backend-play-28" % "7.2.0",
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28"        % hmrcMongoPlayVersion,
     "uk.gov.hmrc"       %% "domain"                    % "8.1.0-play-28",
     "uk.gov.hmrc"       %% "agent-mtd-identifiers"     % "0.47.0-play-28",
