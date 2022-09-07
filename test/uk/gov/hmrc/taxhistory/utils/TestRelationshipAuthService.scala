@@ -30,8 +30,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * A test version of RelationshipAuthService which reads off the Nino-Agent relationships from the given Map
   * rather than interrogating a real auth service.
   */
-case class TestRelationshipAuthService(relationships: Map[Nino, Arn]) extends RelationshipAuthService(authConnector = Mockito.mock(classOf[AuthConnector])) {
+case class TestRelationshipAuthService(relationships: Map[Nino, Arn])
+    extends RelationshipAuthService(authConnector = Mockito.mock(classOf[AuthConnector])) {
 
-  override def retrieveArnFor(nino: Nino)(implicit hc: HeaderCarrier): Future[Option[Arn]] = Future.successful(relationships.get(nino))
+  override def retrieveArnFor(nino: Nino)(implicit hc: HeaderCarrier): Future[Option[Arn]] =
+    Future.successful(relationships.get(nino))
 
 }

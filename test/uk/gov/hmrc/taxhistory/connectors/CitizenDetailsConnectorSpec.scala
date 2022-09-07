@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
-
 import akka.actor.ActorSystem
 import com.codahale.metrics.Timer
 import org.mockito.ArgumentMatchers.any
@@ -40,23 +39,24 @@ import uk.gov.hmrc.taxhistory.utils.TestUtil
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-
-class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with BeforeAndAfterEach with GuiceOneAppPerSuite {
+class CitizenDetailsConnectorSpec
+    extends PlaySpec
+    with MockitoSugar
+    with TestUtil
+    with BeforeAndAfterEach
+    with GuiceOneAppPerSuite {
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
 
-  private val mockHttp = mock[HttpClient]
-  private val mockMetrics = mock[TaxHistoryMetrics]
+  private val mockHttp         = mock[HttpClient]
+  private val mockMetrics      = mock[TaxHistoryMetrics]
   private val mockTimerContext = mock[Timer.Context]
-  private val mockAppConfig = app.injector.instanceOf[AppConfig]
-  private val system = ActorSystem("test")
+  private val mockAppConfig    = app.injector.instanceOf[AppConfig]
+  private val system           = ActorSystem("test")
 
-  private val testConnector = new CitizenDetailsConnector(
-    http = mockHttp,
-    metrics = mockMetrics,
-    config = mockAppConfig,
-    system = system)
+  private val testConnector =
+    new CitizenDetailsConnector(http = mockHttp, metrics = mockMetrics, config = mockAppConfig, system = system)
 
   override def beforeEach: Unit = {
     reset(mockHttp)
@@ -94,7 +94,7 @@ class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUt
         await(testConnector.lookupSaUtr(forThisNino)) mustBe Some(expectedUtr)
       }
 
-      "record metrics" when {
+    "record metrics" when {
       "increment successful metric counter on successful call that returned a UTR" in
         new CitizenDetailsRespondsWithUtr(forThisNino = Nino("AA000003D")) {
           await(testConnector.lookupSaUtr(forThisNino))
@@ -145,8 +145,7 @@ class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUt
   class CitizenDetailsRespondsWithoutUtr(val forThisNino: Nino) {
     when(mockMetrics.startTimer(any())).thenReturn(mockTimerContext)
     when(mockHttp.GET[JsValue](any(), any(), any())(any(), any(), any()))
-      .thenReturn(Future.successful(Json.parse(
-        s"""
+      .thenReturn(Future.successful(Json.parse(s"""
            |{
            |    "dateOfBirth": "23041948",
            |    "ids": {
@@ -177,9 +176,8 @@ class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUt
       .thenReturn(Future.successful(responseWithUtr(forThisNino, expectedUtr)))
   }
 
-  private def responseWithUtr(forThisNino: Nino, expectedUtr: SaUtr) = {
-    Json.parse(
-      s"""
+  private def responseWithUtr(forThisNino: Nino, expectedUtr: SaUtr) =
+    Json.parse(s"""
          |{
          |    "dateOfBirth": "23041948",
          |    "ids": {
@@ -195,5 +193,4 @@ class CitizenDetailsConnectorSpec extends PlaySpec with MockitoSugar with TestUt
          |    }
          |}
         """.stripMargin)
-  }
 }

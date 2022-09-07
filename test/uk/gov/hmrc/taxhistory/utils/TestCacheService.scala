@@ -38,16 +38,15 @@ class TestCacheService[K, V]() extends CacheService[K, V] {
 
   def get(key: K): Future[Option[V]] = Future.successful(map.get(key))
 
-  def getOrElseInsert(key: K)(defaultToInsert: => Future[V]): Future[V] = {
+  def getOrElseInsert(key: K)(defaultToInsert: => Future[V]): Future[V] =
     map.get(key) match {
       case Some(value) => Future.successful(value)
-      case None => defaultToInsert.map { default =>
-        map = map + (key -> default)
-        default
-      }
+      case None        =>
+        defaultToInsert.map { default =>
+          map = map + (key -> default)
+          default
+        }
     }
-  }
 }
 
 case class TestPayeCacheService() extends TestCacheService[(Nino, TaxYear), PayAsYouEarn] with PayeCacheService
-

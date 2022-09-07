@@ -29,23 +29,24 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CitizenDetailsConnector @Inject()(val http: HttpClient,
-                                        val metrics: TaxHistoryMetrics,
-                                        val config: AppConfig,
-                                        val system: ActorSystem)
-                                       (implicit executionContext: ExecutionContext)  extends ConnectorMetrics {
+class CitizenDetailsConnector @Inject() (
+  val http: HttpClient,
+  val metrics: TaxHistoryMetrics,
+  val config: AppConfig,
+  val system: ActorSystem
+)(implicit executionContext: ExecutionContext)
+    extends ConnectorMetrics {
 
   val withRetry: Retry = config.newRetryInstance("des", system)
 
-  def lookupSaUtr(nino: Nino)(implicit hc: HeaderCarrier): Future[Option[SaUtr]] = {
+  def lookupSaUtr(nino: Nino)(implicit hc: HeaderCarrier): Future[Option[SaUtr]] =
     withMetrics(MetricsEnum.CITIZEN_DETAILS) {
       withRetry {
         http.GET[JsValue](s"${config.citizenDetailsBaseUrl}/citizen-details/nino/$nino").map { json =>
           (json \ "ids" \ "sautr").asOpt[SaUtr]
         }
       }
-    }.recover {
-      case _: NotFoundException => None
+    }.recover { case _: NotFoundException =>
+      None
     }
-  }
 }

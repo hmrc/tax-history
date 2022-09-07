@@ -27,14 +27,14 @@ object IabdsOps {
 
   implicit class IabdListOps(val iabds: List[Iabd]) extends TaxHistoryHelper with Logging {
 
-    def matchedCompanyBenefits(npsEmployment: NpsEmployment):List[Iabd] = iabds.filter { iabd =>
+    def matchedCompanyBenefits(npsEmployment: NpsEmployment): List[Iabd] = iabds.filter { iabd =>
       iabd.`type`.isInstanceOf[CompanyBenefits] &&
-        iabd.employmentSequenceNumber.contains(npsEmployment.sequenceNumber)
+      iabd.employmentSequenceNumber.contains(npsEmployment.sequenceNumber)
     }
 
     def companyBenefits: List[CompanyBenefit] = {
 
-      def convertToCompanyBenefits(iabds: List[Iabd]): List[CompanyBenefit] = {
+      def convertToCompanyBenefits(iabds: List[Iabd]): List[CompanyBenefit] =
         iabds.map { iabd =>
           CompanyBenefit(
             amount = iabd.grossAmount.getOrElse(BigDecimal(0)),
@@ -42,7 +42,6 @@ object IabdsOps {
             source = iabd.source
           )
         }
-      }
 
       if (isTotalBenefitInKind) {
         convertToCompanyBenefits(this.iabds)
@@ -53,14 +52,13 @@ object IabdsOps {
       }
     }
 
-
     /**
       * Returns true if there is one single benefit in kind and its type is [[TotalBenefitInKind]].
       */
     def isTotalBenefitInKind: Boolean = {
       val benefitsInKind = iabds.map(_.`type`).filter {
         case _: BenefitInKind => true
-        case _ => false
+        case _                => false
       }
       benefitsInKind == TotalBenefitInKind :: Nil
     }

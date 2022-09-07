@@ -23,7 +23,12 @@ import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 
 object HelperTestData {
 
-  def rti(payeRef: String = "U313", officeNumber: String = "951", currentPayId:Option[String], seq: Int): RtiEmployment = RtiEmployment(
+  def rti(
+    payeRef: String = "U313",
+    officeNumber: String = "951",
+    currentPayId: Option[String],
+    seq: Int
+  ): RtiEmployment = RtiEmployment(
     payeRef = payeRef,
     officeNumber = officeNumber,
     currentPayId = currentPayId,
@@ -57,7 +62,12 @@ object HelperTestData {
     earlierYearUpdates = Nil
   )
 
-  def nps(payeNumber: String = "U313", taxDistrictNumber: String = "951", worksNumber: Option[String], seq: Int): NpsEmployment = NpsEmployment(
+  def nps(
+    payeNumber: String = "U313",
+    taxDistrictNumber: String = "951",
+    worksNumber: Option[String],
+    seq: Int
+  ): NpsEmployment = NpsEmployment(
     payeNumber = payeNumber,
     taxDistrictNumber = taxDistrictNumber,
     worksNumber = worksNumber,

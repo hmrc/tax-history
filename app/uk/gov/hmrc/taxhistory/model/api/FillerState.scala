@@ -29,29 +29,44 @@ object FillerState {
     * Returns a single fillerState, in order of precedence, falling back to Unrelated if the timing of
     * employment and filler have no overlap
     */
-  def fillerState(fillerStartDate: LocalDate, fillerEndDate: LocalDate, employmentStartDate: LocalDate, employmentEndDate: LocalDate): FillerState = {
-    Seq(encompassed(fillerStartDate, fillerEndDate, employmentStartDate, employmentEndDate),
+  def fillerState(
+    fillerStartDate: LocalDate,
+    fillerEndDate: LocalDate,
+    employmentStartDate: LocalDate,
+    employmentEndDate: LocalDate
+  ): FillerState =
+    Seq(
+      encompassed(fillerStartDate, fillerEndDate, employmentStartDate, employmentEndDate),
       overlapCompletely(fillerStartDate, fillerEndDate, employmentStartDate, employmentEndDate),
       overlapStart(fillerStartDate, fillerEndDate, employmentStartDate, employmentEndDate),
       overlapEnd(fillerStartDate, fillerEndDate, employmentStartDate, employmentEndDate),
-      Some(Unrelated)).flatten.head
-  }
+      Some(Unrelated)
+    ).flatten.head
 
   /*
     The filler falls entirely within the bounds of the employment
    */
-  private def encompassed(fillerStartDate: LocalDate, fillerEndDate: LocalDate, employmentStartDate: LocalDate, employmentEndDate: LocalDate): Option[FillerState] =
+  private def encompassed(
+    fillerStartDate: LocalDate,
+    fillerEndDate: LocalDate,
+    employmentStartDate: LocalDate,
+    employmentEndDate: LocalDate
+  ): Option[FillerState] =
     if (fillerStartDate.isEqualOrAfter(employmentStartDate) && fillerEndDate.isEqualOrBefore(employmentEndDate)) {
       Some(EncompassedByEmployment)
-    }
-    else {
+    } else {
       None
     }
 
   /*
     The filler straddles the start of the employment
    */
-  private def overlapStart(fillerStartDate: LocalDate, fillerEndDate: LocalDate, employmentStartDate: LocalDate, employmentEndDate: LocalDate): Option[FillerState] =
+  private def overlapStart(
+    fillerStartDate: LocalDate,
+    fillerEndDate: LocalDate,
+    employmentStartDate: LocalDate,
+    employmentEndDate: LocalDate
+  ): Option[FillerState] =
     if (fillerStartDate.isBefore(employmentStartDate) && fillerEndDate.isEqualOrAfter(employmentStartDate)) {
       Some(OverlapEmploymentStart)
     } else {
@@ -61,8 +76,13 @@ object FillerState {
   /*
     The filler straddles the end of the employment
    */
-  private def overlapEnd(fillerStartDate: LocalDate, fillerEndDate: LocalDate, employmentStartDate: LocalDate, employmentEndDate: LocalDate): Option[FillerState] =
-    if (fillerStartDate.isEqualOrBefore(employmentEndDate) && fillerEndDate.isAfter(employmentEndDate)){
+  private def overlapEnd(
+    fillerStartDate: LocalDate,
+    fillerEndDate: LocalDate,
+    employmentStartDate: LocalDate,
+    employmentEndDate: LocalDate
+  ): Option[FillerState] =
+    if (fillerStartDate.isEqualOrBefore(employmentEndDate) && fillerEndDate.isAfter(employmentEndDate)) {
       Some(OverlapEmploymentEnd)
     } else {
       None
@@ -71,9 +91,18 @@ object FillerState {
   /*
     The employment falls entirely within the bounds of the filler
    */
-  private def overlapCompletely(fillerStartDate: LocalDate, fillerEndDate: LocalDate, employmentStartDate: LocalDate, employmentEndDate: LocalDate): Option[FillerState] = {
-    val isOverlappingStart = overlapStart(fillerStartDate, fillerEndDate, employmentStartDate, employmentEndDate).contains(OverlapEmploymentStart)
-    val isOverlappingEnd = overlapEnd(fillerStartDate, fillerEndDate, employmentStartDate, employmentEndDate).contains(OverlapEmploymentEnd)
+  private def overlapCompletely(
+    fillerStartDate: LocalDate,
+    fillerEndDate: LocalDate,
+    employmentStartDate: LocalDate,
+    employmentEndDate: LocalDate
+  ): Option[FillerState] = {
+    val isOverlappingStart =
+      overlapStart(fillerStartDate, fillerEndDate, employmentStartDate, employmentEndDate).contains(
+        OverlapEmploymentStart
+      )
+    val isOverlappingEnd   =
+      overlapEnd(fillerStartDate, fillerEndDate, employmentStartDate, employmentEndDate).contains(OverlapEmploymentEnd)
     if (isOverlappingStart && isOverlappingEnd) {
       Some(OverlapEmployment)
     } else {
@@ -99,4 +128,3 @@ case object OverlapEmploymentEnd extends FillerState
 case object OverlapEmployment extends FillerState
 
 case object Unrelated extends FillerState
-

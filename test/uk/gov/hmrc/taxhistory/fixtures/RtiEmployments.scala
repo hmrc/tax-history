@@ -23,15 +23,24 @@ import uk.gov.hmrc.taxhistory.utils.TestUtil
 trait RtiEmployments extends TestUtil {
 
   lazy val rtiEmploymentResponse: JsValue = loadFile("/json/rti/response/dummyRti.json")
-  val rtiERTaxablePayTotal: BigDecimal = BigDecimal.valueOf(20000.00)
-  val rtiERTaxTotal: BigDecimal = BigDecimal.valueOf(1880.00)
+  val rtiERTaxablePayTotal: BigDecimal    = BigDecimal.valueOf(20000.00)
+  val rtiERTaxTotal: BigDecimal           = BigDecimal.valueOf(1880.00)
 
-  lazy val rtiPartialDuplicateEmploymentsResponse: JsValue = loadFile("/json/rti/response/dummyRtiPartialDuplicateEmployments.json")
-  lazy val rtiNonMatchingEmploymentsResponse: JsValue = loadFile("/json/rti/response/dummyRtiNonMatchingEmployment.json")
-
-  val rtiEmployment1: RtiEmployment = RtiEmployment(1,"offNo1","ref1",currentPayId = None, payments = Nil, earlierYearUpdates = Nil)
-  val rtiEmployment2: RtiEmployment = RtiEmployment(5,"offNo2","ref2",currentPayId = None, payments = Nil, earlierYearUpdates = Nil)
-  val rtiEmployment3: RtiEmployment = RtiEmployment(3,"offNo3","ref3",currentPayId = None, payments = Nil, earlierYearUpdates = Nil)
-  val rtiEmployment4: RtiEmployment = RtiEmployment(4,"offNo4","ref4",currentPayId = None, payments = Nil, earlierYearUpdates = Nil)
+  lazy val rtiPartialDuplicateEmploymentsResponse: JsValue = loadFile(
+    "/json/rti/response/dummyRtiPartialDuplicateEmployments.json"
+  )
+  lazy val rtiNonMatchingEmploymentsResponse: JsValue      = loadFile(
+    "/json/rti/response/dummyRtiNonMatchingEmployment.json"
+  )
+  // scalastyle:off magic.number
+  val rtiEmployment1: RtiEmployment                        =
+    RtiEmployment(1, "offNo1", "ref1", currentPayId = None, payments = Nil, earlierYearUpdates = Nil)
+  val rtiEmployment2: RtiEmployment                        =
+    RtiEmployment(5, "offNo2", "ref2", currentPayId = None, payments = Nil, earlierYearUpdates = Nil)
+  val rtiEmployment3: RtiEmployment                        =
+    RtiEmployment(3, "offNo3", "ref3", currentPayId = None, payments = Nil, earlierYearUpdates = Nil)
+  val rtiEmployment4: RtiEmployment                        =
+    RtiEmployment(4, "offNo4", "ref4", currentPayId = None, payments = Nil, earlierYearUpdates = Nil)
+  // scalastyle:on magic.number
 
 }

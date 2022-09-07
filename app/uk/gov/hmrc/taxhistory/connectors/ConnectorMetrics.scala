@@ -26,24 +26,30 @@ import scala.concurrent.{ExecutionContext, Future}
 protected trait ConnectorMetrics extends ConnectorCorrelationId with Logging {
   val metrics: TaxHistoryMetrics
 
-  protected def withMetrics[T](metric: MetricsEnum)(codeBlock: => Future[T])(implicit executionContext: ExecutionContext): Future[T] = {
+  protected def withMetrics[T](
+    metric: MetricsEnum
+  )(codeBlock: => Future[T])(implicit executionContext: ExecutionContext): Future[T] = {
     val timerContext = metrics.startTimer(metric)
 
-    codeBlock.map{ result =>
-      timerContext.stop()
-      metrics.incrementSuccessCounter(metric)
-      result
-    }.recover {
-      case e : NotFoundException =>
+    codeBlock
+      .map { result =>
         timerContext.stop()
         metrics.incrementSuccessCounter(metric)
-        logger.warn(s"NotFound Exception ${getClass.getSimpleName} connector (${metric.toString}) : ${e.getMessage}")
-        throw e
-      case e =>
-        metrics.incrementFailedCounter(metric)
-        timerContext.stop()
-        logger.error(s"[ConnectorMetrics][withMetrics] Error returned from ${getClass.getSimpleName} connector (${metric.toString}) : ${e.getMessage}")
-        throw e
-    }
+        result
+      }
+      .recover {
+        case e: NotFoundException =>
+          timerContext.stop()
+          metrics.incrementSuccessCounter(metric)
+          logger.warn(s"NotFound Exception ${getClass.getSimpleName} connector (${metric.toString}) : ${e.getMessage}")
+          throw e
+        case e                    =>
+          metrics.incrementFailedCounter(metric)
+          timerContext.stop()
+          logger.error(
+            s"[ConnectorMetrics][withMetrics] Error returned from ${getClass.getSimpleName} connector (${metric.toString}) : ${e.getMessage}"
+          )
+          throw e
+      }
   }
 }

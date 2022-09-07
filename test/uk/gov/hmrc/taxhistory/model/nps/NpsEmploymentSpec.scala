@@ -45,24 +45,24 @@ class NpsEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with
     """.stripMargin
 
   val startDate = new LocalDate("2015-01-21")
-  val endDate = new LocalDate("2016-01-08")
+  val endDate   = new LocalDate("2016-01-08")
 
   "NpsEmployment" should {
     "transform Nps Employment Response Json correctly to Employment Model " in {
       val employment = Json.parse(employmentResponse).as[NpsEmployment]
-      employment shouldBe a[NpsEmployment]
-      employment.nino shouldBe "AA000000"
-      employment.sequenceNumber shouldBe 6
-      employment.worksNumber shouldBe Some("00191048716")
-      employment.taxDistrictNumber shouldBe "846"
-      employment.payeNumber shouldBe "T2PP"
-      employment.employerName shouldBe "Aldi"
+      employment                              shouldBe a[NpsEmployment]
+      employment.nino                         shouldBe "AA000000"
+      employment.sequenceNumber               shouldBe 6
+      employment.worksNumber                  shouldBe Some("00191048716")
+      employment.taxDistrictNumber            shouldBe "846"
+      employment.payeNumber                   shouldBe "T2PP"
+      employment.employerName                 shouldBe "Aldi"
       employment.receivingJobSeekersAllowance shouldBe true
       employment.receivingOccupationalPension shouldBe true
-      employment.otherIncomeSourceIndicator shouldBe true
-      employment.startDate shouldBe Some(startDate)
-      employment.endDate shouldBe Some(endDate)
-      employment.employmentStatus shouldBe EmploymentStatus.Live
+      employment.otherIncomeSourceIndicator   shouldBe true
+      employment.startDate                    shouldBe Some(startDate)
+      employment.endDate                      shouldBe Some(endDate)
+      employment.employmentStatus             shouldBe EmploymentStatus.Live
     }
 
     "create an NpsEmployment with a 3 digit taxDistrictNumber when the Json response has a 2 digit taxDistrictNumber" in {
@@ -91,11 +91,12 @@ class NpsEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with
     "deserialise NPS Employment Response Json" when {
       "startDate is missing" in {
         val employmentNoStartDateJson: JsObject = Json.parse(employmentResponse).as[JsObject] - "startDate"
-        val deserialised = employmentNoStartDateJson.as[NpsEmployment]
+        val deserialised                        = employmentNoStartDateJson.as[NpsEmployment]
         deserialised.startDate shouldBe None
       }
       "startDate is null" in {
-        val employmentNullStartDateJson: JsObject = Json.parse(employmentResponse).as[JsObject] + ("startDate" -> JsNull)
+        val employmentNullStartDateJson: JsObject =
+          Json.parse(employmentResponse).as[JsObject] + ("startDate" -> JsNull)
         val deserialised = employmentNullStartDateJson.as[NpsEmployment]
         deserialised.startDate shouldBe None
       }

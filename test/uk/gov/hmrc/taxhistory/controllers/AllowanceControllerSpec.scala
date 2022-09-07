@@ -36,21 +36,27 @@ import uk.gov.hmrc.domain.Nino
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AllowanceControllerSpec extends PlaySpec with GuiceOneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
+class AllowanceControllerSpec
+    extends PlaySpec
+    with GuiceOneServerPerSuite
+    with MockitoSugar
+    with TestUtil
+    with BeforeAndAfterEach {
 
   val mockEmploymentHistoryService: EmploymentHistoryService = mock[EmploymentHistoryService]
 
-  val ninoWithAgent: Nino = randomNino()
+  val ninoWithAgent: Nino    = randomNino()
   val ninoWithoutAgent: Nino = randomNino()
+
+  private val taxYear = 2016
 
   val testAllowances = List(Allowance(iabdType = "CarBenefit", amount = BigDecimal(100.00)))
 
-  val cc: ControllerComponents = stubControllerComponents()
+  val cc: ControllerComponents                    = stubControllerComponents()
   implicit val executionContext: ExecutionContext = cc.executionContext
 
-  override def beforeEach: Unit = {
+  override def beforeEach: Unit =
     reset(mockEmploymentHistoryService)
-  }
 
   val testAllowanceController = new AllowanceController(
     employmentHistoryService = mockEmploymentHistoryService,
@@ -64,7 +70,7 @@ class AllowanceControllerSpec extends PlaySpec with GuiceOneServerPerSuite with 
       when(mockEmploymentHistoryService.getAllowances(any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(testAllowances))
 
-      val result = testAllowanceController.getAllowances(ninoWithAgent.nino, 2016).apply(FakeRequest())
+      val result = testAllowanceController.getAllowances(ninoWithAgent.nino, taxYear).apply(FakeRequest())
       status(result) must be(OK)
     }
 
@@ -72,7 +78,7 @@ class AllowanceControllerSpec extends PlaySpec with GuiceOneServerPerSuite with 
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
         when(mockEmploymentHistoryService.getAllowances(any(), any())(any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
-        val result = testAllowanceController.getAllowances(ninoWithAgent.nino, 2016).apply(FakeRequest())
+        val result = testAllowanceController.getAllowances(ninoWithAgent.nino, taxYear).apply(FakeRequest())
         status(result) must be(expectedStatus)
       }
     }
@@ -80,7 +86,7 @@ class AllowanceControllerSpec extends PlaySpec with GuiceOneServerPerSuite with 
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
       when(mockEmploymentHistoryService.getAllowances(any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(testAllowances))
-      val result = testAllowanceController.getAllowances(ninoWithoutAgent.nino, 2016).apply(FakeRequest())
+      val result = testAllowanceController.getAllowances(ninoWithoutAgent.nino, taxYear).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
   }

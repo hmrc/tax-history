@@ -21,10 +21,12 @@ import org.joda.time.LocalDate
 import play.api.libs.json.JodaWrites._
 import play.api.libs.json.JodaReads._
 
-case class StatePension(grossAmount: BigDecimal,
-                        typeDescription: String,
-                        paymentFrequency: Option[Int],
-                        startDate: Option[LocalDate])
+case class StatePension(
+  grossAmount: BigDecimal,
+  typeDescription: String,
+  paymentFrequency: Option[Int],
+  startDate: Option[LocalDate]
+)
 
 object StatePension {
   implicit val formats: OFormat[StatePension] = Json.format[StatePension]

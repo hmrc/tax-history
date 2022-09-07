@@ -23,11 +23,13 @@ import play.api.libs.json.{Json, OFormat}
 import play.api.libs.json.JodaWrites._
 import play.api.libs.json.JodaReads._
 
-case class EarlierYearUpdate(earlierYearUpdateId:UUID = UUID.randomUUID(),
-                             taxablePayEYU: BigDecimal,
-                             taxEYU: BigDecimal,
-                             studentLoanEYU: Option[BigDecimal] = None,
-                             receivedDate:LocalDate)
+case class EarlierYearUpdate(
+  earlierYearUpdateId: UUID = UUID.randomUUID(),
+  taxablePayEYU: BigDecimal,
+  taxEYU: BigDecimal,
+  studentLoanEYU: Option[BigDecimal] = None,
+  receivedDate: LocalDate
+)
 
 object EarlierYearUpdate {
   implicit val formats: OFormat[EarlierYearUpdate] = Json.format[EarlierYearUpdate]

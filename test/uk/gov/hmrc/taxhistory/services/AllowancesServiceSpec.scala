@@ -36,24 +36,38 @@ import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
-
 class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  val testNino: Nino = randomNino()
+  val testNino: Nino             = randomNino()
+
+  private val taxYear1        = 2014
+  private val taxYear2        = 2016
+  private val allowanceAmount = 12
 
   val testEmploymentHistoryService: EmploymentHistoryService = TestEmploymentHistoryService.createNew()
 
-  val npsEmploymentResponse :List[NpsEmployment] = List(
+  val npsEmploymentResponse: List[NpsEmployment] = List(
     NpsEmployment(
-      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), false, false,
-      Some(new LocalDate("2015-01-21")), None, true, Live))
+      "AA000000",
+      1,
+      "531",
+      "J4816",
+      "Aldi",
+      Some("6044041000000"),
+      receivingJobSeekersAllowance = false,
+      otherIncomeSourceIndicator = false,
+      Some(new LocalDate("2015-01-21")),
+      None,
+      receivingOccupationalPension = true,
+      Live
+    )
+  )
 
   lazy val iabdsResponse: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
 
   lazy val testNpsTaxAccount: NpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
-  lazy val testRtiData: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
-
+  lazy val testRtiData: RtiData             = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
 
   "Allowances" should {
     "successfully populated from iabds" in {
@@ -65,7 +79,7 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
         .thenReturn(Future.successful(Some(testNpsTaxAccount)))
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
         .thenReturn(Future.successful(Some(testRtiData)))
-      val response =  await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino,TaxYear(2016)))
+      val response = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(taxYear2)))
 
       val allowances = response.allowances
       allowances.size mustBe 1
@@ -74,11 +88,12 @@ class AllowancesServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
     "successfully retrieve allowance from cache" in {
       lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
 
-      val allowance:List[Allowance] = List(Allowance(UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"), "payeType", 12))
+      val allowance: List[Allowance] =
+        List(Allowance(UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"), "payeType", allowanceAmount))
 
-      testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye)
+      testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(taxYear1)), paye)
 
-      val result = await(testEmploymentHistoryService.getAllowances(Nino("AA000000A"), TaxYear(2014)))
+      val result = await(testEmploymentHistoryService.getAllowances(Nino("AA000000A"), TaxYear(taxYear1)))
       result must be(allowance)
     }
 

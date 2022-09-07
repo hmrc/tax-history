@@ -26,9 +26,12 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class StatePensionController @Inject()(val employmentHistoryService: EmploymentHistoryService,
-                                       val relationshipAuthService: RelationshipAuthService,
-                                       val cc: ControllerComponents)(implicit val ec: ExecutionContext) extends TaxHistoryController(cc) {
+class StatePensionController @Inject() (
+  val employmentHistoryService: EmploymentHistoryService,
+  val relationshipAuthService: RelationshipAuthService,
+  val cc: ControllerComponents
+)(implicit val ec: ExecutionContext)
+    extends TaxHistoryController(cc) {
 
   def getStatePension(nino: String, taxYear: Int): Action[AnyContent] = Action.async { implicit request =>
     relationshipAuthService.withAuthorisedRelationship(Nino(nino)) { _ =>
@@ -36,7 +39,8 @@ class StatePensionController @Inject()(val employmentHistoryService: EmploymentH
     }
   }
 
-  private def retrieveStatePension(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Result] = toResult {
-    employmentHistoryService.getStatePension(nino, taxYear)
-  }
+  private def retrieveStatePension(nino: Nino, taxYear: TaxYear)(implicit hc: HeaderCarrier): Future[Result] =
+    toResult {
+      employmentHistoryService.getStatePension(nino, taxYear)
+    }
 }

@@ -32,36 +32,38 @@ object EmploymentPaymentType {
   case object StatePensionLumpSum extends EmploymentPaymentType { val name = "StatePensionLumpSum" }
 
   def apply(name: String): EmploymentPaymentType = name.trim match {
-    case OccupationalPension.name => OccupationalPension
-    case JobseekersAllowance.name => JobseekersAllowance
-    case IncapacityBenefit.name => IncapacityBenefit
+    case OccupationalPension.name           => OccupationalPension
+    case JobseekersAllowance.name           => JobseekersAllowance
+    case IncapacityBenefit.name             => IncapacityBenefit
     case EmploymentAndSupportAllowance.name => EmploymentAndSupportAllowance
-    case StatePensionLumpSum.name => StatePensionLumpSum
+    case StatePensionLumpSum.name           => StatePensionLumpSum
   }
 
   def unapply(paymentType: EmploymentPaymentType): Option[String] = Some(paymentType.name)
 
-  def paymentType(payeReference: String,
-            receivingOccupationalPension: Boolean,
-            receivingJobSeekersAllowance: Boolean = false): Option[EmploymentPaymentType] = {
-    if(receivingOccupationalPension) {
+  def paymentType(
+    payeReference: String,
+    receivingOccupationalPension: Boolean,
+    receivingJobSeekersAllowance: Boolean = false
+  ): Option[EmploymentPaymentType] =
+    if (receivingOccupationalPension) {
       Some(OccupationalPension)
     } else if (receivingJobSeekersAllowance) {
       Some(JobseekersAllowance)
     } else {
       payeReference match {
-        case "892/BA500" => Some(IncapacityBenefit)
-        case "267/ESA500" => Some(EmploymentAndSupportAllowance)
-        case "267/LS500" => Some(StatePensionLumpSum)
+        case "892/BA500"   => Some(IncapacityBenefit)
+        case "267/ESA500"  => Some(EmploymentAndSupportAllowance)
+        case "267/LS500"   => Some(StatePensionLumpSum)
         case "475/BB00987" => Some(JobseekersAllowance)
-        case _ => None
+        case _             => None
       }
     }
-  }
 
   private implicit val reads: Reads[EmploymentPaymentType] = {
-    case JsString(value) => Try(JsSuccess(EmploymentPaymentType(value))).getOrElse(JsError(s"Invalid EmploymentPaymentType $value"))
-    case invalid => JsError(s"Invalid EmploymentPaymentType $invalid")
+    case JsString(value) =>
+      Try(JsSuccess(EmploymentPaymentType(value))).getOrElse(JsError(s"Invalid EmploymentPaymentType $value"))
+    case invalid         => JsError(s"Invalid EmploymentPaymentType $invalid")
   }
 
   private implicit val writes: Writes[EmploymentPaymentType] = (o: EmploymentPaymentType) => JsString(o.name)

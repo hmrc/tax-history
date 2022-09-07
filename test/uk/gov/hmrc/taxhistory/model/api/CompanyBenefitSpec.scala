@@ -41,9 +41,8 @@ import uk.gov.hmrc.taxhistory.utils.TestUtil
 import java.util.UUID
 
 class CompanyBenefitSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
-
-  lazy val companyBenefitJson = Json.parse(
-    """
+  // scalastyle:off magic.number
+  lazy val companyBenefitJson     = Json.parse("""
       |{
       |  "companyBenefitId":"c9923a63-4208-4e03-926d-7c7c88adc7ee",
       |  "iabdType":"companyBenefitType",
@@ -53,7 +52,6 @@ class CompanyBenefitSpec extends TestUtil with AnyWordSpecLike with Matchers wit
       |}
     """.stripMargin)
   lazy val companyBenefitListJson = JsArray(Seq(companyBenefitJson))
-
 
   lazy val companyBenefit = CompanyBenefit(
     companyBenefitId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
@@ -74,7 +72,7 @@ class CompanyBenefitSpec extends TestUtil with AnyWordSpecLike with Matchers wit
     "generate companyBenefitId when none is supplied" in {
       val comBenefit = CompanyBenefit(iabdType = "otherCompanyBenefitType", amount = BigDecimal(10.00))
       comBenefit.companyBenefitId.toString.nonEmpty shouldBe true
-      comBenefit.companyBenefitId shouldNot be(companyBenefit.companyBenefitId)
+      comBenefit.companyBenefitId                  shouldNot be(companyBenefit.companyBenefitId)
     }
     "transform into Json from object list correctly " in {
       Json.toJson(companyBenefitList) shouldBe companyBenefitListJson
@@ -85,10 +83,14 @@ class CompanyBenefitSpec extends TestUtil with AnyWordSpecLike with Matchers wit
 
     "transform into Json with an 'isForecastBenefit' field" in {
       val forecastSource = Some(1)
-      val actualSource = Some(19)
-      (Json.toJson(companyBenefit.copy(source = actualSource)) \ "isForecastBenefit") shouldBe JsDefined(JsBoolean(false))
-      (Json.toJson(companyBenefit.copy(source = forecastSource)) \ "isForecastBenefit") shouldBe JsDefined(JsBoolean(true))
-      (Json.toJson(companyBenefit.copy(source = None)) \ "isForecastBenefit") shouldBe JsDefined(JsBoolean(true))
+      val actualSource   = Some(19)
+      (Json.toJson(companyBenefit.copy(source = actualSource)) \ "isForecastBenefit")   shouldBe JsDefined(
+        JsBoolean(false)
+      )
+      (Json.toJson(companyBenefit.copy(source = forecastSource)) \ "isForecastBenefit") shouldBe JsDefined(
+        JsBoolean(true)
+      )
+      (Json.toJson(companyBenefit.copy(source = None)) \ "isForecastBenefit")           shouldBe JsDefined(JsBoolean(true))
     }
 
     "determine the 'isForecastBenefit' flag" when {
@@ -108,9 +110,9 @@ class CompanyBenefitSpec extends TestUtil with AnyWordSpecLike with Matchers wit
 
       }
       "source is some other number, then it is forecast" in {
-        val p11dSources = Seq(19, 21, 28, 29)
+        val p11dSources     = Seq(19, 21, 28, 29)
         val forecastSources = (1 to 200).filterNot(p11dSources.contains)
-        forecastSources.foreach{ forecastSource =>
+        forecastSources.foreach { forecastSource =>
           benefit.copy(source = Some(forecastSource)).isForecastBenefit shouldBe true
         }
       }
@@ -119,6 +121,5 @@ class CompanyBenefitSpec extends TestUtil with AnyWordSpecLike with Matchers wit
       }
     }
   }
+  // scalastyle:on magic.number
 }
-
-

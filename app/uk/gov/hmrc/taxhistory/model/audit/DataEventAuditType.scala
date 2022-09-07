@@ -27,5 +27,4 @@ trait DataEventTransaction
 case object PAYEForAgents extends DataEventTransaction
 case object AgentViewedClient extends DataEventTransaction
 
-
 case class DataEventDetail(detail: Map[String, String])

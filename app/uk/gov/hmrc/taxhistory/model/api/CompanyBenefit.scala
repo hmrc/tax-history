@@ -20,17 +20,22 @@ import java.util.UUID
 
 import play.api.libs.json.{Json, _}
 
-case class CompanyBenefit(companyBenefitId: UUID = UUID.randomUUID(),
-                          iabdType: String,
-                          amount: BigDecimal,
-                          source: Option[Int] = None) {
+case class CompanyBenefit(
+  companyBenefitId: UUID = UUID.randomUUID(),
+  iabdType: String,
+  amount: BigDecimal,
+  source: Option[Int] = None
+) {
   def isForecastBenefit: Boolean = {
-    val P11D_ECS = 19
-    val P11D_Manual = 21
-    val P11D_Assessed = 28
+    val P11D_ECS         = 19
+    val P11D_Manual      = 21
+    val P11D_Assessed    = 28
     val P11D_P9D_Amended = 29
 
-    val isP11D = source.contains(P11D_ECS) || source.contains(P11D_Manual) || source.contains(P11D_Assessed) || source.contains(P11D_P9D_Amended)
+    val isP11D     =
+      source.contains(P11D_ECS) || source.contains(P11D_Manual) || source.contains(P11D_Assessed) || source.contains(
+        P11D_P9D_Amended
+      )
     val isForecast = !isP11D
 
     isForecast

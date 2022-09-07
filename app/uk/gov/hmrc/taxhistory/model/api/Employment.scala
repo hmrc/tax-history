@@ -27,26 +27,30 @@ import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType._
 import uk.gov.hmrc.time.TaxYear
 import play.api.libs.json.JodaWrites._
 
-case class Employment(employmentId: UUID = UUID.randomUUID(),
-                      startDate: Option[LocalDate],
-                      endDate: Option[LocalDate] = None,
-                      payeReference: String,
-                      employerName: String,
-                      companyBenefitsURI: Option[String] = None,
-                      payAndTaxURI: Option[String] = None,
-                      employmentURI: Option[String] = None,
-                      employmentPaymentType: Option[EmploymentPaymentType] = None,
-                      employmentStatus: EmploymentStatus,
-                      worksNumber: String) {
+case class Employment(
+  employmentId: UUID = UUID.randomUUID(),
+  startDate: Option[LocalDate],
+  endDate: Option[LocalDate] = None,
+  payeReference: String,
+  employerName: String,
+  companyBenefitsURI: Option[String] = None,
+  payAndTaxURI: Option[String] = None,
+  employmentURI: Option[String] = None,
+  employmentPaymentType: Option[EmploymentPaymentType] = None,
+  employmentStatus: EmploymentStatus,
+  worksNumber: String
+) {
 
   def isOccupationalPension: Boolean = employmentPaymentType.contains(OccupationalPension)
   def isJobseekersAllowance: Boolean = employmentPaymentType.contains(JobseekersAllowance)
 
   def enrichWithURIs(taxYear: Int): Employment = {
     val baseURI = s"/$taxYear/employments/${employmentId.toString}"
-    this.copy(employmentURI = Some(baseURI),
+    this.copy(
+      employmentURI = Some(baseURI),
       companyBenefitsURI = Some(baseURI + "/company-benefits"),
-      payAndTaxURI = Some(baseURI + "/pay-and-tax"))
+      payAndTaxURI = Some(baseURI + "/pay-and-tax")
+    )
   }
 }
 
@@ -84,8 +88,7 @@ object Employment {
       (__ \ "employmentPaymentType").readNullable[EmploymentPaymentType] and
       __.read[EmploymentStatus] and
       (__ \ "worksNumber").read[String]
-    ) (Employment.apply _)
-
+  )(Employment.apply _)
 
   implicit val jsonWrites: Writes[Employment] = (
     (__ \ "employmentId").write[UUID] and
@@ -99,6 +102,6 @@ object Employment {
       (__ \ "employmentPaymentType").writeNullable[EmploymentPaymentType] and
       __.write[EmploymentStatus] and
       (__ \ "worksNumber").write[String]
-    ) (unlift(Employment.unapply))
+  )(unlift(Employment.unapply))
 
 }

@@ -26,17 +26,23 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CompanyBenefitController @Inject()(val employmentHistoryService: EmploymentHistoryService,
-                                         val relationshipAuthService: RelationshipAuthService,
-                                         val cc: ControllerComponents)(implicit val ec: ExecutionContext) extends TaxHistoryController(cc) {
+class CompanyBenefitController @Inject() (
+  val employmentHistoryService: EmploymentHistoryService,
+  val relationshipAuthService: RelationshipAuthService,
+  val cc: ControllerComponents
+)(implicit val ec: ExecutionContext)
+    extends TaxHistoryController(cc) {
 
-  def getCompanyBenefits(nino: String, taxYear: Int, employmentId: String): Action[AnyContent] = Action.async { implicit request =>
-    relationshipAuthService.withAuthorisedRelationship(Nino(nino)) { _ =>
-      retrieveCompanyBenefits(Nino(nino), TaxYear(taxYear), employmentId)
-    }
+  def getCompanyBenefits(nino: String, taxYear: Int, employmentId: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      relationshipAuthService.withAuthorisedRelationship(Nino(nino)) { _ =>
+        retrieveCompanyBenefits(Nino(nino), TaxYear(taxYear), employmentId)
+      }
   }
 
-  private def retrieveCompanyBenefits(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit hc: HeaderCarrier): Future[Result] = toResult {
+  private def retrieveCompanyBenefits(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit
+    hc: HeaderCarrier
+  ): Future[Result] = toResult {
     employmentHistoryService.getCompanyBenefits(nino, taxYear, employmentId)
   }
 }

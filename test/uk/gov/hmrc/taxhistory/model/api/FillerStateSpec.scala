@@ -46,15 +46,17 @@ class FillerStateSpec extends TestUtil with AnyWordSpecLike with Matchers with O
       "return Some(EncompassedEmployment)" when {
         "the filler has the same start and end days as the employment" in {
           val start = LocalDate.parse("2010-10-10")
-          val end = LocalDate.parse("2010-10-11")
+          val end   = LocalDate.parse("2010-10-11")
           FillerState invokePrivate encompassed(start, end, start, end) shouldBe Some(EncompassedByEmployment)
         }
         "the filler has a start and end day both lying within the employment" in {
-          val emplStart = LocalDate.parse("2010-10-10")
-          val emplEnd = LocalDate.parse("2010-10-20")
+          val emplStart   = LocalDate.parse("2010-10-10")
+          val emplEnd     = LocalDate.parse("2010-10-20")
           val fillerStart = emplStart.plusDays(1)
-          val fillerEnd = emplEnd.minusDays(1)
-          FillerState invokePrivate encompassed(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe Some(EncompassedByEmployment)
+          val fillerEnd   = emplEnd.minusDays(1)
+          FillerState invokePrivate encompassed(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe Some(
+            EncompassedByEmployment
+          )
         }
         "the employment and filler's start and end days all lie on the same day" in {
           val date = LocalDate.parse("2010-10-10")
@@ -65,33 +67,33 @@ class FillerStateSpec extends TestUtil with AnyWordSpecLike with Matchers with O
       "return None" when {
         "the filler has a start day before the employment and an end day after the employment" in {
           val emplStart = LocalDate.parse("2010-10-10")
-          val emplEnd = LocalDate.parse("2010-10-20")
+          val emplEnd   = LocalDate.parse("2010-10-20")
 
           val fillerStart = emplStart.minusDays(1)
-          val fillerEnd = emplEnd.plusDays(1)
+          val fillerEnd   = emplEnd.plusDays(1)
           FillerState invokePrivate encompassed(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe None
         }
         "the filler has a start day before the employment and an end day lying within the employment" in {
           val emplStart = LocalDate.parse("2010-10-10")
-          val emplEnd = LocalDate.parse("2010-10-20")
+          val emplEnd   = LocalDate.parse("2010-10-20")
 
           val fillerStart = emplStart.minusDays(1)
-          val fillerEnd = emplEnd.minusDays(1)
+          val fillerEnd   = emplEnd.minusDays(1)
           FillerState invokePrivate encompassed(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe None
         }
         "the filler has a start day lying within the employment and an end day after the employment" in {
           val emplStart = LocalDate.parse("2010-10-10")
-          val emplEnd = LocalDate.parse("2010-10-20")
+          val emplEnd   = LocalDate.parse("2010-10-20")
 
           val fillerStart = emplStart.plusDays(1)
-          val fillerEnd = emplEnd.plusDays(1)
+          val fillerEnd   = emplEnd.plusDays(1)
           FillerState invokePrivate encompassed(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe None
         }
         "the filler has no overlap with the employment" in {
-          val emplStart = LocalDate.parse("2010-10-10")
-          val emplEnd = LocalDate.parse("2010-10-20")
+          val emplStart   = LocalDate.parse("2010-10-10")
+          val emplEnd     = LocalDate.parse("2010-10-20")
           val fillerStart = LocalDate.parse("2010-11-10")
-          val fillerEnd = LocalDate.parse("2010-11-20")
+          val fillerEnd   = LocalDate.parse("2010-11-20")
           FillerState invokePrivate encompassed(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe None
         }
       }
@@ -102,33 +104,39 @@ class FillerStateSpec extends TestUtil with AnyWordSpecLike with Matchers with O
 
       "return Some(OverlapEmploymentStart)" when {
         "the filler has a start day before the employment and an end day lying within the employment" in {
-          val emplStart = LocalDate.parse("2010-10-10")
-          val emplEnd = LocalDate.parse("2010-10-20")
+          val emplStart   = LocalDate.parse("2010-10-10")
+          val emplEnd     = LocalDate.parse("2010-10-20")
           val fillerStart = emplStart.minusDays(1)
-          val fillerEnd = emplEnd.minusDays(1)
-          FillerState invokePrivate overlapStart(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe Some(OverlapEmploymentStart)
+          val fillerEnd   = emplEnd.minusDays(1)
+          FillerState invokePrivate overlapStart(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe Some(
+            OverlapEmploymentStart
+          )
         }
         "the filler starts before and ends after the employment" in {
-          val emplStart = LocalDate.parse("2010-10-10")
-          val emplEnd = LocalDate.parse("2010-10-20")
+          val emplStart   = LocalDate.parse("2010-10-10")
+          val emplEnd     = LocalDate.parse("2010-10-20")
           val fillerStart = emplStart.minusDays(1)
-          val fillerEnd = emplEnd.plusDays(1)
-          FillerState invokePrivate overlapStart(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe Some(OverlapEmploymentStart)
+          val fillerEnd   = emplEnd.plusDays(1)
+          FillerState invokePrivate overlapStart(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe Some(
+            OverlapEmploymentStart
+          )
         }
         "the filler starts before the employment ends on the same day as the start of the employment" in {
           val emplStart = LocalDate.parse("2010-10-10")
-          val emplEnd = LocalDate.parse("2010-10-20")
+          val emplEnd   = LocalDate.parse("2010-10-20")
 
           val fillerStart = emplStart.minusDays(1)
-          val fillerEnd = emplStart
-          FillerState invokePrivate overlapStart(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe Some(OverlapEmploymentStart)
+          val fillerEnd   = emplStart
+          FillerState invokePrivate overlapStart(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe Some(
+            OverlapEmploymentStart
+          )
         }
       }
 
       "return None" when {
         "the filler has the same start and end days as the employment" in {
           val start = LocalDate.parse("2010-10-10")
-          val end = LocalDate.parse("2010-10-11")
+          val end   = LocalDate.parse("2010-10-11")
           FillerState invokePrivate overlapStart(start, end, start, end) shouldBe None
         }
         "the employment and filler's start and end days all lie on the same day" in {
@@ -137,18 +145,18 @@ class FillerStateSpec extends TestUtil with AnyWordSpecLike with Matchers with O
         }
         "the filler has a start day lying within the employment and an end day after the employment" in {
           val emplStart = LocalDate.parse("2010-10-10")
-          val emplEnd = LocalDate.parse("2010-10-20")
+          val emplEnd   = LocalDate.parse("2010-10-20")
 
           val fillerStart = emplStart.plusDays(1)
-          val fillerEnd = emplEnd.plusDays(1)
+          val fillerEnd   = emplEnd.plusDays(1)
           FillerState invokePrivate overlapStart(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe None
         }
         "the filler starts and ends before the employment starts" in {
           val emplStart = LocalDate.parse("2010-10-10")
-          val emplEnd = LocalDate.parse("2010-10-20")
+          val emplEnd   = LocalDate.parse("2010-10-20")
 
           val fillerStart = emplStart.minusDays(2)
-          val fillerEnd = emplStart.minusDays(1)
+          val fillerEnd   = emplStart.minusDays(1)
           FillerState invokePrivate overlapStart(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe None
         }
       }
@@ -159,33 +167,39 @@ class FillerStateSpec extends TestUtil with AnyWordSpecLike with Matchers with O
 
       "return Some(OverlapEmploymentEnd)" when {
         "the filler has a start day lying within the employment and an end day after the employment" in {
-          val emplStart = LocalDate.parse("2010-10-10")
-          val emplEnd = LocalDate.parse("2010-10-20")
+          val emplStart   = LocalDate.parse("2010-10-10")
+          val emplEnd     = LocalDate.parse("2010-10-20")
           val fillerStart = emplStart.plusDays(1)
-          val fillerEnd = emplEnd.plusDays(1)
-          FillerState invokePrivate overlapEnd(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe Some(OverlapEmploymentEnd)
+          val fillerEnd   = emplEnd.plusDays(1)
+          FillerState invokePrivate overlapEnd(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe Some(
+            OverlapEmploymentEnd
+          )
         }
         "the filler starts before and ends after the employment" in {
-          val emplStart = LocalDate.parse("2010-10-10")
-          val emplEnd = LocalDate.parse("2010-10-20")
+          val emplStart   = LocalDate.parse("2010-10-10")
+          val emplEnd     = LocalDate.parse("2010-10-20")
           val fillerStart = emplStart.minusDays(1)
-          val fillerEnd = emplEnd.plusDays(1)
-          FillerState invokePrivate overlapEnd(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe Some(OverlapEmploymentEnd)
+          val fillerEnd   = emplEnd.plusDays(1)
+          FillerState invokePrivate overlapEnd(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe Some(
+            OverlapEmploymentEnd
+          )
         }
         "the filler starts on the same day as the end of the employment and ends after the employment" in {
           val emplStart = LocalDate.parse("2010-10-10")
-          val emplEnd = LocalDate.parse("2010-10-20")
+          val emplEnd   = LocalDate.parse("2010-10-20")
 
           val fillerStart = emplEnd
-          val fillerEnd = emplEnd.plusDays(1)
-          FillerState invokePrivate overlapEnd(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe Some(OverlapEmploymentEnd)
+          val fillerEnd   = emplEnd.plusDays(1)
+          FillerState invokePrivate overlapEnd(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe Some(
+            OverlapEmploymentEnd
+          )
         }
       }
 
       "return None" when {
         "the filler has the same start and end days as the employment" in {
           val start = LocalDate.parse("2010-10-10")
-          val end = LocalDate.parse("2010-10-11")
+          val end   = LocalDate.parse("2010-10-11")
           FillerState invokePrivate overlapEnd(start, end, start, end) shouldBe None
         }
         "the employment and filler's start and end days all lie on the same day" in {
@@ -194,18 +208,18 @@ class FillerStateSpec extends TestUtil with AnyWordSpecLike with Matchers with O
         }
         "the filler starts before and ends within the employment" in {
           val emplStart = LocalDate.parse("2010-10-10")
-          val emplEnd = LocalDate.parse("2010-10-20")
+          val emplEnd   = LocalDate.parse("2010-10-20")
 
           val fillerStart = emplStart.minusDays(1)
-          val fillerEnd = emplEnd.minusDays(1)
+          val fillerEnd   = emplEnd.minusDays(1)
           FillerState invokePrivate overlapEnd(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe None
         }
         "the filler starts and ends after the employment ends" in {
           val emplStart = LocalDate.parse("2010-10-10")
-          val emplEnd = LocalDate.parse("2010-10-20")
+          val emplEnd   = LocalDate.parse("2010-10-20")
 
           val fillerStart = emplEnd.plusDays(1)
-          val fillerEnd = emplEnd.plusDays(2)
+          val fillerEnd   = emplEnd.plusDays(2)
           FillerState invokePrivate overlapEnd(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe None
         }
       }
@@ -216,18 +230,20 @@ class FillerStateSpec extends TestUtil with AnyWordSpecLike with Matchers with O
 
       "return Some(OverlapEmployment)" when {
         "the filler starts before and ends after the employment" in {
-          val emplStart = LocalDate.parse("2010-10-10")
-          val emplEnd = LocalDate.parse("2010-10-20")
+          val emplStart   = LocalDate.parse("2010-10-10")
+          val emplEnd     = LocalDate.parse("2010-10-20")
           val fillerStart = emplStart.minusDays(1)
-          val fillerEnd = emplEnd.plusDays(1)
-          FillerState invokePrivate overlapCompletely(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe Some(OverlapEmployment)
+          val fillerEnd   = emplEnd.plusDays(1)
+          FillerState invokePrivate overlapCompletely(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe Some(
+            OverlapEmployment
+          )
         }
       }
 
       "return None" when {
         "the filler has the same start and end days as the employment" in {
           val start = LocalDate.parse("2010-10-10")
-          val end = LocalDate.parse("2010-10-11")
+          val end   = LocalDate.parse("2010-10-11")
           FillerState invokePrivate overlapCompletely(start, end, start, end) shouldBe None
         }
         "the employment and filler's start and end days all lie on the same day" in {
@@ -236,18 +252,18 @@ class FillerStateSpec extends TestUtil with AnyWordSpecLike with Matchers with O
         }
         "the filler starts and ends within the employment" in {
           val emplStart = LocalDate.parse("2010-10-10")
-          val emplEnd = LocalDate.parse("2010-10-20")
+          val emplEnd   = LocalDate.parse("2010-10-20")
 
           val fillerStart = emplStart.plusDays(1)
-          val fillerEnd = emplEnd.minusDays(1)
+          val fillerEnd   = emplEnd.minusDays(1)
           FillerState invokePrivate overlapCompletely(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe None
         }
         "the filler starts and ends before the employment starts" in {
           val emplStart = LocalDate.parse("2010-10-10")
-          val emplEnd = LocalDate.parse("2010-10-20")
+          val emplEnd   = LocalDate.parse("2010-10-20")
 
           val fillerStart = emplStart.minusDays(2)
-          val fillerEnd = emplStart.minusDays(1)
+          val fillerEnd   = emplStart.minusDays(1)
           FillerState invokePrivate overlapCompletely(fillerStart, fillerEnd, emplStart, emplEnd) shouldBe None
         }
       }
@@ -257,7 +273,7 @@ class FillerStateSpec extends TestUtil with AnyWordSpecLike with Matchers with O
 
   "DateComparisonOps" when {
     val testDateEarlier = LocalDate.parse("2010-10-10")
-    val testDateLater = testDateEarlier.plusDays(1)
+    val testDateLater   = testDateEarlier.plusDays(1)
 
     import FillerState.DateComparisonOps
 
@@ -272,7 +288,7 @@ class FillerStateSpec extends TestUtil with AnyWordSpecLike with Matchers with O
         testDateLater.isEqualOrBefore(testDateEarlier) shouldBe false
       }
     }
-    "isEqualOrAfter is called" should {
+    "isEqualOrAfter is called"  should {
       "return true when first date is equal to second date" in {
         testDateEarlier.isEqualOrAfter(testDateEarlier) shouldBe true
       }
@@ -285,5 +301,3 @@ class FillerStateSpec extends TestUtil with AnyWordSpecLike with Matchers with O
     }
   }
 }
-
-

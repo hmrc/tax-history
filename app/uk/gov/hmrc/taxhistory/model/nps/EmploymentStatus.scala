@@ -27,12 +27,13 @@ object EmploymentStatus {
   case object Ceased extends EmploymentStatus
   case object Unknown extends EmploymentStatus
 
-  private val LiveCode = 1
+  private val LiveCode              = 1
   private val PotentiallyCeasedCode = 2
-  private val CeasedCode = 3
-  private val UnknownCode = 99 // Code 99, Unknown, is internal to tax-history, and is not an wider HMRC employment status
+  private val CeasedCode            = 3
+  private val UnknownCode           =
+    99 // Code 99, Unknown, is internal to tax-history, and is not an wider HMRC employment status
 
-  implicit val jsonReads: Reads[EmploymentStatus] = {
+  implicit val jsonReads: Reads[EmploymentStatus] =
     (__ \ "employmentStatus").read[Int].flatMap[EmploymentStatus] {
       case LiveCode              => Reads(_ => JsSuccess(Live))
       case PotentiallyCeasedCode => Reads(_ => JsSuccess(PotentiallyCeased))
@@ -40,12 +41,11 @@ object EmploymentStatus {
       case UnknownCode           => Reads(_ => JsSuccess(Unknown))
       case _                     => Reads(_ => JsError(JsPath \ "employmentStatus", JsonValidationError("Invalid EmploymentStatus")))
     }
-  }
 
-    implicit val jsonWrites: Writes[EmploymentStatus] = Writes[EmploymentStatus] {
-      case Live              => Json.obj("employmentStatus" -> LiveCode)
-      case PotentiallyCeased => Json.obj("employmentStatus" -> PotentiallyCeasedCode)
-      case Ceased            => Json.obj("employmentStatus" -> CeasedCode)
-      case Unknown           => Json.obj("employmentStatus" -> UnknownCode)
-    }
+  implicit val jsonWrites: Writes[EmploymentStatus] = Writes[EmploymentStatus] {
+    case Live              => Json.obj("employmentStatus" -> LiveCode)
+    case PotentiallyCeased => Json.obj("employmentStatus" -> PotentiallyCeasedCode)
+    case Ceased            => Json.obj("employmentStatus" -> CeasedCode)
+    case Unknown           => Json.obj("employmentStatus" -> UnknownCode)
+  }
 }

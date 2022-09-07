@@ -28,7 +28,7 @@ import uk.gov.hmrc.auth
 import uk.gov.hmrc.auth.core
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
-import uk.gov.hmrc.auth.core.{ AuthConnector, BearerTokenExpired, Enrolment, EnrolmentIdentifier, InsufficientEnrolments}
+import uk.gov.hmrc.auth.core.{AuthConnector, BearerTokenExpired, Enrolment, EnrolmentIdentifier, InsufficientEnrolments}
 import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.connectors.CitizenDetailsConnector
@@ -45,10 +45,10 @@ class SaAuthServiceSpec extends PlaySpec with MockitoSugar {
     val foundSaUtr = SaUtr("UtrFoundForThatNino")
 
     trait Setup {
-      implicit val hc: HeaderCarrier = HeaderCarrier()
+      implicit val hc: HeaderCarrier                           = HeaderCarrier()
       val mockCitizenDetailsConnector: CitizenDetailsConnector = mock[CitizenDetailsConnector]
-      val mockAuthConnector: AuthConnector = mock[AuthConnector]
-      val mockSaAuthService: SaAuthService = new SaAuthService(mockAuthConnector, mockCitizenDetailsConnector)
+      val mockAuthConnector: AuthConnector                     = mock[AuthConnector]
+      val mockSaAuthService: SaAuthService                     = new SaAuthService(mockAuthConnector, mockCitizenDetailsConnector)
 
       val selfAssessmentForAgents648Predicate: Enrolment =
         Enrolment("IR-SA")
@@ -84,55 +84,60 @@ class SaAuthServiceSpec extends PlaySpec with MockitoSugar {
     }
   }
 
-    "SaAuthService" should {
-      trait Setup {
-        val mockPredicate: Predicate = mock[Predicate]
-        val mockCitizenDetailsConnector: CitizenDetailsConnector = mock[CitizenDetailsConnector]
-        val mockAuthConnector: AuthConnector = mock[AuthConnector]
-        val mockSaAuthService: SaAuthService = new SaAuthService(mockAuthConnector, mockCitizenDetailsConnector)
-        implicit val hc: HeaderCarrier = HeaderCarrier()
-        implicit val request: Request[AnyContent] = FakeRequest()
-        val newEnrolments = Set(
-          Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")), state="",delegatedAuthRule = None)
+  "SaAuthService" should {
+    trait Setup {
+      val mockPredicate: Predicate                             = mock[Predicate]
+      val mockCitizenDetailsConnector: CitizenDetailsConnector = mock[CitizenDetailsConnector]
+      val mockAuthConnector: AuthConnector                     = mock[AuthConnector]
+      val mockSaAuthService: SaAuthService                     = new SaAuthService(mockAuthConnector, mockCitizenDetailsConnector)
+      implicit val hc: HeaderCarrier                           = HeaderCarrier()
+      implicit val request: Request[AnyContent]                = FakeRequest()
+      val newEnrolments                                        = Set(
+        Enrolment(
+          "HMRC-AS-AGENT",
+          Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")),
+          state = "",
+          delegatedAuthRule = None
         )
+      )
 
-        when(mockCitizenDetailsConnector.lookupSaUtr(meq(validNino))(any()))
-          .thenReturn(Future.successful(None))
-      }
+      when(mockCitizenDetailsConnector.lookupSaUtr(meq(validNino))(any()))
+        .thenReturn(Future.successful(None))
+    }
 
-      "invoke code block and respond with its result when auth predicate passes" in
-        new Setup {
-          when(mockAuthConnector.authorise(any(), meq(EmptyRetrieval))(any(), any()))
-            .thenReturn(Future.successful(()))
+    "invoke code block and respond with its result when auth predicate passes" in
+      new Setup {
+        when(mockAuthConnector.authorise(any(), meq(EmptyRetrieval))(any(), any()))
+          .thenReturn(Future.successful(()))
 
-          val result: Result = await(mockSaAuthService.withSaAuthorisation(validNino) { _ =>
-            Future.successful(Ok("Invoked block"))
+        val result: Result = await(mockSaAuthService.withSaAuthorisation(validNino) { _ =>
+          Future.successful(Ok("Invoked block"))
         })
 
         result mustBe Ok("Invoked block")
       }
 
-      "not invoke code block and respond with UNAUTHORIZED when auth predicate fails with NoActiveSession" in new Setup {
-        when(mockAuthConnector.authorise(any(), meq(EmptyRetrieval))(any(), any()))
-          .thenReturn(Future.failed(BearerTokenExpired()))
+    "not invoke code block and respond with UNAUTHORIZED when auth predicate fails with NoActiveSession" in new Setup {
+      when(mockAuthConnector.authorise(any(), meq(EmptyRetrieval))(any(), any()))
+        .thenReturn(Future.failed(BearerTokenExpired()))
 
-        val result: Future[Result] = mockSaAuthService.withSaAuthorisation(validNino) { _ =>
-          Future.successful(Ok)
-        }
-
-        status(result) mustBe UNAUTHORIZED
+      val result: Future[Result] = mockSaAuthService.withSaAuthorisation(validNino) { _ =>
+        Future.successful(Ok)
       }
 
-      "not invoke block and respond with FORBIDDEN when auth predicate fails with AuthorisationException" in new Setup {
-        when(mockAuthConnector.authorise(any(), meq(EmptyRetrieval))(any(), any()))
-          .thenReturn(Future.failed(InsufficientEnrolments()))
-
-        val result: Future[Result] = mockSaAuthService.withSaAuthorisation(validNino) { _ =>
-          Future.successful(Ok)
-        }
-
-        status(result) mustBe FORBIDDEN
-      }
+      status(result) mustBe UNAUTHORIZED
     }
+
+    "not invoke block and respond with FORBIDDEN when auth predicate fails with AuthorisationException" in new Setup {
+      when(mockAuthConnector.authorise(any(), meq(EmptyRetrieval))(any(), any()))
+        .thenReturn(Future.failed(InsufficientEnrolments()))
+
+      val result: Future[Result] = mockSaAuthService.withSaAuthorisation(validNino) { _ =>
+        Future.successful(Ok)
+      }
+
+      status(result) mustBe FORBIDDEN
+    }
+  }
 
 }

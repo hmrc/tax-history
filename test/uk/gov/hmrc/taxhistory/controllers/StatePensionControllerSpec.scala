@@ -37,23 +37,28 @@ import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class StatePensionControllerSpec extends AnyWordSpec with Matchers with OptionValues
-  with GuiceOneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
+class StatePensionControllerSpec
+    extends AnyWordSpec
+    with Matchers
+    with OptionValues
+    with GuiceOneServerPerSuite
+    with MockitoSugar
+    with TestUtil
+    with BeforeAndAfterEach {
 
   private val mockEmploymentHistoryService = mock[EmploymentHistoryService]
 
-  private val ninoWithAgent = randomNino()
+  private val ninoWithAgent    = randomNino()
   private val ninoWithoutAgent = randomNino()
 
   private val testStatePension = StatePension(BigDecimal(1023.33), "State Pension", None, None)
-  private val testTaxYear = TaxYear.current.previous.currentYear
+  private val testTaxYear      = TaxYear.current.previous.currentYear
 
-  val cc: ControllerComponents = stubControllerComponents()
+  val cc: ControllerComponents                    = stubControllerComponents()
   implicit val executionContext: ExecutionContext = cc.executionContext
 
-  override def beforeEach: Unit = {
+  override def beforeEach: Unit =
     reset(mockEmploymentHistoryService)
-  }
 
   val testStatePensionController = new StatePensionController(
     employmentHistoryService = mockEmploymentHistoryService,

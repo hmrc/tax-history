@@ -32,11 +32,15 @@ trait Employments {
     endDate = None,
     payeReference = "Nothing",
     employerName = "An Employer",
-    None, None, None, None,
+    None,
+    None,
+    None,
+    None,
     employmentStatus = EmploymentStatus.Live,
-    testWorksNumber)
-
-  val liveOngoingEmployment = templateEmployment
+    testWorksNumber
+  )
+  // scalastyle:off magic.number
+  val liveOngoingEmployment      = templateEmployment
 
   val liveNoEndEmployment = templateEmployment.copy(startDate = Some(TaxYear.current.starts.plusDays(30)))
 
@@ -73,5 +77,6 @@ trait Employments {
     startDate = Some(TaxYear.current.starts.plusDays(90)),
     employmentStatus = EmploymentStatus.PotentiallyCeased
   )
+  // scalastyle:on magic.number
 
 }

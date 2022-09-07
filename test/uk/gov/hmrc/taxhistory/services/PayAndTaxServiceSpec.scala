@@ -36,18 +36,37 @@ import uk.gov.hmrc.time.TaxYear
 import java.util.UUID
 import scala.concurrent.Future
 
-
-class PayAndTaxServiceSpec extends AnyWordSpecLike with Matchers with OptionValues with ScalaFutures with MockitoSugar with TestUtil {
+class PayAndTaxServiceSpec
+    extends AnyWordSpecLike
+    with Matchers
+    with OptionValues
+    with ScalaFutures
+    with MockitoSugar
+    with TestUtil {
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  val testNino: Nino = randomNino()
+  val testNino: Nino             = randomNino()
+
+  private val taxYear1 = 2014
+  private val taxYear2 = 2016
 
   val testEmploymentHistoryService: EmploymentHistoryService = TestEmploymentHistoryService.createNew()
 
   val npsEmploymentResponse: List[NpsEmployment] = List(
     NpsEmployment(
-      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false,
-      otherIncomeSourceIndicator = false, Some(new LocalDate("2015-01-21")), None, receivingOccupationalPension = false, Live))
-
+      "AA000000",
+      1,
+      "531",
+      "J4816",
+      "Aldi",
+      Some("6044041000000"),
+      receivingJobSeekersAllowance = false,
+      otherIncomeSourceIndicator = false,
+      Some(new LocalDate("2015-01-21")),
+      None,
+      receivingOccupationalPension = false,
+      Live
+    )
+  )
 
   lazy val iabdsResponse: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
 
@@ -65,36 +84,15 @@ class PayAndTaxServiceSpec extends AnyWordSpecLike with Matchers with OptionValu
         .thenReturn(Future.successful(Some(rtiEmploymentResponse)))
       when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
         .thenReturn(Future.successful(Some(testNpsTaxAccount)))
-      val payAsYouEarn = testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)).futureValue
+      val payAsYouEarn = testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(taxYear2)).futureValue
 
       val payAndTax = payAsYouEarn.payAndTax
       payAndTax.size shouldBe 1
     }
 
     "successfully retrieve payAndTaxURI from cache" in {
-      lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
-      val testPayAndTax = Some(PayAndTax(
-        payAndTaxId = UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"),
-        taxablePayTotal = Some(2222.22),
-        taxablePayTotalIncludingEYU = Some(2222.23),
-        taxTotal = Some(111.11),
-        taxTotalIncludingEYU = Some(111.12),
-        studentLoan = Some(333.33),
-        paymentDate = Some(new LocalDate("2016-02-20")),
-        earlierYearUpdates = List())
-      )
-
-      testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye)
-
-      val payAndTax = testEmploymentHistoryService.getPayAndTax(Nino("AA000000A"), TaxYear(2014), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3").futureValue
-      payAndTax shouldBe testPayAndTax
-    }
-  }
-
-  "getAllPayAndTax" should {
-    "successfully retrieve all data from cache" in {
-      lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
-      val testPayAndTaxList = Map("01318d7c-bcd9-47e2-8c38-551e7ccdfae3" ->
+      lazy val paye     = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
+      val testPayAndTax = Some(
         PayAndTax(
           payAndTaxId = UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"),
           taxablePayTotal = Some(2222.22),
@@ -107,9 +105,36 @@ class PayAndTaxServiceSpec extends AnyWordSpecLike with Matchers with OptionValu
         )
       )
 
-      testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(2014)), paye)
+      testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(taxYear1)), paye)
 
-      val payAndTax: Map[String, PayAndTax] = testEmploymentHistoryService.getAllPayAndTax(Nino("AA000000A"), TaxYear(2014)).futureValue
+      val payAndTax = testEmploymentHistoryService
+        .getPayAndTax(Nino("AA000000A"), TaxYear(taxYear1), "01318d7c-bcd9-47e2-8c38-551e7ccdfae3")
+        .futureValue
+      payAndTax shouldBe testPayAndTax
+    }
+  }
+
+  "getAllPayAndTax" should {
+    "successfully retrieve all data from cache" in {
+      lazy val paye         = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
+      val testPayAndTaxList = Map(
+        "01318d7c-bcd9-47e2-8c38-551e7ccdfae3" ->
+          PayAndTax(
+            payAndTaxId = UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"),
+            taxablePayTotal = Some(2222.22),
+            taxablePayTotalIncludingEYU = Some(2222.23),
+            taxTotal = Some(111.11),
+            taxTotalIncludingEYU = Some(111.12),
+            studentLoan = Some(333.33),
+            paymentDate = Some(new LocalDate("2016-02-20")),
+            earlierYearUpdates = List()
+          )
+      )
+
+      testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), TaxYear(taxYear1)), paye)
+
+      val payAndTax: Map[String, PayAndTax] =
+        testEmploymentHistoryService.getAllPayAndTax(Nino("AA000000A"), TaxYear(taxYear1)).futureValue
       payAndTax shouldBe testPayAndTaxList
     }
   }

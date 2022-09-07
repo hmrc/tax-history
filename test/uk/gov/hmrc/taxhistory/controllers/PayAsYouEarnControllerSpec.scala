@@ -40,29 +40,36 @@ import uk.gov.hmrc.time.TaxYear
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
-class PayAsYouEarnControllerSpec extends PlaySpec with GuiceOneServerPerSuite with MockitoSugar with TestUtil with BeforeAndAfterEach {
+class PayAsYouEarnControllerSpec
+    extends PlaySpec
+    with GuiceOneServerPerSuite
+    with MockitoSugar
+    with TestUtil
+    with BeforeAndAfterEach {
 
-  val cc: ControllerComponents = stubControllerComponents()
+  val cc: ControllerComponents                    = stubControllerComponents()
   implicit val executionContext: ExecutionContext = cc.executionContext
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  implicit val hc: HeaderCarrier                  = HeaderCarrier()
 
   val testSaAuthService: TestSaAuthService = TestSaAuthService()
 
-  val mockCitizenDetailsConnector: CitizenDetailsConnector = mock[CitizenDetailsConnector]
+  val mockCitizenDetailsConnector: CitizenDetailsConnector   = mock[CitizenDetailsConnector]
   val mockEmploymentHistoryService: EmploymentHistoryService = mock[EmploymentHistoryService]
-  val mockAuthConnector: AuthConnector = mock[AuthConnector]
-  val mockSaAuthService: SaAuthService = mock[SaAuthService]
+  val mockAuthConnector: AuthConnector                       = mock[AuthConnector]
+  val mockSaAuthService: SaAuthService                       = mock[SaAuthService]
 
-  val testEmploymentId: UUID = testSaAuthService.testEmploymentId
+  val testEmploymentId: UUID   = testSaAuthService.testEmploymentId
   val testStartDate: LocalDate = testSaAuthService.testStartDate
-  val testPaye: PayAsYouEarn = testSaAuthService.testPaye
-  val validNino: Nino = testSaAuthService.validNino
-  val unauthorisedNino: Nino = testSaAuthService.unauthorisedNino
-  val forbiddenNino: Nino = testSaAuthService.forbiddenNino
+  val testPaye: PayAsYouEarn   = testSaAuthService.testPaye
+  val validNino: Nino          = testSaAuthService.validNino
+  val unauthorisedNino: Nino   = testSaAuthService.unauthorisedNino
+  val forbiddenNino: Nino      = testSaAuthService.forbiddenNino
 
-  override def beforeEach: Unit = {
+  private lazy val taxYear1 = 2015
+  private lazy val taxYear2 = 2016
+
+  override def beforeEach: Unit =
     reset(mockEmploymentHistoryService)
-  }
 
   val testCtrlr = new PayAsYouEarnController(mockEmploymentHistoryService, testSaAuthService, cc)
 
@@ -86,26 +93,25 @@ class PayAsYouEarnControllerSpec extends PlaySpec with GuiceOneServerPerSuite wi
     "secure access via the SaAuthorisationService" when {
       "not logged in" in {
         {
-          val result = testCtrlr.getPayAsYouEarn(unauthorisedNino, TaxYear(2016)).apply(FakeRequest())
+          val result = testCtrlr.getPayAsYouEarn(unauthorisedNino, TaxYear(taxYear2)).apply(FakeRequest())
           status(result) must be(UNAUTHORIZED)
 
-          //verify(mockSaAuthService).saAuthValidator
           verifyNoInteractions(mockEmploymentHistoryService)
         }
       }
 
       "not authorised to access the nino" in {
         {
-          val result = testCtrlr.getPayAsYouEarn(forbiddenNino, TaxYear(2016)).apply(FakeRequest())
+          val result = testCtrlr.getPayAsYouEarn(forbiddenNino, TaxYear(taxYear2)).apply(FakeRequest())
           status(result) must be(FORBIDDEN)
 
-          //verify(mockSaAuthService).saAuthValidator
           verifyNoInteractions(mockEmploymentHistoryService)
         }
       }
 
+      //TODO understand if this test is needed and fix
       "logged in and authorised to access the nino" in {
-        val result = testCtrlr.getPayAsYouEarn(validNino, TaxYear(2016)).apply(FakeRequest())
+        val result = testCtrlr.getPayAsYouEarn(validNino, TaxYear(taxYear2)).apply(FakeRequest())
         status(result) must be(OK)
 
         //verify(mockSaAuthService).saAuthValidator
@@ -113,20 +119,18 @@ class PayAsYouEarnControllerSpec extends PlaySpec with GuiceOneServerPerSuite wi
     }
 
     "respond with OK for successful get" in {
-      {
-        withSuccessfulGetFromCache {
-          val result = testCtrlr.getPayAsYouEarn(validNino, TaxYear(2016)).apply(FakeRequest())
-          status(result) must be(OK)
-        }
+
+      withSuccessfulGetFromCache {
+        val result = testCtrlr.getPayAsYouEarn(validNino, TaxYear(taxYear2)).apply(FakeRequest())
+        status(result) must be(OK)
       }
     }
 
     "respond with json serialised PayAsYouEarn" in {
-      {
-        withSuccessfulGetFromCache {
-          val result = testCtrlr.getPayAsYouEarn(validNino, TaxYear(2016)).apply(FakeRequest())
-          contentAsJson(result) must be(Json.parse(
-            s"""
+
+      withSuccessfulGetFromCache {
+        val result = testCtrlr.getPayAsYouEarn(validNino, TaxYear(taxYear2)).apply(FakeRequest())
+        contentAsJson(result) must be(Json.parse(s"""
                |{
                |  "employments" : [
                |    {
@@ -144,19 +148,18 @@ class PayAsYouEarnControllerSpec extends PlaySpec with GuiceOneServerPerSuite wi
                |  "payAndTax" : {}
                |}
           """.stripMargin))
-        }
       }
     }
 
     HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-      s"propagate error responses from upstream microservices: when exception is ${httpException.getClass.getSimpleName} and expected status is $expectedStatus" in {
-        {
+      s"propagate error responses from upstream microservices: when exception is ${httpException.getClass.getSimpleName} " +
+        s"and expected status is $expectedStatus" in {
+
           withFailedGetFromCache(httpException) {
-            val result = testCtrlr.getPayAsYouEarn(validNino, TaxYear(2015)).apply(FakeRequest())
+            val result = testCtrlr.getPayAsYouEarn(validNino, TaxYear(taxYear1)).apply(FakeRequest())
             status(result) must be(expectedStatus)
           }
         }
-      }
     }
   }
 }

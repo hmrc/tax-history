@@ -30,32 +30,33 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Uses MongoDB to cache instances of `PayAsYouEarn` for a given NINO and year.
   */
-class TaxHistoryMongoCacheService @Inject()(
-                                             mongoComponent: MongoComponent,
-                                             appConfig: AppConfig,
-                                             timestampSupport: TimestampSupport
-                                           )(implicit ec: ExecutionContext
-                                           ) extends MongoCacheRepository(
-  mongoComponent = mongoComponent,
-  collectionName = appConfig.mongoName,
-  ttl = appConfig.mongoExpiry,
-  timestampSupport = timestampSupport,
-  cacheIdType = CacheIdType.SimpleCacheId
-) with PayeCacheService with Logging {
+class TaxHistoryMongoCacheService @Inject() (
+  mongoComponent: MongoComponent,
+  appConfig: AppConfig,
+  timestampSupport: TimestampSupport
+)(implicit ec: ExecutionContext)
+    extends MongoCacheRepository(
+      mongoComponent = mongoComponent,
+      collectionName = appConfig.mongoName,
+      ttl = appConfig.mongoExpiry,
+      timestampSupport = timestampSupport,
+      cacheIdType = CacheIdType.SimpleCacheId
+    )
+    with PayeCacheService
+    with Logging {
 
   def insertOrUpdate(key: (Nino, TaxYear), value: PayAsYouEarn): Future[Option[PayAsYouEarn]] = {
     val (nino, taxYear) = key
-    val mongoId = nino.value
-    val mongoKey = taxYear.currentYear.toString
-    put(mongoId)(DataKey(mongoKey), value).map(_ => Some(value)).recoverWith {
-      case ex: Exception =>
-        logger.error(s"[TaxHistoryMongoCacheService][insertOrUpdate] failed with message: ${ex.getMessage}")
-        Future.successful(None)
+    val mongoId         = nino.value
+    val mongoKey        = taxYear.currentYear.toString
+    put(mongoId)(DataKey(mongoKey), value).map(_ => Some(value)).recoverWith { case ex: Exception =>
+      logger.error(s"[TaxHistoryMongoCacheService][insertOrUpdate] failed with message: ${ex.getMessage}")
+      Future.successful(None)
     }
   }
 
   private def getFromRepository(nino: Nino, taxYear: TaxYear): Future[Option[PayAsYouEarn]] = {
-    val mongoId = nino.value
+    val mongoId  = nino.value
     val mongoKey = taxYear.currentYear.toString
     get[PayAsYouEarn](mongoId)(DataKey(mongoKey))
   }
@@ -67,22 +68,23 @@ class TaxHistoryMongoCacheService @Inject()(
 
   def getOrElseInsert(key: (Nino, TaxYear))(defaultToInsert: => Future[PayAsYouEarn]): Future[PayAsYouEarn] = {
 
-    def insertDefault(): Future[PayAsYouEarn] = {
+    def insertDefault(): Future[PayAsYouEarn] =
       for {
-        toInsert <- defaultToInsert
+        toInsert        <- defaultToInsert
         insertionResult <- insertOrUpdate(key, toInsert)
       } yield {
-        if (insertionResult.isEmpty) logger.warn(s"[TaxHistoryMongoCacheService][insertDefault] Cache insertion failed for $key")
+        if (insertionResult.isEmpty) {
+          logger.warn(s"[TaxHistoryMongoCacheService][insertDefault] Cache insertion failed for $key")
+        }
         toInsert
       }
-    }
 
     for {
       cacheResult <- get(key)
       returnValue <- cacheResult match {
-        case Some(hit) => Future.successful(hit)
-        case None => insertDefault()
-      }
+                       case Some(hit) => Future.successful(hit)
+                       case None      => insertDefault()
+                     }
     } yield returnValue
   }
 }

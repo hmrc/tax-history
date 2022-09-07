@@ -31,71 +31,88 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
 
   lazy val getTaxAcoountResponseURLDummy: JsValue = loadFile("/json/nps/response/GetTaxAccount.json")
 
-  private val primaryEmploymentId = 12
-  private val actualPupCodedInCYPlusOne = 240
-  private val outStandingDebt = 145.75
-  private val underPayment = 15423.29
+  private val primaryEmploymentId              = 12
+  private val actualPupCodedInCYPlusOne        = 240
+  private val outStandingDebt                  = 145.75
+  private val underPayment                     = 15423.29
+  private val sequenceNumberInt                = 6
+  private val taDeductionType                  = 32
+  private val taAllowanceType                  = 11
+  private val taAllowanceSourceAmount          = 11500
+  private val testNpsIncomeSourceEmpId         = 6
+  private val testNpsIncomeSourceEmpTDN        = 961
+  private val testNpsIncomeSourceEmpType       = 23
+  private val testNpsIncomeBasisOperation      = 64
+  private val incomeSource1DeserialisedEmpId   = 12
+  private val incomeSource1DeserialisedEmpType = 1
+  private val incomeSource1DeserialisedEmpTDN  = 961
 
   private val taxAccount = getTaxAcoountResponseURLDummy.as[NpsTaxAccount](NpsTaxAccount.formats)
 
   private val testNpsEmployment = NpsEmployment(
     nino = "AA000000",
-    sequenceNumber = 6,
+    sequenceNumber = sequenceNumberInt,
     taxDistrictNumber = "961",
     payeNumber = "AZ00010",
     employerName = "Aldi",
     worksNumber = Some("6044041000000"),
-    receivingJobSeekersAllowance = false,
-    otherIncomeSourceIndicator = false,
     startDate = Some(new LocalDate("2015-01-21")),
     endDate = None,
-    receivingOccupationalPension = false,
     employmentStatus = Live
   )
 
-  private val testDeductions = List(
-    TaDeduction(`type` = 32, npsDescription = "savings income taxable at higher rate", amount = BigDecimal("38625"), sourceAmount = Some(0))
+  private val testDeductions      = List(
+    TaDeduction(
+      `type` = taDeductionType,
+      npsDescription = "savings income taxable at higher rate",
+      amount = BigDecimal("38625"),
+      sourceAmount = Some(0)
+    )
   )
-  private val testAllowances = List(
-    TaAllowance(`type` = 11, npsDescription = "personal allowance", amount = BigDecimal("11500"), sourceAmount = Some(11500))
+  private val testAllowances      = List(
+    TaAllowance(
+      `type` = taAllowanceType,
+      npsDescription = "personal allowance",
+      amount = BigDecimal("11500"),
+      sourceAmount = Some(taAllowanceSourceAmount)
+    )
   )
   private val testNpsIncomeSource = NpsIncomeSource(
-    employmentId = 6,
-    employmentTaxDistrictNumber = Some(961),
+    employmentId = testNpsIncomeSourceEmpId,
+    employmentTaxDistrictNumber = Some(testNpsIncomeSourceEmpTDN),
     employmentPayeRef = Some("AZ00010"),
     actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal(3.14)),
     deductions = testDeductions,
     allowances = testAllowances,
-    employmentType = Some(23),
+    employmentType = Some(testNpsIncomeSourceEmpType),
     taxCode = Some("TAX1234"),
-    basisOperation = Some(64)
+    basisOperation = Some(testNpsIncomeBasisOperation)
   )
 
   "NpsTaxAccount" when {
     "transforming NPS Get Tax Account API response Json correctly to NpsTaxAccount Model " in {
-      taxAccount shouldBe a[NpsTaxAccount]
-      taxAccount.getPrimaryEmploymentId shouldBe Some(primaryEmploymentId)
+      taxAccount                              shouldBe a[NpsTaxAccount]
+      taxAccount.getPrimaryEmploymentId       shouldBe Some(primaryEmploymentId)
       taxAccount.getActualPupCodedInCYPlusOne shouldBe Some(actualPupCodedInCYPlusOne)
-      taxAccount.getOutStandingDebt shouldBe Some(outStandingDebt)
-      taxAccount.getUnderPayment shouldBe Some(underPayment)
+      taxAccount.getOutStandingDebt           shouldBe Some(outStandingDebt)
+      taxAccount.getUnderPayment              shouldBe Some(underPayment)
     }
 
     "deserialising the 'incomeSources' field" should {
       val incomeSource1Deserialised = NpsIncomeSource(
-        employmentId = 12,
-        employmentType = Some(1),
+        employmentId = incomeSource1DeserialisedEmpId,
+        employmentType = Some(incomeSource1DeserialisedEmpType),
         actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal("240")),
         deductions = testDeductions,
         allowances = testAllowances,
         taxCode = Some("K7757"),
         basisOperation = None,
-        employmentTaxDistrictNumber = Some(961),
+        employmentTaxDistrictNumber = Some(incomeSource1DeserialisedEmpTDN),
         employmentPayeRef = Some("AZ00010")
       )
       val incomeSourcesDeserialised = List(incomeSource1Deserialised)
 
-      val incomeSourcesSerialised = Json.parse(
-        s"""
+      val incomeSourcesSerialised = Json.parse(s"""
            | [
            |   {
            |     "employmentId":12,
@@ -120,7 +137,8 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
       }
 
       "deserialise from a non-empty json array of allowances" in {
-        val jsonIncomeSourcesPresent = getTaxAcoountResponseURLDummy.as[JsObject] + ("incomeSources" -> incomeSourcesSerialised)
+        val jsonIncomeSourcesPresent =
+          getTaxAcoountResponseURLDummy.as[JsObject] + ("incomeSources"           -> incomeSourcesSerialised)
         fromJson[NpsTaxAccount](jsonIncomeSourcesPresent).get.incomeSources shouldBe incomeSourcesDeserialised
       }
 
@@ -130,7 +148,8 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
       }
 
       "deserialise when 'employmentTaxDistrictNumber' contains a null value (ASA-265)" in {
-        val noEmplTaxDistrictNumJson = (incomeSourcesSerialised \ 0).as[JsObject] + ("employmentTaxDistrictNumber" -> JsNull)
+        val noEmplTaxDistrictNumJson =
+          (incomeSourcesSerialised \ 0).as[JsObject] + ("employmentTaxDistrictNumber"             -> JsNull)
         fromJson[NpsIncomeSource](noEmplTaxDistrictNumJson).get.employmentTaxDistrictNumber shouldBe None
       }
 
@@ -144,89 +163,132 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
       }
 
       "deserialise when 'taxCode' contains a value that is not valid for the TaxCode domain class (ASA-265)" in {
-        val unusualTaxCode = "FNORDS"
+        val unusualTaxCode         = "FNORDS"
         assertThrows[IllegalArgumentException] {
           TaxCode(unusualTaxCode)
         }
-        val withUnusualTaxCodeJson = (incomeSourcesSerialised \ 0).as[JsObject] + ("taxCode" -> JsString(unusualTaxCode))
+        val withUnusualTaxCodeJson =
+          (incomeSourcesSerialised \ 0).as[JsObject] + ("taxCode" -> JsString(unusualTaxCode))
         val jsResult = fromJson[NpsIncomeSource](withUnusualTaxCodeJson)
-        jsResult shouldBe a[JsSuccess[_]]
+        jsResult             shouldBe a[JsSuccess[_]]
         jsResult.get.taxCode shouldBe Some(unusualTaxCode)
       }
     }
 
     "matchedIncomeSource is called" should {
       "return None when no employment and income source match" in {
-        val npsEmployment = NpsEmployment(
-          "AA000000", 6, "999", "AZ00010", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false,
-          otherIncomeSourceIndicator = false, Some(new LocalDate("2015-01-21")), None, receivingOccupationalPension = false, Live)
+        val sequenceNumber = 6
+        val npsEmployment  = NpsEmployment(
+          "AA000000",
+          sequenceNumber,
+          "999",
+          "AZ00010",
+          "Aldi",
+          Some("6044041000000"),
+          receivingJobSeekersAllowance = false,
+          otherIncomeSourceIndicator = false,
+          Some(new LocalDate("2015-01-21")),
+          None,
+          receivingOccupationalPension = false,
+          Live
+        )
 
         taxAccount.matchedIncomeSource(npsEmployment) shouldBe None
       }
 
       "return a single income source when income sources match the employment" in {
         val targetEmploymentId = 6
-        val npsEmployment = NpsEmployment(
-          "AA000000", targetEmploymentId, "961", "AZ00010", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false,
-          otherIncomeSourceIndicator = false, Some(new LocalDate("2015-01-21")), None, receivingOccupationalPension = false, Live)
+        val npsEmployment      = NpsEmployment(
+          "AA000000",
+          targetEmploymentId,
+          "961",
+          "AZ00010",
+          "Aldi",
+          Some("6044041000000"),
+          receivingJobSeekersAllowance = false,
+          otherIncomeSourceIndicator = false,
+          Some(new LocalDate("2015-01-21")),
+          None,
+          receivingOccupationalPension = false,
+          Live
+        )
 
         taxAccount.matchedIncomeSource(npsEmployment).get.employmentId shouldBe targetEmploymentId
       }
 
-      "return None if the income source's would normally match the employment but the employmentTaxDistrictNumber or employmentPayeRef is not present (ASA-265)" in {
-        val targetEmploymentId = 6
-        val matchingTaxDistrictNum = 961
-        val matchingEmploymentRef = "AZ00010"
-        val npsEmployment = testNpsEmployment.copy(
-          sequenceNumber = targetEmploymentId,
-          taxDistrictNumber = matchingTaxDistrictNum.toString,
-          payeNumber = matchingEmploymentRef
-        )
+      "return None if the income source's would normally match the employment but the employmentTaxDistrictNumber or " +
+        "employmentPayeRef is not present (ASA-265)" in {
+          val targetEmploymentId     = 6
+          val matchingTaxDistrictNum = 961
+          val matchingEmploymentRef  = "AZ00010"
+          val npsEmployment          = testNpsEmployment.copy(
+            sequenceNumber = targetEmploymentId,
+            taxDistrictNumber = matchingTaxDistrictNum.toString,
+            payeNumber = matchingEmploymentRef
+          )
 
-        val incomeSource = testNpsIncomeSource.copy(
-          employmentId = targetEmploymentId,
-          employmentTaxDistrictNumber = Some(matchingTaxDistrictNum),
-          employmentPayeRef = Some(matchingEmploymentRef)
-        )
+          val incomeSource = testNpsIncomeSource.copy(
+            employmentId = targetEmploymentId,
+            employmentTaxDistrictNumber = Some(matchingTaxDistrictNum),
+            employmentPayeRef = Some(matchingEmploymentRef)
+          )
 
-        NpsTaxAccount(List(
-          incomeSource
-        )).matchedIncomeSource(npsEmployment).get.employmentId shouldBe targetEmploymentId
+          NpsTaxAccount(
+            List(
+              incomeSource
+            )
+          ).matchedIncomeSource(npsEmployment).get.employmentId shouldBe targetEmploymentId
 
-        NpsTaxAccount(List(
-          incomeSource.copy(employmentTaxDistrictNumber = None)
-        )).matchedIncomeSource(npsEmployment) shouldBe None
+          NpsTaxAccount(
+            List(
+              incomeSource.copy(employmentTaxDistrictNumber = None)
+            )
+          ).matchedIncomeSource(npsEmployment) shouldBe None
 
-        NpsTaxAccount(List(
-          incomeSource.copy(employmentPayeRef = None)
-        )).matchedIncomeSource(npsEmployment) shouldBe None
-      }
+          NpsTaxAccount(
+            List(
+              incomeSource.copy(employmentPayeRef = None)
+            )
+          ).matchedIncomeSource(npsEmployment) shouldBe None
+        }
     }
 
     "getPrimaryEmploymentId is called" should {
       "return the employmentId if there is an income source whose employmentType indicates a primary income " in {
         val employmentTypePrimaryIncome = 1
-        NpsTaxAccount(List(testNpsIncomeSource.copy(
-          employmentType = Some(employmentTypePrimaryIncome)
-        ))).getPrimaryEmploymentId shouldBe Some(testNpsIncomeSource.employmentId)
+        NpsTaxAccount(
+          List(
+            testNpsIncomeSource.copy(
+              employmentType = Some(employmentTypePrimaryIncome)
+            )
+          )
+        ).getPrimaryEmploymentId shouldBe Some(testNpsIncomeSource.employmentId)
       }
 
       "return None if there is no income source whose employmentType indicates a primary income" in {
         val employmentTypeNotPrimary = 2
-        NpsTaxAccount(List(testNpsIncomeSource.copy(
-          employmentType = Some(employmentTypeNotPrimary)
-        ))).getPrimaryEmploymentId shouldBe None
+        NpsTaxAccount(
+          List(
+            testNpsIncomeSource.copy(
+              employmentType = Some(employmentTypeNotPrimary)
+            )
+          )
+        ).getPrimaryEmploymentId shouldBe None
       }
 
       "work with missing employmentType (ASA-265)" in {
-        NpsTaxAccount(List(testNpsIncomeSource.copy(
-          employmentType = None
-        ))).getPrimaryEmploymentId shouldBe None
+        NpsTaxAccount(
+          List(
+            testNpsIncomeSource.copy(
+              employmentType = None
+            )
+          )
+        ).getPrimaryEmploymentId shouldBe None
       }
     }
 
     "getOutStandingDebt is called" should {
-      val employmentTypePrimaryIncome = 1
+      val employmentTypePrimaryIncome  = 1
       val deductionTypeOutstandingDebt = 41
       val deductionWithOutstandingDebt = TaDeduction(
         `type` = deductionTypeOutstandingDebt,
@@ -236,24 +298,32 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
       )
 
       "return the sourceAmount from a primary income with a deduction indicating outstanding debt" in {
-        NpsTaxAccount(List(testNpsIncomeSource.copy(
-          employmentType = Some(employmentTypePrimaryIncome),
-          deductions = List(deductionWithOutstandingDebt)
-        ))).getOutStandingDebt shouldBe deductionWithOutstandingDebt.sourceAmount
+        NpsTaxAccount(
+          List(
+            testNpsIncomeSource.copy(
+              employmentType = Some(employmentTypePrimaryIncome),
+              deductions = List(deductionWithOutstandingDebt)
+            )
+          )
+        ).getOutStandingDebt shouldBe deductionWithOutstandingDebt.sourceAmount
       }
 
       "work with missing employmentType (ASA-265)" in {
-        NpsTaxAccount(List(testNpsIncomeSource.copy(
-          employmentType = None,
-          deductions = List(deductionWithOutstandingDebt)
-        ))).getOutStandingDebt shouldBe None
+        NpsTaxAccount(
+          List(
+            testNpsIncomeSource.copy(
+              employmentType = None,
+              deductions = List(deductionWithOutstandingDebt)
+            )
+          )
+        ).getOutStandingDebt shouldBe None
       }
     }
 
     "getUnderPayment is called" should {
-      val employmentTypePrimaryIncome = 1
+      val employmentTypePrimaryIncome     = 1
       val deductionTypeUnderpaymentAmount = 35
-      val deductionWithUnderpayment = TaDeduction(
+      val deductionWithUnderpayment       = TaDeduction(
         `type` = deductionTypeUnderpaymentAmount,
         npsDescription = "desc",
         amount = BigDecimal("123"),
@@ -261,42 +331,62 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
       )
 
       "return the sourceAmount from a primary income with a deduction indicating an underpayment amount" in {
-        NpsTaxAccount(List(testNpsIncomeSource.copy(
-          employmentType = Some(employmentTypePrimaryIncome),
-          deductions = List(deductionWithUnderpayment)
-        ))).getUnderPayment shouldBe deductionWithUnderpayment.sourceAmount
+        NpsTaxAccount(
+          List(
+            testNpsIncomeSource.copy(
+              employmentType = Some(employmentTypePrimaryIncome),
+              deductions = List(deductionWithUnderpayment)
+            )
+          )
+        ).getUnderPayment shouldBe deductionWithUnderpayment.sourceAmount
       }
 
       "work with missing employmentType (ASA-265)" in {
-        NpsTaxAccount(List(testNpsIncomeSource.copy(
-          employmentType = None,
-          deductions = List(deductionWithUnderpayment)
-        ))).getUnderPayment shouldBe None
+        NpsTaxAccount(
+          List(
+            testNpsIncomeSource.copy(
+              employmentType = None,
+              deductions = List(deductionWithUnderpayment)
+            )
+          )
+        ).getUnderPayment shouldBe None
       }
     }
 
     "getActualPupCodedInCYPlusOne is called" should {
-      val employmentTypePrimaryIncome = 1
+      val employmentTypePrimaryIncome    = 1
       val employmentTypeNotPrimaryIncome = 2
       "return getActualPupCodedInCYPlusOne if there is an income source with an employmentType indicating primary income" in {
-        NpsTaxAccount(List(testNpsIncomeSource.copy(
-          employmentType = Some(employmentTypePrimaryIncome),
-          actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal("123"))
-        ))).getActualPupCodedInCYPlusOne shouldBe Some(BigDecimal("123"))
+        NpsTaxAccount(
+          List(
+            testNpsIncomeSource.copy(
+              employmentType = Some(employmentTypePrimaryIncome),
+              actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal("123"))
+            )
+          )
+        ).getActualPupCodedInCYPlusOne shouldBe Some(BigDecimal("123"))
       }
 
       "return None if there is no income source with an employmentType indicating primary income" in {
-        NpsTaxAccount(List(testNpsIncomeSource.copy(
-          employmentType = Some(employmentTypeNotPrimaryIncome),
-          actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal("123"))
-        ))).getActualPupCodedInCYPlusOne shouldBe None
+        NpsTaxAccount(
+          List(
+            testNpsIncomeSource.copy(
+              employmentType = Some(employmentTypeNotPrimaryIncome),
+              actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal("123"))
+            )
+          )
+        ).getActualPupCodedInCYPlusOne shouldBe None
       }
 
       "return None if employmentType is missing (ASA-265)" in {
-        NpsTaxAccount(List(testNpsIncomeSource.copy(
-          employmentType = None,
-          actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal("123"))
-        ))).getActualPupCodedInCYPlusOne shouldBe None
+        NpsTaxAccount(
+          List(
+            testNpsIncomeSource.copy(
+              employmentType = None,
+              actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal("123"))
+            )
+          )
+        ).getActualPupCodedInCYPlusOne shouldBe None
       }
     }
   }

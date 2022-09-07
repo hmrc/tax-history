@@ -22,14 +22,25 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 
-
 class IndividualTaxYearSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
 
-  lazy val indiviualTaxYearJson: JsValue = loadFile("/json/model/api/individual-tax-year.json")
+  lazy val indiviualTaxYearJson: JsValue     = loadFile("/json/model/api/individual-tax-year.json")
   lazy val indiviualTaxYearListJson: JsValue = loadFile("/json/model/api/individual-tax-years.json")
+  private lazy val taxYear1                  = 2016
+  private lazy val taxYear2                  = 2015
 
-  lazy val indivTaxYear1: IndividualTaxYear = IndividualTaxYear(year = 2016, allowancesURI = "/2016/allowances", employmentsURI = "/2016/employments", taxAccountURI = "/2016/tax-account")
-  lazy val indivTaxYear2: IndividualTaxYear = IndividualTaxYear(year = 2015, allowancesURI = "/2015/allowances", employmentsURI = "/2015/employments", taxAccountURI = "/2015/tax-account")
+  lazy val indivTaxYear1: IndividualTaxYear = IndividualTaxYear(
+    year = taxYear1,
+    allowancesURI = "/2016/allowances",
+    employmentsURI = "/2016/employments",
+    taxAccountURI = "/2016/tax-account"
+  )
+  lazy val indivTaxYear2: IndividualTaxYear = IndividualTaxYear(
+    year = taxYear2,
+    allowancesURI = "/2015/allowances",
+    employmentsURI = "/2015/employments",
+    taxAccountURI = "/2015/tax-account"
+  )
 
   lazy val taxYearList = List(indivTaxYear1, indivTaxYear2)
 

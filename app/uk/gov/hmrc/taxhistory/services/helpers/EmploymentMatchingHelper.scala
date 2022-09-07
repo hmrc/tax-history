@@ -20,19 +20,20 @@ import uk.gov.hmrc.taxhistory.model.rti.RtiEmployment
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
 import uk.gov.hmrc.taxhistory.utils.Logging
 
-
 object EmploymentMatchingHelper extends TaxHistoryHelper with Logging {
 
   private def hasSameSequenceNo(nps: NpsEmployment, rti: RtiEmployment): Boolean =
     nps.sequenceNumber == rti.sequenceNo
 
-  private def matchEmploymentsFromSameEmployerSamePayrollId(optPayrollId: Option[String],
-                                                            npsWithSamePayrollId: List[NpsEmployment],
-                                                            rtiWithSamePayrollId: List[RtiEmployment]): Map[NpsEmployment, RtiEmployment] = {
-    val isPayrollIdPresent = optPayrollId.isDefined
+  private def matchEmploymentsFromSameEmployerSamePayrollId(
+    optPayrollId: Option[String],
+    npsWithSamePayrollId: List[NpsEmployment],
+    rtiWithSamePayrollId: List[RtiEmployment]
+  ): Map[NpsEmployment, RtiEmployment] = {
+    val isPayrollIdPresent   = optPayrollId.isDefined
     val hasOnlyOneEmployment = npsWithSamePayrollId.length == 1 && rtiWithSamePayrollId.length == 1
 
-    if(!isPayrollIdPresent) logger.warn("worksNumber/currentPayId is missing - will rely on sequenceNumber to match.")
+    if (!isPayrollIdPresent) logger.warn("worksNumber/currentPayId is missing - will rely on sequenceNumber to match.")
 
     (for {
       nps <- npsWithSamePayrollId
@@ -41,12 +42,13 @@ object EmploymentMatchingHelper extends TaxHistoryHelper with Logging {
     } yield nps -> rti).toMap
   }
 
-  private def matchEmploymentsFromSameEmployer(npsSameEmployer: List[NpsEmployment],
-                                               rtiSameEmployer: List[RtiEmployment]): Map[NpsEmployment, RtiEmployment] = {
+  private def matchEmploymentsFromSameEmployer(
+    npsSameEmployer: List[NpsEmployment],
+    rtiSameEmployer: List[RtiEmployment]
+  ): Map[NpsEmployment, RtiEmployment] =
     if (npsSameEmployer.length == 1 && rtiSameEmployer.length == 1) {
       Map(npsSameEmployer.head -> rtiSameEmployer.head)
-    }
-    else {
+    } else {
       val npsByPayrollId: Map[Option[String], List[NpsEmployment]] = npsSameEmployer.groupBy(_.worksNumber)
       val rtiByPayrollId: Map[Option[String], List[RtiEmployment]] = rtiSameEmployer.groupBy(_.currentPayId)
 
@@ -56,23 +58,29 @@ object EmploymentMatchingHelper extends TaxHistoryHelper with Logging {
         optRtiWithSamePayrollId match {
           case Some(rtiSamePayrollId) => // 1 or more RTI employments have the same payroll ID
             matchEmploymentsFromSameEmployerSamePayrollId(optPayrollId, npsWithSamePayrollId, rtiSamePayrollId)
-          case None => Map.empty[NpsEmployment, RtiEmployment] // No RTI employments have same payroll ID
+          case None                   => Map.empty[NpsEmployment, RtiEmployment] // No RTI employments have same payroll ID
         }
       }
     }
-  }
 
-  def matchEmployments(npsEmployments: List[NpsEmployment], rtiEmployments: List[RtiEmployment]): Map[NpsEmployment, RtiEmployment] = {
-    val npsByEmployer: Map[(String, String), List[NpsEmployment]] = npsEmployments.groupBy(nps => (nps.taxDistrictNumber, nps.payeNumber))
-    val rtiByEmployer: Map[(String, String), List[RtiEmployment]] = rtiEmployments.groupBy(rti => (rti.officeNumber, rti.payeRef))
+  def matchEmployments(
+    npsEmployments: List[NpsEmployment],
+    rtiEmployments: List[RtiEmployment]
+  ): Map[NpsEmployment, RtiEmployment] = {
+    val npsByEmployer: Map[(String, String), List[NpsEmployment]] =
+      npsEmployments.groupBy(nps => (nps.taxDistrictNumber, nps.payeNumber))
+    val rtiByEmployer: Map[(String, String), List[RtiEmployment]] =
+      rtiEmployments.groupBy(rti => (rti.officeNumber, rti.payeRef))
 
-    npsByEmployer.collect {
-      case (employerKey, npsSameEmployer) =>
+    npsByEmployer
+      .collect { case (employerKey, npsSameEmployer) =>
         rtiByEmployer.get(employerKey) match {
           case Some(rtiSameEmployer) => matchEmploymentsFromSameEmployer(npsSameEmployer, rtiSameEmployer)
-          case None => Map.empty[NpsEmployment, RtiEmployment]
+          case None                  => Map.empty[NpsEmployment, RtiEmployment]
         }
-    }.flatten.toMap
+      }
+      .flatten
+      .toMap
   }
 
 }

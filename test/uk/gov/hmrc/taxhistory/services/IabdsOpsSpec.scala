@@ -29,21 +29,42 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
-  val testNino = randomNino()
+  implicit val hc: HeaderCarrier       = HeaderCarrier()
+  private val employmentSequenceNumber = 201700055
+  private val grossAmount              = 100
+  private val paymentFrequency         = 26
 
-  val onlyIabdList: List[Iabd] = List(Iabd("QQ000003", Some(201700055), VanBenefit, Some(100), Some("Van Benefit"), Some(26)))
+  val onlyIabdList: List[Iabd] = List(
+    Iabd(
+      "QQ000003",
+      Some(employmentSequenceNumber),
+      VanBenefit,
+      Some(grossAmount),
+      Some("Van Benefit"),
+      Some(paymentFrequency)
+    )
+  )
 
   val npsEmploymentResponse: List[NpsEmployment] = List(
     NpsEmployment(
-      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), receivingJobSeekersAllowance = false,
-      otherIncomeSourceIndicator = false, Some(new LocalDate("2015-01-21")), None, receivingOccupationalPension = false, Live))
+      "AA000000",
+      1,
+      "531",
+      "J4816",
+      "Aldi",
+      Some("6044041000000"),
+      receivingJobSeekersAllowance = false,
+      otherIncomeSourceIndicator = false,
+      Some(new LocalDate("2015-01-21")),
+      None,
+      receivingOccupationalPension = false,
+      Live
+    )
+  )
 
-
-  lazy val iabdList: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
+  lazy val iabdList: List[Iabd]                        = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
   lazy val iabdsTotalBenfitInKindJsonResponse: JsValue = loadFile("/json/nps/response/iabdsTotalBIK.json")
-  lazy val iabdsBenfitInKindJsonResponse: JsValue = loadFile("/json/nps/response/iabdsBIK.json")
-
+  lazy val iabdsBenfitInKindJsonResponse: JsValue      = loadFile("/json/nps/response/iabdsBIK.json")
 
   "Iabds Helper" should {
     "correctly convert an iabd to an allowance model" in {
@@ -65,12 +86,13 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil {
 
     "Get CompanyBenfits from Iabd data and ignore Benefit In Kind (type 28)" in {
 
-      val iabds = iabdsBenfitInKindJsonResponse.as[List[Iabd]]
+      val cbSource = 26
+      val iabds    = iabdsBenfitInKindJsonResponse.as[List[Iabd]]
 
       val companyBenefits = iabds.companyBenefits
       companyBenefits.size mustBe 7
       val companyBenefit1 = companyBenefits.head
-      companyBenefit1.source mustBe Some(26)
+      companyBenefit1.source mustBe Some(cbSource)
       companyBenefit1.iabdType mustBe "UnKnown"
       companyBenefit1.amount mustBe 36795
     }

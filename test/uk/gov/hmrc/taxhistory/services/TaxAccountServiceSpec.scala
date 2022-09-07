@@ -38,20 +38,34 @@ import scala.concurrent.Future
 class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  val testNino: Nino = randomNino()
+  val testNino: Nino             = randomNino()
+
+  private val taxYear        = 2016
+  private val actualPUPCoded = 240
 
   val testEmploymentHistoryService: EmploymentHistoryService = TestEmploymentHistoryService.createNew()
 
-  val npsEmploymentResponse :List[NpsEmployment] = List(
+  val npsEmploymentResponse: List[NpsEmployment] = List(
     NpsEmployment(
-      "AA000000", 1, "531", "J4816", "Aldi", Some("6044041000000"), false, false,
-      Some(new LocalDate("2015-01-21")), None, true, Live))
-
+      "AA000000",
+      1,
+      "531",
+      "J4816",
+      "Aldi",
+      Some("6044041000000"),
+      receivingJobSeekersAllowance = false,
+      otherIncomeSourceIndicator = false,
+      Some(new LocalDate("2015-01-21")),
+      None,
+      receivingOccupationalPension = true,
+      Live
+    )
+  )
 
   lazy val testNpsTaxAccount: NpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
 
   lazy val iabdsResponse: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
-  lazy val testRtiData: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
+  lazy val testRtiData: RtiData      = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
 
   "TaxAccount" should {
     "successfully be populated from GetTaxAccount" in {
@@ -64,17 +78,18 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
         .thenReturn(Future.successful(Some(testRtiData)))
 
-      val payAsYouEarn = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(2016)))
+      val payAsYouEarn = await(testEmploymentHistoryService.retrieveAndBuildPaye(testNino, TaxYear(taxYear)))
 
       val taxAccount = payAsYouEarn.taxAccount.get
       taxAccount.outstandingDebtRestriction mustBe Some(145.75)
       taxAccount.underpaymentAmount mustBe Some(15423.29)
-      taxAccount.actualPUPCodedInCYPlusOneTaxYear mustBe Some(240)
+      taxAccount.actualPUPCodedInCYPlusOneTaxYear mustBe Some(actualPUPCoded)
     }
 
     "successfully retrieve tax account from cache" in {
-      lazy val paye = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
-      val testTaxAccount = Some(TaxAccount(UUID.fromString("3923afda-41ee-4226-bda5-e39cc4c82934"), Some(22.22), Some(11.11),Some(33.33)))
+      lazy val paye      = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
+      val testTaxAccount =
+        Some(TaxAccount(UUID.fromString("3923afda-41ee-4226-bda5-e39cc4c82934"), Some(22.22), Some(11.11), Some(33.33)))
 
       testEmploymentHistoryService.cacheService.insertOrUpdate((testNino, TaxYear.current.previous), paye)
 

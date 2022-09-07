@@ -23,20 +23,19 @@ import java.util.UUID.randomUUID
 import scala.util.matching.Regex
 
 protected trait ConnectorCorrelationId extends Logging {
-  protected val CORRELATION_HEADER = "CorrelationId"
+  protected val CORRELATION_HEADER        = "CorrelationId"
   private val CorrelationIdPattern: Regex = """.*([A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}).*""".r
-  private val twentyFour = 24
+  private val twentyFour                  = 24
 
-  def generateNewUUID : String = randomUUID.toString
+  def generateNewUUID: String = randomUUID.toString
 
-  def getCorrelationId(hc: HeaderCarrier): String = {
+  def getCorrelationId(hc: HeaderCarrier): String =
     hc.requestId match {
       case Some(requestId) =>
         requestId.value match {
           case CorrelationIdPattern(prefix) => prefix + "-" + generateNewUUID.substring(twentyFour)
-          case _ => generateNewUUID
+          case _                            => generateNewUUID
         }
-      case _ => generateNewUUID
+      case _               => generateNewUUID
     }
-  }
 }
