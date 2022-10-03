@@ -172,35 +172,39 @@ class EmploymentHistoryServiceSpec
 
   val startDate = new LocalDate("2015-01-21")
 
-  private def stubNpsGetEmploymentsSucceeds(npsEmployments: List[NpsEmployment]) =
+  private def stubNpsGetEmploymentsSucceeds(
+    npsEmployments: List[NpsEmployment]
+  ): OngoingStubbing[Future[List[NpsEmployment]]] =
     when(testEmploymentHistoryService.desNpsConnector.getEmployments(any(), any()))
       .thenReturn(Future.successful(npsEmployments))
 
-  private def stubRtiGetEmploymentsSucceeds(rtiEmployments: Option[RtiData]) =
+  private def stubRtiGetEmploymentsSucceeds(rtiEmployments: Option[RtiData]): OngoingStubbing[Future[Option[RtiData]]] =
     when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
       .thenReturn(Future.successful(rtiEmployments))
 
-  private def stubNpsGetTaxAccountSucceeds(optTaxAccount: Option[NpsTaxAccount]) =
+  private def stubNpsGetTaxAccountSucceeds(
+    optTaxAccount: Option[NpsTaxAccount]
+  ): OngoingStubbing[Future[Option[NpsTaxAccount]]] =
     when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
       .thenReturn(Future.successful(optTaxAccount))
 
-  private def stubNpsGetIabdsSucceeds(iabds: List[Iabd]) =
+  private def stubNpsGetIabdsSucceeds(iabds: List[Iabd]): OngoingStubbing[Future[List[Iabd]]] =
     when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
       .thenReturn(Future.successful(iabds))
 
-  private def stubNpsGetEmploymentsFails(failure: Throwable) =
+  private def stubNpsGetEmploymentsFails(failure: Throwable): OngoingStubbing[Future[List[NpsEmployment]]] =
     when(testEmploymentHistoryService.desNpsConnector.getEmployments(any(), any()))
       .thenReturn(Future.failed(failure))
 
-  private def stubNpsGetTaxAccountFails(failure: Throwable) =
+  private def stubNpsGetTaxAccountFails(failure: Throwable): OngoingStubbing[Future[Option[NpsTaxAccount]]] =
     when(testEmploymentHistoryService.desNpsConnector.getTaxAccount(any(), any()))
       .thenReturn(Future.failed(failure))
 
-  private def stubNpsGetIabdFails(failure: Throwable) =
+  private def stubNpsGetIabdFails(failure: Throwable): OngoingStubbing[Future[List[Iabd]]] =
     when(testEmploymentHistoryService.desNpsConnector.getIabds(any(), any()))
       .thenReturn(Future.failed(failure))
 
-  private def stubRtiGetEmploymentsFails(failure: Throwable) =
+  private def stubRtiGetEmploymentsFails(failure: Throwable): OngoingStubbing[Future[Option[RtiData]]] =
     when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
       .thenReturn(Future.failed(failure))
 
@@ -457,8 +461,8 @@ class EmploymentHistoryServiceSpec
       val testEmployment2 =
         Employment(
           UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
-          Some(locaDateCyMinus1("01", "21")),
-          Some(locaDateCyMinus1("02", "21")),
+          Some(localDateCyMinus1("01", "21")),
+          Some(localDateCyMinus1("02", "21")),
           "paye-1",
           "employer-1",
           Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),
@@ -471,7 +475,7 @@ class EmploymentHistoryServiceSpec
 
       val testEmployment3 = Employment(
         UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
-        Some(locaDateCyMinus1("02", "22")),
+        Some(localDateCyMinus1("02", "22")),
         None,
         "paye-2",
         "employer-2",

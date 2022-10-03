@@ -24,7 +24,8 @@ import scala.util.Random
 
 object ITestUtil {
   def loadFile(path:String): JsValue = {
-    val jsonString = Source.fromURL(getClass.getResource(path)).mkString
+    val source     = Source.fromURL(getClass.getResource(path))
+    val jsonString = try source.mkString finally source.close()
     Json.parse(jsonString)
   }
 

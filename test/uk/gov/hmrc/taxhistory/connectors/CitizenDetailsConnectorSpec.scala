@@ -25,8 +25,6 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.concurrent.Eventually._
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.{Nino, SaUtr}
@@ -46,8 +44,6 @@ class CitizenDetailsConnectorSpec
     with BeforeAndAfterEach
     with GuiceOneAppPerSuite {
   implicit val hc: HeaderCarrier = HeaderCarrier()
-
-  override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
 
   private val mockHttp         = mock[HttpClient]
   private val mockMetrics      = mock[TaxHistoryMetrics]
@@ -176,7 +172,7 @@ class CitizenDetailsConnectorSpec
       .thenReturn(Future.successful(responseWithUtr(forThisNino, expectedUtr)))
   }
 
-  private def responseWithUtr(forThisNino: Nino, expectedUtr: SaUtr) =
+  private def responseWithUtr(forThisNino: Nino, expectedUtr: SaUtr): JsValue =
     Json.parse(s"""
          |{
          |    "dateOfBirth": "23041948",

@@ -29,12 +29,18 @@ trait TestUtil {
   val randomNino: () => Nino = () => Nino(new Generator(new Random()).nextNino.value.replaceFirst("MA", "AA"))
 
   def loadFile(path: String): JsValue = {
-    val jsonString = Source.fromURL(getClass.getResource(path)).mkString
+    val source     = Source.fromURL(getClass.getResource(path))
+    val jsonString =
+      try source.mkString
+      finally source.close()
     Json.parse(jsonString)
   }
 
   def loadFile(path: String, placeholders: Seq[PlaceHolder]): JsValue = {
-    val jsonStringWithPlaceholders = Source.fromURL(getClass.getResource(path)).mkString
+    val source                     = Source.fromURL(getClass.getResource(path))
+    val jsonStringWithPlaceholders =
+      try source.mkString
+      finally source.close()
     val jsonString                 = replacePlaceholder(jsonStringWithPlaceholders, placeholders)
     Json.parse(jsonString)
   }
@@ -47,9 +53,7 @@ trait TestUtil {
       string
     }
 
-  def locaDateCy(mm: String, dd: String): LocalDate = localDateInTaxYear(TaxYear.current, mm, dd)
-
-  def locaDateCyMinus1(mm: String, dd: String): LocalDate = localDateInTaxYear(TaxYear.current.previous, mm, dd)
+  def localDateCyMinus1(mm: String, dd: String): LocalDate = localDateInTaxYear(TaxYear.current.previous, mm, dd)
 
   private def localDateInTaxYear(taxYear: TaxYear, mm: String, dd: String): LocalDate = {
     val startYear = new LocalDate(s"${taxYear.startYear}-$mm-$dd")
@@ -57,22 +61,13 @@ trait TestUtil {
     if (TaxYear.taxYearFor(startYear) == taxYear) startYear else endYear
   }
 
-  val config: Map[String, Any] = Map(
-    "appName"                                      -> "appName",
-    "mongoExpiry"                                  -> (60 * 30),
-    "desEnv"                                       -> "local",
-    "desAuth"                                      -> "local",
-    "mongoName"                                    -> "mongodb.name",
-    "currentYearFlag"                              -> true,
-    "featureFlags.currentYearFlag"                 -> true,
-    "statePensionFlag"                             -> true,
-    "jobSeekersAllowanceFlag"                      -> true,
-    "desBaseUrl"                                   -> "http://localhost:9998",
-    "citizenDetailsBaseUrl"                        -> "citizen-details",
+  protected def config(ifsEnabled: Boolean = true): Map[String, Any] = Map(
+    "microservice.services.des.env"                -> "local",
     "microservice.services.des.authorizationToken" -> "local",
-    "microservice.services.des.env"                -> "local"
+    "microservice.services.ifs.env"                -> "local",
+    "microservice.services.ifs.authorizationToken" -> "local",
+    "featureFlags.ifsEnabledFlag"                  -> ifsEnabled
   )
-
 }
 
 case class PlaceHolder(regex: String, newValue: String)

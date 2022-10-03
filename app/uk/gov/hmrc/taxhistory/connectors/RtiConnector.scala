@@ -37,33 +37,57 @@ class RtiConnector @Inject() (
 )(implicit executionContext: ExecutionContext)
     extends ConnectorMetrics {
 
-  lazy val authorization: String = s"Bearer ${config.desAuth}"
-  val withRetry: Retry           = config.newRetryInstance("des", system)
+  private lazy val desEnv: String          = config.desEnv
+  private lazy val desAuth: String         = config.desAuth
+  private lazy val desBaseUrl: String      = config.desBaseUrl
+  private lazy val ifsEnv: String          = config.ifsEnv
+  private lazy val ifsAuth: String         = config.ifsAuth
+  private lazy val ifsBaseUrl: String      = config.ifsBaseUrl
+  private lazy val ifsEnabledFlag: Boolean = config.ifsEnabledFlag
 
-  def rtiEmploymentsUrl(nino: Nino, taxYear: TaxYear): String = {
+  private def withRetry(name: String): Retry = config.newRetryInstance(name, system)
+
+  def rtiEmploymentsUrl(nino: Nino, taxYear: TaxYear, downstreamBaseUrl: String): String = {
     val formattedTaxYear = s"${taxYear.startYear % 100}-${taxYear.finishYear % 100}"
-    s"${config.desBaseUrl}/rti/individual/payments/nino/${nino.withoutSuffix}/tax-year/$formattedTaxYear"
+    s"$downstreamBaseUrl/rti/individual/payments/nino/${nino.withoutSuffix}/tax-year/$formattedTaxYear"
   }
 
-  def buildHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
+  def buildHeaders(downstreamEnv: String, downstreamAuth: String)(implicit hc: HeaderCarrier): Seq[(String, String)] =
     Seq(
-      "Environment"      -> { config.desEnv },
-      "Authorization"    -> s"Bearer ${config.desAuth}",
+      "Environment"      -> downstreamEnv,
+      "Authorization"    -> s"Bearer $downstreamAuth",
       CORRELATION_HEADER -> getCorrelationId(hc)
     )
 
-  def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[Option[RtiData]] = {
-    implicit val hc: HeaderCarrier = HeaderCarrier()
+  def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[Option[RtiData]] =
     withMetrics(MetricsEnum.RTI_GET_EMPLOYMENTS) {
-      withRetry {
-        http
-          .GET[RtiData](rtiEmploymentsUrl(nino, taxYear), headers = buildHeaders(hc))
-          .map(Some(_))
-      }.recover {
-        case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == 404 =>
-          logger.warn(s"RTIEmployments returned a 404 response: ${ex.message}")
-          None
+      if (ifsEnabledFlag) {
+        getRTIEmploymentsWithRetry("ifs", nino, taxYear, ifsEnv, ifsAuth, ifsBaseUrl)
+      } else {
+        getRTIEmploymentsWithRetry("des", nino, taxYear, desEnv, desAuth, desBaseUrl)
       }
+    }
+
+  private def getRTIEmploymentsWithRetry(
+    name: String,
+    nino: Nino,
+    taxYear: TaxYear,
+    downstreamEnv: String,
+    downstreamAuth: String,
+    downstreamBaseUrl: String
+  ): Future[Option[RtiData]] = {
+    implicit val hc: HeaderCarrier = HeaderCarrier()
+    withRetry(name) {
+      http
+        .GET[RtiData](
+          url = rtiEmploymentsUrl(nino, taxYear, downstreamBaseUrl),
+          headers = buildHeaders(downstreamEnv, downstreamAuth)(hc)
+        )
+        .map(Some(_))
+    }.recover {
+      case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == 404 =>
+        logger.warn(s"RTIEmployments returned a 404 response: ${ex.message}")
+        None
     }
   }
 

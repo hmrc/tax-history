@@ -38,7 +38,7 @@ import scala.concurrent.Future
 
 class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with GuiceOneAppPerSuite {
 
-  override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
+  override lazy val app: Application = new GuiceApplicationBuilder().configure(config()).build()
 
   lazy val testIabds: List[Iabd]                  = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
   lazy val testNpsTaxAccount: NpsTaxAccount       = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
@@ -52,8 +52,8 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with 
   private val mockAppConfig         = app.injector.instanceOf[AppConfig]
   private val system                = ActorSystem("test")
 
-  val uuid                     = "123f4567-g89c-42c3-b456-557742330000"
-  lazy val testDesNpsConnector = new DesNpsConnector(
+  val uuid                             = "123f4567-g89c-42c3-b456-557742330000"
+  private lazy val testDesNpsConnector = new DesNpsConnector(
     http = mockHttpClient,
     metrics = mockTaxHistoryMetrics,
     config = mockAppConfig,
@@ -61,8 +61,8 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with 
   ) {
     override def generateNewUUID: String = uuid
   }
-  val testNino: Nino           = randomNino()
-  val testYear                 = 2016
+  val testNino: Nino                   = randomNino()
+  val testYear                         = 2016
 
   "return new ID pre-appending the requestID when the requestID matches the format(8-4-4-4)" in {
     val requestId  = "dcba0000-ij12-df34-jk56"
