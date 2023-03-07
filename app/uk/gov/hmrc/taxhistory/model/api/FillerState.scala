@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
-import org.joda.time.LocalDate
+import java.time.LocalDate
 
 /**
   * The filler state describes the temporal relationship of a filler (an employment gap) to an employment.

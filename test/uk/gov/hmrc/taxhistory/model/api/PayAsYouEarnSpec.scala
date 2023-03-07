@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,18 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
-import org.joda.time.LocalDate
+import java.time.LocalDate
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.Json._
 import play.api.libs.json.{JsObject, _}
 import uk.gov.hmrc.taxhistory.model.nps._
-import uk.gov.hmrc.taxhistory.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 
 import java.util.UUID
 
-class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
+class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with DateUtils {
 
   private lazy val fullPayeJson: JsObject = loadFile("/json/model/api/paye.json").as[JsObject]
 
@@ -51,8 +51,8 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
     "(de)serialising the 'employments' field" should {
       val employment1      = Employment(
         employmentId = UUID.fromString(employment1Id),
-        startDate = Some(new LocalDate("2016-01-21")),
-        endDate = Some(new LocalDate("2017-01-01")),
+        startDate = Some(LocalDate.of(YEAR_2016, JANUARY, DAY_21)),
+        endDate = Some(LocalDate.of(YEAR_2017, JANUARY, DAY_1)),
         payeReference = "paye-1",
         employerName = "employer-1",
         employmentStatus = EmploymentStatus.Live,
@@ -74,7 +74,7 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
 
       val employment2      = Employment(
         employmentId = UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
-        startDate = Some(new LocalDate("2016-02-22")),
+        startDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_22)),
         endDate = None,
         payeReference = "paye-2",
         employerName = "employer-2",
@@ -196,7 +196,7 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
         taxablePayTotalIncludingEYU = Some(BigDecimal("2222.23")),
         taxTotal = Some(BigDecimal("111.11")),
         taxTotalIncludingEYU = Some(BigDecimal("111.12")),
-        paymentDate = Some(new LocalDate("2016-02-20")),
+        paymentDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_20)),
         studentLoan = Some(BigDecimal("333.33")),
         earlierYearUpdates = Nil
       )

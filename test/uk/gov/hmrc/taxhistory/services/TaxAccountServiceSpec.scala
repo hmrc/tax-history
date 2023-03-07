@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxhistory.services
 
 import java.util.UUID
-import org.joda.time.LocalDate
+import java.time.LocalDate
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
@@ -29,18 +29,17 @@ import uk.gov.hmrc.taxhistory.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.api.{PayAsYouEarn, TaxAccount}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
-import uk.gov.hmrc.taxhistory.utils.TestUtil
-import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
+import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestEmploymentHistoryService, TestUtil}
 import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
-class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
+class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil with DateUtils {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val testNino: Nino             = randomNino()
 
-  private val taxYear        = 2016
+  private val taxYear        = YEAR_2016
   private val actualPUPCoded = 240
 
   val testEmploymentHistoryService: EmploymentHistoryService = TestEmploymentHistoryService.createNew()
@@ -55,7 +54,7 @@ class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
       Some("6044041000000"),
       receivingJobSeekersAllowance = false,
       otherIncomeSourceIndicator = false,
-      Some(new LocalDate("2015-01-21")),
+      Some(LocalDate.of(YEAR_2015, JANUARY, DAY_21)),
       None,
       receivingOccupationalPension = true,
       Live

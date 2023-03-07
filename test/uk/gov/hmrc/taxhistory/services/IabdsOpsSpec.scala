@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,16 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import org.joda.time.LocalDate
+import java.time.LocalDate
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, VanBenefit}
-import uk.gov.hmrc.taxhistory.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 
-class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil {
+class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil with DateUtils {
 
   import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 
@@ -55,7 +55,7 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil {
       Some("6044041000000"),
       receivingJobSeekersAllowance = false,
       otherIncomeSourceIndicator = false,
-      Some(new LocalDate("2015-01-21")),
+      Some(LocalDate.of(YEAR_2015, JANUARY, DAY_21)),
       None,
       receivingOccupationalPension = false,
       Live

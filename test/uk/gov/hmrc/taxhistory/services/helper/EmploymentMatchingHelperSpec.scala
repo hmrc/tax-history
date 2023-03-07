@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,8 +43,8 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
         .toSeq
 
       matchedEmployments must have length 2
-      matchedEmployments must contain(npsEmployment1, rtiEmployment1)
-      matchedEmployments must contain(npsEmployment2, rtiEmployment2)
+      matchedEmployments must contain((npsEmployment1, rtiEmployment1))
+      matchedEmployments must contain((npsEmployment2, rtiEmployment2))
     }
 
     "the worksNumber/currentPayId is missing" in {
@@ -62,8 +62,8 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
         .toSeq
 
       matchedEmployments must have length 2
-      matchedEmployments must contain(npsEmployment1, rtiEmployment1)
-      matchedEmployments must contain(npsEmployment2, rtiEmployment2)
+      matchedEmployments must contain((npsEmployment1, rtiEmployment1))
+      matchedEmployments must contain((npsEmployment2, rtiEmployment2))
     }
   }
 
@@ -82,7 +82,7 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
         .toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain(npsEmployment1, rtiEmployment)
+      matchedEmployments must contain((npsEmployment1, rtiEmployment))
     }
 
     "the two NPS employments have the same worksNumber/currentPayId but a different sequenceNumber" in {
@@ -99,7 +99,7 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
         .toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain(npsEmployment1, rtiEmployment)
+      matchedEmployments must contain((npsEmployment1, rtiEmployment))
     }
 
     "the two NPS employments have a missing worksNumber/currentPayId" in {
@@ -116,7 +116,7 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
         .toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain(npsEmployment1, rtiEmployment)
+      matchedEmployments must contain((npsEmployment1, rtiEmployment))
     }
   }
 
@@ -135,7 +135,7 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
         .toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain(npsEmployment, rtiEmployment2)
+      matchedEmployments must contain((npsEmployment, rtiEmployment2))
     }
 
     "the two RTI employments have the same worksNumber/currentPayId but different sequenceNumber" in {
@@ -152,7 +152,7 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
         .toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain(npsEmployment, rtiEmployment2)
+      matchedEmployments must contain((npsEmployment, rtiEmployment2))
     }
 
     "the two RTI employments have a missing worksNumber/currentPayId" in {
@@ -169,7 +169,7 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
         .toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain(npsEmployment, rtiEmployment2)
+      matchedEmployments must contain((npsEmployment, rtiEmployment2))
     }
   }
 
@@ -181,7 +181,7 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
       val matchedEmployments = EmploymentMatchingHelper.matchEmployments(List(npsEmployment), List(rtiEmployment)).toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain(npsEmployment, rtiEmployment)
+      matchedEmployments must contain((npsEmployment, rtiEmployment))
     }
 
     "even if the worksNumber/currentPayId is missing and the sequence numbers do not match" in {
@@ -191,7 +191,7 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
       val matchedEmployments = EmploymentMatchingHelper.matchEmployments(List(npsEmployment), List(rtiEmployment)).toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain(npsEmployment, rtiEmployment)
+      matchedEmployments must contain((npsEmployment, rtiEmployment))
     }
   }
 
@@ -211,7 +211,7 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
         .toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain(npsEmployment1, rtiEmployment2)
+      matchedEmployments must contain((npsEmployment1, rtiEmployment2))
     }
 
     "the worksNumber/currentPayId is missing and the sequenceNumber matches only on one pair" in {
@@ -229,7 +229,7 @@ class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestU
         .toSeq
 
       matchedEmployments must have length 1
-      matchedEmployments must contain(npsEmployment1, rtiEmployment2)
+      matchedEmployments must contain((npsEmployment1, rtiEmployment2))
     }
   }
 

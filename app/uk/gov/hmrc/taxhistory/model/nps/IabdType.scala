@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
-import org.joda.time.LocalDate
-import org.joda.time.format.DateTimeFormat
+import java.time.LocalDate
 import play.api.Logging
 import play.api.libs.json._
+
+import java.time.format.DateTimeFormatter
 
 sealed trait IabdType
 
@@ -130,7 +131,7 @@ case class Iabd(
   def toStatePension: StatePension = {
     val paymentStartDate: Option[LocalDate] = paymentFrequency match {
       case Some(1)            => // Weekly
-        startDate.map(date => LocalDate.parse(date, DateTimeFormat.forPattern("dd/MM/yyyy")))
+        startDate.map(date => LocalDate.parse(date, DateTimeFormatter.ofPattern("dd/MM/yyyy")))
       case Some(5)            => // Annual
         None
       case Some(unknownValue) =>

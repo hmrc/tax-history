@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.utils
 
-import org.joda.time.LocalDate
+import java.time.LocalDate
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.time.TaxYear
@@ -42,18 +42,16 @@ trait TestUtil {
   @tailrec
   private def replacePlaceholder(string: String, pHs: Seq[PlaceHolder]): String =
     if (pHs.nonEmpty) {
-      replacePlaceholder(string.replaceAllLiterally(pHs.head.regex, pHs.head.newValue), pHs.tail)
+      replacePlaceholder(string.replace(pHs.head.regex, pHs.head.newValue), pHs.tail)
     } else {
       string
     }
 
-  def locaDateCy(mm: String, dd: String): LocalDate = localDateInTaxYear(TaxYear.current, mm, dd)
+  def locaDateCyMinus1(mm: Int, dd: Int): LocalDate = localDateInTaxYear(TaxYear.current.previous, mm, dd)
 
-  def locaDateCyMinus1(mm: String, dd: String): LocalDate = localDateInTaxYear(TaxYear.current.previous, mm, dd)
-
-  private def localDateInTaxYear(taxYear: TaxYear, mm: String, dd: String): LocalDate = {
-    val startYear = new LocalDate(s"${taxYear.startYear}-$mm-$dd")
-    val endYear   = new LocalDate(s"${taxYear.finishYear}-$mm-$dd")
+  private def localDateInTaxYear(taxYear: TaxYear, mm: Int, dd: Int): LocalDate = {
+    val startYear = LocalDate.of(taxYear.startYear, mm, dd)
+    val endYear   = LocalDate.of(taxYear.finishYear, mm, dd)
     if (TaxYear.taxYearFor(startYear) == taxYear) startYear else endYear
   }
 

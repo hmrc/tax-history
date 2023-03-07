@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,33 +16,17 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
-/*
- * Copyright 2017 HM Revenue & Customs
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-import org.joda.time.LocalDate
+import java.time.LocalDate
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.{JsObject, JsValue, Json}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
-import uk.gov.hmrc.taxhistory.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 
 import java.util.UUID
 
-class EmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
+class EmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with DateUtils {
 
   lazy val employmentJson: JsValue          = loadFile("/json/model/api/employment.json")
   lazy val employmentNoEndDateJson: JsValue = loadFile("/json/model/api/employmentNoEndDate.json")
@@ -50,8 +34,8 @@ class EmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with Op
 
   lazy val employment1: Employment = Employment(
     employmentId = UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
-    startDate = Some(new LocalDate("2016-01-21")),
-    endDate = Some(new LocalDate("2017-01-01")),
+    startDate = Some(LocalDate.of(YEAR_2016, JANUARY, DAY_21)),
+    endDate = Some(LocalDate.of(YEAR_2017, JANUARY, DAY_1)),
     payeReference = "paye-1",
     employerName = "employer-1",
     employmentStatus = EmploymentStatus.Live,
@@ -62,7 +46,7 @@ class EmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with Op
     employmentId = UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
     payeReference = "paye-2",
     employerName = "employer-2",
-    startDate = Some(new LocalDate("2016-02-22")),
+    startDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_22)),
     employmentStatus = EmploymentStatus.Live,
     worksNumber = "00191048716"
   )
@@ -81,8 +65,8 @@ class EmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with Op
       val emp = Employment(
         payeReference = "paye-1",
         employerName = "employer-1",
-        startDate = Some(new LocalDate("2016-01-21")),
-        endDate = Some(new LocalDate("2017-01-01")),
+        startDate = Some(LocalDate.of(YEAR_2016, JANUARY, DAY_21)),
+        endDate = Some(LocalDate.of(YEAR_2017, JANUARY, DAY_1)),
         employmentStatus = EmploymentStatus.Live,
         worksNumber = "00191048716"
       )

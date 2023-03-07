@@ -17,9 +17,7 @@
 package uk.gov.hmrc.taxhistory.model.nps
 
 import play.api.libs.json.{Json, OFormat}
-import org.joda.time.LocalDate
-import play.api.libs.json.JodaWrites._
-import play.api.libs.json.JodaReads._
+import java.time.LocalDate
 
 case class StatePension(
   grossAmount: BigDecimal,

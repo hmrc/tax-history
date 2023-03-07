@@ -17,6 +17,6 @@ addSbtPlugin("uk.gov.hmrc" % "sbt-distributables" % "2.2.0")
 
 addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.8.19")
 
-addSbtPlugin("com.timushev.sbt" % "sbt-updates"  % "0.6.3")
+addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.6.3")
 
-addSbtPlugin("org.scalameta"    % "sbt-scalafmt" % "2.5.0")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.0")

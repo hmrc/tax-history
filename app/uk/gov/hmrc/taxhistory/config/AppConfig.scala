@@ -23,8 +23,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.taxhistory.utils.Retry
 
 import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
-import scala.language.postfixOps
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 @Singleton
 class AppConfig @Inject() (config: ServicesConfig) {
@@ -43,13 +42,13 @@ class AppConfig @Inject() (config: ServicesConfig) {
 
   def newRetryInstance(name: String, actorSystem: ActorSystem): Retry = {
     val times    = config.getInt(s"microservice.services.$name.retry.times")
-    val interval = getConfFiniteDuration(s"microservice.services.$name.retry.interval", 500 millis)
+    val interval = getConfFiniteDuration(s"microservice.services.$name.retry.interval")
     new Retry(times, interval, actorSystem)
   }
 
-  private def getConfFiniteDuration(key: String, default: FiniteDuration): FiniteDuration = {
+  private def getConfFiniteDuration(key: String): FiniteDuration = {
     val d = FiniteDuration(config.getInt(key), "ms")
-    require(d.isFinite(), s"not a finite duration: $key")
+    require(d.isFinite, s"not a finite duration: $key")
     FiniteDuration(d.length, d.unit)
   }
 

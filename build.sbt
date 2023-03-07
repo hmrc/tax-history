@@ -5,7 +5,6 @@ import sbt.Tests.{Group, SubProcess}
 import sbt._
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
 
 val appName = "tax-history"
@@ -30,7 +29,6 @@ lazy val microservice =
     .settings(PlayKeys.playDefaultPort := 9997)
     .settings(scoverageSettings: _*)
     .settings(scalaSettings: _*)
-    .settings(publishingSettings: _*)
     .settings(defaultSettings(): _*)
     .settings(routesImport ++= Seq("uk.gov.hmrc.taxhistory.binders.PathBinders._"))
     .settings(
@@ -39,7 +37,8 @@ lazy val microservice =
       retrieveManaged := true,
       // ***************
       // To resolve a bug with version 2.x.x of the scoverage plugin - https://github.com/sbt/sbt/issues/6997
-      libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
+      libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always,
+      scalacOptions += "-Wconf:src=routes/.*:s"
     )
     .configs(IntegrationTest)
     .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)

@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxhistory.controllers
 import javax.inject.Singleton
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc._
-import uk.gov.hmrc.http.{BadRequestException, NotFoundException, Upstream4xxResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{BadRequestException, NotFoundException, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.taxhistory.utils.Logging
 
@@ -36,9 +36,9 @@ class TaxHistoryController(cc: ControllerComponents) extends BackendController(c
       case e404: NotFoundException                                                 =>
         logger.info("404 Not found: " + e404.message)
         NotFound
-      case e4xx: Upstream4xxResponse                                               =>
-        logger.warn(s"Service returned error ${e4xx.upstreamResponseCode}: ${e4xx.message}")
-        Status(e4xx.upstreamResponseCode)
+      case UpstreamErrorResponse.Upstream4xxResponse(e4xx)                         =>
+        logger.warn(s"Service returned error ${e4xx.statusCode}: ${e4xx.message}")
+        Status(e4xx.statusCode)
       case e5xx: UpstreamErrorResponse if e5xx.statusCode == INTERNAL_SERVER_ERROR =>
         logger.error(s"[TaxHistoryController][toResult]Internal server error  ${e5xx.statusCode}: ${e5xx.message}")
         InternalServerError

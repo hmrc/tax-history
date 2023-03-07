@@ -14,21 +14,28 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxhistory.model.api
+package uk.gov.hmrc.taxhistory.utils
 
-import java.util.UUID
+trait DateUtils {
 
-import play.api.libs.json.{Json, OFormat}
-import java.time.LocalDate
+  val YEAR_2015 = 2015
+  val YEAR_2016 = 2016
+  val YEAR_2017 = 2017
 
-case class EarlierYearUpdate(
-  earlierYearUpdateId: UUID = UUID.randomUUID(),
-  taxablePayEYU: BigDecimal,
-  taxEYU: BigDecimal,
-  studentLoanEYU: Option[BigDecimal] = None,
-  receivedDate: LocalDate
-)
+  val JANUARY  = 1
+  val FEBRUARY = 2
+  val MARCH    = 3
+  val MAY      = 5
+  val JUNE     = 6
+  val OCTOBER  = 10
+  val DECEMBER = 12
 
-object EarlierYearUpdate {
-  implicit val formats: OFormat[EarlierYearUpdate] = Json.format[EarlierYearUpdate]
+  val DAY_1  = 1
+  val DAY_8  = 8
+  val DAY_20 = 20
+  val DAY_21 = 21
+  val DAY_22 = 22
+  val DAY_26 = 26
+  val DAY_29 = 29
+  val DAY_31 = 31
 }

@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.taxhistory.model.rti
 
-import com.github.nscala_time.time.Imports.richAbstractPartial
-import org.joda.time.LocalDate
 import play.api.libs.json._
-import play.api.libs.json.JodaWrites._
 import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, PayAndTax}
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
+import java.time.LocalDate
+import scala.math.Ordered.orderingToOrdered
 
 case class RtiData(nino: String, employments: List[RtiEmployment])
 

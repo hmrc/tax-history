@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ package uk.gov.hmrc.taxhistory.model.api
  * limitations under the License.
  */
 
-import org.joda.time.LocalDate
+import java.time.LocalDate
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{OptionValues, PrivateMethodTester}
 import org.scalatest.matchers.should.Matchers
@@ -41,7 +41,7 @@ import uk.gov.hmrc.taxhistory.utils.TestUtil
 class FillerStateSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with PrivateMethodTester {
   "FillerState" when {
     "encompassed is called" should {
-      val encompassed: PrivateMethod[FillerState] = PrivateMethod[FillerState]('encompassed)
+      val encompassed: PrivateMethod[FillerState] = PrivateMethod[FillerState](Symbol("encompassed"))
 
       "return Some(EncompassedEmployment)" when {
         "the filler has the same start and end days as the employment" in {
@@ -100,7 +100,7 @@ class FillerStateSpec extends TestUtil with AnyWordSpecLike with Matchers with O
     }
 
     "overlapStart is called" should {
-      val overlapStart: PrivateMethod[FillerState] = PrivateMethod[FillerState]('overlapStart)
+      val overlapStart: PrivateMethod[FillerState] = PrivateMethod[FillerState](Symbol("overlapStart"))
 
       "return Some(OverlapEmploymentStart)" when {
         "the filler has a start day before the employment and an end day lying within the employment" in {
@@ -163,7 +163,7 @@ class FillerStateSpec extends TestUtil with AnyWordSpecLike with Matchers with O
     }
 
     "overlapEnd is called" should {
-      val overlapEnd: PrivateMethod[FillerState] = PrivateMethod[FillerState]('overlapEnd)
+      val overlapEnd: PrivateMethod[FillerState] = PrivateMethod[FillerState](Symbol("overlapEnd"))
 
       "return Some(OverlapEmploymentEnd)" when {
         "the filler has a start day lying within the employment and an end day after the employment" in {
@@ -226,7 +226,7 @@ class FillerStateSpec extends TestUtil with AnyWordSpecLike with Matchers with O
     }
 
     "overlapCompletely is called" should {
-      val overlapCompletely: PrivateMethod[FillerState] = PrivateMethod[FillerState]('overlapCompletely)
+      val overlapCompletely: PrivateMethod[FillerState] = PrivateMethod[FillerState](Symbol("overlapCompletely"))
 
       "return Some(OverlapEmployment)" when {
         "the filler starts before and ends after the employment" in {

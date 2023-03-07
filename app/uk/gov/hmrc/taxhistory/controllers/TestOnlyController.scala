@@ -28,6 +28,6 @@ class TestOnlyController @Inject() (val cacheService: TaxHistoryMongoCacheServic
 ) extends TaxHistoryController(cc) {
 
   def clearCache: Action[AnyContent] = Action.async {
-    cacheService.collection.drop.toFuture().map(_ => Ok)
+    cacheService.collection.drop().toFuture().map(_ => Ok)
   }
 }
