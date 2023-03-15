@@ -4,7 +4,7 @@ import sbt._
 object AppDependencies {
 
   private lazy val hmrcBootstrapPlayVersion = "7.14.0"
-  private lazy val hmrcMongoPlayVersion     = "1.1.0"
+  private lazy val hmrcMongoPlayVersion     = "0.74.0"
 
   private val compile = Seq(
     ws,
@@ -21,7 +21,7 @@ object AppDependencies {
     "org.scalatestplus.play" %% "scalatestplus-play"      % "5.1.0",
     "org.scalatestplus"      %% "mockito-4-6"             % "3.2.15.0",
     "com.vladsch.flexmark"    % "flexmark-all"            % "0.62.2",
-    "org.mockito"             % "mockito-core"            % "4.11.0" //upgrade to 5 when moving to Java 11
+    "org.scalamock"          %% "scalamock"               % "5.2.0"
   ).map(_ % "test, it")
 
   def apply(): Seq[ModuleID]      = compile ++ test

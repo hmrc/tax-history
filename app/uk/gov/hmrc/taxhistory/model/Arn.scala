@@ -18,6 +18,10 @@ package uk.gov.hmrc.taxhistory.model
 
 import uk.gov.hmrc.domain.{Modulus23Check, SimpleObjectReads, SimpleObjectWrites, TaxIdentifier}
 
+/*
+ * This class was copied from "uk.gov.hmrc" %% "agent-mtd-identifiers" % "0.47.0-play-28"
+ * The reason to copy it, is due to the library using scala 2.12 with no plan to migrate to scala 2.13 in the near future
+ */
 case class Arn(value: String) extends TaxIdentifier
 
 object Arn {
