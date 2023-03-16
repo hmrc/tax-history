@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,26 +16,20 @@
 
 package uk.gov.hmrc.taxhistory.model.rti
 
-import org.joda.time.LocalDate
+import java.time.LocalDate
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json.fromJson
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 import uk.gov.hmrc.taxhistory.model.api.EarlierYearUpdate
-import uk.gov.hmrc.taxhistory.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 
 import java.util.UUID
 
-class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
+class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with DateUtils {
 
   lazy val rtiSuccessfulResponseURLDummy: JsValue = loadFile("/json/rti/response/dummyRti.json")
-
-  private val year2016     = 2016
-  private val monthMarch   = 3
-  private val monthJune    = 6
-  private val dayOne       = 1
-  private val dayThirtyOne = 31
 
   "RtiData" should {
 
@@ -72,10 +66,10 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
     "transform Rti Response Json correctly which containing Payments" in {
       val payments20160313 =
         rtiDetails.employments.flatMap(emp =>
-          emp.payments.find(pay => pay.paidOnDate == new LocalDate(year2016, monthMarch, dayThirtyOne))
+          emp.payments.find(pay => pay.paidOnDate == LocalDate.of(YEAR_2016, MARCH, DAY_31))
         )
       payments20160313.size                     shouldBe 1
-      payments20160313.head.paidOnDate          shouldBe new LocalDate(year2016, monthMarch, dayThirtyOne)
+      payments20160313.head.paidOnDate          shouldBe LocalDate.of(YEAR_2016, MARCH, DAY_31)
       payments20160313.head.taxablePayYTD       shouldBe BigDecimal.valueOf(20000.00)
       payments20160313.head.totalTaxYTD         shouldBe BigDecimal.valueOf(1880.00)
       payments20160313.head.studentLoansYTD.get shouldBe BigDecimal.valueOf(333.33)
@@ -84,17 +78,17 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
     "sort payment list by paid on date with latest payment in last position" in {
       val paymentsList = rtiDetails.employments.head.payments.sorted
       paymentsList.size               shouldBe 5
-      paymentsList.last.paidOnDate    shouldBe new LocalDate(year2016, monthMarch, dayThirtyOne)
+      paymentsList.last.paidOnDate    shouldBe LocalDate.of(YEAR_2016, MARCH, DAY_31)
       paymentsList.last.taxablePayYTD shouldBe BigDecimal.valueOf(20000.00)
       paymentsList.last.totalTaxYTD   shouldBe BigDecimal.valueOf(1880.00)
     }
 
     "transform Rti Response Json correctly which containing EndOfYearUpdates" in {
       val earlierYearUpdates = rtiDetails.employments.flatMap(emp =>
-        emp.earlierYearUpdates.find(eyu => eyu.receivedDate == new LocalDate(year2016, monthJune, dayOne))
+        emp.earlierYearUpdates.find(eyu => eyu.receivedDate == LocalDate.of(YEAR_2016, JUNE, DAY_1))
       )
       earlierYearUpdates.size                 shouldBe 1
-      earlierYearUpdates.head.receivedDate    shouldBe new LocalDate(year2016, monthJune, dayOne)
+      earlierYearUpdates.head.receivedDate    shouldBe LocalDate.of(YEAR_2016, JUNE, DAY_1)
       earlierYearUpdates.head.taxablePayDelta shouldBe BigDecimal.valueOf(-600.99)
       earlierYearUpdates.head.totalTaxDelta   shouldBe BigDecimal.valueOf(-10.99)
     }

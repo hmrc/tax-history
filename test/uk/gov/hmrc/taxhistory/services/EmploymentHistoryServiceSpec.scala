@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import org.joda.time.LocalDate
+import java.time.LocalDate
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
@@ -34,10 +34,10 @@ import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType.OccupationalPensio
 import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
-import uk.gov.hmrc.taxhistory.utils.{PlaceHolder, TestUtil}
-import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService
+import uk.gov.hmrc.taxhistory.utils.{DateUtils, PlaceHolder, TestEmploymentHistoryService, TestUtil}
 import uk.gov.hmrc.time.TaxYear
 import play.api.test.Helpers._
+
 import java.util.UUID
 import scala.concurrent.Future
 
@@ -48,7 +48,8 @@ class EmploymentHistoryServiceSpec
     with ScalaFutures
     with MockitoSugar
     with TestUtil
-    with Employments {
+    with Employments
+    with DateUtils {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   private val taxYear            = 2016
@@ -67,7 +68,7 @@ class EmploymentHistoryServiceSpec
       Some("6044041000000"),
       receivingJobSeekersAllowance = false,
       otherIncomeSourceIndicator = false,
-      Some(new LocalDate("2015-01-21")),
+      Some(LocalDate.of(YEAR_2015, JANUARY, DAY_21)),
       None,
       receivingOccupationalPension = true,
       Live
@@ -84,7 +85,7 @@ class EmploymentHistoryServiceSpec
       Some("6044041000000"),
       receivingJobSeekersAllowance = true,
       otherIncomeSourceIndicator = false,
-      Some(new LocalDate(s"${TaxYear.current.currentYear}-01-21")),
+      Some(LocalDate.of(TaxYear.current.currentYear, JANUARY, DAY_21)),
       None,
       receivingOccupationalPension = false,
       Live
@@ -101,7 +102,7 @@ class EmploymentHistoryServiceSpec
       Some("6044041000000"),
       receivingJobSeekersAllowance = true,
       otherIncomeSourceIndicator = false,
-      Some(new LocalDate(s"${TaxYear.current.previous.currentYear}-01-21")),
+      Some(LocalDate.of(TaxYear.current.previous.currentYear, JANUARY, DAY_21)),
       None,
       receivingOccupationalPension = false,
       Live
@@ -118,7 +119,7 @@ class EmploymentHistoryServiceSpec
       Some("6044041000000"),
       receivingJobSeekersAllowance = false,
       otherIncomeSourceIndicator = true,
-      Some(new LocalDate("2015-01-21")),
+      Some(LocalDate.of(YEAR_2015, JANUARY, DAY_21)),
       None,
       receivingOccupationalPension = false,
       Live
@@ -135,7 +136,7 @@ class EmploymentHistoryServiceSpec
       Some("6044041000000"),
       receivingJobSeekersAllowance = true,
       otherIncomeSourceIndicator = false,
-      Some(new LocalDate("2015-01-21")),
+      Some(LocalDate.of(YEAR_2015, JANUARY, DAY_21)),
       None,
       receivingOccupationalPension = false,
       Live
@@ -152,7 +153,7 @@ class EmploymentHistoryServiceSpec
       Some("6044041000000"),
       receivingJobSeekersAllowance = false,
       otherIncomeSourceIndicator = true,
-      Some(new LocalDate("2015-01-21")),
+      Some(LocalDate.of(YEAR_2015, JANUARY, DAY_21)),
       None,
       receivingOccupationalPension = false,
       Live
@@ -170,7 +171,7 @@ class EmploymentHistoryServiceSpec
   lazy val testNpsTaxAccount: NpsTaxAccount                = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
   lazy val testIabds: List[Iabd]                           = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
 
-  val startDate = new LocalDate("2015-01-21")
+  val startDate = LocalDate.of(YEAR_2015, JANUARY, DAY_21)
 
   private def stubNpsGetEmploymentsSucceeds(npsEmployments: List[NpsEmployment]) =
     when(testEmploymentHistoryService.desNpsConnector.getEmployments(any(), any()))
@@ -323,7 +324,7 @@ class EmploymentHistoryServiceSpec
       payAndTax.earlierYearUpdates.size     shouldBe 1
 
       val eyu = payAndTax.earlierYearUpdates.head
-      eyu.receivedDate  shouldBe new LocalDate("2016-06-01")
+      eyu.receivedDate  shouldBe LocalDate.of(YEAR_2016, JUNE, DAY_1)
       eyu.taxablePayEYU shouldBe BigDecimal(-600.99)
       eyu.taxEYU        shouldBe BigDecimal(-10.99)
 
@@ -370,7 +371,7 @@ class EmploymentHistoryServiceSpec
       val eyu = payAndTax.earlierYearUpdates.head
       eyu.taxablePayEYU            shouldBe BigDecimal(-600.99)
       eyu.taxEYU                   shouldBe BigDecimal(-10.99)
-      eyu.receivedDate             shouldBe new LocalDate("2016-06-01")
+      eyu.receivedDate             shouldBe LocalDate.of(YEAR_2016, JUNE, DAY_1)
       benefits.size                shouldBe 2
       benefits.head.iabdType       shouldBe "CarFuelBenefit"
       benefits.head.amount         shouldBe BigDecimal(amount)
@@ -454,11 +455,12 @@ class EmploymentHistoryServiceSpec
       )
       lazy val paye    = loadFile("/json/withPlaceholders/model/api/paye.json", placeHolders).as[PayAsYouEarn]
 
+      // scalastyle:off magic.number
       val testEmployment2 =
         Employment(
           UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
-          Some(locaDateCyMinus1("01", "21")),
-          Some(locaDateCyMinus1("02", "21")),
+          Some(locaDateCyMinus1(1, 21)),
+          Some(locaDateCyMinus1(2, 21)),
           "paye-1",
           "employer-1",
           Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),
@@ -471,7 +473,7 @@ class EmploymentHistoryServiceSpec
 
       val testEmployment3 = Employment(
         UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
-        Some(locaDateCyMinus1("02", "22")),
+        Some(locaDateCyMinus1(2, 22)),
         None,
         "paye-2",
         "employer-2",
@@ -493,8 +495,8 @@ class EmploymentHistoryServiceSpec
       val employments = testEmploymentHistoryService.getEmployments(Nino("AA000000A"), taxYear).futureValue
       employments.head.employmentStatus shouldBe EmploymentStatus.Unknown
 
-      employments.head.startDate shouldBe Some(taxYear.starts.withMonthOfYear(april).withDayOfMonth(dayOfMonth6))
-      employments.head.endDate   shouldBe Some(taxYear.finishes.withMonthOfYear(january).withDayOfMonth(dayOfMonth20))
+      employments.head.startDate shouldBe Some(taxYear.starts.withMonth(april).withDayOfMonth(dayOfMonth6))
+      employments.head.endDate   shouldBe Some(taxYear.finishes.withMonth(january).withDayOfMonth(dayOfMonth20))
       employments                  should contain(testEmployment2)
       employments                  should contain(testEmployment3)
     }
@@ -513,8 +515,8 @@ class EmploymentHistoryServiceSpec
 
       val testEmployment = Employment(
         UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
-        Some(new LocalDate("2016-01-21")),
-        Some(new LocalDate("2017-01-01")),
+        Some(LocalDate.of(YEAR_2016, JANUARY, DAY_21)),
+        Some(LocalDate.of(YEAR_2017, JANUARY, DAY_1)),
         "paye-1",
         "employer-1",
         Some("/2014/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),

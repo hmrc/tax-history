@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,14 @@
 package uk.gov.hmrc.taxhistory.model.api
 
 import java.util.UUID
-
-import org.joda.time.LocalDate
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json.{Reads, Writes, __}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType._
 import uk.gov.hmrc.time.TaxYear
-import play.api.libs.json.JodaWrites._
+
+import java.time.LocalDate
 
 case class Employment(
   employmentId: UUID = UUID.randomUUID(),
@@ -56,9 +55,6 @@ case class Employment(
 
 object Employment {
 
-  import play.api.libs.json.JodaReads
-  implicit val dateJsReader = JodaReads.jodaLocalDateReads("yyyy-MM-dd")
-
   def noRecord(startDate: LocalDate, endDate: LocalDate): Employment = {
     val noRecord = "No record held"
 
@@ -78,8 +74,8 @@ object Employment {
 
   implicit val jsonReads: Reads[Employment] = (
     (__ \ "employmentId").read[UUID] and
-      (__ \ "startDate").readNullable[LocalDate](dateJsReader) and
-      (__ \ "endDate").readNullable[LocalDate](dateJsReader) and
+      (__ \ "startDate").readNullable[LocalDate] and
+      (__ \ "endDate").readNullable[LocalDate] and
       (__ \ "payeReference").read[String] and
       (__ \ "employerName").read[String] and
       (__ \ "companyBenefitsURI").readNullable[String] and

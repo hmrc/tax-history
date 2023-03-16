@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,10 @@ package uk.gov.hmrc.taxhistory.controllers
 
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
-import uk.gov.hmrc.agentmtdidentifiers.model.Arn
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.auditable.Auditable
+import uk.gov.hmrc.taxhistory.model.Arn
 import uk.gov.hmrc.taxhistory.model.audit.{AgentViewedClient, AgentViewedClientEvent, DataEventDetail}
 import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, RelationshipAuthService}
 import uk.gov.hmrc.taxhistory.utils.Logging

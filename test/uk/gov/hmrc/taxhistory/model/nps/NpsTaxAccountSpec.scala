@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
-import org.joda.time.LocalDate
+import java.time.LocalDate
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -25,9 +25,9 @@ import play.api.libs.json._
 import uk.gov.hmrc.domain.TaxCode
 import uk.gov.hmrc.taxhistory.model.api.IncomeSource
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
-import uk.gov.hmrc.taxhistory.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 
-class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
+class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with DateUtils {
 
   lazy val getTaxAcoountResponseURLDummy: JsValue = loadFile("/json/nps/response/GetTaxAccount.json")
 
@@ -56,7 +56,7 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
     payeNumber = "AZ00010",
     employerName = "Aldi",
     worksNumber = Some("6044041000000"),
-    startDate = Some(new LocalDate("2015-01-21")),
+    startDate = Some(LocalDate.of(YEAR_2015, JANUARY, DAY_21)),
     endDate = None,
     employmentStatus = Live
   )
@@ -187,7 +187,7 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
           Some("6044041000000"),
           receivingJobSeekersAllowance = false,
           otherIncomeSourceIndicator = false,
-          Some(new LocalDate("2015-01-21")),
+          Some(LocalDate.of(YEAR_2015, JANUARY, DAY_21)),
           None,
           receivingOccupationalPension = false,
           Live
@@ -207,7 +207,7 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
           Some("6044041000000"),
           receivingJobSeekersAllowance = false,
           otherIncomeSourceIndicator = false,
-          Some(new LocalDate("2015-01-21")),
+          Some(LocalDate.of(YEAR_2015, JANUARY, DAY_21)),
           None,
           receivingOccupationalPension = false,
           Live

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class Retry @Inject() (val times: Int, val delay: FiniteDuration, val system: ActorSystem) extends Logging {
 
-  private def apply[A](n: Int = times)(f: => Future[A])(implicit ec: ExecutionContext): Future[A] =
+  private def apply[A](n: Int)(f: => Future[A])(implicit ec: ExecutionContext): Future[A] =
     f.recoverWith {
       case ShouldRetryAfter(e) if n > 0 =>
         logger.warn(s"Retrying after failure $e")

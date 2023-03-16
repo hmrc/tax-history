@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,11 +64,7 @@ class EmploymentHistoryService @Inject() (
     val fillers                    = getFillers(employmentsWithoutPensions, List(employmentGapFiller), taxYear)
 
     (employments ++ fillers) sortBy { employment =>
-      employment.startDate.getOrElse {
-        // This employment has no start date.
-        // Let it be ordered at the start of all employments.
-        taxYear.starts.minusDays(1)
-      }.toDate
+      employment.startDate.getOrElse(taxYear.starts.minusDays(1))
     }
   }
 
@@ -102,7 +98,7 @@ class EmploymentHistoryService @Inject() (
     }
 
   def getFromCache(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[PayAsYouEarn] =
-    cacheService.getOrElseInsert(nino, taxYear) {
+    cacheService.getOrElseInsert((nino, taxYear)) {
       retrieveAndBuildPaye(nino, taxYear).map { h =>
         logger.debug(s"Refreshing cached data for $nino $taxYear")
         h

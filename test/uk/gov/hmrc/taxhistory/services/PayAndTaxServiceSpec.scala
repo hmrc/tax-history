@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import org.joda.time.LocalDate
+import java.time.LocalDate
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.OptionValues
@@ -30,7 +30,7 @@ import uk.gov.hmrc.taxhistory.model.api.{PayAndTax, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.rti.RtiData
-import uk.gov.hmrc.taxhistory.utils.{TestEmploymentHistoryService, TestUtil}
+import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestEmploymentHistoryService, TestUtil}
 import uk.gov.hmrc.time.TaxYear
 
 import java.util.UUID
@@ -42,7 +42,8 @@ class PayAndTaxServiceSpec
     with OptionValues
     with ScalaFutures
     with MockitoSugar
-    with TestUtil {
+    with TestUtil
+    with DateUtils {
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val testNino: Nino             = randomNino()
 
@@ -61,7 +62,7 @@ class PayAndTaxServiceSpec
       Some("6044041000000"),
       receivingJobSeekersAllowance = false,
       otherIncomeSourceIndicator = false,
-      Some(new LocalDate("2015-01-21")),
+      Some(LocalDate.of(YEAR_2015, JANUARY, DAY_21)),
       None,
       receivingOccupationalPension = false,
       Live
@@ -100,7 +101,7 @@ class PayAndTaxServiceSpec
           taxTotal = Some(111.11),
           taxTotalIncludingEYU = Some(111.12),
           studentLoan = Some(333.33),
-          paymentDate = Some(new LocalDate("2016-02-20")),
+          paymentDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_20)),
           earlierYearUpdates = List()
         )
       )
@@ -126,7 +127,7 @@ class PayAndTaxServiceSpec
             taxTotal = Some(111.11),
             taxTotalIncludingEYU = Some(111.12),
             studentLoan = Some(333.33),
-            paymentDate = Some(new LocalDate("2016-02-20")),
+            paymentDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_20)),
             earlierYearUpdates = List()
           )
       )

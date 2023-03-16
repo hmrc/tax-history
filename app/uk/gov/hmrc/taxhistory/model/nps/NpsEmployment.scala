@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
-import org.joda.time.LocalDate
+import java.time.LocalDate
 import play.api.libs.json._
-import play.api.libs.json.JodaWrites._
 import uk.gov.hmrc.taxhistory.model.api.{Employment, EmploymentPaymentType}
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
 
@@ -91,5 +90,5 @@ object NpsEmployment {
   dropped since the field type in the NPS API is an integer. In such cases, pad to 3 digits.
    */
   private def withPadding(taxDistrictNumber: String): String =
-    taxDistrictNumber.reverse.padTo(3, "0").reverse.mkString
+    taxDistrictNumber.reverse.padTo(3, '0').reverse.mkString
 }

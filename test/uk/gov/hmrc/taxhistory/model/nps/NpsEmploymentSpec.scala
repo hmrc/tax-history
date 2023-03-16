@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
-import org.joda.time.LocalDate
+import java.time.LocalDate
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
-import uk.gov.hmrc.taxhistory.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 
-class NpsEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
+class NpsEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with DateUtils {
 
   lazy val employmentsResponse: JsValue = loadFile("/json/nps/response/employments.json")
 
@@ -44,8 +44,8 @@ class NpsEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with
       |    }
     """.stripMargin
 
-  val startDate = new LocalDate("2015-01-21")
-  val endDate   = new LocalDate("2016-01-08")
+  val startDate = LocalDate.of(YEAR_2015, JANUARY, DAY_21)
+  val endDate   = LocalDate.of(YEAR_2016, JANUARY, DAY_8)
 
   "NpsEmployment" should {
     "transform Nps Employment Response Json correctly to Employment Model " in {

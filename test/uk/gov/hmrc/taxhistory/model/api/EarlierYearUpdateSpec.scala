@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,32 +16,16 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
-/*
- * Copyright 2017 HM Revenue & Customs
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-import org.joda.time.LocalDate
+import java.time.LocalDate
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.{JsValue, Json}
-import uk.gov.hmrc.taxhistory.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 
 import java.util.UUID
 
-class EarlierYearUpdateSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
+class EarlierYearUpdateSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with DateUtils {
 
   lazy val earlierYearUpdateJson: JsValue     = loadFile("/json/model/api/earlierYearUpdate.json")
   lazy val earlierYearUpdateListJson: JsValue = loadFile("/json/model/api/earlierYearUpdates.json")
@@ -50,16 +34,16 @@ class EarlierYearUpdateSpec extends TestUtil with AnyWordSpecLike with Matchers 
     earlierYearUpdateId = UUID.fromString("cf1886e7-ae56-4ec2-84a6-926d64ace287"),
     taxablePayEYU = BigDecimal(6543.21),
     taxEYU = BigDecimal(123.45),
-    receivedDate = new LocalDate("2016-06-26")
+    receivedDate = LocalDate.of(YEAR_2016, JUNE, DAY_26)
   )
 
-  lazy val earlierYearUpdate2: EarlierYearUpdate = EarlierYearUpdate(
+  lazy val earlierYearUpdate2: EarlierYearUpdate          = EarlierYearUpdate(
     earlierYearUpdateId = UUID.fromString("effa7845-aa97-454f-88da-ffa099eba7f2"),
     taxablePayEYU = BigDecimal(123.45),
     taxEYU = BigDecimal(67.89),
-    receivedDate = new LocalDate("2015-05-29")
+    receivedDate = LocalDate.of(YEAR_2015, MAY, DAY_29)
   )
-  lazy val earlierYearUpdateList                 = List(earlierYearUpdate1, earlierYearUpdate2)
+  lazy val earlierYearUpdateList: List[EarlierYearUpdate] = List(earlierYearUpdate1, earlierYearUpdate2)
 
   "EarlierYearUpdate" should {
 
@@ -73,7 +57,7 @@ class EarlierYearUpdateSpec extends TestUtil with AnyWordSpecLike with Matchers 
       val eyu = EarlierYearUpdate(
         taxablePayEYU = BigDecimal(1.11),
         taxEYU = BigDecimal(22.22),
-        receivedDate = new LocalDate("2015-05-29")
+        receivedDate = LocalDate.of(YEAR_2015, MAY, DAY_29)
       )
 
       eyu.earlierYearUpdateId.toString.nonEmpty shouldBe true

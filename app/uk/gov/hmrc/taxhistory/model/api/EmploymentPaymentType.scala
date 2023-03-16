@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ package uk.gov.hmrc.taxhistory.model.api
 
 import play.api.libs.json._
 
-import scala.util.Try
-
 sealed trait EmploymentPaymentType extends Product with Serializable {
   val name: String
 }
@@ -31,12 +29,13 @@ object EmploymentPaymentType {
   case object EmploymentAndSupportAllowance extends EmploymentPaymentType { val name = "EmploymentAndSupportAllowance" }
   case object StatePensionLumpSum extends EmploymentPaymentType { val name = "StatePensionLumpSum" }
 
-  def apply(name: String): EmploymentPaymentType = name.trim match {
-    case OccupationalPension.name           => OccupationalPension
-    case JobseekersAllowance.name           => JobseekersAllowance
-    case IncapacityBenefit.name             => IncapacityBenefit
-    case EmploymentAndSupportAllowance.name => EmploymentAndSupportAllowance
-    case StatePensionLumpSum.name           => StatePensionLumpSum
+  def apply(name: String): Option[EmploymentPaymentType] = name.trim match {
+    case OccupationalPension.name           => Some(OccupationalPension)
+    case JobseekersAllowance.name           => Some(JobseekersAllowance)
+    case IncapacityBenefit.name             => Some(IncapacityBenefit)
+    case EmploymentAndSupportAllowance.name => Some(EmploymentAndSupportAllowance)
+    case StatePensionLumpSum.name           => Some(StatePensionLumpSum)
+    case _                                  => None
   }
 
   def unapply(paymentType: EmploymentPaymentType): Option[String] = Some(paymentType.name)
@@ -62,7 +61,10 @@ object EmploymentPaymentType {
 
   private implicit val reads: Reads[EmploymentPaymentType] = {
     case JsString(value) =>
-      Try(JsSuccess(EmploymentPaymentType(value))).getOrElse(JsError(s"Invalid EmploymentPaymentType $value"))
+      EmploymentPaymentType(value) match {
+        case Some(et) => JsSuccess(et)
+        case None     => JsError(s"Invalid EmploymentPaymentType $value")
+      }
     case invalid         => JsError(s"Invalid EmploymentPaymentType $invalid")
   }
 

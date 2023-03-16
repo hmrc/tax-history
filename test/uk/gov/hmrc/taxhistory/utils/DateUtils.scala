@@ -14,16 +14,28 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxhistory.metrics
+package uk.gov.hmrc.taxhistory.utils
 
-import uk.gov.hmrc.taxhistory.metrics
+trait DateUtils {
 
-object MetricsEnum extends Enumeration {
+  val YEAR_2015 = 2015
+  val YEAR_2016 = 2016
+  val YEAR_2017 = 2017
 
-  type MetricsEnum = Value
-  val NPS_GET_EMPLOYMENTS: metrics.MetricsEnum.Value = Value
-  val RTI_GET_EMPLOYMENTS: metrics.MetricsEnum.Value = Value
-  val NPS_GET_IABDS: metrics.MetricsEnum.Value       = Value
-  val NPS_GET_TAX_ACCOUNT: metrics.MetricsEnum.Value = Value
-  val CITIZEN_DETAILS: metrics.MetricsEnum.Value     = Value
+  val JANUARY  = 1
+  val FEBRUARY = 2
+  val MARCH    = 3
+  val MAY      = 5
+  val JUNE     = 6
+  val OCTOBER  = 10
+  val DECEMBER = 12
+
+  val DAY_1  = 1
+  val DAY_8  = 8
+  val DAY_20 = 20
+  val DAY_21 = 21
+  val DAY_22 = 22
+  val DAY_26 = 26
+  val DAY_29 = 29
+  val DAY_31 = 31
 }

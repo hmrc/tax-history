@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,32 +16,16 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
-/*
- * Copyright 2017 HM Revenue & Customs
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-import org.joda.time.LocalDate
+import java.time.LocalDate
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsValue, Json}
-import uk.gov.hmrc.taxhistory.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 
 import java.util.UUID
 
-class PayAndTaxSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
+class PayAndTaxSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with DateUtils {
 
   lazy val payAndTaxNoEyuJson: JsValue      = loadFile("/json/model/api/payAndTaxNoEyu.json")
   lazy val payAndTaxWithEyuJson: JsValue    = loadFile("/json/model/api/payAndTaxWithEyu.json")
@@ -52,7 +36,7 @@ class PayAndTaxSpec extends TestUtil with AnyWordSpecLike with Matchers with Opt
       earlierYearUpdateId = UUID.fromString("e6926848-818b-4d01-baa1-02111eb0f514"),
       taxablePayEYU = BigDecimal(123.45),
       taxEYU = BigDecimal(67.89),
-      receivedDate = new LocalDate("2015-05-29")
+      receivedDate = LocalDate.of(YEAR_2015, MAY, DAY_29)
     )
   )
 
@@ -63,7 +47,7 @@ class PayAndTaxSpec extends TestUtil with AnyWordSpecLike with Matchers with Opt
     taxTotal = Some(BigDecimal(6666.66)),
     taxTotalIncludingEYU = Some(BigDecimal(6666.66)),
     earlierYearUpdates = Nil,
-    paymentDate = Some(new LocalDate("2016-02-20"))
+    paymentDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_20))
   )
 
   lazy val payAndTaxValuesNone: PayAndTax = PayAndTax(
@@ -83,7 +67,7 @@ class PayAndTaxSpec extends TestUtil with AnyWordSpecLike with Matchers with Opt
     taxTotal = Some(BigDecimal(2222.22)),
     taxTotalIncludingEYU = Some(BigDecimal(2290.11)),
     earlierYearUpdates = eyuList,
-    paymentDate = Some(new LocalDate("2016-02-20"))
+    paymentDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_20))
   )
 
   "PayAndTax" should {

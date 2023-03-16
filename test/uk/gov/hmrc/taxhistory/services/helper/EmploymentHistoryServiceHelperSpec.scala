@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.services.helper
 
-import org.joda.time.LocalDate
+import java.time.LocalDate
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import uk.gov.hmrc.taxhistory.model.rti.RtiData
@@ -24,10 +24,10 @@ import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType.{JobseekersAllowan
 import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps._
-import uk.gov.hmrc.taxhistory.utils.TestUtil
+import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
 
-class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
+class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with TestUtil with DateUtils {
 
   private val sequenceNumber                                          = 6
   val npsEmploymentResponseWithTaxDistrictNumber: List[NpsEmployment] = List(
@@ -40,7 +40,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       Some("6044041000000"),
       receivingJobSeekersAllowance = false,
       otherIncomeSourceIndicator = false,
-      Some(new LocalDate("2015-01-21")),
+      Some(LocalDate.of(YEAR_2015, JANUARY, DAY_21)),
       None,
       receivingOccupationalPension = false,
       Live
@@ -53,10 +53,10 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
 
   lazy val testIncomeSource: IncomeSource = IncomeSource(1, 1, None, Nil, Nil, testTaxCode, None, 1, "")
 
-  val startDate                    = new LocalDate("2015-01-21")
+  val startDate                    = LocalDate.of(YEAR_2015, JANUARY, DAY_21)
   lazy val employment1: Employment = Employment(
     payeReference = "1234",
-    startDate = Some(new LocalDate("2016-10-20")),
+    startDate = Some(LocalDate.of(YEAR_2016, OCTOBER, DAY_20)),
     employerName = "AnEmployerName",
     employmentStatus = EmploymentStatus.Live,
     worksNumber = "00191048716"
@@ -64,7 +64,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
 
   lazy val employment2: Employment = Employment(
     payeReference = "4321",
-    startDate = Some(new LocalDate("2015-12-01")),
+    startDate = Some(LocalDate.of(YEAR_2015, DECEMBER, DAY_1)),
     employerName = "AnotherEmployerName",
     employmentStatus = EmploymentStatus.Live,
     worksNumber = "00191048716"
