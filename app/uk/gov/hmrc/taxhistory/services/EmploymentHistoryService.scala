@@ -177,14 +177,7 @@ class EmploymentHistoryService @Inject() (
 
   def getIncomeSource(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit
     headerCarrier: HeaderCarrier
-  ): Future[Option[IncomeSource]] =
-    (if (taxYear == TaxYear.current) {
-       getFromCache(nino, taxYear).map(_.incomeSources.get(employmentId))
-     } else {
-       Future(None)
-     }).orNotFound(
-      s"IncomeSource not found for NINO ${nino.value}, tax year ${taxYear.toString}, and employmentId $employmentId"
-    )
+  ): Future[Option[IncomeSource]] = getFromCache(nino, taxYear).map(_.incomeSources.get(employmentId))
 
   def getTaxYears(nino: Nino): Future[List[IndividualTaxYear]] = {
 
