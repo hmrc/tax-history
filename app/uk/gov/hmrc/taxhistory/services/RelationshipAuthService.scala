@@ -39,9 +39,10 @@ class RelationshipAuthService @Inject() (val authConnector: AuthConnector)(impli
     with Results
     with Logging {
 
-  lazy val affinityGroupAllEnrolls: Retrieval[Option[AffinityGroup] ~ Enrolments] = affinityGroup and allEnrolments
+  private lazy val affinityGroupAllEnrolls: Retrieval[Option[AffinityGroup] ~ Enrolments] =
+    affinityGroup and allEnrolments
 
-  lazy val AgentEnrolmentForPAYE: Enrolment = Enrolment("HMRC-AS-AGENT")
+  private lazy val AgentEnrolmentForPAYE: Enrolment = Enrolment("HMRC-AS-AGENT")
     .withDelegatedAuthRule("afi-auth")
 
   private def extractArn(enrolls: Enrolments): Option[Arn] = for {
