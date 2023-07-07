@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxhistory.services
 
 import javax.inject.Inject
 import play.api.mvc.{Result, Results}
-import uk.gov.hmrc.taxhistory.model.Arn
+import uk.gov.hmrc.agentmtdidentifiers.model.Arn
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core._

@@ -33,7 +33,7 @@ lazy val microservice =
     .settings(defaultSettings(): _*)
     .settings(routesImport ++= Seq("uk.gov.hmrc.taxhistory.binders.PathBinders._"))
     .settings(
-      scalaVersion := "2.13.10",
+      scalaVersion := "2.13.11",
       libraryDependencies ++= AppDependencies(),
       retrieveManaged := true,
       // ***************
