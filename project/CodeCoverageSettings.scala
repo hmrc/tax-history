@@ -20,7 +20,7 @@ import scoverage.ScoverageKeys
 object CodeCoverageSettings {
   private val excludedPackages: Seq[String] = Seq(
     "<empty>",
-    ".*(Reverse|BuildInfo|Routes).*",
+    ".*(Routes).*",
     "uk.gov.hmrc.taxhistory.auditable",
     "uk.gov.hmrc.taxhistory.controllers.TestOnlyController",
     "uk.gov.hmrc.taxhistory.metrics",

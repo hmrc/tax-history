@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
-import java.time.{LocalDate, Month}
+import java.time.LocalDate
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
