@@ -1,9 +1,9 @@
 import play.sbt.PlayImport.PlayKeys
 import play.sbt.routes.RoutesKeys.routesImport
 import sbt.Keys._
-import sbt.Tests.{Group, SubProcess}
 import sbt._
-import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings}
+import uk.gov.hmrc.DefaultBuildSettings
+import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings, oneForkedJvmPerTest}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
 import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
 
@@ -29,7 +29,7 @@ lazy val microservice =
       scalacOptions += "-Wconf:src=routes/.*:s"
     )
     .configs(IntegrationTest)
-    .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
+    .settings(DefaultBuildSettings.integrationTestSettings())
     .settings(
       IntegrationTest / Keys.fork := false,
       IntegrationTest / unmanagedSourceDirectories := (IntegrationTest / baseDirectory)(base => Seq(base / "it")).value,
@@ -39,11 +39,6 @@ lazy val microservice =
       Test / parallelExecution := false
     )
     .settings(resolvers += Resolver.jcenterRepo)
-
-def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] = tests map { test =>
-  val forkOptions = ForkOptions().withRunJVMOptions(Vector("-Dtest.name=" + test.name))
-  Group(test.name, Seq(test), SubProcess(config = forkOptions))
-}
 
 addCommandAlias("scalafmtAll", "all scalafmtSbt scalafmt Test/scalafmtt IntegrationTest/scalafmt")
 addCommandAlias("scalastyleAll", "all scalastyle Test/scalastyle IntegrationTest/scalastyle")
