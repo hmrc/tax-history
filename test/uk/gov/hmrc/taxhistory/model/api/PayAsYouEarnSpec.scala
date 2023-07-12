@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
-import java.time.LocalDate
+import java.time.{LocalDate, Month}
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
@@ -93,8 +93,78 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
           |    }
         """.stripMargin)
 
-      val employmentsDeserialised = List(employment1, employment2)
-      val employmentsSerialised   = JsArray(Seq(employments1Json, employments2Json))
+      val employment3      = Employment(
+        employmentId = UUID.fromString(employment1Id),
+        startDate = Some(LocalDate.of(YEAR_2016, JANUARY, DAY_21)),
+        endDate = Some(LocalDate.of(YEAR_2017, JANUARY, DAY_1)),
+        payeReference = "paye-1",
+        employerName = "employer-1",
+        employmentStatus = EmploymentStatus.Live,
+        employmentPaymentType = Some(EmploymentPaymentType.JobseekersAllowance),
+        worksNumber = "00191048716"
+      )
+      val employments3Json = Json.parse(s"""
+           |    {
+           |      "employmentId": "$employment1Id",
+           |      "startDate": "2016-01-21",
+           |      "endDate": "2017-01-01",
+           |      "payeReference": "paye-1",
+           |      "employerName": "employer-1",
+           |      "employmentPaymentType": "JobseekersAllowance",
+           |      "employmentStatus": 1,
+           |      "worksNumber": "00191048716"
+           |    }
+        """.stripMargin)
+
+      val employment4      = Employment(
+        employmentId = UUID.fromString(employment1Id),
+        startDate = Some(LocalDate.of(YEAR_2016, JANUARY, DAY_21)),
+        endDate = Some(LocalDate.of(YEAR_2017, JANUARY, DAY_1)),
+        payeReference = "paye-1",
+        employerName = "employer-1",
+        employmentStatus = EmploymentStatus.Live,
+        employmentPaymentType = Some(EmploymentPaymentType.EmploymentAndSupportAllowance),
+        worksNumber = "00191048716"
+      )
+      val employments4Json = Json.parse(s"""
+           |    {
+           |      "employmentId": "$employment1Id",
+           |      "startDate": "2016-01-21",
+           |      "endDate": "2017-01-01",
+           |      "payeReference": "paye-1",
+           |      "employerName": "employer-1",
+           |      "employmentPaymentType": "EmploymentAndSupportAllowance",
+           |      "employmentStatus": 1,
+           |      "worksNumber": "00191048716"
+           |    }
+        """.stripMargin)
+
+      val employment5      = Employment(
+        employmentId = UUID.fromString(employment1Id),
+        startDate = Some(LocalDate.of(YEAR_2016, JANUARY, DAY_21)),
+        endDate = Some(LocalDate.of(YEAR_2017, JANUARY, DAY_1)),
+        payeReference = "paye-1",
+        employerName = "employer-1",
+        employmentStatus = EmploymentStatus.Live,
+        employmentPaymentType = Some(EmploymentPaymentType.StatePensionLumpSum),
+        worksNumber = "00191048716"
+      )
+      val employments5Json = Json.parse(s"""
+           |    {
+           |      "employmentId": "$employment1Id",
+           |      "startDate": "2016-01-21",
+           |      "endDate": "2017-01-01",
+           |      "payeReference": "paye-1",
+           |      "employerName": "employer-1",
+           |      "employmentPaymentType": "StatePensionLumpSum",
+           |      "employmentStatus": 1,
+           |      "worksNumber": "00191048716"
+           |    }
+        """.stripMargin)
+
+      val employmentsDeserialised = List(employment1, employment2, employment3, employment4, employment5)
+      val employmentsSerialised   =
+        JsArray(Seq(employments1Json, employments2Json, employments3Json, employments4Json, employments5Json))
 
       "serialise to an empty json array when there are no employments" in {
         val payeNoEmployments = PayAsYouEarn(employments = Nil)

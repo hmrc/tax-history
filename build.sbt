@@ -9,26 +9,13 @@ import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
 
 val appName = "tax-history"
 
-lazy val scoverageSettings = {
-  import scoverage.ScoverageKeys
-  Seq(
-    // Semicolon-separated list of regexs matching classes to exclude
-    ScoverageKeys.coverageExcludedPackages := "<empty>;Reverse.*;.*AuthService.*;modgiels/.data/..*;" +
-      "uk.gov.hmrc.taxhistory.auditable;uk.gov.hmrc.taxhistory.metrics;view.*;controllers.auth.*;filters.*;forms.*;config.*;" +
-      ".*BuildInfo.*;prod.Routes;app.Routes;testOnlyDoNotUseInAppConf.Routes;controllers.ExampleController;controllers.testonly.TestOnlyController",
-    ScoverageKeys.coverageMinimumStmtTotal := 90.00,
-    ScoverageKeys.coverageFailOnMinimum := true,
-    ScoverageKeys.coverageHighlighting := true,
-    Test / parallelExecution := false
-  )
-}
-
 lazy val microservice =
   Project(appName, file("."))
     .enablePlugins(SbtAutoBuildPlugin, play.sbt.PlayScala, SbtDistributablesPlugin)
     .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
+    .settings(majorVersion := 3)
     .settings(PlayKeys.playDefaultPort := 9997)
-    .settings(scoverageSettings: _*)
+    .settings(CodeCoverageSettings.settings: _*)
     .settings(scalaSettings: _*)
     .settings(defaultSettings(): _*)
     .settings(routesImport ++= Seq("uk.gov.hmrc.taxhistory.binders.PathBinders._"))
@@ -44,12 +31,12 @@ lazy val microservice =
     .configs(IntegrationTest)
     .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
     .settings(
-      majorVersion := 3,
       IntegrationTest / Keys.fork := false,
       IntegrationTest / unmanagedSourceDirectories := (IntegrationTest / baseDirectory)(base => Seq(base / "it")).value,
       addTestReportOption(IntegrationTest, "int-test-reports"),
       IntegrationTest / testGrouping := oneForkedJvmPerTest((IntegrationTest / definedTests).value),
-      IntegrationTest / parallelExecution := false
+      IntegrationTest / parallelExecution := false,
+      Test / parallelExecution := false
     )
     .settings(resolvers += Resolver.jcenterRepo)
 
@@ -58,5 +45,5 @@ def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] = tests map { te
   Group(test.name, Seq(test), SubProcess(config = forkOptions))
 }
 
-addCommandAlias("scalafmtAll", "all scalafmtSbt scalafmt Test/scalafmt")
-addCommandAlias("scalastyleAll", "all scalastyle Test/scalastyle")
+addCommandAlias("scalafmtAll", "all scalafmtSbt scalafmt Test/scalafmtt IntegrationTest/scalafmt")
+addCommandAlias("scalastyleAll", "all scalastyle Test/scalastyle IntegrationTest/scalastyle")
