@@ -38,7 +38,6 @@ lazy val microservice =
       IntegrationTest / parallelExecution := false,
       Test / parallelExecution := false
     )
-    .settings(resolvers += Resolver.jcenterRepo)
 
 addCommandAlias("scalafmtAll", "all scalafmtSbt scalafmt Test/scalafmtt IntegrationTest/scalafmt")
 addCommandAlias("scalastyleAll", "all scalastyle Test/scalastyle IntegrationTest/scalastyle")
