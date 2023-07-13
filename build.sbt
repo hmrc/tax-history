@@ -1,10 +1,4 @@
-import play.sbt.PlayImport.PlayKeys
-import play.sbt.routes.RoutesKeys.routesImport
-import sbt.Keys._
-import sbt._
 import uk.gov.hmrc.DefaultBuildSettings
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
-import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
 
 val appName = "tax-history"
 
@@ -27,7 +21,6 @@ lazy val microservice =
       scalacOptions += "-Wconf:src=routes/.*:s"
     )
     .settings(DefaultBuildSettings.integrationTestSettings())
-    .settings(Test / parallelExecution := false)
 
 addCommandAlias("scalafmtAll", "all scalafmtSbt scalafmt Test/scalafmt IntegrationTest/scalafmt")
 addCommandAlias("scalastyleAll", "all scalastyle Test/scalastyle IntegrationTest/scalastyle")
