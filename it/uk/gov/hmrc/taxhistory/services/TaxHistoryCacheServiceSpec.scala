@@ -33,12 +33,16 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class TaxHistoryCacheServiceSpec extends AnyWordSpecLike with Matchers with OptionValues with ScalaFutures
-  with MockitoSugar
-  with BeforeAndAfterAll
-  with BeforeAndAfterEach
-  with GuiceOneServerPerSuite
-  with MongoSupport {
+class TaxHistoryCacheServiceSpec
+    extends AnyWordSpecLike
+    with Matchers
+    with OptionValues
+    with ScalaFutures
+    with MockitoSugar
+    with BeforeAndAfterAll
+    with BeforeAndAfterEach
+    with GuiceOneServerPerSuite
+    with MongoSupport {
 
   import ITestUtil._
 
@@ -54,16 +58,14 @@ class TaxHistoryCacheServiceSpec extends AnyWordSpecLike with Matchers with Opti
 
   val testPaye: PayAsYouEarn = PayAsYouEarn()
 
-  val nino: Nino = randomNino()
+  val nino: Nino       = randomNino()
   val taxYear: TaxYear = TaxYear(2015)
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     testTaxHistoryCacheService.collection.drop()
-  }
 
-  override def afterEach(): Unit = {
+  override def afterEach(): Unit =
     testTaxHistoryCacheService.collection.drop()
-  }
 
   "TaxHistoryCacheService" should {
 
@@ -74,15 +76,13 @@ class TaxHistoryCacheServiceSpec extends AnyWordSpecLike with Matchers with Opti
 
     "fetch from the cache by ID" in {
       await(for {
-        _ <- testTaxHistoryCacheService.insertOrUpdate((nino, taxYear), testPaye)
+        _             <- testTaxHistoryCacheService.insertOrUpdate((nino, taxYear), testPaye)
         readbackValue <- testTaxHistoryCacheService.get((nino, taxYear))
-      } yield {
-        readbackValue shouldBe Some(testPaye)
-      })
+      } yield readbackValue shouldBe Some(testPaye))
     }
 
     "When not in the mongo cache update the cache and fetch" in {
-      val nino = randomNino()
+      val nino    = randomNino()
       val taxYear = TaxYear(2014)
 
       val cacheResult0 = await(testTaxHistoryCacheService.get((nino, taxYear)))
@@ -95,7 +95,6 @@ class TaxHistoryCacheServiceSpec extends AnyWordSpecLike with Matchers with Opti
     }
   }
 
-  override protected def afterAll(): Unit = {
+  override protected def afterAll(): Unit =
     mongoComponent.database.drop()
-  }
 }

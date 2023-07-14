@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxhistory.utils
 
 import org.mockito.Mockito
-import uk.gov.hmrc.taxhistory.model.Arn
+import uk.gov.hmrc.agentmtdidentifiers.model.Arn
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier

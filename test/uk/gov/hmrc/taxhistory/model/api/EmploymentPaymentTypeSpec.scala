@@ -69,6 +69,11 @@ class EmploymentPaymentTypeSpec extends TestUtil with AnyWordSpecLike with Match
     "return OccupationalPension if 'receivingOccupationalPension' flag is true" in {
       paymentType("123/AB123", receivingOccupationalPension = true) shouldBe Some(OccupationalPension)
     }
+    "return JobseekersAllowance if 'receivingJobseekersAllowance' flag is true" in {
+      paymentType("123/AB123", receivingOccupationalPension = false, receivingJobSeekersAllowance = true) shouldBe Some(
+        JobseekersAllowance
+      )
+    }
     "return IncapacityBenefit if PAYE reference is '892/BA500'" in {
       paymentType("892/BA500", receivingOccupationalPension = false) shouldBe Some(IncapacityBenefit)
     }

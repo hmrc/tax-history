@@ -68,9 +68,9 @@ object NpsIncomeSource {
 
 case class NpsTaxAccount(incomeSources: List[NpsIncomeSource]) {
 
-  val PrimaryEmployment      = 1
-  val OutStandingDebtType    = 41
-  val UnderpaymentAmountType = 35
+  private val PrimaryEmployment      = 1
+  private val OutStandingDebtType    = 41
+  private val UnderpaymentAmountType = 35
 
   private def findPrimaryEmployment: Option[NpsIncomeSource] =
     incomeSources.find(_.employmentType.contains(PrimaryEmployment))

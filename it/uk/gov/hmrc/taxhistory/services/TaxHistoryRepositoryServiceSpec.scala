@@ -31,24 +31,25 @@ import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-
-class TaxHistoryRepositoryServiceSpec extends AnyWordSpecLike with Matchers with OptionValues with ScalaFutures
-  with MongoSupport
-  with BeforeAndAfterAll
-  with BeforeAndAfterEach
-  with GuiceOneServerPerSuite {
+class TaxHistoryRepositoryServiceSpec
+    extends AnyWordSpecLike
+    with Matchers
+    with OptionValues
+    with ScalaFutures
+    with MongoSupport
+    with BeforeAndAfterAll
+    with BeforeAndAfterEach
+    with GuiceOneServerPerSuite {
 
   val mockAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
-  val mockTimeStampSupport = new CurrentTimestampSupport()
-  val repository = new TaxHistoryMongoCacheService(mongoComponent, mockAppConfig, mockTimeStampSupport)
+  val mockTimeStampSupport     = new CurrentTimestampSupport()
+  val repository               = new TaxHistoryMongoCacheService(mongoComponent, mockAppConfig, mockTimeStampSupport)
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     repository.collection.drop()
-  }
 
-  override def afterEach(): Unit = {
+  override def afterEach(): Unit =
     repository.collection.drop()
-  }
 
   "TaxHistoryCacheService" should {
 
@@ -62,7 +63,7 @@ class TaxHistoryRepositoryServiceSpec extends AnyWordSpecLike with Matchers with
     "fetch from the cache by ID " in {
       await(repository.insertOrUpdate((Nino("AA000000A"), TaxYear(2015)), payAsYouEarn))
       val readbackData = await(repository.findById("AA000000A"))
-      readbackData shouldBe defined
+      readbackData                                          shouldBe defined
       (readbackData.get.data \ "2015").get.as[PayAsYouEarn] shouldBe payAsYouEarn
     }
   }

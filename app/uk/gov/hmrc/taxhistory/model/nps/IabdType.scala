@@ -69,13 +69,13 @@ case object EarlierYearsAdjustment extends Allowances
 case object UnKnown extends IabdType
 
 object IabdType {
-  val UnknownIabdTypeId: Int = -1000
+  private val UnknownIabdTypeId: Int = -1000
 
-  def apply(id: Int): IabdType         = idMap.getOrElse(id, UnKnown)
-  def unapply(iabdType: IabdType): Int =
+  def apply(id: Int): IabdType          = idMap.getOrElse(id, UnKnown)
+  def unapply(iabdType: IabdType): Int  =
     idMap.collectFirst({ case (key, value) if value == iabdType => key }).getOrElse(UnknownIabdTypeId)
 
-  val idMap: Map[Int, IabdType]        = Map(
+  private val idMap: Map[Int, IabdType] = Map(
     8   -> EmployerProvidedServices,
     29  -> CarFuelBenefit,
     30  -> MedicalInsurance,

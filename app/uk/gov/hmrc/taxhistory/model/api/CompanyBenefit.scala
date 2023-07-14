@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxhistory.model.api
 
 import java.util.UUID
 
-import play.api.libs.json.{Json, _}
+import play.api.libs.json._
 
 case class CompanyBenefit(
   companyBenefitId: UUID = UUID.randomUUID(),

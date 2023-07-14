@@ -23,7 +23,7 @@ import scala.io.Source
 import scala.util.Random
 
 object ITestUtil {
-  def loadFile(path:String): JsValue = {
+  def loadFile(path: String): JsValue = {
     val jsonString = Source.fromURL(getClass.getResource(path)).mkString
     Json.parse(jsonString)
   }
