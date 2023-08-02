@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxhistory.connectors
 
 import akka.actor.ActorSystem
+import play.api.http.Status.NOT_FOUND
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
@@ -24,6 +25,7 @@ import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.utils.Retry
+
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -58,7 +60,7 @@ class DesNpsConnector @Inject() (
       withRetry {
         http.GET[List[Iabd]](iabdsUrl(nino, year), headers = buildHeaders(hc))
       }.recover {
-        case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == 404 =>
+        case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == NOT_FOUND =>
           logger.warn(s"NPS getIabds returned a 404 response: ${ex.message}")
           List.empty
       }
@@ -71,7 +73,7 @@ class DesNpsConnector @Inject() (
       withRetry {
         http.GET[NpsTaxAccount](taxAccountUrl(nino, year), headers = buildHeaders(hc)).map(Some(_))
       }.recover {
-        case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == 404 =>
+        case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == NOT_FOUND =>
           logger.warn(s"NPS getTaxAccount returned a 404 response: ${ex.message}")
           None
       }
@@ -84,7 +86,7 @@ class DesNpsConnector @Inject() (
       withRetry {
         http.GET[List[NpsEmployment]](employmentsUrl(nino, year), headers = buildHeaders(hc))
       }.recover {
-        case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == 404 =>
+        case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == NOT_FOUND =>
           logger.warn(s"NPS getEmployments returned a 404 response: ${ex.message}")
           List.empty
       }

@@ -257,5 +257,16 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with 
 
       intercept[BadRequestException](await(result))
     }
+
+    "return an empty list if the response from DES is 404 (Not Found)" in {
+      when(testDesNpsConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+
+      when(testDesNpsConnector.http.GET[HttpResponse](any(), any(), any())(any(), any(), any()))
+        .thenReturn(Future.failed(UpstreamErrorResponse("Not found", NOT_FOUND, NOT_FOUND)))
+
+      val result = testDesNpsConnector.getEmployments(testNino, testYear)
+
+      await(result) mustBe List.empty
+    }
   }
 }

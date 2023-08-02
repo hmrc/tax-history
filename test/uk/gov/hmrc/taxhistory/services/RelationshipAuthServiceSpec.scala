@@ -23,7 +23,7 @@ import play.api.mvc.Results._
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, UnauthorizedException}
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 
 import scala.concurrent.Future
@@ -90,7 +90,7 @@ class RelationshipAuthServiceSpec extends PlaySpec with MockitoSugar with TestUt
 
     "respond with UNAUTHORIZED where the affinity group is not retrieved" in {
       when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(any(), any()))
-        .thenReturn(Future.successful(new ~[Option[AffinityGroup], Enrolments](None, Enrolments(newEnrolments))))
+        .thenReturn(Future.failed(new UnauthorizedException("Failed to retrieve affinity group or enrolments")))
 
       val result = testRelationshipAuthService.withAuthorisedRelationship(ninoWithAgent) { arn =>
         Future.successful(Ok("Some content"))
@@ -100,6 +100,17 @@ class RelationshipAuthServiceSpec extends PlaySpec with MockitoSugar with TestUt
     }
 
     "respond with UNAUTHORIZED when the user is not logged in" in {
+      when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(any(), any()))
+        .thenReturn(Future.failed(new UnauthorizedException("Unauthorized")))
+
+      val result = testRelationshipAuthService.withAuthorisedRelationship(ninoWithAgent) { arn =>
+        Future.successful(Ok("Some content"))
+      }
+
+      status(result) must be(UNAUTHORIZED)
+    }
+
+    "respond with UNAUTHORIZED when there are insufficient enrolments" in {
       when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(any(), any()))
         .thenReturn(Future.failed(new InsufficientEnrolments))
 

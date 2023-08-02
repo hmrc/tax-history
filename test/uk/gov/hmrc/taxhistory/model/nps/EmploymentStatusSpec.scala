@@ -20,21 +20,24 @@ import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json._
-import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.{Ceased, Live, PotentiallyCeased}
+import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.{Ceased, Live, PotentiallyCeased, Unknown}
 
 class EmploymentStatusSpec extends AnyWordSpec with Matchers with OptionValues {
 
   "EmploymentStatus" must {
     "read and write json successfully" in {
-      EmploymentStatus.jsonReads.reads(EmploymentStatus.jsonWrites.writes(EmploymentStatus.Live))   shouldBe JsSuccess(
+      EmploymentStatus.jsonReads.reads(EmploymentStatus.jsonWrites.writes(EmploymentStatus.Live))    shouldBe JsSuccess(
         Live
       )
-      EmploymentStatus.jsonReads.reads(EmploymentStatus.jsonWrites.writes(EmploymentStatus.Ceased)) shouldBe JsSuccess(
+      EmploymentStatus.jsonReads.reads(EmploymentStatus.jsonWrites.writes(EmploymentStatus.Ceased))  shouldBe JsSuccess(
         Ceased
       )
       EmploymentStatus.jsonReads.reads(
         EmploymentStatus.jsonWrites.writes(EmploymentStatus.PotentiallyCeased)
-      )                                                                                             shouldBe JsSuccess(PotentiallyCeased)
+      )                                                                                              shouldBe JsSuccess(PotentiallyCeased)
+      EmploymentStatus.jsonReads.reads(EmploymentStatus.jsonWrites.writes(EmploymentStatus.Unknown)) shouldBe JsSuccess(
+        Unknown
+      )
     }
 
     "throw error on invalid data" in {
