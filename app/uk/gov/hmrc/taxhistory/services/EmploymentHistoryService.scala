@@ -18,7 +18,6 @@ package uk.gov.hmrc.taxhistory.services
 
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
-import uk.gov.hmrc.taxhistory.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.connectors.{DesNpsConnector, RtiConnector}
@@ -27,6 +26,7 @@ import uk.gov.hmrc.taxhistory.model.api.FillerState._
 import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.audit._
 import uk.gov.hmrc.taxhistory.model.nps._
+import uk.gov.hmrc.taxhistory.model.rti.{RtiData, RtiEmployment}
 import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, EmploymentMatchingHelper}
 import uk.gov.hmrc.taxhistory.utils.Logging
@@ -177,14 +177,20 @@ class EmploymentHistoryService @Inject() (
 
   def getIncomeSource(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit
     headerCarrier: HeaderCarrier
-  ): Future[Option[IncomeSource]] =
-    (if (taxYear == TaxYear.current) {
-       getFromCache(nino, taxYear).map(_.incomeSources.get(employmentId))
-     } else {
-       Future(None)
-     }).orNotFound(
-      s"IncomeSource not found for NINO ${nino.value}, tax year ${taxYear.toString}, and employmentId $employmentId"
-    )
+  ): Future[Option[IncomeSource]] = {
+    val incomeSource = if (config.taxAccountPreviousYearsFlag) {
+      getFromCache(nino, taxYear).map(_.incomeSources.get(employmentId))
+    } else if (taxYear == TaxYear.current) {
+      getFromCache(nino, taxYear).map(_.incomeSources.get(employmentId))
+    } else {
+      Future(None)
+    }
+
+    val notFoundMessage = s"IncomeSource not found for NINO ${nino.value}, tax year ${taxYear.toString}," +
+      s" and employmentId $employmentId"
+
+    incomeSource.orNotFound(notFoundMessage)
+  }
 
   def getTaxYears(nino: Nino): Future[List[IndividualTaxYear]] = {
 
