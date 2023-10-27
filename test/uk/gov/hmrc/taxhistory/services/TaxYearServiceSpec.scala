@@ -35,7 +35,7 @@ class TaxYearServiceSpec extends PlaySpec with MockitoSugar with GuiceOneAppPerS
 
   "get Individual Tax Years" should {
     "successfully return list of five tax years" in {
-      val taxYears = await(testEmploymentHistoryService.getTaxYears(testNino))
+      val taxYears = await(testEmploymentHistoryService.getTaxYears)
 
       taxYears.size mustBe 5
       // scalastyle:off magic.number

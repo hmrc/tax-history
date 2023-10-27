@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import java.time.LocalDate
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.OptionValues
@@ -25,7 +24,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.taxhistory.model.api.{PayAndTax, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
@@ -33,8 +32,11 @@ import uk.gov.hmrc.taxhistory.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestEmploymentHistoryService, TestUtil}
 import uk.gov.hmrc.time.TaxYear
 
+import java.time.LocalDate
 import java.util.UUID
+import scala.concurrent.Await.result
 import scala.concurrent.Future
+import scala.concurrent.duration.Duration
 
 class PayAndTaxServiceSpec
     extends AnyWordSpecLike
@@ -58,6 +60,23 @@ class PayAndTaxServiceSpec
       1,
       "531",
       "J4816",
+      "Aldi",
+      Some("6044041000000"),
+      receivingJobSeekersAllowance = false,
+      otherIncomeSourceIndicator = false,
+      Some(LocalDate.of(YEAR_2015, JANUARY, DAY_21)),
+      None,
+      receivingOccupationalPension = false,
+      Live
+    )
+  )
+
+  val npsInvalidEmploymentResponse: List[NpsEmployment] = List(
+    NpsEmployment(
+      "AA000000",
+      1,
+      "531",
+      "TEST",
       "Aldi",
       Some("6044041000000"),
       receivingJobSeekersAllowance = false,
@@ -113,6 +132,20 @@ class PayAndTaxServiceSpec
         .futureValue
       payAndTax shouldBe testPayAndTax
     }
+
+    "failed to retrieve data from cache" in {
+      val employmentId = "unknown"
+      val nino         = Nino("AA000000A")
+      val taxYear      = TaxYear(taxYear1)
+      val exception    = intercept[NotFoundException] {
+        result(
+          testEmploymentHistoryService.getPayAndTax(nino, taxYear, employmentId),
+          Duration.Inf
+        )
+      }
+
+      exception.message shouldBe s"PayAndTax not found for NINO ${nino.value}, tax year ${taxYear.toString} and employmentId $employmentId"
+    }
   }
 
   "getAllPayAndTax" should {
@@ -137,6 +170,22 @@ class PayAndTaxServiceSpec
       val payAndTax: Map[String, PayAndTax] =
         testEmploymentHistoryService.getAllPayAndTax(Nino("AA000000A"), TaxYear(taxYear1)).futureValue
       payAndTax shouldBe testPayAndTaxList
+    }
+
+    "failed to retrieve data from cache" in {
+      when(testEmploymentHistoryService.desNpsConnector.getEmployments(any(), any()))
+        .thenReturn(Future.successful(npsInvalidEmploymentResponse))
+      when(testEmploymentHistoryService.rtiConnector.getRTIEmployments(any(), any()))
+        .thenReturn(Future.successful(Some(rtiEmploymentResponse)))
+
+      val invalidTaxYear = 3366
+      val nino           = Nino("AA000000A")
+      val taxYear        = TaxYear(invalidTaxYear)
+      val exception      = intercept[NotFoundException] {
+        result(testEmploymentHistoryService.getAllPayAndTax(nino, taxYear), Duration.Inf)
+      }
+
+      exception.message shouldBe s"PayAndTax not found for NINO ${nino.value}, tax year ${taxYear.toString}"
     }
   }
 }

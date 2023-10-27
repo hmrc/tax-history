@@ -68,10 +68,10 @@ class PayAsYouEarnControllerSpec
   private lazy val taxYear1 = 2015
   private lazy val taxYear2 = 2016
 
-  override def beforeEach: Unit =
+  override def beforeEach(): Unit =
     reset(mockEmploymentHistoryService)
 
-  val testCtrlr = new PayAsYouEarnController(mockEmploymentHistoryService, testSaAuthService, cc)
+  val controller = new PayAsYouEarnController(mockEmploymentHistoryService, testSaAuthService, cc)
 
   def withSuccessfulGetFromCache(testCode: => Any): Unit = {
     when(mockEmploymentHistoryService.getFromCache(any(), any())(any[HeaderCarrier]))
@@ -92,26 +92,22 @@ class PayAsYouEarnControllerSpec
 
     "secure access via the SaAuthorisationService" when {
       "not logged in" in {
-        {
-          val result = testCtrlr.getPayAsYouEarn(unauthorisedNino, TaxYear(taxYear2)).apply(FakeRequest())
-          status(result) must be(UNAUTHORIZED)
+        val result = controller.getPayAsYouEarn(unauthorisedNino, TaxYear(taxYear2)).apply(FakeRequest())
+        status(result) must be(UNAUTHORIZED)
 
-          verifyNoInteractions(mockEmploymentHistoryService)
-        }
+        verifyNoInteractions(mockEmploymentHistoryService)
       }
 
       "not authorised to access the nino" in {
-        {
-          val result = testCtrlr.getPayAsYouEarn(forbiddenNino, TaxYear(taxYear2)).apply(FakeRequest())
-          status(result) must be(FORBIDDEN)
+        val result = controller.getPayAsYouEarn(forbiddenNino, TaxYear(taxYear2)).apply(FakeRequest())
+        status(result) must be(FORBIDDEN)
 
-          verifyNoInteractions(mockEmploymentHistoryService)
-        }
+        verifyNoInteractions(mockEmploymentHistoryService)
       }
 
       //TODO understand if this test is needed and fix
       "logged in and authorised to access the nino" in {
-        val result = testCtrlr.getPayAsYouEarn(validNino, TaxYear(taxYear2)).apply(FakeRequest())
+        val result = controller.getPayAsYouEarn(validNino, TaxYear(taxYear2)).apply(FakeRequest())
         status(result) must be(OK)
 
         //verify(mockSaAuthService).saAuthValidator
@@ -121,7 +117,7 @@ class PayAsYouEarnControllerSpec
     "respond with OK for successful get" in {
 
       withSuccessfulGetFromCache {
-        val result = testCtrlr.getPayAsYouEarn(validNino, TaxYear(taxYear2)).apply(FakeRequest())
+        val result = controller.getPayAsYouEarn(validNino, TaxYear(taxYear2)).apply(FakeRequest())
         status(result) must be(OK)
       }
     }
@@ -129,7 +125,7 @@ class PayAsYouEarnControllerSpec
     "respond with json serialised PayAsYouEarn" in {
 
       withSuccessfulGetFromCache {
-        val result = testCtrlr.getPayAsYouEarn(validNino, TaxYear(taxYear2)).apply(FakeRequest())
+        val result = controller.getPayAsYouEarn(validNino, TaxYear(taxYear2)).apply(FakeRequest())
         contentAsJson(result) must be(Json.parse(s"""
                |{
                |  "employments" : [
@@ -156,7 +152,7 @@ class PayAsYouEarnControllerSpec
         s"and expected status is $expectedStatus" in {
 
           withFailedGetFromCache(httpException) {
-            val result = testCtrlr.getPayAsYouEarn(validNino, TaxYear(taxYear1)).apply(FakeRequest())
+            val result = controller.getPayAsYouEarn(validNino, TaxYear(taxYear1)).apply(FakeRequest())
             status(result) must be(expectedStatus)
           }
         }

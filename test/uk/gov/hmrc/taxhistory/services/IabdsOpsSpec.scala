@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import java.time.LocalDate
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.JsValue
@@ -24,6 +23,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, VanBenefit}
 import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
+
+import java.time.LocalDate
 
 class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil with DateUtils {
 
@@ -62,9 +63,13 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil with DateUti
     )
   )
 
-  lazy val iabdList: List[Iabd]                        = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
-  lazy val iabdsTotalBenfitInKindJsonResponse: JsValue = loadFile("/json/nps/response/iabdsTotalBIK.json")
-  lazy val iabdsBenfitInKindJsonResponse: JsValue      = loadFile("/json/nps/response/iabdsBIK.json")
+  lazy val iabdList: List[Iabd]                                   = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
+  lazy val iabdsTotalBenfitInKindJsonResponse: JsValue            = loadFile("/json/nps/response/iabdsTotalBIK.json")
+  lazy val iabdsBenfitInKindJsonResponse: JsValue                 = loadFile("/json/nps/response/iabdsBIK.json")
+  lazy val iabdsBenfitInKindNoGrossJsonResponse: JsValue          = loadFile("/json/nps/response/iabdsBIKNoGrossAmount.json")
+  lazy val iabdsBenfitInKindAllowanceNoGrossJsonResponse: JsValue = loadFile(
+    "/json/nps/response/iabdsAllowanceNoGross.json"
+  )
 
   "Iabds Helper" should {
     "correctly convert an iabd to an allowance model" in {
@@ -120,8 +125,32 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil with DateUti
     }
 
     "Return only Allowances from List of Nps Iabds" in {
-      val allowances = iabdList.allowances
+      val allowances           = iabdList.allowances
+      val expectedGross        = 200
+      val expectedGrossDecimal = BigDecimal(expectedGross)
+
       allowances.size mustBe 1
+      allowances.head.amount mustBe expectedGrossDecimal
+      allowances.toString() contains "FlatRateJobExpenses" mustBe true
+    }
+
+    "Return Iabds converted to company benefits when no gross amount default it to 0" in {
+      val ninoWithoutGrossAmount = Set("QQ000001", "QQ000002")
+      val iabds                  = iabdsBenfitInKindNoGrossJsonResponse.as[List[Iabd]]
+      val targetIabds            = iabds.filter(iabd => ninoWithoutGrossAmount.contains(iabd.nino))
+      val companyBenefits        = targetIabds.companyBenefits
+
+      companyBenefits.size mustBe 2
+      companyBenefits.head.amount mustBe BigDecimal(0)
+      companyBenefits.last.amount mustBe BigDecimal(0)
+    }
+
+    "Return only Allowances from List of Nps Iabds, when no gross it defaults to 0" in {
+      val allowances    = iabdsBenfitInKindAllowanceNoGrossJsonResponse.as[List[Iabd]].allowances
+      val expectedGross = BigDecimal(0)
+
+      allowances.size mustBe 1
+      allowances.head.amount mustBe expectedGross
       allowances.toString() contains "FlatRateJobExpenses" mustBe true
     }
 

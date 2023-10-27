@@ -31,9 +31,9 @@ class TestCacheService[K, V]() extends CacheService[K, V] {
 
   var map: Map[K, V] = Map.empty
 
-  def insertOrUpdate(key: K, value: V): Future[Option[V]] = Future.successful {
+  def insertOrUpdate(key: K, value: V): Future[V] = Future.successful {
     map = map + (key -> value)
-    Some(value)
+    map.getOrElse(key, throw new RuntimeException("Failed to insert into cache"))
   }
 
   def get(key: K): Future[Option[V]] = Future.successful(map.get(key))

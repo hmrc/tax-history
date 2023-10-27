@@ -20,7 +20,7 @@ import scala.concurrent.Future
 
 trait CacheService[K, V] {
 
-  def insertOrUpdate(key: K, value: V): Future[Option[V]]
+  def insertOrUpdate(key: K, value: V): Future[V]
 
   def get(key: K): Future[Option[V]]
 

@@ -16,35 +16,47 @@
 
 package uk.gov.hmrc.taxhistory.binders
 
-import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.{EitherValues, OptionValues}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.time.TaxYear
 
-class PathBindersSpec extends AnyWordSpec with Matchers with OptionValues {
+class PathBindersSpec extends AnyWordSpec with Matchers with OptionValues with EitherValues {
 
-  private lazy val taxYear = 2018
+  private lazy val validTaxYearInt: Int           = 2018
+  private lazy val invalidTaxYearAsString: String = "badyear"
+  private lazy val validNinoAsString: String      = "AA000003D"
+  private lazy val invalidNinoAsString: String    = "badnino"
+  private lazy val formKey: String                = "someKey"
 
   "ninoBinder" must {
     "parse a valid nino" in {
-      PathBinders.ninoBinder.bind("someKey", "AA000003D").right.get shouldBe Nino("AA000003D")
+      PathBinders.ninoBinder.bind(formKey, validNinoAsString).value shouldBe Nino(validNinoAsString)
     }
 
     "not parse an invalid nino" in {
-      val result = PathBinders.ninoBinder.bind("someKey", "badnino").left.get
-      result shouldBe "Cannot parse parameter 'someKey' with value 'badnino' as 'Nino'"
+      val result = PathBinders.ninoBinder.bind(formKey, invalidNinoAsString).left.value
+      result shouldBe s"Cannot parse parameter '$formKey' with value '$invalidNinoAsString' as 'Nino'"
+    }
+
+    "unbind a valid nino" in {
+      PathBinders.ninoBinder.unbind(formKey, Nino(validNinoAsString)) shouldBe validNinoAsString
     }
   }
 
   "taxYearBinder" must {
     "parse a valid tax year" in {
-      PathBinders.taxYearBinder.bind("someKey", "2018").right.get shouldBe TaxYear(taxYear)
+      PathBinders.taxYearBinder.bind(formKey, validTaxYearInt.toString).value shouldBe TaxYear(validTaxYearInt)
     }
 
     "not parse an invalid tax year" in {
-      val result = PathBinders.taxYearBinder.bind("someKey", "badyear").left.get
-      result shouldBe "Cannot parse parameter 'someKey' with value 'badyear' as 'TaxYear'"
+      val result = PathBinders.taxYearBinder.bind(formKey, invalidTaxYearAsString).left.value
+      result shouldBe s"Cannot parse parameter '$formKey' with value '$invalidTaxYearAsString' as 'TaxYear'"
+    }
+
+    "unbind a valid tax year" in {
+      PathBinders.taxYearBinder.unbind(formKey, TaxYear(validTaxYearInt)) shouldBe validTaxYearInt.toString
     }
   }
 }

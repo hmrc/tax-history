@@ -58,7 +58,7 @@ class CitizenDetailsConnectorSpec
   private val testConnector =
     new CitizenDetailsConnector(http = mockHttp, metrics = mockMetrics, config = mockAppConfig, system = system)
 
-  override def beforeEach: Unit = {
+  override def beforeEach(): Unit = {
     reset(mockHttp)
     reset(mockMetrics)
     reset(mockTimerContext)

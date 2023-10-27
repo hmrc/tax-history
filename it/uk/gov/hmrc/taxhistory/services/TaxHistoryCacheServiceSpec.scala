@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.services
 
+import org.mongodb.scala.model.Filters
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
@@ -27,9 +28,11 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mongo.CurrentTimestampSupport
 import uk.gov.hmrc.mongo.test.MongoSupport
 import uk.gov.hmrc.taxhistory.config.AppConfig
-import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
+import uk.gov.hmrc.taxhistory.model.api.{Employment, PayAsYouEarn}
+import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 import uk.gov.hmrc.time.TaxYear
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -48,30 +51,42 @@ class TaxHistoryCacheServiceSpec
 
   val mockAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
-  val mockTimeStampSupport = new CurrentTimestampSupport()
+  val timestampSupport = new CurrentTimestampSupport()
 
   val testTaxHistoryCacheService = new TaxHistoryMongoCacheService(
     mongoComponent,
     mockAppConfig,
-    mockTimeStampSupport
+    timestampSupport
   )
 
-  val testPaye: PayAsYouEarn = PayAsYouEarn()
+  val testPaye: PayAsYouEarn     = PayAsYouEarn()
+  val testEmployment: Employment = Employment(
+    startDate = Some(LocalDate.now()),
+    payeReference = "SOME_PAYE",
+    employerName = "Megacorp Plc",
+    employmentStatus = EmploymentStatus.Live,
+    worksNumber = "00191048716"
+  )
+  val testPaye2: PayAsYouEarn    = PayAsYouEarn(employments = List(testEmployment))
 
   val nino: Nino       = randomNino()
-  val taxYear: TaxYear = TaxYear(2015)
+  val taxYearInt: Int  = 2015
+  val taxYear: TaxYear = TaxYear(taxYearInt)
+
+  override protected def afterAll(): Unit =
+    testTaxHistoryCacheService.collection.deleteMany(Filters.empty()).toFuture().futureValue
 
   override def beforeEach(): Unit =
-    testTaxHistoryCacheService.collection.drop()
+    testTaxHistoryCacheService.collection.deleteMany(Filters.empty()).toFuture().futureValue
 
   override def afterEach(): Unit =
-    testTaxHistoryCacheService.collection.drop()
+    testTaxHistoryCacheService.collection.deleteMany(Filters.empty()).toFuture().futureValue
 
   "TaxHistoryCacheService" should {
 
     "successfully add the Data in cache" in {
       val cacheData = await(testTaxHistoryCacheService.insertOrUpdate((nino, taxYear), testPaye))
-      cacheData shouldBe Some(testPaye)
+      cacheData shouldBe testPaye
     }
 
     "fetch from the cache by ID" in {
@@ -83,18 +98,37 @@ class TaxHistoryCacheServiceSpec
 
     "When not in the mongo cache update the cache and fetch" in {
       val nino    = randomNino()
-      val taxYear = TaxYear(2014)
+      val taxYear = TaxYear(taxYearInt - 1)
 
       val cacheResult0 = await(testTaxHistoryCacheService.get((nino, taxYear)))
       cacheResult0 shouldBe None
+
       val cacheResult1 = await(testTaxHistoryCacheService.getOrElseInsert((nino, taxYear))(Future(testPaye)))
       cacheResult1 shouldBe testPaye
+
       // The cache should now contain the value.
       val cacheResult2 = await(testTaxHistoryCacheService.get((nino, taxYear)))
       cacheResult2 shouldBe Some(testPaye)
     }
+
+    "When not in the mongo cache update the cache and fetch, when request again just get" in {
+      val nino    = randomNino()
+      val taxYear = TaxYear(taxYearInt - 1)
+
+      val cacheResult0 = await(testTaxHistoryCacheService.get((nino, taxYear)))
+      cacheResult0 shouldBe None
+
+      val cacheResult1 = await(testTaxHistoryCacheService.getOrElseInsert((nino, taxYear))(Future(testPaye)))
+      cacheResult1 shouldBe testPaye
+
+      // if no cache then insert testPaye2
+      // but at this point I assume previous call already inserted and it will return existing data
+      val cacheResult2 = await(testTaxHistoryCacheService.getOrElseInsert((nino, taxYear))(Future(testPaye2)))
+      cacheResult2 shouldBe testPaye
+
+      val cacheResult3 = await(testTaxHistoryCacheService.get((nino, taxYear)))
+      cacheResult3 shouldBe Some(testPaye)
+    }
   }
 
-  override protected def afterAll(): Unit =
-    mongoComponent.database.drop()
 }

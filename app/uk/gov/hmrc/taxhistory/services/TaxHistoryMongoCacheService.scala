@@ -21,7 +21,6 @@ import uk.gov.hmrc.mongo.cache.{CacheIdType, DataKey, MongoCacheRepository}
 import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
 import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.model.api.PayAsYouEarn
-import uk.gov.hmrc.taxhistory.utils.Logging
 import uk.gov.hmrc.time.TaxYear
 
 import javax.inject.Inject
@@ -42,17 +41,13 @@ class TaxHistoryMongoCacheService @Inject() (
       timestampSupport = timestampSupport,
       cacheIdType = CacheIdType.SimpleCacheId
     )
-    with PayeCacheService
-    with Logging {
+    with PayeCacheService {
 
-  def insertOrUpdate(key: (Nino, TaxYear), value: PayAsYouEarn): Future[Option[PayAsYouEarn]] = {
+  def insertOrUpdate(key: (Nino, TaxYear), value: PayAsYouEarn): Future[PayAsYouEarn] = {
     val (nino, taxYear) = key
     val mongoId         = nino.value
     val mongoKey        = taxYear.currentYear.toString
-    put(mongoId)(DataKey(mongoKey), value).map(_ => Some(value)).recoverWith { case ex: Exception =>
-      logger.error(s"[TaxHistoryMongoCacheService][insertOrUpdate] failed with message: ${ex.getMessage}")
-      Future.successful(None)
-    }
+    put(mongoId)(DataKey(mongoKey), value).map(_ => value)
   }
 
   private def getFromRepository(nino: Nino, taxYear: TaxYear): Future[Option[PayAsYouEarn]] = {
@@ -72,12 +67,7 @@ class TaxHistoryMongoCacheService @Inject() (
       for {
         toInsert        <- defaultToInsert
         insertionResult <- insertOrUpdate(key, toInsert)
-      } yield {
-        if (insertionResult.isEmpty) {
-          logger.warn(s"[TaxHistoryMongoCacheService][insertDefault] Cache insertion failed for $key")
-        }
-        toInsert
-      }
+      } yield insertionResult
 
     for {
       cacheResult <- get(key)

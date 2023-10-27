@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
@@ -49,8 +48,8 @@ class IndividualTaxYearControllerSpec
 
   private val taxYear = 2018
 
-  private val mockAuditable = mock[Auditable]
-  val testTaxYears          = List(IndividualTaxYear(taxYear, "fakeUri", "fakeUri", "fakeUri"))
+  private val mockAuditable                 = mock[Auditable]
+  val testTaxYears: List[IndividualTaxYear] = List(IndividualTaxYear(taxYear, "fakeUri", "fakeUri", "fakeUri"))
 
   val cc: ControllerComponents                    = stubControllerComponents()
   implicit val executionContext: ExecutionContext = cc.executionContext
@@ -67,7 +66,7 @@ class IndividualTaxYearControllerSpec
 
   "getTaxYears" must {
     "respond with OK for successful get" in {
-      when(mockEmploymentHistoryService.getTaxYears(any()))
+      when(mockEmploymentHistoryService.getTaxYears)
         .thenReturn(Future.successful(testTaxYears))
       val result = testIndividualTaxYearController.getTaxYears(ninoWithAgent.nino).apply(FakeRequest())
       status(result) must be(OK)
@@ -75,7 +74,7 @@ class IndividualTaxYearControllerSpec
 
     "propagate error responses from upstream microservices" in {
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-        when(mockEmploymentHistoryService.getTaxYears(any()))
+        when(mockEmploymentHistoryService.getTaxYears)
           .thenReturn(Future.failed(httpException))
         val result = testIndividualTaxYearController.getTaxYears(ninoWithAgent.nino).apply(FakeRequest())
         status(result) must be(expectedStatus)
@@ -83,7 +82,7 @@ class IndividualTaxYearControllerSpec
     }
 
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
-      when(mockEmploymentHistoryService.getTaxYears(any()))
+      when(mockEmploymentHistoryService.getTaxYears)
         .thenReturn(Future.successful(testTaxYears))
       val result = testIndividualTaxYearController.getTaxYears(ninoWithoutAgent.nino).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)

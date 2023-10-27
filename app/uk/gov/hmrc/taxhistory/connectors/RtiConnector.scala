@@ -37,8 +37,7 @@ class RtiConnector @Inject() (
 )(implicit executionContext: ExecutionContext)
     extends ConnectorMetrics {
 
-  lazy val authorization: String = s"Bearer ${config.desAuth}"
-  val withRetry: Retry           = config.newRetryInstance("des", system)
+  val withRetry: Retry = config.newRetryInstance("des", system)
 
   def rtiEmploymentsUrl(nino: Nino, taxYear: TaxYear): String = {
     val formattedTaxYear = s"${taxYear.startYear % 100}-${taxYear.finishYear % 100}"
