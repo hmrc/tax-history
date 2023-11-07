@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.services.helper
 
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import uk.gov.hmrc.taxhistory.model.rti.RtiEmployment
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
@@ -24,7 +23,7 @@ import uk.gov.hmrc.taxhistory.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helper.HelperTestData.{nps, rti}
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentMatchingHelper
 
-class EmploymentMatchingHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
+class EmploymentMatchingHelperSpec extends PlaySpec with TestUtil {
 
   // scalastyle:off magic.number
   "Given 2 NPS and 2 RTI employments from the same employer, match those 2 NPS employments with the RTI employments" when {

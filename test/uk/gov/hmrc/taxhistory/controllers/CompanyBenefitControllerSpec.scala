@@ -50,14 +50,16 @@ class CompanyBenefitControllerSpec
 
   private val taxYear = 2016
 
-  val testCompanyBenefits = List(CompanyBenefit(iabdType = "CarBenefit", amount = BigDecimal(100.00)))
+  val testCompanyBenefits: List[CompanyBenefit] = List(
+    CompanyBenefit(iabdType = "CarBenefit", amount = BigDecimal(100.00))
+  )
 
   val employmentId: String = UUID.randomUUID().toString
 
   val cc: ControllerComponents                    = stubControllerComponents()
   implicit val executionContext: ExecutionContext = cc.executionContext
 
-  override def beforeEach: Unit =
+  override def beforeEach(): Unit =
     reset(mockEmploymentHistoryService)
 
   val testCompanyBenefitController = new CompanyBenefitController(

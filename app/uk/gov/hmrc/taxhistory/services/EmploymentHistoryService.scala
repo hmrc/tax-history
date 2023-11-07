@@ -192,7 +192,7 @@ class EmploymentHistoryService @Inject() (
     incomeSource.orNotFound(notFoundMessage)
   }
 
-  def getTaxYears(nino: Nino): Future[List[IndividualTaxYear]] = {
+  def getTaxYears: Future[List[IndividualTaxYear]] = {
 
     val taxYearList: List[TaxYear] =
       // scalastyle:off magic.number

@@ -52,19 +52,19 @@ class EmploymentControllerSpec
   private lazy val taxYear1 = 2015
   private lazy val taxYear2 = 2016
 
-  val testEmployment: Employment = Employment(
+  val testEmployment: Employment        = Employment(
     startDate = Some(LocalDate.now()),
     payeReference = "SOME_PAYE",
     employerName = "Megacorp Plc",
     employmentStatus = EmploymentStatus.Live,
     worksNumber = "00191048716"
   )
-  val testEmployments            = List(testEmployment)
+  val testEmployments: List[Employment] = List(testEmployment)
 
   val cc: ControllerComponents                    = stubControllerComponents()
   implicit val executionContext: ExecutionContext = cc.executionContext
 
-  override def beforeEach: Unit =
+  override def beforeEach(): Unit =
     reset(mockEmploymentHistoryService)
 
   val testEmploymentController = new EmploymentController(

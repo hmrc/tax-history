@@ -53,7 +53,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
 
   lazy val testIncomeSource: IncomeSource = IncomeSource(1, 1, None, Nil, Nil, testTaxCode, None, 1, "")
 
-  val startDate                    = LocalDate.of(YEAR_2015, JANUARY, DAY_21)
+  val startDate: LocalDate         = LocalDate.of(YEAR_2015, JANUARY, DAY_21)
   lazy val employment1: Employment = Employment(
     payeReference = "1234",
     startDate = Some(LocalDate.of(YEAR_2016, OCTOBER, DAY_20)),
@@ -117,26 +117,26 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       merged.allowances mustBe Nil
 
       merged.benefits.size mustBe 2
-      val Some(benefits1) = merged.benefits.get(employment1.employmentId.toString)
+      val benefits1 = merged.benefits.get(employment1.employmentId.toString).value
       benefits1.size mustBe 1
       benefits1 must contain(companyBenefit)
 
-      val Some(benefits2) = merged.benefits.get(employment2.employmentId.toString)
+      val benefits2 = merged.benefits.get(employment2.employmentId.toString).value
       benefits2.size mustBe 1
       benefits2 must contain(companyBenefit)
 
       merged.incomeSources.size mustBe 2
-      val Some(incomeSources1) = merged.incomeSources.get(employment1.employmentId.toString)
+      val incomeSources1 = merged.incomeSources.get(employment1.employmentId.toString).value
       incomeSources1 must be(testIncomeSource)
 
-      val Some(incomeSources2) = merged.incomeSources.get(employment2.employmentId.toString)
+      val incomeSources2 = merged.incomeSources.get(employment2.employmentId.toString).value
       incomeSources2 must be(testIncomeSource)
 
       merged.payAndTax.size mustBe 2
-      val Some(payAndTax1) = merged.payAndTax.get(employment1.employmentId.toString)
+      val payAndTax1 = merged.payAndTax.get(employment1.employmentId.toString).value
       payAndTax1 mustBe payAndTax
 
-      val Some(payAndTax2) = merged.payAndTax.get(employment2.employmentId.toString)
+      val payAndTax2 = merged.payAndTax.get(employment2.employmentId.toString).value
       payAndTax2 mustBe payAndTax
 
       val mergedTaxAccount = merged.taxAccount.get
@@ -155,16 +155,16 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       merged.allowances mustBe Nil
 
       merged.benefits.size mustBe 1
-      val Some(benefits1) = merged.benefits.get(employment1.employmentId.toString)
+      val benefits1 = merged.benefits.get(employment1.employmentId.toString).value
       benefits1.size mustBe 1
       benefits1 must contain(companyBenefit)
 
       merged.incomeSources.size mustBe 1
-      val Some(incomeSources1) = merged.incomeSources.get(employment1.employmentId.toString)
+      val incomeSources1 = merged.incomeSources.get(employment1.employmentId.toString).value
       incomeSources1 must be(testIncomeSource)
 
       merged.payAndTax.size mustBe 1
-      val Some(payAndTax1) = merged.payAndTax.get(employment1.employmentId.toString)
+      val payAndTax1 = merged.payAndTax.get(employment1.employmentId.toString).value
       payAndTax1 mustBe payAndTax
 
       merged.taxAccount mustBe None
@@ -180,23 +180,23 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     "Build employment1 from rti, nps employment1, Iabd and income source data" in {
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
 
-      val payAsYouEarn    = EmploymentHistoryServiceHelper.buildPAYE(
+      val payAsYouEarn = EmploymentHistoryServiceHelper.buildPAYE(
         testRtiData.employments.headOption,
         testIabds,
         Some(testIncomeSource),
         npsEmployments.head
       )
-      val employment      = payAsYouEarn.employments.head
+      val employment   = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
-      val Some(payAndTax) = payAsYouEarn.payAndTax.get(employment.employmentId.toString)
+      val payAndTax    = payAsYouEarn.payAndTax.get(employment.employmentId.toString).value
       payAndTax.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       payAndTax.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
       payAndTax.earlierYearUpdates.size mustBe 1
       payAsYouEarn.employments.head.startDate mustBe Some(startDate)
       payAsYouEarn.employments.head.endDate mustBe None
       payAsYouEarn.incomeSources.head._2 must be(testIncomeSource)
-      val Some(companyBenefits) = payAsYouEarn.benefits.get(employment.employmentId.toString)
+      val companyBenefits = payAsYouEarn.benefits.get(employment.employmentId.toString).value
       companyBenefits.size mustBe 9
     }
 

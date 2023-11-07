@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
+import org.mongodb.scala.model.Filters
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.taxhistory.services.TaxHistoryMongoCacheService
 
@@ -28,6 +29,6 @@ class TestOnlyController @Inject() (val cacheService: TaxHistoryMongoCacheServic
 ) extends TaxHistoryController(cc) {
 
   def clearCache: Action[AnyContent] = Action.async {
-    cacheService.collection.drop().toFuture().map(_ => Ok)
+    cacheService.collection.deleteMany(Filters.empty()).toFuture().map(_ => Ok)
   }
 }

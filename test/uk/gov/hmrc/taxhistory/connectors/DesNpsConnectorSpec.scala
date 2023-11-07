@@ -33,6 +33,7 @@ import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.utils.TestUtil
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -52,8 +53,14 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with 
   private val mockAppConfig         = app.injector.instanceOf[AppConfig]
   private val system                = ActorSystem("test")
 
-  val uuid                     = "123f4567-g89c-42c3-b456-557742330000"
-  lazy val testDesNpsConnector = new DesNpsConnector(
+  lazy val uuid: String                         = "123f4567-g89c-42c3-b456-557742330000"
+  lazy val desNpsConnector: DesNpsConnector     = new DesNpsConnector(
+    http = mockHttpClient,
+    metrics = mockTaxHistoryMetrics,
+    config = mockAppConfig,
+    system = system
+  )
+  lazy val testDesNpsConnector: DesNpsConnector = new DesNpsConnector(
     http = mockHttpClient,
     metrics = mockTaxHistoryMetrics,
     config = mockAppConfig,
@@ -61,8 +68,8 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with 
   ) {
     override def generateNewUUID: String = uuid
   }
-  val testNino: Nino           = randomNino()
-  val testYear                 = 2016
+  val testNino: Nino                            = randomNino()
+  val testYear: Int                             = 2016
 
   "return new ID pre-appending the requestID when the requestID matches the format(8-4-4-4)" in {
     val requestId  = "dcba0000-ij12-df34-jk56"
@@ -268,5 +275,13 @@ class DesNpsConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with 
 
       await(result) mustBe List.empty
     }
+  }
+
+  "generateNewUUID" in {
+    val uuidLength = 36
+    val id         = desNpsConnector.generateNewUUID
+
+    id     shouldNot be(empty)
+    id.length should be(uuidLength)
   }
 }

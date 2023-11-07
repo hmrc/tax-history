@@ -43,14 +43,12 @@ case class CompanyBenefit(
 }
 
 object CompanyBenefit {
-  implicit val reads = Json.reads[CompanyBenefit]
+  private val reads: Reads[CompanyBenefit] = Json.reads[CompanyBenefit]
 
-  implicit val writes = new Writes[CompanyBenefit] {
-    override def writes(cb: CompanyBenefit): JsValue = {
-      implicit val defaultWrites: Writes[CompanyBenefit] = Json.writes[CompanyBenefit]
-      Json.toJson(cb).as[JsObject] + ("isForecastBenefit" -> JsBoolean(cb.isForecastBenefit))
-    }
+  private val defaultWrites: Writes[CompanyBenefit] = Json.writes[CompanyBenefit]
+  private val writes: Writes[CompanyBenefit]        = (cb: CompanyBenefit) => {
+    Json.toJson(cb)(defaultWrites).as[JsObject] + ("isForecastBenefit" -> JsBoolean(cb.isForecastBenefit))
   }
 
-  implicit val formats = Format[CompanyBenefit](reads, writes)
+  implicit val formats: Format[CompanyBenefit] = Format[CompanyBenefit](reads, writes)
 }

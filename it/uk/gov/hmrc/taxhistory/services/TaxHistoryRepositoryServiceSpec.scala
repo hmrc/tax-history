@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.services
 
+import org.mongodb.scala.model.Filters
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
@@ -46,10 +47,10 @@ class TaxHistoryRepositoryServiceSpec
   val repository               = new TaxHistoryMongoCacheService(mongoComponent, mockAppConfig, mockTimeStampSupport)
 
   override def beforeEach(): Unit =
-    repository.collection.drop()
+    repository.collection.deleteMany(Filters.empty()).toFuture().futureValue
 
   override def afterEach(): Unit =
-    repository.collection.drop()
+    repository.collection.deleteMany(Filters.empty()).toFuture().futureValue
 
   "TaxHistoryCacheService" should {
 
@@ -57,7 +58,7 @@ class TaxHistoryRepositoryServiceSpec
 
     "successfully add the Data in cache" in {
       val result = await(repository.insertOrUpdate((Nino("AA000000A"), TaxYear(2015)), payAsYouEarn))
-      result shouldBe Some(payAsYouEarn)
+      result shouldBe payAsYouEarn
     }
 
     "fetch from the cache by ID " in {
