@@ -19,6 +19,7 @@ package uk.gov.hmrc.taxhistory.services.helpers
 import uk.gov.hmrc.taxhistory.model.api.{Allowance, CompanyBenefit}
 import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.utils.Logging
+import uk.gov.hmrc.time.TaxYear
 
 /**
   * Enriches a `List[Iabd]` with various convenience methods.
@@ -32,14 +33,16 @@ object IabdsOps {
       iabd.employmentSequenceNumber.contains(npsEmployment.sequenceNumber)
     }
 
-    def companyBenefits: List[CompanyBenefit] = {
+    def companyBenefits(taxYear: TaxYear): List[CompanyBenefit] = {
 
       def convertToCompanyBenefits(iabds: List[Iabd]): List[CompanyBenefit] =
         iabds.map { iabd =>
           CompanyBenefit(
             amount = iabd.grossAmount.getOrElse(BigDecimal(0)),
             iabdType = iabd.`type`.toString,
-            source = iabd.source
+            source = iabd.source,
+            captureDate = iabd.captureDate,
+            taxYear = taxYear
           )
         }
 

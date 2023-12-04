@@ -16,16 +16,18 @@
 
 package uk.gov.hmrc.taxhistory.services.helper
 
-import java.time.LocalDate
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import uk.gov.hmrc.taxhistory.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType.{JobseekersAllowance, OccupationalPension, StatePensionLumpSum}
 import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps._
-import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
+import uk.gov.hmrc.taxhistory.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentHistoryServiceHelper
+import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
+import uk.gov.hmrc.time.TaxYear
+
+import java.time.LocalDate
 
 class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with TestUtil with DateUtils {
 
@@ -76,7 +78,14 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal(33.33))
   )
 
-  lazy val companyBenefit: CompanyBenefit = CompanyBenefit(iabdType = "type", amount = BigDecimal(123.00))
+  lazy val companyBenefit: CompanyBenefit =
+    CompanyBenefit(
+      iabdType = "type",
+      amount = BigDecimal(123.00),
+      source = None,
+      captureDate = Some("6/4/2022"),
+      taxYear = TaxYear(2022)
+    )
 
   lazy val payAndTax: PayAndTax = PayAndTax(
     taxablePayTotal = Some(BigDecimal(2222.22)),
@@ -173,7 +182,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     "Build pay as you earn using empty tax account" in {
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
       val payAsYouEarn   =
-        EmploymentHistoryServiceHelper.buildPAYE(None, Nil, Some(testIncomeSource), npsEmployments.head)
+        EmploymentHistoryServiceHelper.buildPAYE(None, Nil, Some(testIncomeSource), npsEmployments.head, TaxYear(2022))
       payAsYouEarn.taxAccount mustBe None
     }
 
@@ -184,7 +193,8 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
         testRtiData.employments.headOption,
         testIabds,
         Some(testIncomeSource),
-        npsEmployments.head
+        npsEmployments.head,
+        TaxYear(2022)
       )
       val employment   = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
@@ -203,7 +213,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
     "Build employment1 when there is no  data for rti, Iabd and income source" in {
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
 
-      val payAsYouEarn    = EmploymentHistoryServiceHelper.buildPAYE(None, Nil, None, npsEmployments.head)
+      val payAsYouEarn    = EmploymentHistoryServiceHelper.buildPAYE(None, Nil, None, npsEmployments.head, TaxYear(2022))
       val employment      = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
@@ -220,7 +230,13 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
       val npsEmployments = npsEmploymentResponseWithTaxDistrictNumber
 
       val payAsYouEarn    =
-        EmploymentHistoryServiceHelper.buildPAYE(None, testIabds, Some(testIncomeSource), npsEmployments.head)
+        EmploymentHistoryServiceHelper.buildPAYE(
+          None,
+          testIabds,
+          Some(testIncomeSource),
+          npsEmployments.head,
+          TaxYear(2022)
+        )
       val employment      = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
       employment.payeReference mustBe "0531/J4816"
@@ -239,7 +255,8 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
         testRtiData.employments.headOption,
         Nil,
         Some(testIncomeSource),
-        npsEmployments.head
+        npsEmployments.head,
+        TaxYear(2022)
       )
       val employment      = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
@@ -261,7 +278,8 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
         testRtiData.employments.headOption,
         Nil,
         Some(testIncomeSource),
-        npsEmployments.head
+        npsEmployments.head,
+        TaxYear(2022)
       )
       val employment      = payAsYouEarn.employments.head
       employment.employerName mustBe "Aldi"
@@ -283,7 +301,8 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
           testRtiData.employments.headOption,
           Nil,
           Some(testIncomeSource),
-          npsEmployment
+          npsEmployment,
+          TaxYear(2022)
         )
         payAsYouEarn.employments.head.employmentPaymentType mustBe Some(JobseekersAllowance)
 
@@ -294,19 +313,22 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
           testRtiData.employments.headOption,
           Nil,
           Some(testIncomeSource),
-          npsEmployment
+          npsEmployment,
+          TaxYear(2022)
         )
         payAsYouEarn.employments.head.employmentPaymentType mustBe Some(OccupationalPension)
       }
       "NPS employment has a recognised PAYE reference" in {
         val npsEmployment =
           npsEmploymentResponseWithTaxDistrictNumber.head.copy(taxDistrictNumber = "267", payeNumber = "LS500")
-        val payAsYouEarn  = EmploymentHistoryServiceHelper.buildPAYE(
-          testRtiData.employments.headOption,
-          Nil,
-          Some(testIncomeSource),
-          npsEmployment
-        )
+        val payAsYouEarn  =
+          EmploymentHistoryServiceHelper.buildPAYE(
+            testRtiData.employments.headOption,
+            Nil,
+            Some(testIncomeSource),
+            npsEmployment,
+            TaxYear(2022)
+          )
         payAsYouEarn.employments.head.employmentPaymentType mustBe Some(StatePensionLumpSum)
       }
 
@@ -317,7 +339,8 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
           testRtiData.employments.headOption,
           Nil,
           Some(testIncomeSource),
-          npsEmployment
+          npsEmployment,
+          TaxYear(2022)
         )
         payAsYouEarn.employments.head.employmentPaymentType mustBe Some(JobseekersAllowance)
       }
@@ -328,7 +351,8 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with
           testRtiData.employments.headOption,
           Nil,
           Some(testIncomeSource),
-          npsEmployment
+          npsEmployment,
+          TaxYear(2022)
         )
         payAsYouEarn.employments.head.employmentPaymentType mustBe None
       }

@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import org.scalatestplus.mockito.MockitoSugar
 import org.mockito.ArgumentMatchers.any
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.mvc.Results._
 import play.api.test.Helpers._
@@ -26,8 +26,8 @@ import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.http.{HeaderCarrier, UnauthorizedException}
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class RelationshipAuthServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
 
@@ -58,6 +58,7 @@ class RelationshipAuthServiceSpec extends PlaySpec with MockitoSugar with TestUt
   )
 
   "RelationshipAuthService" should {
+
     "authorise when a correct relationship is present" in {
       when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(any(), any()))
         .thenReturn(
@@ -74,6 +75,7 @@ class RelationshipAuthServiceSpec extends PlaySpec with MockitoSugar with TestUt
     }
 
     "respond with UNAUTHORIZED for enrolments which are not HMRC Agents" in {
+
       when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(any(), any()))
         .thenReturn(
           Future.successful(

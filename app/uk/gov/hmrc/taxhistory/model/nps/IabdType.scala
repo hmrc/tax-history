@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
-import java.time.LocalDate
 import play.api.Logging
 import play.api.libs.json._
 
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 sealed trait IabdType
@@ -29,41 +29,69 @@ case object StatePensions extends IabdType
 sealed trait CompanyBenefits extends IabdType
 
 case object EmployerProvidedServices extends CompanyBenefits
+
 case object CarFuelBenefit extends CompanyBenefits
+
 case object MedicalInsurance extends CompanyBenefits
+
 case object CarBenefit extends CompanyBenefits
+
 case object TelephoneBenefit extends CompanyBenefits
+
 case object ServiceBenefit extends CompanyBenefits
+
 case object TaxableExpenseBenefit extends CompanyBenefits
+
 case object VanBenefit extends CompanyBenefits
+
 case object VanFuelBenefit extends CompanyBenefits
+
 case object BeneficialLoan extends CompanyBenefits
 
 sealed trait BenefitInKind extends CompanyBenefits
 
 case object TotalBenefitInKind extends BenefitInKind
+
 case object Accommodation extends BenefitInKind
+
 case object Assets extends BenefitInKind
+
 case object AssetTransfer extends BenefitInKind
+
 case object EducationalService extends BenefitInKind
+
 case object Entertaining extends BenefitInKind
+
 case object ExpensesPay extends BenefitInKind
+
 case object Mileage extends BenefitInKind
+
 case object NonQualifyingRelocationExpense extends BenefitInKind
+
 case object OtherItems extends BenefitInKind
+
 case object PaymentEmployeesBehalf extends BenefitInKind
+
 case object PersonalIncidentExpenses extends BenefitInKind
+
 case object QualifyingRelocationExpenses extends BenefitInKind
+
 case object EmployerProvidedProfessionalSubscription extends BenefitInKind
+
 case object IncomeTaxPaidNotDeductedFromDirectorsRemuneration extends BenefitInKind
+
 case object TravelAndSubsistence extends BenefitInKind
+
 case object VoucherAndCreditCards extends BenefitInKind
+
 case object NonCashBenefit extends BenefitInKind
 
 sealed trait Allowances extends IabdType
 
 case object FlatRateJobExpenses extends Allowances
+
 case object ProfessionalSubscriptions extends Allowances
+
 case object EarlierYearsAdjustment extends Allowances
 
 case object UnKnown extends IabdType
@@ -71,7 +99,8 @@ case object UnKnown extends IabdType
 object IabdType {
   private val UnknownIabdTypeId: Int = -1000
 
-  def apply(id: Int): IabdType          = idMap.getOrElse(id, UnKnown)
+  def apply(id: Int): IabdType = idMap.getOrElse(id, UnKnown)
+
   def unapply(iabdType: IabdType): Int  =
     idMap.collectFirst({ case (key, value) if value == iabdType => key }).getOrElse(UnknownIabdTypeId)
 
@@ -112,7 +141,8 @@ object IabdType {
 
   implicit val format: Format[IabdType] = new Format[IabdType] {
     def reads(json: JsValue): JsSuccess[IabdType] = JsSuccess(IabdType.apply(json.as[Int]))
-    def writes(iabdType: IabdType): JsNumber      = JsNumber(IabdType.unapply(iabdType))
+
+    def writes(iabdType: IabdType): JsNumber = JsNumber(IabdType.unapply(iabdType))
   }
 }
 
@@ -123,23 +153,25 @@ case class Iabd(
   grossAmount: Option[BigDecimal] = None,
   typeDescription: Option[String] = None,
   source: Option[Int] = None,
+  captureDate: Option[String],
   paymentFrequency: Option[Int] = None,
   startDate: Option[String] = None
 ) extends Logging {
 
   // scalastyle:off magic.number
   def toStatePension: StatePension = {
-    val paymentStartDate: Option[LocalDate] = paymentFrequency match {
-      case Some(1)            => // Weekly
-        startDate.map(date => LocalDate.parse(date, DateTimeFormatter.ofPattern("dd/MM/yyyy")))
-      case Some(5)            => // Annual
-        None
-      case Some(unknownValue) =>
-        logger.warn(s"Unknown value for IABD's 'paymentFrequency': $unknownValue")
-        None
-      case _                  =>
-        None
-    }
+    val paymentStartDate: Option[LocalDate] =
+      paymentFrequency match {
+        case Some(1)            => // Weekly
+          startDate.map(date => LocalDate.parse(date, DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+        case Some(5)            => // Annual
+          None
+        case Some(unknownValue) =>
+          logger.warn(s"Unknown value for IABD's 'paymentFrequency': $unknownValue")
+          None
+        case _                  =>
+          None
+      }
 
     StatePension(
       grossAmount = grossAmount.getOrElse(0.0),

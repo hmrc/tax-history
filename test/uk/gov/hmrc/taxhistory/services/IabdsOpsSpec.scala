@@ -23,6 +23,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, VanBenefit}
 import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
+import uk.gov.hmrc.time.TaxYear
 
 import java.time.LocalDate
 
@@ -37,12 +38,13 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil with DateUti
 
   val onlyIabdList: List[Iabd] = List(
     Iabd(
-      "QQ000003",
-      Some(employmentSequenceNumber),
-      VanBenefit,
-      Some(grossAmount),
-      Some("Van Benefit"),
-      Some(paymentFrequency)
+      nino = "QQ000003",
+      employmentSequenceNumber = Some(employmentSequenceNumber),
+      `type` = VanBenefit,
+      grossAmount = Some(grossAmount),
+      typeDescription = Some("Van Benefit"),
+      captureDate = Some("5/4/2022"),
+      paymentFrequency = Some(paymentFrequency)
     )
   )
 
@@ -94,7 +96,7 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil with DateUti
       val cbSource = 26
       val iabds    = iabdsBenfitInKindJsonResponse.as[List[Iabd]]
 
-      val companyBenefits = iabds.companyBenefits
+      val companyBenefits = iabds.companyBenefits(TaxYear(2022))
       companyBenefits.size mustBe 7
       val companyBenefit1 = companyBenefits.head
       companyBenefit1.source mustBe Some(cbSource)
@@ -106,7 +108,7 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil with DateUti
 
       val iabds = iabdsTotalBenfitInKindJsonResponse.as[List[Iabd]]
 
-      val companyBenefits = iabds.companyBenefits
+      val companyBenefits = iabds.companyBenefits(TaxYear(2022))
       companyBenefits.size mustBe 2
     }
 
@@ -138,7 +140,7 @@ class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil with DateUti
       val ninoWithoutGrossAmount = Set("QQ000001", "QQ000002")
       val iabds                  = iabdsBenfitInKindNoGrossJsonResponse.as[List[Iabd]]
       val targetIabds            = iabds.filter(iabd => ninoWithoutGrossAmount.contains(iabd.nino))
-      val companyBenefits        = targetIabds.companyBenefits
+      val companyBenefits        = targetIabds.companyBenefits(TaxYear(2022))
 
       companyBenefits.size mustBe 2
       companyBenefits.head.amount mustBe BigDecimal(0)

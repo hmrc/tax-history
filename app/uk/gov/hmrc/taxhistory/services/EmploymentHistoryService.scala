@@ -99,9 +99,9 @@ class EmploymentHistoryService @Inject() (
 
   def getFromCache(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[PayAsYouEarn] =
     cacheService.getOrElseInsert((nino, taxYear)) {
-      retrieveAndBuildPaye(nino, taxYear).map { h =>
+      retrieveAndBuildPaye(nino, taxYear).map { payAsYouEarn =>
         logger.debug(s"Refreshing cached data for $nino $taxYear")
-        h
+        payAsYouEarn
       }
     }
 
@@ -281,7 +281,8 @@ class EmploymentHistoryService @Inject() (
         rtiEmployment = employmentMatches.get(npsEmployment),
         iabds = iabdsNoStatePensions.matchedCompanyBenefits(npsEmployment),
         incomeSource = matchedIncomeSource,
-        npsEmployment = npsEmployment
+        npsEmployment = npsEmployment,
+        taxYear
       )
     }
 

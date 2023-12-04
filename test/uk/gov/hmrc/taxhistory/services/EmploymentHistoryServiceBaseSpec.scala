@@ -22,7 +22,7 @@ import org.mockito.stubbing.OngoingStubbing
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, Employment, IncomeSource, PayAndTax, PayAsYouEarn, TaxAccount}
+import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.rti.RtiData
@@ -178,7 +178,14 @@ trait EmploymentHistoryServiceBaseSpec extends DateUtils with TestUtil {
     actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal(33.33))
   )
 
-  lazy val companyBenefit: CompanyBenefit = CompanyBenefit(iabdType = "type", amount = BigDecimal(123.00))
+  lazy val companyBenefit: CompanyBenefit =
+    CompanyBenefit(
+      iabdType = "type",
+      amount = BigDecimal(123.00),
+      source = None,
+      captureDate = Some("5/4/2022"),
+      taxYear = TaxYear(2022)
+    )
 
   lazy val payAndTax: PayAndTax = PayAndTax(
     taxablePayTotal = Some(BigDecimal(2222.22)),

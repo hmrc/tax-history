@@ -78,6 +78,7 @@ class EmploymentControllerSpec
     "respond with OK for successful get" in {
       when(mockEmploymentHistoryService.getEmployments(any(), any())(any[HeaderCarrier]))
         .thenReturn(Future.successful(testEmployments))
+
       val result = testEmploymentController.getEmployments(ninoWithAgent.nino, taxYear2).apply(FakeRequest())
       status(result) must be(OK)
     }
@@ -97,7 +98,6 @@ class EmploymentControllerSpec
       val result = testEmploymentController.getEmployments(ninoWithoutAgent.nino, taxYear1).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)
     }
-
   }
 
   "getEmployment" must {

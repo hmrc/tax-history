@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.taxhistory.services.helpers
 
-import uk.gov.hmrc.taxhistory.model.rti.RtiEmployment
 import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, IncomeSource, PayAndTax, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
+import uk.gov.hmrc.taxhistory.model.rti.RtiEmployment
 import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 import uk.gov.hmrc.taxhistory.utils.Logging
+import uk.gov.hmrc.time.TaxYear
 
 object EmploymentHistoryServiceHelper extends TaxHistoryHelper with Logging {
 
@@ -39,7 +40,8 @@ object EmploymentHistoryServiceHelper extends TaxHistoryHelper with Logging {
     rtiEmployment: Option[RtiEmployment],
     iabds: List[Iabd],
     incomeSource: Option[IncomeSource],
-    npsEmployment: NpsEmployment
+    npsEmployment: NpsEmployment,
+    taxYear: TaxYear
   ): PayAsYouEarn = {
 
     val employment = npsEmployment.toEmployment
@@ -49,11 +51,12 @@ object EmploymentHistoryServiceHelper extends TaxHistoryHelper with Logging {
       case Some(rtiEmp) => Map(employment.employmentId.toString -> rtiEmp.toPayAndTax)
     }
 
-    val benefits: Map[String, List[CompanyBenefit]] = if (iabds.nonEmpty) {
-      Map(employment.employmentId.toString -> iabds.companyBenefits)
-    } else {
-      Map.empty
-    }
+    val benefits: Map[String, List[CompanyBenefit]] =
+      if (iabds.nonEmpty) {
+        Map(employment.employmentId.toString -> iabds.companyBenefits(taxYear))
+      } else {
+        Map.empty
+      }
 
     val income: Map[String, IncomeSource] = incomeSource match {
       case None     => Map.empty

@@ -16,34 +16,37 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
-import java.util.UUID
-
 import play.api.libs.json._
+import uk.gov.hmrc.taxhistory.utils.LocalDateHelpers
+import uk.gov.hmrc.time.TaxYear
+
+import java.util.UUID
 
 case class CompanyBenefit(
   companyBenefitId: UUID = UUID.randomUUID(),
   iabdType: String,
   amount: BigDecimal,
-  source: Option[Int] = None
-) {
+  source: Option[Int] = None,
+  captureDate: Option[String],
+  taxYear: TaxYear
+) extends LocalDateHelpers {
+
   def isForecastBenefit: Boolean = {
-    val P11D_ECS         = 19
-    val P11D_Manual      = 21
-    val P11D_Assessed    = 28
-    val P11D_P9D_Amended = 29
+    val April6thTaxYearStartDay = taxYear.starts
 
-    val isP11D     =
-      source.contains(P11D_ECS) || source.contains(P11D_Manual) || source.contains(P11D_Assessed) || source.contains(
-        P11D_P9D_Amended
-      )
-    val isForecast = !isP11D
-
-    isForecast
+    captureDate.exists { date =>
+      val captureLocalDate = strDateToLocalDate(date)
+      // we want the day the cutoff to be 5th April for a given tax year
+      captureLocalDate.isBefore(April6thTaxYearStartDay)
+    }
   }
 }
 
 object CompanyBenefit {
-  private val reads: Reads[CompanyBenefit] = Json.reads[CompanyBenefit]
+
+  implicit val formatTaxYear: OFormat[TaxYear] = Json.format[TaxYear]
+
+  implicit val reads: Reads[CompanyBenefit] = Json.reads[CompanyBenefit]
 
   private val defaultWrites: Writes[CompanyBenefit] = Json.writes[CompanyBenefit]
   private val writes: Writes[CompanyBenefit]        = (cb: CompanyBenefit) => {

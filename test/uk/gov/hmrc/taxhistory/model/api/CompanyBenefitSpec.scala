@@ -16,23 +16,29 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
-import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
-import play.api.libs.json.{JsArray, JsBoolean, JsDefined, Json}
+import org.scalatest.wordspec.AnyWordSpecLike
+import play.api.libs.json.{JsArray, Json}
 import uk.gov.hmrc.taxhistory.utils.TestUtil
+import uk.gov.hmrc.time.TaxYear
 
 import java.util.UUID
 
 class CompanyBenefitSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
+
   // scalastyle:off magic.number
   lazy val companyBenefitJson     = Json.parse("""
       |{
       |  "companyBenefitId":"c9923a63-4208-4e03-926d-7c7c88adc7ee",
       |  "iabdType":"companyBenefitType",
       |  "amount":12,
-      |  "source" : 1,
-      |  "isForecastBenefit" : true
+      |  "source":1,
+      |  "captureDate":"05/04/2022",
+      |  "taxYear" : {
+      |     "startYear":2022
+      |   },
+      |  "isForecastBenefit":true
       |}
     """.stripMargin)
   lazy val companyBenefitListJson = JsArray(Seq(companyBenefitJson))
@@ -41,67 +47,88 @@ class CompanyBenefitSpec extends TestUtil with AnyWordSpecLike with Matchers wit
     companyBenefitId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
     iabdType = "companyBenefitType",
     amount = BigDecimal(12.00),
-    source = Some(1)
+    source = Some(1),
+    captureDate = Some("05/04/2022"),
+    TaxYear(2022)
   )
 
   lazy val companyBenefitList = List(companyBenefit)
 
   "CompanyBenefit" should {
-    "transform into Json from object correctly " in {
+
+    "correctly transform into Json from object" in {
       Json.toJson(companyBenefit) shouldBe companyBenefitJson
     }
-    "transform into object from json correctly " in {
+
+    "correctly transform into object from Json " in {
       companyBenefitJson.as[CompanyBenefit] shouldBe companyBenefit
     }
-    "generate companyBenefitId when none is supplied" in {
-      val comBenefit = CompanyBenefit(iabdType = "otherCompanyBenefitType", amount = BigDecimal(10.00))
+
+    "generate companyBenefitId when source = None is supplied" in {
+      val comBenefit = CompanyBenefit(
+        iabdType = "otherCompanyBenefitType",
+        amount = BigDecimal(10.00),
+        source = None,
+        captureDate = Some("05/04/2022"),
+        taxYear = TaxYear(2022)
+      )
       comBenefit.companyBenefitId.toString.nonEmpty shouldBe true
       comBenefit.companyBenefitId                  shouldNot be(companyBenefit.companyBenefitId)
     }
-    "transform into Json from object list correctly " in {
+
+    "transform into Json from object list correctly" in {
       Json.toJson(companyBenefitList) shouldBe companyBenefitListJson
     }
-    "transform into object list from json correctly " in {
+
+    "transform into object list from json correctly" in {
       companyBenefitListJson.as[List[CompanyBenefit]] shouldBe companyBenefitList
     }
 
-    "transform into Json with an 'isForecastBenefit' field" in {
-      val forecastSource = Some(1)
-      val actualSource   = Some(19)
-      (Json.toJson(companyBenefit.copy(source = actualSource)) \ "isForecastBenefit")   shouldBe JsDefined(
-        JsBoolean(false)
-      )
-      (Json.toJson(companyBenefit.copy(source = forecastSource)) \ "isForecastBenefit") shouldBe JsDefined(
-        JsBoolean(true)
-      )
-      (Json.toJson(companyBenefit.copy(source = None)) \ "isForecastBenefit")           shouldBe JsDefined(JsBoolean(true))
-    }
+    ".isForecastBenefit()" when {
 
-    "determine the 'isForecastBenefit' flag" when {
-      val benefit = CompanyBenefit(iabdType = "", amount = BigDecimal(0), source = None)
-      "source is 19 - P11D (ECS), then it is not forecast" in {
-        benefit.copy(source = Some(19)).isForecastBenefit shouldBe false
-      }
-      "source is 21 - P11D (MANUAL), then it is not forecast" in {
-        benefit.copy(source = Some(21)).isForecastBenefit shouldBe false
-      }
-      "source is 28 - P11D (Assessed P11D), then it is not forecast" in {
-        benefit.copy(source = Some(28)).isForecastBenefit shouldBe false
+      "the captureDate is == 5th April of a given tax year (start of tax year)" should {
 
-      }
-      "source is 29 - P11D (P11D/P9D), then it is not forecast" in {
-        benefit.copy(source = Some(29)).isForecastBenefit shouldBe false
+        "return false, since the benefit is P11d status" in {
 
-      }
-      "source is some other number, then it is forecast" in {
-        val p11dSources     = Seq(19, 21, 28, 29)
-        val forecastSources = (1 to 200).filterNot(p11dSources.contains)
-        forecastSources.foreach { forecastSource =>
-          benefit.copy(source = Some(forecastSource)).isForecastBenefit shouldBe true
+          val companyBenefit = CompanyBenefit(
+            iabdType = "",
+            amount = BigDecimal(0),
+            source = None,
+            captureDate = Some("5/4/2022"),
+            taxYear = TaxYear(2022)
+          )
+          companyBenefit.isForecastBenefit shouldBe true
         }
       }
-      "source is not present, then it is forecast" in {
-        benefit.copy(source = None).isForecastBenefit shouldBe true
+
+      "the captureDate is after 5th April of the current tax year" should {
+
+        "return false, since the benefit is P11d status" in {
+
+          val companyBenefit = CompanyBenefit(
+            iabdType = "",
+            amount = BigDecimal(0),
+            source = None,
+            captureDate = Some("6/04/2022"),
+            taxYear = TaxYear(2022)
+          )
+          companyBenefit.isForecastBenefit shouldBe false
+        }
+      }
+
+      "the captureDate is before 5th April of a given tax year" should {
+
+        "return true the benefit should be a forecast" in {
+
+          val companyBenefit = CompanyBenefit(
+            iabdType = "",
+            amount = BigDecimal(0),
+            source = None,
+            captureDate = Some("04/4/2022"),
+            taxYear = TaxYear(2022)
+          )
+          companyBenefit.isForecastBenefit shouldBe true
+        }
       }
     }
   }

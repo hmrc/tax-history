@@ -26,3 +26,5 @@ tmp
 bin
 .bsp
 .idea
+.metals/
+.vscode/
