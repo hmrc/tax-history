@@ -16,14 +16,12 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import java.util.UUID
-
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.mvc.ControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -31,10 +29,11 @@ import uk.gov.hmrc.agentmtdidentifiers.model.Arn
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.model.api.CompanyBenefit
-import uk.gov.hmrc.taxhistory.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
-import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestRelationshipAuthService}
+import uk.gov.hmrc.taxhistory.utils.{HttpErrors, TestRelationshipAuthService, TestUtil}
+import uk.gov.hmrc.time.TaxYear
 
+import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
 class CompanyBenefitControllerSpec
@@ -51,7 +50,13 @@ class CompanyBenefitControllerSpec
   private val taxYear = 2016
 
   val testCompanyBenefits: List[CompanyBenefit] = List(
-    CompanyBenefit(iabdType = "CarBenefit", amount = BigDecimal(100.00))
+    CompanyBenefit(
+      iabdType = "CarBenefit",
+      amount = BigDecimal(100.00),
+      source = None,
+      captureDate = Some("5/4/2022"),
+      taxYear = TaxYear(2022)
+    )
   )
 
   val employmentId: String = UUID.randomUUID().toString

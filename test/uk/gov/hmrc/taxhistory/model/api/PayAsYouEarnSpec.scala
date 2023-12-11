@@ -16,15 +16,16 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
-import java.time.LocalDate
-import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json._
-import play.api.libs.json.{JsObject, _}
+import play.api.libs.json._
 import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
+import uk.gov.hmrc.time.TaxYear
 
+import java.time.LocalDate
 import java.util.UUID
 
 class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with DateUtils {
@@ -221,12 +222,15 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
     }
 
     "(de)serialising the 'benefits' field" should {
-      val benefit1             = CompanyBenefit(
-        companyBenefitId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
-        iabdType = "companyBenefitType",
-        amount = BigDecimal("12.00"),
-        source = None
-      )
+      val benefit1             =
+        CompanyBenefit(
+          companyBenefitId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
+          iabdType = "companyBenefitType",
+          amount = BigDecimal("12.00"),
+          source = None,
+          captureDate = Some("5/4/2022"),
+          TaxYear(2022)
+        )
       val benefitsDeserialised = Map(employment1Id -> List(benefit1))
       val benefitsSerialised   = Json.parse(s"""
            |  {
@@ -235,6 +239,10 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
            |        "companyBenefitId": "c9923a63-4208-4e03-926d-7c7c88adc7ee",
            |        "iabdType": "companyBenefitType",
            |        "amount": 12,
+           |        "captureDate": "5/4/2022",
+           |        "taxYear" : {
+           |          "startYear" : 2022
+           |        },
            |        "isForecastBenefit": true
            |      }
            |    ]

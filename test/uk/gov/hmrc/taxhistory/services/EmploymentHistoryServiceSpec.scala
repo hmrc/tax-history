@@ -30,6 +30,7 @@ import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType.OccupationalPensio
 import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
+import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService.mockAppConfig
 import uk.gov.hmrc.taxhistory.utils.{PlaceHolder, TestEmploymentHistoryService}
 import uk.gov.hmrc.time.TaxYear
 
@@ -48,7 +49,74 @@ class EmploymentHistoryServiceSpec
     with Employments {
 
   "EmploymentHistoryService" when {
+
+    ".getEmployments" should {
+
+      "return employments with all fillers" in {
+
+        val taxYear = TaxYear.current.previous
+
+        val placeHolders = Seq(
+          PlaceHolder("%taxYearStartYear%", taxYear.startYear.toString),
+          PlaceHolder("%taxYearFinishYear%", taxYear.finishYear.toString)
+        )
+        lazy val paye    = loadFile("/json/withPlaceholders/model/api/paye.json", placeHolders).as[PayAsYouEarn]
+
+        // scalastyle:off magic.number
+
+        val testEmployment2 =
+          Employment(
+            employmentId = UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
+            startDate = Some(locaDateCyMinus1(1, 21)),
+            endDate = Some(locaDateCyMinus1(2, 21)),
+            payeReference = "paye-1",
+            employerName = "employer-1",
+            companyBenefitsURI =
+              Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/company-benefits"),
+            payAndTaxURI = Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3/pay-and-tax"),
+            employmentURI = Some(s"/${taxYear.startYear}/employments/01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
+            employmentPaymentType = None,
+            employmentStatus = Live,
+            worksNumber = "00191048716"
+          )
+
+        val testEmployment3 =
+          Employment(
+            employmentId = UUID.fromString("019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
+            startDate = Some(locaDateCyMinus1(2, 22)),
+            endDate = None,
+            payeReference = "paye-2",
+            employerName = "employer-2",
+            companyBenefitsURI =
+              Some(s"/${taxYear.startYear}/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/company-benefits"),
+            payAndTaxURI = Some(s"/${taxYear.startYear}/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87/pay-and-tax"),
+            employmentURI = Some(s"/${taxYear.startYear}/employments/019f5fee-d5e4-4f3e-9569-139b8ad81a87"),
+            employmentPaymentType = None,
+            employmentStatus = Live,
+            worksNumber = "00191048716"
+          )
+
+        when(mockAppConfig.jobSeekersAllowanceFlag).thenReturn(true)
+
+        // Set up the test data in the cache
+        testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), taxYear), paye).futureValue
+        val april        = 4
+        val january      = 1
+        val dayOfMonth6  = 6
+        val dayOfMonth20 = 20
+
+        val employments = testEmploymentHistoryService.getEmployments(Nino("AA000000A"), taxYear).futureValue
+
+        employments.head.employmentStatus shouldBe EmploymentStatus.Unknown
+        employments.head.startDate        shouldBe Some(taxYear.starts.withMonth(april).withDayOfMonth(dayOfMonth6))
+        employments.head.endDate          shouldBe Some(taxYear.finishes.withMonth(january).withDayOfMonth(dayOfMonth20))
+        employments                         should contain(testEmployment2)
+        employments                         should contain(testEmployment3)
+      }
+    }
+
     ".retrieveNpsEmployments" should {
+
       "successfully get Nps Employments Data" in
         new StubConnectors(npsGetEmployments = stubNpsGetEmploymentsSucceeds(npsEmploymentResponse)) {
           noException shouldBe thrownBy(
@@ -323,6 +391,8 @@ class EmploymentHistoryServiceSpec
         val dayOfMonth6  = 6
         val dayOfMonth20 = 20
 
+        when(mockAppConfig.jobSeekersAllowanceFlag).thenReturn(false)
+
         val employments = testEmploymentHistoryService.getEmployments(Nino("AA000000A"), taxYear).futureValue
         employments.head.employmentStatus shouldBe EmploymentStatus.Unknown
 
@@ -386,11 +456,21 @@ class EmploymentHistoryServiceSpec
       }
 
       "get company benefits from cache successfully" in {
+
         val paye   = loadFile("/json/model/api/paye.json").as[PayAsYouEarn]
         val amount = 12
 
         val testCompanyBenefits: List[CompanyBenefit] =
-          List(CompanyBenefit(UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"), "companyBenefitType", amount))
+          List(
+            CompanyBenefit(
+              companyBenefitId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
+              iabdType = "companyBenefitType",
+              amount = amount,
+              source = None,
+              captureDate = Some("5/04/2022"),
+              taxYear = TaxYear(2022)
+            )
+          )
 
         testEmploymentHistoryService.cacheService
           .insertOrUpdate((Nino("AA000000A"), TaxYear(taxYear2)), paye)
