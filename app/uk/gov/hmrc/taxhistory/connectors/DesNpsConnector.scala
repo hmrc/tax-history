@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import play.api.http.Status.NOT_FOUND
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._

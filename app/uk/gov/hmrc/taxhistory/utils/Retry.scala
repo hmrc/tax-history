@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.taxhistory.utils
 
-import akka.actor.ActorSystem
-import akka.pattern.after
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.pattern.after
 import uk.gov.hmrc.http.{BadGatewayException, GatewayTimeoutException, UpstreamErrorResponse}
 
 import javax.inject.Inject

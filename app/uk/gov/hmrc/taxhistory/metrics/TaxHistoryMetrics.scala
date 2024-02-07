@@ -18,13 +18,14 @@ package uk.gov.hmrc.taxhistory.metrics
 
 import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.Timer.Context
-import com.kenshoo.play.metrics.Metrics
+//import com.kenshoo.play.metrics.Metrics
+import com.codahale.metrics.MetricRegistry
 import uk.gov.hmrc.taxhistory.metrics.MetricsEnum.MetricsEnum
 
 import javax.inject.Inject
 
-class TaxHistoryMetrics @Inject() (val metrics: Metrics) {
-  private val registry: MetricRegistry = metrics.defaultRegistry
+class TaxHistoryMetrics @Inject() (val metrics: MetricRegistry) {
+  private val registry: MetricRegistry = metrics
   private val timers                   = Map(
     MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.timer("nps-get-employments-response-timer"),
     MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.timer("rti-get-employments-response-timer"),

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.config
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.taxhistory.utils.Retry
 

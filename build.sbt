@@ -2,17 +2,20 @@ import uk.gov.hmrc.DefaultBuildSettings
 
 val appName = "tax-history"
 
+ThisBuild / majorVersion := 3
+ThisBuild / scalaVersion := "2.13.12"
+
 lazy val microservice =
   Project(appName, file("."))
     .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
     .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
-    .settings(majorVersion := 3)
+    //.settings(majorVersion := 3)
     .settings(PlayKeys.playDefaultPort := 9997)
     .settings(CodeCoverageSettings.settings)
     .settings(routesImport ++= Seq("uk.gov.hmrc.taxhistory.binders.PathBinders._"))
     .configs(IntegrationTest)
     .settings(
-      scalaVersion := "2.13.12",
+      //scalaVersion := "2.13.12",
       libraryDependencies ++= AppDependencies(),
       retrieveManaged := true,
       // ***************

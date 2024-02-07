@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import com.codahale.metrics.Timer
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
