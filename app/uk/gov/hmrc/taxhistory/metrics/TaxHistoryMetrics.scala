@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,28 +18,26 @@ package uk.gov.hmrc.taxhistory.metrics
 
 import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.Timer.Context
-import com.kenshoo.play.metrics.Metrics
 import uk.gov.hmrc.taxhistory.metrics.MetricsEnum.MetricsEnum
 
 import javax.inject.Inject
 
-class TaxHistoryMetrics @Inject() (val metrics: Metrics) {
-  private val registry: MetricRegistry = metrics.defaultRegistry
-  private val timers                   = Map(
+class TaxHistoryMetrics @Inject() (val registry: MetricRegistry) {
+  private val timers          = Map(
     MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.timer("nps-get-employments-response-timer"),
     MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.timer("rti-get-employments-response-timer"),
     MetricsEnum.NPS_GET_IABDS       -> registry.timer("nps-get-iabds-response-timer"),
     MetricsEnum.NPS_GET_TAX_ACCOUNT -> registry.timer("nps-get-tax-account-response-timer"),
     MetricsEnum.CITIZEN_DETAILS     -> registry.timer("citizen-details-response-timer")
   )
-  private val successCounters          = Map(
+  private val successCounters = Map(
     MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.counter("rti-get-employments-success-counter"),
     MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.counter("nps-get-employments-success-counter"),
     MetricsEnum.NPS_GET_IABDS       -> registry.counter("nps-get-iabds-success-counter"),
     MetricsEnum.NPS_GET_TAX_ACCOUNT -> registry.counter("nps-get-tax-account-success-counter"),
     MetricsEnum.CITIZEN_DETAILS     -> registry.counter("citizen-details-success-counter")
   )
-  private val failedCounters           = Map(
+  private val failedCounters  = Map(
     MetricsEnum.NPS_GET_EMPLOYMENTS -> registry.counter("nps-get-employments-failed-counter"),
     MetricsEnum.RTI_GET_EMPLOYMENTS -> registry.counter("rti-get-employments-failed-counter"),
     MetricsEnum.NPS_GET_IABDS       -> registry.counter("nps-get-iabds-failed-counter"),

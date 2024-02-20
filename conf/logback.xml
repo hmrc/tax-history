@@ -46,6 +46,7 @@
     <logger name="com.google.inject" level="INFO"/>
 
     <logger name="uk.gov" level="INFO"/>
+    <logger name="play" level="INFO"/>
 
     <logger name="application"  level="DEBUG"/>
     <!--  default to INFO logging level  -->
@@ -59,7 +60,7 @@
         <appender-ref ref="STDOUT"/>
     </logger>
 
-    <root level="INFO">
+    <root level="ERROR">
         <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>
     </root>
