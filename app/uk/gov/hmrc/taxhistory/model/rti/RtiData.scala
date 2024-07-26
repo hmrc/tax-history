@@ -149,7 +149,7 @@ object RtiEarlierYearUpdate {
 }
 
 object RtiEmployment {
-  implicit val reader: Reads[RtiEmployment]   = (js: JsValue) => {
+  implicit val reader: Reads[RtiEmployment]   = (js: JsValue) =>
     for {
       sequenceNo         <- (js \ "sequenceNumber").validate[Int]
       officeNumber       <- (js \ "empRefs" \ "officeNo").validate[String]
@@ -165,16 +165,14 @@ object RtiEmployment {
       payments = payments.getOrElse(List.empty),
       earlierYearUpdates = earlierYearUpdates.getOrElse(Nil)
     )
-  }
   implicit val writer: OWrites[RtiEmployment] = Json.writes[RtiEmployment]
 }
 
 object RtiData {
-  implicit val reader: Reads[RtiData]   = (js: JsValue) => {
+  implicit val reader: Reads[RtiData]   = (js: JsValue) =>
     for {
       nino        <- (js \ "request" \ "nino").validate[String]
       employments <- (js \ "individual" \ "employments" \ "employment").validate[List[RtiEmployment]]
     } yield RtiData(nino = nino, employments = employments)
-  }
   implicit val writer: OWrites[RtiData] = Json.writes[RtiData]
 }

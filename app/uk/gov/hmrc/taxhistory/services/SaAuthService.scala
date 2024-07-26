@@ -28,11 +28,10 @@ import uk.gov.hmrc.taxhistory.utils.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 
-/**
-  * Checks if a logged in user is either:
-  * - An individual who has a NINO that matches the requested NINO in the URL
-  * - An agent with an IR-SA-AGENT enrolment and who has a delegated IR-SA enrolment for the client identified by the
-  * requested NINO (where the IR-SA enrolment's UTR matches the client's SA UTR)
+/** Checks if a logged in user is either:
+  *   - An individual who has a NINO that matches the requested NINO in the URL
+  *   - An agent with an IR-SA-AGENT enrolment and who has a delegated IR-SA enrolment for the client identified by the
+  *     requested NINO (where the IR-SA enrolment's UTR matches the client's SA UTR)
   */
 class SaAuthService @Inject() (val authConnector: AuthConnector, val citizenDetailsConnector: CitizenDetailsConnector)(
   implicit val ec: ExecutionContext
@@ -61,8 +60,7 @@ class SaAuthService @Inject() (val authConnector: AuthConnector, val citizenDeta
     }
   }
 
-  /**
-    * A code block wrapped in this function will only be executed if the logged in NINO matches the request NINO or
+  /** A code block wrapped in this function will only be executed if the logged in NINO matches the request NINO or
     * there exists an authorised relationship between the given NINO and an Agent.
     */
   def withSaAuthorisation(nino: Nino)(

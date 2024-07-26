@@ -51,7 +51,7 @@ class EmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with Op
     worksNumber = "00191048716"
   )
 
-  lazy val employmentList = List(employment1, employment2)
+  lazy val employmentList: List[Employment] = List(employment1, employment2)
 
   "Employment" should {
 

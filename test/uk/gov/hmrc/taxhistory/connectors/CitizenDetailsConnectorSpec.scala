@@ -16,53 +16,21 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
-import org.apache.pekko.actor.ActorSystem
-import com.codahale.metrics.Timer
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{reset, verify, when}
-import org.scalatest.BeforeAndAfterEach
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.Mockito.{verify, when}
 import org.scalatest.concurrent.Eventually._
-import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.http.HttpClient
-import uk.gov.hmrc.taxhistory.config.AppConfig
-import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
-import uk.gov.hmrc.taxhistory.utils.TestUtil
+import uk.gov.hmrc.taxhistory.metrics.MetricsEnum
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class CitizenDetailsConnectorSpec
-    extends PlaySpec
-    with MockitoSugar
-    with TestUtil
-    with BeforeAndAfterEach
-    with GuiceOneAppPerSuite {
-  implicit val hc: HeaderCarrier = HeaderCarrier()
-
-  override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
-
-  private val mockHttp         = mock[HttpClient]
-  private val mockMetrics      = mock[TaxHistoryMetrics]
-  private val mockTimerContext = mock[Timer.Context]
-  private val mockAppConfig    = app.injector.instanceOf[AppConfig]
-  private val system           = ActorSystem("test")
+class CitizenDetailsConnectorSpec extends BaseConnectorSpec {
 
   private val testConnector =
-    new CitizenDetailsConnector(http = mockHttp, metrics = mockMetrics, config = mockAppConfig, system = system)
-
-  override def beforeEach(): Unit = {
-    reset(mockHttp)
-    reset(mockMetrics)
-    reset(mockTimerContext)
-  }
+    new CitizenDetailsConnector(http = mockHttpClient, metrics = mockMetrics, config = mockAppConfig, system = system)
 
   "lookupSaUtr" should {
 
@@ -77,20 +45,17 @@ class CitizenDetailsConnectorSpec
       }
 
     "return None if citizen-details returns 404 for a given NINO" in
-      new CitizenDetailsFails(new NotFoundException("")) {
+      new CitizenDetailsFails(NOT_FOUND) {
         await(testConnector.lookupSaUtr(Nino("AA000003D"))) mustBe None
       }
 
     "return UpstreamErrorResponse if citizen-details returns 5xx" in
-      new CitizenDetailsFails(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)) {
+      new CitizenDetailsFails(INTERNAL_SERVER_ERROR) {
         intercept[UpstreamErrorResponse](await(testConnector.lookupSaUtr(Nino("AA000003D"))))
       }
 
     "will attempt a retry upon failure" in
-      new CitizenDetailsFailsOnceThenRespondsWithUtr(
-        UpstreamErrorResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR),
-        forThisNino = Nino("AA000003D")
-      ) {
+      new CitizenDetailsFailsOnceThenRespondsWithUtr(INTERNAL_SERVER_ERROR, forThisNino = Nino("AA000003D")) {
         await(testConnector.lookupSaUtr(forThisNino)) mustBe Some(expectedUtr)
       }
 
@@ -108,7 +73,7 @@ class CitizenDetailsConnectorSpec
         }
 
       "increment successful metric counter on call that returned 404" in
-        new CitizenDetailsFails(new NotFoundException("")) {
+        new CitizenDetailsFails(NOT_FOUND) {
           await(testConnector.lookupSaUtr(Nino("AA000003D")))
           eventually(verify(mockMetrics).incrementSuccessCounter(MetricsEnum.CITIZEN_DETAILS))
         }
@@ -121,13 +86,13 @@ class CitizenDetailsConnectorSpec
         }
 
       "increment failed metric counter on failed call" in
-        new CitizenDetailsFails(new BadRequestException("")) {
+        new CitizenDetailsFails(BAD_REQUEST) {
           intercept[Throwable](await(testConnector.lookupSaUtr(Nino("AA000003D"))))
           eventually(verify(mockMetrics).incrementFailedCounter(MetricsEnum.CITIZEN_DETAILS))
         }
 
       "tracks time of unsuccessful calls" in
-        new CitizenDetailsFails(new BadRequestException("")) {
+        new CitizenDetailsFails(BAD_REQUEST) {
           intercept[Throwable](await(testConnector.lookupSaUtr(Nino("AA000003D"))))
           verify(mockMetrics).startTimer(MetricsEnum.CITIZEN_DETAILS)
           eventually(verify(mockTimerContext).stop())
@@ -137,52 +102,49 @@ class CitizenDetailsConnectorSpec
 
   class CitizenDetailsRespondsWithUtr(val forThisNino: Nino) {
     val expectedUtr: SaUtr = SaUtr("1097133333")
-    when(mockMetrics.startTimer(any())).thenReturn(mockTimerContext)
-    when(mockHttp.GET[JsValue](any(), any(), any())(any(), any(), any()))
-      .thenReturn(Future.successful(responseWithUtr(forThisNino, expectedUtr)))
+    mockExecuteMethod(responseWithUtr(forThisNino, expectedUtr), OK)
   }
 
   class CitizenDetailsRespondsWithoutUtr(val forThisNino: Nino) {
-    when(mockMetrics.startTimer(any())).thenReturn(mockTimerContext)
-    when(mockHttp.GET[JsValue](any(), any(), any())(any(), any(), any()))
-      .thenReturn(Future.successful(Json.parse(s"""
-           |{
-           |    "dateOfBirth": "23041948",
-           |    "ids": {
-           |        "nino": "${forThisNino.value}"
-           |    },
-           |    "name": {
-           |        "current": {
-           |            "firstName": "Jim",
-           |            "lastName": "Ferguson"
-           |        },
-           |        "previous": []
-           |    }
-           |}
-        """.stripMargin)))
+    mockExecuteMethod(responseWithoutUtr(forThisNino), OK)
   }
 
-  class CitizenDetailsFails(withThisException: Throwable) {
-    when(mockMetrics.startTimer(any())).thenReturn(mockTimerContext)
-    when(mockHttp.GET[JsValue](any(), any(), any())(any(), any(), any()))
-      .thenReturn(Future.failed(withThisException))
+  class CitizenDetailsFails(status: Int) {
+    mockExecuteMethod("", status)
   }
 
-  class CitizenDetailsFailsOnceThenRespondsWithUtr(withThisException: Throwable, val forThisNino: Nino) {
+  class CitizenDetailsFailsOnceThenRespondsWithUtr(status: Int, val forThisNino: Nino) {
     val expectedUtr: SaUtr = SaUtr("1097133333")
     when(mockMetrics.startTimer(any())).thenReturn(mockTimerContext)
-    when(mockHttp.GET[JsValue](any(), any(), any())(any(), any(), any()))
-      .thenReturn(Future.failed(withThisException))
-      .thenReturn(Future.successful(responseWithUtr(forThisNino, expectedUtr)))
+    when(mockRequestBuilder.execute(any[HttpReads[HttpResponse]], any()))
+      .thenReturn(Future.successful(buildHttpResponse(status)))
+      .thenReturn(Future.successful(buildHttpResponse(responseWithUtr(forThisNino, expectedUtr))))
   }
 
-  private def responseWithUtr(forThisNino: Nino, expectedUtr: SaUtr) =
-    Json.parse(s"""
+  private def responseWithUtr(forThisNino: Nino, expectedUtr: SaUtr): String =
+    s"""
+       |{
+       |    "dateOfBirth": "23041948",
+       |    "ids": {
+       |        "nino": "${forThisNino.value}",
+       |        "sautr": "${expectedUtr.value}"
+       |    },
+       |    "name": {
+       |        "current": {
+       |            "firstName": "Jim",
+       |            "lastName": "Ferguson"
+       |        },
+       |        "previous": []
+       |    }
+       |}
+        """.stripMargin
+
+  private def responseWithoutUtr(forThisNino: Nino): String =
+    s"""
          |{
          |    "dateOfBirth": "23041948",
          |    "ids": {
-         |        "nino": "${forThisNino.value}",
-         |        "sautr": "${expectedUtr.value}"
+         |        "nino": "${forThisNino.value}"
          |    },
          |    "name": {
          |        "current": {
@@ -192,5 +154,6 @@ class CitizenDetailsConnectorSpec
          |        "previous": []
          |    }
          |}
-        """.stripMargin)
+        """.stripMargin
+
 }

@@ -20,7 +20,6 @@ import java.util.UUID
 import java.time.LocalDate
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
@@ -34,7 +33,7 @@ import uk.gov.hmrc.time.TaxYear
 
 import scala.concurrent.Future
 
-class TaxAccountServiceSpec extends PlaySpec with MockitoSugar with TestUtil with DateUtils {
+class TaxAccountServiceSpec extends PlaySpec with TestUtil with DateUtils {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val testNino: Nino             = randomNino()

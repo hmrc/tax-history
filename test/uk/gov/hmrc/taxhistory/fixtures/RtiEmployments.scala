@@ -32,7 +32,6 @@ trait RtiEmployments extends TestUtil {
   lazy val rtiNonMatchingEmploymentsResponse: JsValue      = loadFile(
     "/json/rti/response/dummyRtiNonMatchingEmployment.json"
   )
-  // scalastyle:off magic.number
   val rtiEmployment1: RtiEmployment                        =
     RtiEmployment(1, "offNo1", "ref1", currentPayId = None, payments = Nil, earlierYearUpdates = Nil)
   val rtiEmployment2: RtiEmployment                        =
@@ -41,6 +40,5 @@ trait RtiEmployments extends TestUtil {
     RtiEmployment(3, "offNo3", "ref3", currentPayId = None, payments = Nil, earlierYearUpdates = Nil)
   val rtiEmployment4: RtiEmployment                        =
     RtiEmployment(4, "offNo4", "ref4", currentPayId = None, payments = Nil, earlierYearUpdates = Nil)
-  // scalastyle:on magic.number
 
 }

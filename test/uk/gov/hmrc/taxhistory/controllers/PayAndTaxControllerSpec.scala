@@ -21,7 +21,6 @@ import org.mockito.Mockito._
 import org.scalatest.{BeforeAndAfterEach, OptionValues}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.mvc.ControllerComponents
 import play.api.test.FakeRequest
@@ -42,11 +41,10 @@ class PayAndTaxControllerSpec
     with Matchers
     with OptionValues
     with GuiceOneServerPerSuite
-    with MockitoSugar
     with TestUtil
     with BeforeAndAfterEach {
 
-  val mockEmploymentHistoryService: EmploymentHistoryService = mock[EmploymentHistoryService]
+  val mockEmploymentHistoryService: EmploymentHistoryService = mock(classOf[EmploymentHistoryService])
 
   val ninoWithAgent: Nino    = randomNino()
   val ninoWithoutAgent: Nino = randomNino()
@@ -55,7 +53,7 @@ class PayAndTaxControllerSpec
   val employmentId: String = UUID.randomUUID().toString
 
   val testPayAndTax: PayAndTax                    = PayAndTax(earlierYearUpdates = Nil)
-  val testPayAndTaxMap                            =
+  val testPayAndTaxMap: Map[String, PayAndTax]    =
     Map(s"${testPayAndTax.payAndTaxId}" -> testPayAndTax, s"${testPayAndTax.payAndTaxId}" -> testPayAndTax)
 
   val cc: ControllerComponents                    = stubControllerComponents()

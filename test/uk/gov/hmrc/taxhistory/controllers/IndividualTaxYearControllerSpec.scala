@@ -18,7 +18,6 @@ package uk.gov.hmrc.taxhistory.controllers
 
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.mvc.ControllerComponents
@@ -37,18 +36,17 @@ import scala.concurrent.{ExecutionContext, Future}
 class IndividualTaxYearControllerSpec
     extends PlaySpec
     with GuiceOneServerPerSuite
-    with MockitoSugar
     with TestUtil
     with BeforeAndAfterEach {
 
-  val mockEmploymentHistoryService: EmploymentHistoryService = mock[EmploymentHistoryService]
+  val mockEmploymentHistoryService: EmploymentHistoryService = mock(classOf[EmploymentHistoryService])
 
   val ninoWithAgent: Nino    = randomNino()
   val ninoWithoutAgent: Nino = randomNino()
 
   private val taxYear = 2018
 
-  private val mockAuditable                 = mock[Auditable]
+  private val mockAuditable                 = mock(classOf[Auditable])
   val testTaxYears: List[IndividualTaxYear] = List(IndividualTaxYear(taxYear, "fakeUri", "fakeUri", "fakeUri"))
 
   val cc: ControllerComponents                    = stubControllerComponents()

@@ -32,9 +32,8 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-/**
-  * A test version of SaAuthService which returns a predicate without calling citizenDetailsConnector
-  * rather than interrogating a real auth service.
+/** A test version of SaAuthService which returns a predicate without calling citizenDetailsConnector rather than
+  * interrogating a real auth service.
   */
 case class TestSaAuthService()
     extends SaAuthService(

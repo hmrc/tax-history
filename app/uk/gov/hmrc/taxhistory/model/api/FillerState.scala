@@ -18,16 +18,14 @@ package uk.gov.hmrc.taxhistory.model.api
 
 import java.time.LocalDate
 
-/**
-  * The filler state describes the temporal relationship of a filler (an employment gap) to an employment.
+/** The filler state describes the temporal relationship of a filler (an employment gap) to an employment.
   */
 trait FillerState
 
 object FillerState {
 
-  /**
-    * Returns a single fillerState, in order of precedence, falling back to Unrelated if the timing of
-    * employment and filler have no overlap
+  /** Returns a single fillerState, in order of precedence, falling back to Unrelated if the timing of employment and
+    * filler have no overlap
     */
   def fillerState(
     fillerStartDate: LocalDate,

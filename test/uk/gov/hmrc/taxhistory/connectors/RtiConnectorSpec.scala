@@ -16,55 +16,37 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
-import org.apache.pekko.actor.ActorSystem
-import com.codahale.metrics.Timer
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import org.scalatestplus.mockito.MockitoSugar
-import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.taxhistory.model.rti.RtiData
-import uk.gov.hmrc.taxhistory.config.AppConfig
-import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
-import uk.gov.hmrc.taxhistory.utils.TestUtil
 import uk.gov.hmrc.time.TaxYear
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with GuiceOneAppPerSuite {
+class RtiConnectorSpec extends BaseConnectorSpec {
 
-  override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
-  implicit val hc: HeaderCarrier     = HeaderCarrier()
-
-  val mockHttpClient: HttpClient               = mock[HttpClient]
-  val mockAppConfig: AppConfig                 = app.injector.instanceOf[AppConfig]
-  val mockTaxHistoryMetrics: TaxHistoryMetrics = mock[TaxHistoryMetrics]
-  val system: ActorSystem                      = ActorSystem("test")
-  private val taxYear                          = 2016
-  private val taxYearPlusOne                   = 2017
+  private val taxYear        = 2016
+  private val taxYearPlusOne = 2017
 
   val uuid                           = "123f4567-g89c-42c3-b456-557742330000"
   val testRtiConnector: RtiConnector = new RtiConnector(
     http = mockHttpClient,
-    metrics = mockTaxHistoryMetrics,
+    metrics = mockMetrics,
     config = mockAppConfig,
     system = system
   ) {
     override def generateNewUUID: String = uuid
   }
 
-  val testNino: Nino                = randomNino()
-  val testNinoWithoutSuffix: String = testNino.withoutSuffix
-  lazy val testRtiData: RtiData     = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
+  val testNino: Nino                    = randomNino()
+  val testNinoWithoutSuffix: String     = testNino.withoutSuffix
+  lazy val testRtiData: String          = loadFile("/json/rti/response/dummyRti.json").toString()
+  lazy val testRtiDataAsObject: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
 
   "return new ID pre-appending the requestID when the requestID matches the format(8-4-4-4)" in {
     val requestId  = "dcba0000-ij12-df34-jk56"
@@ -107,53 +89,39 @@ class RtiConnectorSpec extends PlaySpec with MockitoSugar with TestUtil with Gui
 
     "get RTI data " when {
       "given a valid Nino and TaxYear" in {
-        when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+        mockExecuteMethod(testRtiData, OK)
 
-        when(testRtiConnector.http.GET[RtiData](any(), any(), any())(any(), any(), any()))
-          .thenReturn(Future.successful(testRtiData))
+        val result = await(testRtiConnector.getRTIEmployments(testNino, TaxYear(taxYear)))
 
-        val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(taxYear))
-
-        await(result) mustBe Some(testRtiData)
+        result.get.nino mustBe testRtiDataAsObject.nino
+        result.get.employments must contain theSameElementsAs testRtiDataAsObject.employments
       }
 
       "retrying after the first call failed and the second call succeeds" in {
+        when(mockRequestBuilder.execute(any[HttpReads[HttpResponse]], any()))
+          .thenReturn(Future.successful(buildHttpResponse(INTERNAL_SERVER_ERROR)))
+          .thenReturn(Future.successful(buildHttpResponse(testRtiData)))
 
-        when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+        val result = await(testRtiConnector.getRTIEmployments(testNino, TaxYear(taxYear)))
 
-        when(testRtiConnector.http.GET[RtiData](any())(any(), any(), any()))
-          .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
-          .thenReturn(Future.successful(testRtiData))
-
-        val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(taxYear))
-
-        await(result) mustBe Some(testRtiData)
+        result.get.nino mustBe testRtiDataAsObject.nino
+        result.get.employments must contain theSameElementsAs testRtiDataAsObject.employments
       }
 
       "return None when the call to RTI fails with 404 NotFound" in {
+        mockExecuteMethod(NOT_FOUND)
 
-        when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
+        val result = await(testRtiConnector.getRTIEmployments(testNino, TaxYear(taxYear)))
 
-        when(testRtiConnector.http.GET[RtiData](any(), any(), any())(any(), any(), any()))
-          .thenReturn(Future.failed(UpstreamErrorResponse("Not found", NOT_FOUND, NOT_FOUND)))
-
-        val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(taxYear))
-
-        await(result) mustBe None
+        result mustBe None
       }
 
       "return and handle an error response" in {
+        mockExecuteMethod(INTERNAL_SERVER_ERROR)
 
-        val expectedResponse = Json.parse("""{"reason": "Internal Server Error"}""")
-
-        when(testRtiConnector.metrics.startTimer(any())).thenReturn(new Timer().time())
-
-        when(testRtiConnector.http.GET[HttpResponse](any(), any(), any())(any(), any(), any()))
-          .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR)))
-
-        val result = testRtiConnector.getRTIEmployments(testNino, TaxYear(taxYear))
-
-        intercept[UpstreamErrorResponse](await(result) mustBe expectedResponse)
+        intercept[UpstreamErrorResponse] {
+          await(testRtiConnector.getRTIEmployments(testNino, TaxYear(taxYear)))
+        }
       }
     }
   }

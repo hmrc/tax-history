@@ -42,7 +42,7 @@ class IndividualTaxYearSpec extends TestUtil with AnyWordSpecLike with Matchers 
     taxAccountURI = "/2015/tax-account"
   )
 
-  lazy val taxYearList = List(indivTaxYear1, indivTaxYear2)
+  lazy val taxYearList: List[IndividualTaxYear] = List(indivTaxYear1, indivTaxYear2)
 
   "IndividualTaxYear" should {
     "transform into Json from object correctly " in {

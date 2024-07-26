@@ -17,10 +17,10 @@
 package uk.gov.hmrc.taxhistory.connectors
 
 import org.apache.pekko.actor.ActorSystem
-import play.api.http.Status.NOT_FOUND
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
@@ -31,7 +31,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DesNpsConnector @Inject() (
-  val http: HttpClient,
+  val http: HttpClientV2,
   val metrics: TaxHistoryMetrics,
   val config: AppConfig,
   val system: ActorSystem
@@ -40,16 +40,19 @@ class DesNpsConnector @Inject() (
 
   private val servicePrefix = "/pay-as-you-earn"
 
-  val withRetry: Retry                              = config.newRetryInstance("des", system)
-  def iabdsUrl(nino: Nino, year: Int): String       =
+  val withRetry: Retry = config.newRetryInstance("des", system)
+
+  def iabdsUrl(nino: Nino, year: Int): String =
     s"${config.desBaseUrl}$servicePrefix/individuals/${nino.value}/iabds/tax-year/$year"
-  def taxAccountUrl(nino: Nino, year: Int): String  =
+
+  def taxAccountUrl(nino: Nino, year: Int): String =
     s"${config.desBaseUrl}$servicePrefix/individuals/${nino.value}/tax-account/tax-year/$year"
+
   def employmentsUrl(nino: Nino, year: Int): String = s"${config.desBaseUrl}/individuals/${nino.value}/employment/$year"
 
   def buildHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
     Seq(
-      "Environment"      -> { config.desEnv },
+      "Environment"      -> config.desEnv,
       "Authorization"    -> s"Bearer ${config.desAuth}",
       CORRELATION_HEADER -> getCorrelationId(hc)
     )
@@ -58,11 +61,20 @@ class DesNpsConnector @Inject() (
     implicit val hc: HeaderCarrier = HeaderCarrier()
     withMetrics(MetricsEnum.NPS_GET_IABDS) {
       withRetry {
-        http.GET[List[Iabd]](iabdsUrl(nino, year), headers = buildHeaders(hc))
-      }.recover {
-        case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == NOT_FOUND =>
-          logger.warn(s"NPS getIabds returned a 404 response: ${ex.message}")
-          List.empty
+        val fullURL = iabdsUrl(nino, year)
+        http
+          .get(url"$fullURL")
+          .setHeader(buildHeaders: _*)
+          .execute[HttpResponse]
+          .map { response =>
+            response.status match {
+              case 404 =>
+                logger.warn(s"NPS getIabds returned a 404 response: ${response.body}")
+                List.empty
+              case 200 => response.json.as[List[Iabd]]
+              case _   => throw UpstreamErrorResponse(response.body, response.status, response.status)
+            }
+          }
       }
     }
   }
@@ -71,11 +83,20 @@ class DesNpsConnector @Inject() (
     implicit val hc: HeaderCarrier = HeaderCarrier()
     withMetrics(MetricsEnum.NPS_GET_TAX_ACCOUNT) {
       withRetry {
-        http.GET[NpsTaxAccount](taxAccountUrl(nino, year), headers = buildHeaders(hc)).map(Some(_))
-      }.recover {
-        case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == NOT_FOUND =>
-          logger.warn(s"NPS getTaxAccount returned a 404 response: ${ex.message}")
-          None
+        val fullURL = taxAccountUrl(nino, year)
+        http
+          .get(url"$fullURL")
+          .setHeader(buildHeaders: _*)
+          .execute[HttpResponse]
+          .map { response =>
+            response.status match {
+              case 404 =>
+                logger.warn(s"NPS getTaxAccount returned a 404 response: ${response.body}")
+                None
+              case 200 => response.json.asOpt[NpsTaxAccount]
+              case _   => throw UpstreamErrorResponse(response.body, response.status, response.status)
+            }
+          }
       }
     }
   }
@@ -84,11 +105,20 @@ class DesNpsConnector @Inject() (
     implicit val hc: HeaderCarrier = HeaderCarrier()
     withMetrics(MetricsEnum.NPS_GET_EMPLOYMENTS) {
       withRetry {
-        http.GET[List[NpsEmployment]](employmentsUrl(nino, year), headers = buildHeaders(hc))
-      }.recover {
-        case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == NOT_FOUND =>
-          logger.warn(s"NPS getEmployments returned a 404 response: ${ex.message}")
-          List.empty
+        val fullURL = employmentsUrl(nino, year)
+        http
+          .get(url"$fullURL")
+          .setHeader(buildHeaders: _*)
+          .execute[HttpResponse]
+          .map { response =>
+            response.status match {
+              case 404 =>
+                logger.warn(s"NPS getEmployments returned a 404 response: ${response.body}")
+                List.empty
+              case 200 => response.json.as[List[NpsEmployment]]
+              case _   => throw UpstreamErrorResponse(response.body, response.status, response.status)
+            }
+          }
       }
     }
   }

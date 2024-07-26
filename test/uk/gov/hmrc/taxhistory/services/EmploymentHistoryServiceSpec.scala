@@ -62,8 +62,6 @@ class EmploymentHistoryServiceSpec
         )
         lazy val paye    = loadFile("/json/withPlaceholders/model/api/paye.json", placeHolders).as[PayAsYouEarn]
 
-        // scalastyle:off magic.number
-
         val testEmployment2 =
           Employment(
             employmentId = UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
@@ -354,7 +352,6 @@ class EmploymentHistoryServiceSpec
         )
         lazy val paye    = loadFile("/json/withPlaceholders/model/api/paye.json", placeHolders).as[PayAsYouEarn]
 
-        // scalastyle:off magic.number
         val testEmployment2 =
           Employment(
             UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),

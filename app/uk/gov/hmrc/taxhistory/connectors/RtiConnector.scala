@@ -20,17 +20,19 @@ import org.apache.pekko.actor.ActorSystem
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.taxhistory.model.rti.RtiData
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
+import uk.gov.hmrc.taxhistory.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.utils.Retry
 import uk.gov.hmrc.time.TaxYear
+
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class RtiConnector @Inject() (
-  val http: HttpClient,
+  val http: HttpClientV2,
   val metrics: TaxHistoryMetrics,
   val config: AppConfig,
   val system: ActorSystem
@@ -46,7 +48,7 @@ class RtiConnector @Inject() (
 
   def buildHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
     Seq(
-      "Environment"      -> { config.desEnv },
+      "Environment"      -> config.desEnv,
       "Authorization"    -> s"Bearer ${config.desAuth}",
       CORRELATION_HEADER -> getCorrelationId(hc)
     )
@@ -55,13 +57,21 @@ class RtiConnector @Inject() (
     implicit val hc: HeaderCarrier = HeaderCarrier()
     withMetrics(MetricsEnum.RTI_GET_EMPLOYMENTS) {
       withRetry {
+        val fullURL = rtiEmploymentsUrl(nino, taxYear)
         http
-          .GET[RtiData](rtiEmploymentsUrl(nino, taxYear), headers = buildHeaders(hc))
-          .map(Some(_))
-      }.recover {
-        case UpstreamErrorResponse.Upstream4xxResponse(ex) if ex.statusCode == 404 =>
-          logger.warn(s"RTIEmployments returned a 404 response: ${ex.message}")
-          None
+          .get(url"$fullURL")
+          .setHeader(buildHeaders: _*)
+          .execute[HttpResponse]
+          .map { response =>
+            response.status match {
+              case 404 =>
+                logger.warn(s"RTIEmployments returned a 404 response: ${response.body}")
+                None
+              case 200 =>
+                Some(response.json.as[RtiData])
+              case _   => throw UpstreamErrorResponse(response.body, response.status, response.status)
+            }
+          }
       }
     }
   }

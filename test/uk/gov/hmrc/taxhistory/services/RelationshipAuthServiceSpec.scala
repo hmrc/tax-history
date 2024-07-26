@@ -17,30 +17,30 @@
 package uk.gov.hmrc.taxhistory.services
 
 import org.mockito.ArgumentMatchers.any
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.mvc.Results._
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
+import uk.gov.hmrc.domain
 import uk.gov.hmrc.http.{HeaderCarrier, UnauthorizedException}
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class RelationshipAuthServiceSpec extends PlaySpec with MockitoSugar with TestUtil {
+class RelationshipAuthServiceSpec extends PlaySpec with TestUtil {
 
   import org.mockito.Mockito._
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val mockAuthConnector           = mock[AuthConnector]
-  val testRelationshipAuthService = new RelationshipAuthService(mockAuthConnector)
+  val mockAuthConnector: AuthConnector = mock(classOf[AuthConnector])
+  val testRelationshipAuthService      = new RelationshipAuthService(mockAuthConnector)
 
-  val ninoWithAgent = randomNino()
+  val ninoWithAgent: domain.Nino = randomNino()
 
-  val newEnrolments               = Set(
+  val newEnrolments: Set[Enrolment]               = Set(
     Enrolment(
       "HMRC-AS-AGENT",
       Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")),
@@ -48,7 +48,7 @@ class RelationshipAuthServiceSpec extends PlaySpec with MockitoSugar with TestUt
       delegatedAuthRule = None
     )
   )
-  val UnAuthorisedAgentEnrolments = Set(
+  val UnAuthorisedAgentEnrolments: Set[Enrolment] = Set(
     Enrolment(
       "HMRC-AS-UNAUTHORISED-AGENT",
       Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")),

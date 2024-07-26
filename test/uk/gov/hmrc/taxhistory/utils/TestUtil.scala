@@ -28,13 +28,19 @@ trait TestUtil {
 
   val randomNino: () => Nino = () => Nino(new Generator(new Random()).nextNino.value.replaceFirst("MA", "AA"))
 
-  def loadFile(path: String): JsValue = {
-    val jsonString = Source.fromURL(getClass.getResource(path)).mkString
-    Json.parse(jsonString)
+  private def readFileAsString(path: String): String = {
+    val source  = Source.fromURL(getClass.getResource(path))
+    val content =
+      try source.mkString
+      finally source.close()
+    content
   }
 
+  def loadFile(path: String): JsValue =
+    Json.parse(readFileAsString(path))
+
   def loadFile(path: String, placeholders: Seq[PlaceHolder]): JsValue = {
-    val jsonStringWithPlaceholders = Source.fromURL(getClass.getResource(path)).mkString
+    val jsonStringWithPlaceholders = readFileAsString(path)
     val jsonString                 = replacePlaceholder(jsonStringWithPlaceholders, placeholders)
     Json.parse(jsonString)
   }
@@ -72,5 +78,3 @@ trait TestUtil {
   )
 
 }
-
-case class PlaceHolder(regex: String, newValue: String)

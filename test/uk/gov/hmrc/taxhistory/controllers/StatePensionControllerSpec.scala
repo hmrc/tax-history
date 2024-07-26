@@ -21,7 +21,6 @@ import org.mockito.Mockito._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfterEach, OptionValues}
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.mvc.ControllerComponents
 import play.api.test.FakeRequest
@@ -42,11 +41,10 @@ class StatePensionControllerSpec
     with Matchers
     with OptionValues
     with GuiceOneServerPerSuite
-    with MockitoSugar
     with TestUtil
     with BeforeAndAfterEach {
 
-  private val mockEmploymentHistoryService = mock[EmploymentHistoryService]
+  private val mockEmploymentHistoryService = mock(classOf[EmploymentHistoryService])
 
   private val ninoWithAgent    = randomNino()
   private val ninoWithoutAgent = randomNino()

@@ -49,9 +49,8 @@ object CompanyBenefit {
   implicit val reads: Reads[CompanyBenefit] = Json.reads[CompanyBenefit]
 
   private val defaultWrites: Writes[CompanyBenefit] = Json.writes[CompanyBenefit]
-  private val writes: Writes[CompanyBenefit]        = (cb: CompanyBenefit) => {
+  private val writes: Writes[CompanyBenefit]        = (cb: CompanyBenefit) =>
     Json.toJson(cb)(defaultWrites).as[JsObject] + ("isForecastBenefit" -> JsBoolean(cb.isForecastBenefit))
-  }
 
-  implicit val formats: Format[CompanyBenefit] = Format[CompanyBenefit](reads, writes)
+  implicit val formats: Format[CompanyBenefit]      = Format[CompanyBenefit](reads, writes)
 }

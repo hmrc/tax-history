@@ -22,7 +22,6 @@ import org.scalatest.OptionValues
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.taxhistory.model.api.{PayAndTax, PayAsYouEarn}
@@ -43,7 +42,6 @@ class PayAndTaxServiceSpec
     with Matchers
     with OptionValues
     with ScalaFutures
-    with MockitoSugar
     with TestUtil
     with DateUtils {
   implicit val hc: HeaderCarrier = HeaderCarrier()

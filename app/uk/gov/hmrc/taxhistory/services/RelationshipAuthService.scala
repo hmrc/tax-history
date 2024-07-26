@@ -30,9 +30,8 @@ import uk.gov.hmrc.taxhistory.utils.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 
-/**
-  * This service provides a method to check whether an authorised relationship exists between a NINO and an Agent
-  * before proceeding with a given code block.
+/** This service provides a method to check whether an authorised relationship exists between a NINO and an Agent before
+  * proceeding with a given code block.
   */
 class RelationshipAuthService @Inject() (val authConnector: AuthConnector)(implicit executionContext: ExecutionContext)
     extends AuthorisedFunctions
@@ -63,9 +62,8 @@ class RelationshipAuthService @Inject() (val authConnector: AuthConnector)(impli
           Future.failed(new UnauthorizedException("Failed to retrieve affinity group or enrolments"))
       }
 
-  /**
-    * A code block wrapped in this function will only be executed if there exists an authorised relationship
-    * between the given NINO and an Agent.
+  /** A code block wrapped in this function will only be executed if there exists an authorised relationship between the
+    * given NINO and an Agent.
     */
   def withAuthorisedRelationship(
     nino: Nino

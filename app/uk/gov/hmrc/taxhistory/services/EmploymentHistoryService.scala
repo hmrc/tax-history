@@ -195,9 +195,7 @@ class EmploymentHistoryService @Inject() (
   def getTaxYears: Future[List[IndividualTaxYear]] = {
 
     val taxYearList: List[TaxYear] =
-      // scalastyle:off magic.number
       List(TaxYear.current.back(1), TaxYear.current.back(2), TaxYear.current.back(3), TaxYear.current.back(4))
-    // scalastyle:on magic.number
 
     val completeTaxYearList = if (config.currentYearFlag) TaxYear.current +: taxYearList else taxYearList
 
@@ -225,9 +223,8 @@ class EmploymentHistoryService @Inject() (
         )
     }
 
-  /**
-    * Retrieves (from connected microservices) the data required to build instances of
-    * the tax year summary (`PayAsYouEarn`) and combines this data into a `PayAsYouEarn` instance.
+  /** Retrieves (from connected microservices) the data required to build instances of the tax year summary
+    * (`PayAsYouEarn`) and combines this data into a `PayAsYouEarn` instance.
     */
   def retrieveAndBuildPaye(nino: Nino, taxYear: TaxYear)(implicit
     headerCarrier: HeaderCarrier
@@ -242,9 +239,8 @@ class EmploymentHistoryService @Inject() (
     paye
   }
 
-  /**
-    * Given the data required, performs the necessary logic to combine this data from
-    * different sources into a `PayAsYouEarn` (tax year summary) instance.
+  /** Given the data required, performs the necessary logic to combine this data from different sources into a
+    * `PayAsYouEarn` (tax year summary) instance.
     */
   def mergeEmployments(
     nino: Nino,

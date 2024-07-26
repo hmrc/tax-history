@@ -17,20 +17,21 @@
 package uk.gov.hmrc.taxhistory.connectors
 
 import org.apache.pekko.actor.ActorSystem
-import javax.inject.{Inject, Singleton}
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.domain.{Nino, SaUtr}
+import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.utils.Retry
-import uk.gov.hmrc.http.HttpReads.Implicits._
+
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CitizenDetailsConnector @Inject() (
-  val http: HttpClient,
+  val http: HttpClientV2,
   val metrics: TaxHistoryMetrics,
   val config: AppConfig,
   val system: ActorSystem
@@ -39,14 +40,32 @@ class CitizenDetailsConnector @Inject() (
 
   val withRetry: Retry = config.newRetryInstance("des", system)
 
+  private def extractSaUtr(json: JsValue): Option[SaUtr] = (json \ "ids" \ "sautr").asOpt[SaUtr]
+
+  /** Lookup the SA UTR for a given NINO API Spec details can be found here
+    * https://github.com/hmrc/citizen-details?tab=readme-ov-file#response-status-codes
+    * @param nino
+    *   - NINO
+    * @param hc
+    *   - HeaderCarrier
+    * @return
+    *   - Future\[Option\[SaUtr\]\]
+    */
   def lookupSaUtr(nino: Nino)(implicit hc: HeaderCarrier): Future[Option[SaUtr]] =
     withMetrics(MetricsEnum.CITIZEN_DETAILS) {
+      val fullURL = s"${config.citizenDetailsBaseUrl}/citizen-details/nino/$nino"
       withRetry {
-        http.GET[JsValue](s"${config.citizenDetailsBaseUrl}/citizen-details/nino/$nino").map { json =>
-          (json \ "ids" \ "sautr").asOpt[SaUtr]
-        }
+        http
+          .get(url"$fullURL")
+          .execute[HttpResponse]
+          .map { response =>
+            response.status match {
+              case 404 => None
+              case 200 => extractSaUtr(response.json)
+              case _   => throw UpstreamErrorResponse(response.body, response.status, response.status)
+            }
+          }
       }
-    }.recover { case _: NotFoundException =>
-      None
     }
+
 }

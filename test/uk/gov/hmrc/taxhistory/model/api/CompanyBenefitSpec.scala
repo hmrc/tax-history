@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxhistory.model.api
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.libs.json.{JsArray, Json}
+import play.api.libs.json.{JsArray, JsValue, Json}
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 import uk.gov.hmrc.time.TaxYear
 
@@ -27,8 +27,7 @@ import java.util.UUID
 
 class CompanyBenefitSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
 
-  // scalastyle:off magic.number
-  lazy val companyBenefitJson     = Json.parse("""
+  lazy val companyBenefitJson: JsValue     = Json.parse("""
       |{
       |  "companyBenefitId":"c9923a63-4208-4e03-926d-7c7c88adc7ee",
       |  "iabdType":"companyBenefitType",
@@ -41,9 +40,9 @@ class CompanyBenefitSpec extends TestUtil with AnyWordSpecLike with Matchers wit
       |  "isForecastBenefit":true
       |}
     """.stripMargin)
-  lazy val companyBenefitListJson = JsArray(Seq(companyBenefitJson))
+  lazy val companyBenefitListJson: JsArray = JsArray(Seq(companyBenefitJson))
 
-  lazy val companyBenefit = CompanyBenefit(
+  lazy val companyBenefit: CompanyBenefit = CompanyBenefit(
     companyBenefitId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
     iabdType = "companyBenefitType",
     amount = BigDecimal(12.00),
@@ -52,7 +51,7 @@ class CompanyBenefitSpec extends TestUtil with AnyWordSpecLike with Matchers wit
     TaxYear(2022)
   )
 
-  lazy val companyBenefitList = List(companyBenefit)
+  lazy val companyBenefitList: List[CompanyBenefit] = List(companyBenefit)
 
   "CompanyBenefit" should {
 
@@ -132,5 +131,4 @@ class CompanyBenefitSpec extends TestUtil with AnyWordSpecLike with Matchers wit
       }
     }
   }
-  // scalastyle:on magic.number
 }
