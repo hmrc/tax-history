@@ -26,9 +26,8 @@ import uk.gov.hmrc.taxhistory.services.RelationshipAuthService
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-/**
-  * A test version of RelationshipAuthService which reads off the Nino-Agent relationships from the given Map
-  * rather than interrogating a real auth service.
+/** A test version of RelationshipAuthService which reads off the Nino-Agent relationships from the given Map rather
+  * than interrogating a real auth service.
   */
 case class TestRelationshipAuthService(relationships: Map[Nino, Arn])
     extends RelationshipAuthService(authConnector = Mockito.mock(classOf[AuthConnector])) {

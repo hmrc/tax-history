@@ -20,7 +20,6 @@ import java.time.LocalDate
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.libs.json.Json
@@ -40,12 +39,7 @@ import uk.gov.hmrc.time.TaxYear
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
-class PayAsYouEarnControllerSpec
-    extends PlaySpec
-    with GuiceOneServerPerSuite
-    with MockitoSugar
-    with TestUtil
-    with BeforeAndAfterEach {
+class PayAsYouEarnControllerSpec extends PlaySpec with GuiceOneServerPerSuite with TestUtil with BeforeAndAfterEach {
 
   val cc: ControllerComponents                    = stubControllerComponents()
   implicit val executionContext: ExecutionContext = cc.executionContext
@@ -53,10 +47,10 @@ class PayAsYouEarnControllerSpec
 
   val testSaAuthService: TestSaAuthService = TestSaAuthService()
 
-  val mockCitizenDetailsConnector: CitizenDetailsConnector   = mock[CitizenDetailsConnector]
-  val mockEmploymentHistoryService: EmploymentHistoryService = mock[EmploymentHistoryService]
-  val mockAuthConnector: AuthConnector                       = mock[AuthConnector]
-  val mockSaAuthService: SaAuthService                       = mock[SaAuthService]
+  val mockCitizenDetailsConnector: CitizenDetailsConnector   = mock(classOf[CitizenDetailsConnector])
+  val mockEmploymentHistoryService: EmploymentHistoryService = mock(classOf[EmploymentHistoryService])
+  val mockAuthConnector: AuthConnector                       = mock(classOf[AuthConnector])
+  val mockSaAuthService: SaAuthService                       = mock(classOf[SaAuthService])
 
   val testEmploymentId: UUID   = testSaAuthService.testEmploymentId
   val testStartDate: LocalDate = testSaAuthService.testStartDate

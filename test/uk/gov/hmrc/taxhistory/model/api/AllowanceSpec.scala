@@ -35,7 +35,7 @@ class AllowanceSpec extends TestUtil with AnyWordSpecLike with Matchers with Opt
     amount = BigDecimal(12.00)
   )
 
-  lazy val allowanceList = List(allowance1)
+  lazy val allowanceList: List[Allowance] = List(allowance1)
 
   "Allowance" should {
     "transform into Json from object correctly " in {

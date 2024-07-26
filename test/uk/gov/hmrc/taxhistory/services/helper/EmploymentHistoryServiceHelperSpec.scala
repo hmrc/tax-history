@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.services.helper
 
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType.{JobseekersAllowance, OccupationalPension, StatePensionLumpSum}
 import uk.gov.hmrc.taxhistory.model.api._
@@ -29,7 +28,7 @@ import uk.gov.hmrc.time.TaxYear
 
 import java.time.LocalDate
 
-class EmploymentHistoryServiceHelperSpec extends PlaySpec with MockitoSugar with TestUtil with DateUtils {
+class EmploymentHistoryServiceHelperSpec extends PlaySpec with TestUtil with DateUtils {
 
   private val sequenceNumber                                          = 6
   val npsEmploymentResponseWithTaxDistrictNumber: List[NpsEmployment] = List(

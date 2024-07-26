@@ -24,7 +24,6 @@ import uk.gov.hmrc.taxhistory.fixtures.RtiEmployments
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 
 class RtiEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with RtiEmployments {
-  // scalastyle:off magic.number
   private val testEmploymentTaxablePayYTD   = BigDecimal(1234)
   private val testEmploymentTotalTaxYTD     = BigDecimal(5678)
   private val testEmploymentStudentLoansYTD = BigDecimal(333.33)
@@ -203,5 +202,4 @@ class RtiEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with
       }
     }
   }
-  // scalastyle:on magic.number
 }

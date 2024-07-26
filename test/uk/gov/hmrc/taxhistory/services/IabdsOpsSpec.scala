@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.HeaderCarrier
@@ -27,7 +26,7 @@ import uk.gov.hmrc.time.TaxYear
 
 import java.time.LocalDate
 
-class IabdsOpsSpec extends PlaySpec with MockitoSugar with TestUtil with DateUtils {
+class IabdsOpsSpec extends PlaySpec with TestUtil with DateUtils {
 
   import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 

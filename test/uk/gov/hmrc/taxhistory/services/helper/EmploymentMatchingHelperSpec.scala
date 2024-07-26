@@ -25,7 +25,6 @@ import uk.gov.hmrc.taxhistory.services.helpers.EmploymentMatchingHelper
 
 class EmploymentMatchingHelperSpec extends PlaySpec with TestUtil {
 
-  // scalastyle:off magic.number
   "Given 2 NPS and 2 RTI employments from the same employer, match those 2 NPS employments with the RTI employments" when {
     "the worksNumber/currentPayId is present" in {
       val rtiEmployment1 = rti(currentPayId = Some("1234"), seq = 3)

@@ -23,11 +23,9 @@ import uk.gov.hmrc.time.TaxYear
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-/**
-  * A simple in-memory implementation of the cache service.
-  * Values never expire.
+/** A simple in-memory implementation of the cache service. Values never expire.
   */
-class TestCacheService[K, V]() extends CacheService[K, V] {
+class TestCacheService[K, V] extends CacheService[K, V] {
 
   var map: Map[K, V] = Map.empty
 

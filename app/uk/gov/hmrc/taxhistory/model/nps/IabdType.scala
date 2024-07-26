@@ -102,7 +102,7 @@ object IabdType {
   def apply(id: Int): IabdType = idMap.getOrElse(id, UnKnown)
 
   def unapply(iabdType: IabdType): Int  =
-    idMap.collectFirst({ case (key, value) if value == iabdType => key }).getOrElse(UnknownIabdTypeId)
+    idMap.collectFirst { case (key, value) if value == iabdType => key }.getOrElse(UnknownIabdTypeId)
 
   private val idMap: Map[Int, IabdType] = Map(
     8   -> EmployerProvidedServices,
@@ -158,7 +158,6 @@ case class Iabd(
   startDate: Option[String] = None
 ) extends Logging {
 
-  // scalastyle:off magic.number
   def toStatePension: StatePension = {
     val paymentStartDate: Option[LocalDate] =
       paymentFrequency match {
@@ -180,7 +179,6 @@ case class Iabd(
       startDate = paymentStartDate
     )
   }
-  // scalastyle:on magic.number
 }
 
 object Iabd {

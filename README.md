@@ -15,7 +15,7 @@ In order to run the microservice, you must have SBT installed. You should then b
 sbt run
 ```
 
-In order to run all tests(+ coverage, + scalastyle, + scalafmt):
+In order to run all tests(+ coverage, + scalafmt):
 
 ```bash
 run_all_tests.sh

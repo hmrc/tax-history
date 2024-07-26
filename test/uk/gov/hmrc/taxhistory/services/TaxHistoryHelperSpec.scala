@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.TaxHistoryHelper
 
-class TaxHistoryHelperSpec extends PlaySpec with MockitoSugar with TestUtil {
+class TaxHistoryHelperSpec extends PlaySpec with TestUtil {
 
   object TestTaxHistoryHelper extends TaxHistoryHelper
 

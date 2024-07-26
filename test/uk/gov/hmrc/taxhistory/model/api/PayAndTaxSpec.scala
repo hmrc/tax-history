@@ -31,7 +31,7 @@ class PayAndTaxSpec extends TestUtil with AnyWordSpecLike with Matchers with Opt
   lazy val payAndTaxWithEyuJson: JsValue    = loadFile("/json/model/api/payAndTaxWithEyu.json")
   lazy val payAndTaxValuesNoneJson: JsValue = loadFile("/json/model/api/payAndTaxValuesNone.json")
 
-  lazy val eyuList = List(
+  lazy val eyuList: List[EarlierYearUpdate] = List(
     EarlierYearUpdate(
       earlierYearUpdateId = UUID.fromString("e6926848-818b-4d01-baa1-02111eb0f514"),
       taxablePayEYU = BigDecimal(123.45),

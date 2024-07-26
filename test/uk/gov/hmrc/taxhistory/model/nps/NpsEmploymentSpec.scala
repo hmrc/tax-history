@@ -44,8 +44,8 @@ class NpsEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with
       |    }
     """.stripMargin
 
-  val startDate = LocalDate.of(YEAR_2015, JANUARY, DAY_21)
-  val endDate   = LocalDate.of(YEAR_2016, JANUARY, DAY_8)
+  val startDate: LocalDate = LocalDate.of(YEAR_2015, JANUARY, DAY_21)
+  val endDate: LocalDate   = LocalDate.of(YEAR_2016, JANUARY, DAY_8)
 
   "NpsEmployment" should {
     "transform Nps Employment Response Json correctly to Employment Model " in {

@@ -24,8 +24,7 @@ package object taxhistory {
 
   implicit class FutureListOps[A](fl: Future[List[A]])(implicit ec: ExecutionContext) {
 
-    /**
-      * Converts a future containing an empty collection into a failure with NotFoundException
+    /** Converts a future containing an empty collection into a failure with NotFoundException
       */
     def orNotFound(message: String): Future[List[A]] = fl.flatMap {
       case Nil      => Future.failed(new NotFoundException(message))
@@ -35,8 +34,7 @@ package object taxhistory {
 
   implicit class FutureMapOps[A, B](fl: Future[Map[A, B]])(implicit ec: ExecutionContext) {
 
-    /**
-      * Converts a future containing an empty map into a failure with NotFoundException
+    /** Converts a future containing an empty map into a failure with NotFoundException
       */
     def orNotFound(message: String): Future[Map[A, B]] = fl.flatMap {
       case map @ _ if map.isEmpty => Future.failed(new NotFoundException(message))
@@ -46,8 +44,7 @@ package object taxhistory {
 
   implicit class FutureOptionOps[A](fl: Future[Option[A]])(implicit ec: ExecutionContext) {
 
-    /**
-      * Converts a future containing an empty option into a failure with NotFoundException
+    /** Converts a future containing an empty option into a failure with NotFoundException
       */
     def orNotFound(message: String): Future[Option[A]] = fl.flatMap {
       case None    => Future.failed(new NotFoundException(message))

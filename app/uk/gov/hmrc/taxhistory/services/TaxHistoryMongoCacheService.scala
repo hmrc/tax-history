@@ -26,8 +26,7 @@ import uk.gov.hmrc.time.TaxYear
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-/**
-  * Uses MongoDB to cache instances of `PayAsYouEarn` for a given NINO and year.
+/** Uses MongoDB to cache instances of `PayAsYouEarn` for a given NINO and year.
   */
 class TaxHistoryMongoCacheService @Inject() (
   mongoComponent: MongoComponent,

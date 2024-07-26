@@ -26,7 +26,7 @@ trait Employments {
 
   val testWorksNumber = "00191048716"
 
-  private def templateEmployment = Employment(
+  private def templateEmployment        = Employment(
     employmentId = UUID.randomUUID(),
     startDate = Some(TaxYear.current.starts),
     endDate = None,
@@ -39,44 +39,42 @@ trait Employments {
     employmentStatus = EmploymentStatus.Live,
     testWorksNumber
   )
-  // scalastyle:off magic.number
-  val liveOngoingEmployment      = templateEmployment
+  val liveOngoingEmployment: Employment = templateEmployment
 
-  val liveNoEndEmployment = templateEmployment.copy(startDate = Some(TaxYear.current.starts.plusDays(30)))
+  val liveNoEndEmployment: Employment = templateEmployment.copy(startDate = Some(TaxYear.current.starts.plusDays(30)))
 
-  val liveStartYearEmployment = templateEmployment.copy(endDate = Some(TaxYear.current.starts.plusDays(10)))
+  val liveStartYearEmployment: Employment = templateEmployment.copy(endDate = Some(TaxYear.current.starts.plusDays(10)))
 
-  val liveMidYearEmployment = templateEmployment.copy(
+  val liveMidYearEmployment: Employment = templateEmployment.copy(
     startDate = Some(TaxYear.current.starts.plusDays(40)),
     endDate = Some(TaxYear.current.finishes.minusDays(10))
   )
 
-  val liveEndYearEmployment = templateEmployment.copy(
+  val liveEndYearEmployment: Employment = templateEmployment.copy(
     startDate = Some(TaxYear.current.finishes.minusDays(10)),
     endDate = Some(TaxYear.current.finishes)
   )
 
-  val ceasedBeforeStartEmployment = templateEmployment.copy(
+  val ceasedBeforeStartEmployment: Employment = templateEmployment.copy(
     startDate = Some(TaxYear.current.previous.starts.plusDays(5)),
     endDate = Some(TaxYear.current.starts.plusDays(30)),
     employmentStatus = EmploymentStatus.Ceased
   )
 
-  val ceasedNoEndEmployment = templateEmployment.copy(
+  val ceasedNoEndEmployment: Employment = templateEmployment.copy(
     startDate = Some(TaxYear.current.starts.plusDays(90)),
     employmentStatus = EmploymentStatus.Ceased
   )
 
-  val ceasedAfterEndEmployment = templateEmployment.copy(
+  val ceasedAfterEndEmployment: Employment = templateEmployment.copy(
     startDate = Some(TaxYear.current.starts.plusDays(60)),
     endDate = Some(TaxYear.current.next.starts.plusDays(30)),
     employmentStatus = EmploymentStatus.Ceased
   )
 
-  val potentiallyCeasedEmployment = templateEmployment.copy(
+  val potentiallyCeasedEmployment: Employment = templateEmployment.copy(
     startDate = Some(TaxYear.current.starts.plusDays(90)),
     employmentStatus = EmploymentStatus.PotentiallyCeased
   )
-  // scalastyle:on magic.number
 
 }

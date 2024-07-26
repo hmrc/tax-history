@@ -21,8 +21,7 @@ import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.utils.Logging
 import uk.gov.hmrc.time.TaxYear
 
-/**
-  * Enriches a `List[Iabd]` with various convenience methods.
+/** Enriches a `List[Iabd]` with various convenience methods.
   */
 object IabdsOps {
 
@@ -55,8 +54,7 @@ object IabdsOps {
       }
     }
 
-    /**
-      * Returns true if there is one single benefit in kind and its type is [[TotalBenefitInKind]].
+    /** Returns true if there is one single benefit in kind and its type is [[TotalBenefitInKind]].
       */
     def isTotalBenefitInKind: Boolean = {
       val benefitsInKind = iabds.map(_.`type`).filter {

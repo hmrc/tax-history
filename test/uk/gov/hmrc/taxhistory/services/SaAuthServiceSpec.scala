@@ -18,7 +18,6 @@ package uk.gov.hmrc.taxhistory.services
 
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito._
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.mvc.{AnyContent, Request, Result}
 import play.api.mvc.Results.Ok
@@ -36,7 +35,7 @@ import uk.gov.hmrc.taxhistory.connectors.CitizenDetailsConnector
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SaAuthServiceSpec extends PlaySpec with MockitoSugar {
+class SaAuthServiceSpec extends PlaySpec {
 
   val validNino: Nino = Nino("AA000000A")
 
@@ -46,8 +45,8 @@ class SaAuthServiceSpec extends PlaySpec with MockitoSugar {
 
     trait Setup {
       implicit val hc: HeaderCarrier                           = HeaderCarrier()
-      val mockCitizenDetailsConnector: CitizenDetailsConnector = mock[CitizenDetailsConnector]
-      val mockAuthConnector: AuthConnector                     = mock[AuthConnector]
+      val mockCitizenDetailsConnector: CitizenDetailsConnector = mock(classOf[CitizenDetailsConnector])
+      val mockAuthConnector: AuthConnector                     = mock(classOf[AuthConnector])
       val mockSaAuthService: SaAuthService                     = new SaAuthService(mockAuthConnector, mockCitizenDetailsConnector)
 
       val selfAssessmentForAgents648Predicate: Enrolment =
@@ -86,13 +85,13 @@ class SaAuthServiceSpec extends PlaySpec with MockitoSugar {
 
   "SaAuthService" should {
     trait Setup {
-      val mockPredicate: Predicate                             = mock[Predicate]
-      val mockCitizenDetailsConnector: CitizenDetailsConnector = mock[CitizenDetailsConnector]
-      val mockAuthConnector: AuthConnector                     = mock[AuthConnector]
+      val mockPredicate: Predicate                             = mock(classOf[Predicate])
+      val mockCitizenDetailsConnector: CitizenDetailsConnector = mock(classOf[CitizenDetailsConnector])
+      val mockAuthConnector: AuthConnector                     = mock(classOf[AuthConnector])
       val mockSaAuthService: SaAuthService                     = new SaAuthService(mockAuthConnector, mockCitizenDetailsConnector)
       implicit val hc: HeaderCarrier                           = HeaderCarrier()
       implicit val request: Request[AnyContent]                = FakeRequest()
-      val newEnrolments                                        = Set(
+      val newEnrolments: Set[Enrolment]                        = Set(
         Enrolment(
           "HMRC-AS-AGENT",
           Seq(EnrolmentIdentifier("AgentReferenceNumber", "TestArn")),
