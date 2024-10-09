@@ -27,15 +27,11 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 @Singleton
 class AppConfig @Inject() (config: ServicesConfig) {
 
-  lazy val appName: String                      = config.getString("appName")
-  lazy val mongoExpiry: Duration                = Duration(config.getInt("mongodb.cache.expire.seconds"), TimeUnit.SECONDS)
-  lazy val mongoName: String                    = config.getString("mongodb.name")
-  lazy val desEnv: String                       = config.getConfString("des.env", "local")
-  lazy val desAuth: String                      = config.getConfString("des.authorizationToken", "Local")
-  lazy val currentYearFlag: Boolean             = config.getBoolean("featureFlags.currentYearFlag")
-  lazy val statePensionFlag: Boolean            = config.getBoolean("featureFlags.statePensionFlag")
-  lazy val jobSeekersAllowanceFlag: Boolean     = config.getBoolean("featureFlags.jobSeekersAllowanceFlag")
-  lazy val taxAccountPreviousYearsFlag: Boolean = config.getBoolean("featureFlags.taxAccountPreviousYearsFlag")
+  lazy val appName: String       = config.getString("appName")
+  lazy val mongoExpiry: Duration = Duration(config.getInt("mongodb.cache.expire.seconds"), TimeUnit.SECONDS)
+  lazy val mongoName: String     = config.getString("mongodb.name")
+  lazy val desEnv: String        = config.getConfString("des.env", "local")
+  lazy val desAuth: String       = config.getConfString("des.authorizationToken", "Local")
 
   lazy val desBaseUrl: String            = config.baseUrl("des")
   lazy val citizenDetailsBaseUrl: String = config.baseUrl("citizen-details")
