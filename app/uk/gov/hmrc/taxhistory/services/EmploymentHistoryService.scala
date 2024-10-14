@@ -51,10 +51,8 @@ class EmploymentHistoryService @Inject() (
 
       if (employments.forall(_.isOccupationalPension)) {
         employments
-      } else if (config.jobSeekersAllowanceFlag) {
-        addFillers(employments, taxYear)
       } else {
-        addFillers(employments, taxYear).filterNot(emp => emp.isJobseekersAllowance)
+        addFillers(employments, taxYear)
       }
     }
 
@@ -163,11 +161,7 @@ class EmploymentHistoryService @Inject() (
 
       paye.statePension match {
         case Some(statePension) =>
-          Future.successful(if (config.statePensionFlag) {
-            Some(statePension)
-          } else {
-            None
-          })
+          Future.successful(Some(statePension))
         case None               =>
           Future.failed(
             new NotFoundException(s"StatePension not found for NINO ${nino.value} and tax year ${taxYear.toString}")
@@ -178,13 +172,7 @@ class EmploymentHistoryService @Inject() (
   def getIncomeSource(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit
     headerCarrier: HeaderCarrier
   ): Future[Option[IncomeSource]] = {
-    val incomeSource = if (config.taxAccountPreviousYearsFlag) {
-      getFromCache(nino, taxYear).map(_.incomeSources.get(employmentId))
-    } else if (taxYear == TaxYear.current) {
-      getFromCache(nino, taxYear).map(_.incomeSources.get(employmentId))
-    } else {
-      Future(None)
-    }
+    val incomeSource = getFromCache(nino, taxYear).map(_.incomeSources.get(employmentId))
 
     val notFoundMessage = s"IncomeSource not found for NINO ${nino.value}, tax year ${taxYear.toString}," +
       s" and employmentId $employmentId"
@@ -197,7 +185,7 @@ class EmploymentHistoryService @Inject() (
     val taxYearList: List[TaxYear] =
       List(TaxYear.current.back(1), TaxYear.current.back(2), TaxYear.current.back(3), TaxYear.current.back(4))
 
-    val completeTaxYearList = if (config.currentYearFlag) TaxYear.current +: taxYearList else taxYearList
+    val completeTaxYearList = TaxYear.current +: taxYearList
 
     val taxYears = completeTaxYearList.map(year =>
       IndividualTaxYear(

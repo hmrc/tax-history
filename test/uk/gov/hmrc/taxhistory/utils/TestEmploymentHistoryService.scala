@@ -28,8 +28,6 @@ object TestEmploymentHistoryService {
 
   val mockAppConfig: AppConfig = mock(classOf[AppConfig])
 
-  when(mockAppConfig.currentYearFlag).thenReturn(true)
-
   def createNew(): EmploymentHistoryService =
     new EmploymentHistoryService(
       desNpsConnector = mock(classOf[DesNpsConnector]),

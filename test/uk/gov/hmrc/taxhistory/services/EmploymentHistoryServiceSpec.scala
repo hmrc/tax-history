@@ -94,8 +94,6 @@ class EmploymentHistoryServiceSpec
             worksNumber = "00191048716"
           )
 
-        when(mockAppConfig.jobSeekersAllowanceFlag).thenReturn(true)
-
         // Set up the test data in the cache
         testEmploymentHistoryService.cacheService.insertOrUpdate((Nino("AA000000A"), taxYear), paye).futureValue
         val april        = 4
@@ -387,8 +385,6 @@ class EmploymentHistoryServiceSpec
         val january      = 1
         val dayOfMonth6  = 6
         val dayOfMonth20 = 20
-
-        when(mockAppConfig.jobSeekersAllowanceFlag).thenReturn(false)
 
         val employments = testEmploymentHistoryService.getEmployments(Nino("AA000000A"), taxYear).futureValue
         employments.head.employmentStatus shouldBe EmploymentStatus.Unknown
@@ -759,14 +755,7 @@ class EmploymentHistoryServiceSpec
 
     ".getIncomeSource" should {
 
-      def enableFlag(): Unit =
-        when(TestEmploymentHistoryService.mockAppConfig.taxAccountPreviousYearsFlag).thenReturn(true)
-
-      def disableFlag(): Unit =
-        when(TestEmploymentHistoryService.mockAppConfig.taxAccountPreviousYearsFlag).thenReturn(false)
-
-      "get Income Source return None when no data and taxAccountPreviousYearsFlag = true" in {
-        enableFlag()
+      "get Income Source return None when no data" in {
 
         val empRefId = "invalidEmpId"
 
@@ -782,8 +771,7 @@ class EmploymentHistoryServiceSpec
           .toString()}, and employmentId $empRefId"
       }
 
-      "get Income Source return Data for current year when no data and taxAccountPreviousYearsFlag = true" in {
-        enableFlag()
+      "get Income Source return Data for current year when no data" in {
 
         val empRefId = payAsYouEarn.incomeSources.keys.head
 
@@ -796,8 +784,7 @@ class EmploymentHistoryServiceSpec
         incomeSource shouldBe payAsYouEarn.incomeSources.get(empRefId)
       }
 
-      "get Income Source return Data for previous year when no data and taxAccountPreviousYearsFlag = true" in {
-        enableFlag()
+      "get Income Source return Data for previous year when no data" in {
 
         val empRefId = payAsYouEarn.incomeSources.keys.head
 
@@ -814,61 +801,7 @@ class EmploymentHistoryServiceSpec
           )
 
         incomeSource shouldBe payAsYouEarn.incomeSources.get(empRefId)
-      }
-
-      "get Income Source return None when no data and taxAccountPreviousYearsFlag = false" in {
-        disableFlag()
-
-        val empRefId = "invalidEmpId"
-
-        testEmploymentHistoryService.cacheService
-          .insertOrUpdate((testNino, TaxYear.current), payAsYouEarn)
-          .futureValue
-
-        val exception = intercept[NotFoundException] {
-          result(testEmploymentHistoryService.getIncomeSource(testNino, TaxYear.current, empRefId), Duration.Inf)
-        }
-
-        exception.message shouldBe s"IncomeSource not found for NINO ${testNino.nino}, tax year ${TaxYear.current
-          .toString()}, and employmentId $empRefId"
-      }
-
-      "get Income Source return Data for current year when no data and taxAccountPreviousYearsFlag = false" in {
-        disableFlag()
-
-        val empRefId = payAsYouEarn.incomeSources.keys.head
-
-        testEmploymentHistoryService.cacheService
-          .insertOrUpdate((testNino, TaxYear.current), payAsYouEarn)
-          .futureValue
-        val incomeSource =
-          result(testEmploymentHistoryService.getIncomeSource(testNino, TaxYear.current, empRefId), Duration.Inf)
-
-        incomeSource shouldBe payAsYouEarn.incomeSources.get(empRefId)
-      }
-
-      "get Income Source return Data for previous year when no data and taxAccountPreviousYearsFlag = false" in {
-        disableFlag()
-
-        val empRefId = payAsYouEarn.incomeSources.keys.head
-
-        testEmploymentHistoryService.cacheService
-          .insertOrUpdate((testNino, TaxYear.current), payAsYouEarn)
-          .futureValue
-        testEmploymentHistoryService.cacheService
-          .insertOrUpdate((testNino, TaxYear.current.previous), payAsYouEarn)
-          .futureValue
-        val exception = intercept[NotFoundException] {
-          result(
-            testEmploymentHistoryService.getIncomeSource(testNino, TaxYear.current.previous, empRefId),
-            Duration.Inf
-          )
-        }
-
-        exception.message shouldBe s"IncomeSource not found for NINO ${testNino.nino}, tax year ${TaxYear.current.previous
-          .toString()}, and employmentId $empRefId"
       }
     }
   }
-
 }
