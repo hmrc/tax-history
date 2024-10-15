@@ -17,9 +17,9 @@
 package uk.gov.hmrc.taxhistory.model.api
 
 import play.api.libs.json._
-import uk.gov.hmrc.taxhistory.utils.LocalDateHelpers
 import uk.gov.hmrc.time.TaxYear
 
+import java.time.LocalDate
 import java.util.UUID
 
 case class CompanyBenefit(
@@ -29,13 +29,25 @@ case class CompanyBenefit(
   source: Option[Int] = None,
   captureDate: Option[String],
   taxYear: TaxYear
-) extends LocalDateHelpers {
+) {
+
+  private def removeLeadingZeros(from: String): String = {
+    val removeLeadingZeros = "^0+(?!$)"
+    from.replaceFirst(removeLeadingZeros, "")
+  }
 
   def isForecastBenefit: Boolean = {
     val April6thTaxYearStartDay = taxYear.starts
 
     captureDate.exists { date =>
-      val captureLocalDate = strDateToLocalDate(date)
+      val captureLocalDate = date.split("/").toSeq match {
+        case Seq(day, month, year) =>
+          LocalDate.of(year.toInt, removeLeadingZeros(month).toInt, removeLeadingZeros(day).toInt)
+        case _                     =>
+          throw new IllegalArgumentException(
+            s"Invalid date format: $date, expected format is dd/MM/yyyy => 1/1/2021 or 01/01/2021"
+          )
+      }
       // we want the day the cutoff to be 5th April for a given tax year
       captureLocalDate.isBefore(April6thTaxYearStartDay)
     }

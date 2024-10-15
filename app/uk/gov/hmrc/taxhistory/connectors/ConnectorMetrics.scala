@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxhistory.connectors
 import uk.gov.hmrc.http.NotFoundException
 import uk.gov.hmrc.taxhistory.metrics.MetricsEnum.MetricsEnum
 import uk.gov.hmrc.taxhistory.metrics.TaxHistoryMetrics
-import uk.gov.hmrc.taxhistory.utils.Logging
+import play.api.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -41,7 +41,9 @@ protected trait ConnectorMetrics extends ConnectorCorrelationId with Logging {
         case e: NotFoundException =>
           timerContext.stop()
           metrics.incrementSuccessCounter(metric)
-          logger.warn(s"NotFound Exception ${getClass.getSimpleName} connector (${metric.toString}) : ${e.getMessage}")
+          logger.warn(
+            s"[ConnectorMetrics][withMetrics] NotFound Exception ${getClass.getSimpleName} connector (${metric.toString}) : ${e.getMessage}"
+          )
           throw e
         case e                    =>
           metrics.incrementFailedCounter(metric)

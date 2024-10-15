@@ -65,7 +65,9 @@ class RtiConnector @Inject() (
           .map { response =>
             response.status match {
               case 404 =>
-                logger.warn(s"RTIEmployments returned a 404 response: ${response.body}")
+                logger.warn(
+                  s"[RtiConnector][getRTIEmployments] RTIEmployments returned a 404 response: ${response.body}"
+                )
                 None
               case 200 =>
                 Some(response.json.as[RtiData])

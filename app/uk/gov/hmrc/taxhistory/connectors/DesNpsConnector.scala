@@ -69,7 +69,7 @@ class DesNpsConnector @Inject() (
           .map { response =>
             response.status match {
               case 404 =>
-                logger.warn(s"NPS getIabds returned a 404 response: ${response.body}")
+                logger.warn(s"[DesNpsConnector][getIabds] NPS getIabds returned a 404 response: ${response.body}")
                 List.empty
               case 200 => response.json.as[List[Iabd]]
               case _   => throw UpstreamErrorResponse(response.body, response.status, response.status)
@@ -91,7 +91,9 @@ class DesNpsConnector @Inject() (
           .map { response =>
             response.status match {
               case 404 =>
-                logger.warn(s"NPS getTaxAccount returned a 404 response: ${response.body}")
+                logger.warn(
+                  s"[DesNpsConnector][getTaxAccount] NPS getTaxAccount returned a 404 response: ${response.body}"
+                )
                 None
               case 200 => response.json.asOpt[NpsTaxAccount]
               case _   => throw UpstreamErrorResponse(response.body, response.status, response.status)
@@ -113,7 +115,9 @@ class DesNpsConnector @Inject() (
           .map { response =>
             response.status match {
               case 404 =>
-                logger.warn(s"NPS getEmployments returned a 404 response: ${response.body}")
+                logger.warn(
+                  s"[DesNpsConnector][getEmployments] NPS getEmployments returned a 404 response: ${response.body}"
+                )
                 List.empty
               case 200 => response.json.as[List[NpsEmployment]]
               case _   => throw UpstreamErrorResponse(response.body, response.status, response.status)

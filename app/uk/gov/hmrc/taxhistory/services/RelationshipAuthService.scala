@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.services
 
-import javax.inject.Inject
 import play.api.mvc.{Result, Results}
 import uk.gov.hmrc.agentmtdidentifiers.model.Arn
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
@@ -26,8 +25,9 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, UnauthorizedException}
-import uk.gov.hmrc.taxhistory.utils.Logging
+import play.api.Logging
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 /** This service provides a method to check whether an authorised relationship exists between a NINO and an Agent before
@@ -58,7 +58,7 @@ class RelationshipAuthService @Inject() (val authConnector: AuthConnector)(impli
             case _                        => Future.successful(None)
           }
         case _                     =>
-          logger.debug("Failed to retrieve affinity group or enrolments")
+          logger.debug("[RelationshipAuthService][retrieveArnFor] Failed to retrieve affinity group or enrolments")
           Future.failed(new UnauthorizedException("Failed to retrieve affinity group or enrolments"))
       }
 
@@ -72,18 +72,18 @@ class RelationshipAuthService @Inject() (val authConnector: AuthConnector)(impli
       .flatMap {
         case Some(arn) => action(arn)
         case None      =>
-          logger.info(s"No ARN found for $nino")
+          logger.info(s"[RelationshipAuthService][withAuthorisedRelationship] No ARN found for $nino")
           Future.successful(Unauthorized)
       }
       .recoverWith {
         case e: UnauthorizedException  =>
-          logger.info("Unauthorized: " + e.getMessage)
+          logger.info(s"[RelationshipAuthService][withAuthorisedRelationship] Unauthorized: ${e.getMessage}")
           Future.successful(Unauthorized(e.getMessage))
         case e: InsufficientEnrolments =>
-          logger.info("InsufficientEnrolments: " + e.getMessage)
+          logger.info(s"[RelationshipAuthService][withAuthorisedRelationship] InsufficientEnrolments: ${e.getMessage}")
           Future.successful(Unauthorized(e.getMessage))
         case e                         =>
-          logger.info("Error thrown :" + e.getMessage)
+          logger.info(s"[RelationshipAuthService][withAuthorisedRelationship] Error thrown : ${e.getMessage}")
           Future.successful(InternalServerError(e.getMessage))
       }
 

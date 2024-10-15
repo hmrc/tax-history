@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.taxhistory.controllers
 
-import javax.inject.Singleton
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc._
 import uk.gov.hmrc.http.{BadRequestException, NotFoundException, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.taxhistory.utils.Logging
+import play.api.Logging
 
+import javax.inject.Singleton
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -31,25 +31,25 @@ class TaxHistoryController(cc: ControllerComponents) extends BackendController(c
   def toResult[A: Writes](fa: Future[A])(implicit ec: ExecutionContext): Future[Result] =
     fa.map(value => Ok(Json.toJson(value))).recover {
       case e400: BadRequestException                                               =>
-        logger.warn("Bad Request: " + e400.message)
+        logger.warn(s"[TaxHistoryController][toResult] Bad Request: ${e400.message}")
         BadRequest
       case e404: NotFoundException                                                 =>
-        logger.info("404 Not found: " + e404.message)
+        logger.info(s"[TaxHistoryController][toResult] 404 Not found: ${e404.message}")
         NotFound
       case UpstreamErrorResponse.Upstream4xxResponse(e4xx)                         =>
-        logger.warn(s"Service returned error ${e4xx.statusCode}: ${e4xx.message}")
+        logger.warn(s"[TaxHistoryController][toResult] Service returned error ${e4xx.statusCode}: ${e4xx.message}")
         Status(e4xx.statusCode)
       case e5xx: UpstreamErrorResponse if e5xx.statusCode == INTERNAL_SERVER_ERROR =>
-        logger.error(s"[TaxHistoryController][toResult]Internal server error  ${e5xx.statusCode}: ${e5xx.message}")
+        logger.error(s"[TaxHistoryController][toResult] Internal server error  ${e5xx.statusCode}: ${e5xx.message}")
         InternalServerError
       case e5xx: UpstreamErrorResponse if e5xx.statusCode == SERVICE_UNAVAILABLE   =>
-        logger.error(s"[TaxHistoryController][toResult]Service unavailable  ${e5xx.statusCode}: ${e5xx.message}")
+        logger.error(s"[TaxHistoryController][toResult] Service unavailable  ${e5xx.statusCode}: ${e5xx.message}")
         ServiceUnavailable
       case e5xx: UpstreamErrorResponse                                             =>
-        logger.error(s"[TaxHistoryController][toResult]Service returned error ${e5xx.statusCode}: ${e5xx.message}")
+        logger.error(s"[TaxHistoryController][toResult] Service returned error ${e5xx.statusCode}: ${e5xx.message}")
         Status(e5xx.statusCode)
       case ex @ _                                                                  =>
-        logger.error(s"[TaxHistoryController][toResult]Error: ${ex.toString} - ${ex.getMessage}")
+        logger.error(s"[TaxHistoryController][toResult] Error: ${ex.toString} - ${ex.getMessage}")
         InternalServerError
     }
 }

@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
+import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxhistory.utils.Logging
 
 import java.util.UUID.randomUUID
 import scala.util.matching.Regex

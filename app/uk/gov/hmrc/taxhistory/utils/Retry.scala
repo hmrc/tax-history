@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxhistory.utils
 
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.pattern.after
+import play.api.Logging
 import uk.gov.hmrc.http.{BadGatewayException, GatewayTimeoutException, UpstreamErrorResponse}
 
 import javax.inject.Inject
@@ -29,7 +30,7 @@ class Retry @Inject() (val times: Int, val delay: FiniteDuration, val system: Ac
   private def apply[A](n: Int)(f: => Future[A])(implicit ec: ExecutionContext): Future[A] =
     f.recoverWith {
       case ShouldRetryAfter(e) if n > 0 =>
-        logger.warn(s"Retrying after failure $e")
+        logger.warn(s"[Retry][apply] Retrying after failure ${e.getMessage}")
         after(delay, system.scheduler)(apply(n - 1)(f))
     }
 

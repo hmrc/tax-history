@@ -30,8 +30,7 @@ import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType.OccupationalPensio
 import uk.gov.hmrc.taxhistory.model.api._
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
-import uk.gov.hmrc.taxhistory.utils.TestEmploymentHistoryService.mockAppConfig
-import uk.gov.hmrc.taxhistory.utils.{PlaceHolder, TestEmploymentHistoryService}
+import uk.gov.hmrc.taxhistory.utils.PlaceHolder
 import uk.gov.hmrc.time.TaxYear
 
 import java.time.LocalDate
