@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.taxhistory.utils
 
-import org.mockito.Mockito.{mock, when}
+import org.mockito.Mockito.mock
 import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.connectors.{DesNpsConnector, RtiConnector}
 import uk.gov.hmrc.taxhistory.services.EmploymentHistoryService
 
@@ -26,14 +25,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object TestEmploymentHistoryService {
 
-  val mockAppConfig: AppConfig = mock(classOf[AppConfig])
-
   def createNew(): EmploymentHistoryService =
     new EmploymentHistoryService(
       desNpsConnector = mock(classOf[DesNpsConnector]),
       rtiConnector = mock(classOf[RtiConnector]),
       cacheService = TestPayeCacheService(),
-      auditable = mock(classOf[Auditable]),
-      config = mockAppConfig
+      auditable = mock(classOf[Auditable])
     )
+
 }

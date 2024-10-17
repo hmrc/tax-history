@@ -24,7 +24,7 @@ import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, AuthorisedF
 import uk.gov.hmrc.domain.{Nino, SaUtr}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.connectors.CitizenDetailsConnector
-import uk.gov.hmrc.taxhistory.utils.Logging
+import play.api.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 

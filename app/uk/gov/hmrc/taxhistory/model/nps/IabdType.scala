@@ -166,7 +166,7 @@ case class Iabd(
         case Some(5)            => // Annual
           None
         case Some(unknownValue) =>
-          logger.warn(s"Unknown value for IABD's 'paymentFrequency': $unknownValue")
+          logger.warn(s"[Iabd][toStatePension] Unknown value for IABD's 'paymentFrequency': $unknownValue")
           None
         case _                  =>
           None

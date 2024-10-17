@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxhistory.services.helpers
 
 import uk.gov.hmrc.taxhistory.model.api.{Allowance, CompanyBenefit}
 import uk.gov.hmrc.taxhistory.model.nps._
-import uk.gov.hmrc.taxhistory.utils.Logging
+import play.api.Logging
 import uk.gov.hmrc.time.TaxYear
 
 /** Enriches a `List[Iabd]` with various convenience methods.

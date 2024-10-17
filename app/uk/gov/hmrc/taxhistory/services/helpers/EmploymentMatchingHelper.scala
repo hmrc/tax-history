@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.taxhistory.services.helpers
 
-import uk.gov.hmrc.taxhistory.model.rti.RtiEmployment
 import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
-import uk.gov.hmrc.taxhistory.utils.Logging
+import uk.gov.hmrc.taxhistory.model.rti.RtiEmployment
+import play.api.Logging
 
 object EmploymentMatchingHelper extends TaxHistoryHelper with Logging {
 
@@ -33,7 +33,11 @@ object EmploymentMatchingHelper extends TaxHistoryHelper with Logging {
     val isPayrollIdPresent   = optPayrollId.isDefined
     val hasOnlyOneEmployment = npsWithSamePayrollId.length == 1 && rtiWithSamePayrollId.length == 1
 
-    if (!isPayrollIdPresent) logger.warn("worksNumber/currentPayId is missing - will rely on sequenceNumber to match.")
+    if (!isPayrollIdPresent) {
+      logger.warn(
+        "[EmploymentMatchingHelper][matchEmploymentsFromSameEmployerSamePayrollId] worksNumber/currentPayId is missing - will rely on sequenceNumber to match."
+      )
+    }
 
     (for {
       nps <- npsWithSamePayrollId

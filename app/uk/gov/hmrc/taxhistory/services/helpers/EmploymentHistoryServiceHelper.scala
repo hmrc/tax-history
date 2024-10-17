@@ -20,7 +20,7 @@ import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, IncomeSource, PayAndTax
 import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment}
 import uk.gov.hmrc.taxhistory.model.rti.RtiEmployment
 import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
-import uk.gov.hmrc.taxhistory.utils.Logging
+import play.api.Logging
 import uk.gov.hmrc.time.TaxYear
 
 object EmploymentHistoryServiceHelper extends TaxHistoryHelper with Logging {

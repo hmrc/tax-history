@@ -24,7 +24,7 @@ import uk.gov.hmrc.taxhistory.auditable.Auditable
 import uk.gov.hmrc.agentmtdidentifiers.model.Arn
 import uk.gov.hmrc.taxhistory.model.audit.{AgentViewedClient, AgentViewedClientEvent, DataEventDetail}
 import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, RelationshipAuthService}
-import uk.gov.hmrc.taxhistory.utils.Logging
+import play.api.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 
