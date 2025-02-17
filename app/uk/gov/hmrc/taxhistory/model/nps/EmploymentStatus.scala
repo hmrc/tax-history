@@ -26,20 +26,29 @@ object EmploymentStatus {
   case object PotentiallyCeased extends EmploymentStatus
   case object Ceased extends EmploymentStatus
   case object Unknown extends EmploymentStatus
+// remove unknown and add permanently ceased: 6
+  case object PermanentlyCeased extends EmploymentStatus
 
   private val LiveCode              = 1
   private val PotentiallyCeasedCode = 2
   private val CeasedCode            = 3
   private val UnknownCode           =
     99 // Code 99, Unknown, is internal to tax-history, and is not an wider HMRC employment status
+  private val PermanentlyCeasedCode = 6
 
   implicit val jsonReads: Reads[EmploymentStatus] =
-    (__ \ "employmentStatus").read[Int].flatMap[EmploymentStatus] {
-      case LiveCode              => Reads(_ => JsSuccess(Live))
-      case PotentiallyCeasedCode => Reads(_ => JsSuccess(PotentiallyCeased))
-      case CeasedCode            => Reads(_ => JsSuccess(Ceased))
-      case UnknownCode           => Reads(_ => JsSuccess(Unknown))
-      case _                     => Reads(_ => JsError(JsPath \ "employmentStatus", JsonValidationError("Invalid EmploymentStatus")))
+    (__ \ "employmentStatus").read(Reads.of[String].orElse(Reads.of[Int].map(x => s"$x"))).flatMap[EmploymentStatus] {
+      case "1"                 => Reads(_ => JsSuccess(Live))
+      case "2"                 => Reads(_ => JsSuccess(PotentiallyCeased))
+      case "3"                 => Reads(_ => JsSuccess(Ceased))
+      case "99"                => Reads(_ => JsSuccess(Unknown))
+      case "6"                 => Reads(_ => JsSuccess(PermanentlyCeased))
+      case "Live"              => Reads(_ => JsSuccess(Live))
+      case "PotentiallyCeased" => Reads(_ => JsSuccess(PotentiallyCeased))
+      case "Ceased"            => Reads(_ => JsSuccess(Ceased))
+      case "Unknown"           => Reads(_ => JsSuccess(Unknown))
+      case "PermanentlyCeased" => Reads(_ => JsSuccess(PermanentlyCeased))
+      case _                   => Reads(_ => JsError(JsPath \ s"employmentStatus", JsonValidationError("Invalid EmploymentStatus")))
     }
 
   implicit val jsonWrites: Writes[EmploymentStatus] = Writes[EmploymentStatus] {
@@ -47,5 +56,6 @@ object EmploymentStatus {
     case PotentiallyCeased => Json.obj("employmentStatus" -> PotentiallyCeasedCode)
     case Ceased            => Json.obj("employmentStatus" -> CeasedCode)
     case Unknown           => Json.obj("employmentStatus" -> UnknownCode)
+    case PermanentlyCeased => Json.obj("employmentStatus" -> PermanentlyCeasedCode)
   }
 }

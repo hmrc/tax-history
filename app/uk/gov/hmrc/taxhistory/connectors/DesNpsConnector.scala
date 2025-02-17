@@ -23,7 +23,8 @@ import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
-import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.model.nps.HIPNpsEmployments.toListOfHIPNpsEmployment
+import uk.gov.hmrc.taxhistory.model.nps.{HIPNpsEmployment, HIPNpsEmployments, HipErrors, Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.utils.Retry
 
 import javax.inject.{Inject, Singleton}
@@ -45,10 +46,19 @@ class DesNpsConnector @Inject() (
   def iabdsUrl(nino: Nino, year: Int): String =
     s"${config.desBaseUrl}$servicePrefix/individuals/${nino.value}/iabds/tax-year/$year"
 
-  def taxAccountUrl(nino: Nino, year: Int): String =
+  def taxAccountUrl(nino: Nino, year: Int): String  =
     s"${config.desBaseUrl}$servicePrefix/individuals/${nino.value}/tax-account/tax-year/$year"
-
+//TODO: remove employmentsUrl
   def employmentsUrl(nino: Nino, year: Int): String = s"${config.desBaseUrl}/individuals/${nino.value}/employment/$year"
+
+  def employmentsHIPUrl(nino: Nino, year: Int): String =
+    s"${config.hipBaseUrl}/employment/employee/${nino.value}/tax-year/$year/employment-details"
+
+  def buildHIPHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
+    Seq(
+      "correlationId"        -> getCorrelationId(hc),
+      "gov-uk-originator-id" -> config.hipOriginatorId
+    )
 
   def buildHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
     Seq(
@@ -103,27 +113,60 @@ class DesNpsConnector @Inject() (
     }
   }
 
-  def getEmployments(nino: Nino, year: Int): Future[List[NpsEmployment]] = {
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-    withMetrics(MetricsEnum.NPS_GET_EMPLOYMENTS) {
-      withRetry {
-        val fullURL = employmentsUrl(nino, year)
-        http
-          .get(url"$fullURL")
-          .setHeader(buildHeaders: _*)
-          .execute[HttpResponse]
-          .map { response =>
-            response.status match {
-              case 404 =>
-                logger.warn(
-                  s"[DesNpsConnector][getEmployments] NPS getEmployments returned a 404 response: ${response.body}"
-                )
-                List.empty
-              case 200 => response.json.as[List[NpsEmployment]]
-              case _   => throw UpstreamErrorResponse(response.body, response.status, response.status)
+  def getEmployments(nino: Nino, year: Int): Future[List[NpsEmployment]] =
+    if (config.isUsingHIP) {
+      //to be changed
+      implicit val hc: HeaderCarrier = HeaderCarrier()
+      withMetrics(MetricsEnum.NPS_GET_EMPLOYMENTS) {
+        withRetry {
+          val fullURL = employmentsHIPUrl(nino, year)
+          http
+            .get(url"$fullURL")
+            .setHeader(buildHIPHeaders: _*)
+            .execute[HttpResponse]
+            .map { response =>
+              response.status match {
+                case 404                                         =>
+                  logger.warn(
+                    s"[DesNpsConnector][getEmployments] NPS getEmployments returned a 404 response: ${response.body}"
+                  )
+                  List.empty
+                case 200 if response.body.equalsIgnoreCase("{}") => List.empty
+                case 200                                         =>
+                  toListOfHIPNpsEmployment(response.json.as[HIPNpsEmployments])
+                    .map[NpsEmployment](HIPNpsEmployment.toNpsEmployment)
+                //TODO:Remove .map as it maps to des NpsEmployment
+                case _                                           =>
+                  throw UpstreamErrorResponse(
+                    response.json.validate[HipErrors].toString,
+                    response.status,
+                    response.status
+                  )
+              }
             }
-          }
+        }
+      }
+    } else {
+      implicit val hc: HeaderCarrier = HeaderCarrier()
+      withMetrics(MetricsEnum.NPS_GET_EMPLOYMENTS) {
+        withRetry {
+          val fullURL = employmentsUrl(nino, year)
+          http
+            .get(url"$fullURL")
+            .setHeader(buildHeaders: _*)
+            .execute[HttpResponse]
+            .map { response =>
+              response.status match {
+                case 404 =>
+                  logger.warn(
+                    s"[DesNpsConnector][getEmployments] NPS getEmployments returned a 404 response"
+                  )
+                  List.empty
+                case 200 => response.json.as[List[NpsEmployment]]
+                case _   => throw UpstreamErrorResponse(response.body, response.status, response.status)
+              }
+            }
+        }
       }
     }
-  }
 }

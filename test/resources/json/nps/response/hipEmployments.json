@@ -1,0 +1,116 @@
+{
+  "nationalInsuranceNumber": "RN000001A",
+  "taxYear": 2023,
+  "individualsEmploymentDetails": [
+    {
+      "payeSchemeOperatorName": "Scheme X",
+      "employerReference": "123/A56789",
+      "employmentIdentifier": "0010123456789",
+      "employmentSequenceNumber": 123,
+      "employmentRecordType": "PRIMARY",
+      "employmentStatus": "Ceased",
+      "jobTitle": "IT Consultant",
+      "worksNumber": "12345",
+      "startingTaxCode": "1257L",
+      "taxCodeOperation": "Cumulative",
+      "startTaxCodeOperation": "Cumulative",
+      "otherIncomeSource": true,
+      "payrolledCurrentYear": true,
+      "payrolledNextYear": true,
+      "jobSeekersAllowance": true,
+      "activeOccupationalPension": true,
+      "directorIdentifier": true,
+      "employerManualCorrespondence": true,
+      "p161Identifier": true,
+      "creationMediaType": "BACS",
+      "employmentRecordSourceType": "ECC",
+      "startDateSource": "ECC",
+      "startDate": "2000-01-02",
+      "cessationMediaType": "BACS",
+      "endDateSource": "ECC",
+      "endDate": "2023-06-27",
+      "cessationPayForEmployment": 15000.12,
+      "payrolledBenefitTaxYearCYList": {
+        "taxYear": 2023,
+        "payrolledBenefitDetailsList": [
+          {
+            "payrolledBenefitSequenceNumber": 1,
+            "iabdType": "Gift Aid Payments (001)",
+            "alreadyPayrolled": true,
+            "payrolledBenefitStartDate": "2023-02-07",
+            "payrolledBenefitEndDate": "2023-06-07",
+            "payrolledBenefitInKindStatus": "Invalid Payrolling Benefit In Kind (PBIK)"
+          }
+        ]
+      },
+      "payrolledBenefitTaxYearCY1List": {
+        "taxYear": 2024,
+        "payrolledBenefitDetailsList": [
+          {
+            "payrolledBenefitSequenceNumber": 1,
+            "iabdType": "Gift Aid Payments (001)",
+            "alreadyPayrolled": true,
+            "payrolledBenefitStartDate": "2023-02-07",
+            "payrolledBenefitEndDate": "2023-06-07",
+            "payrolledBenefitInKindStatus": "Invalid Payrolling Benefit In Kind (PBIK)"
+          }
+        ]
+      }
+    },
+    {
+      "payeSchemeOperatorName": "Scheme Y",
+      "employerReference": "987/Z654321",
+      "employmentIdentifier": "9999123456789",
+      "employmentSequenceNumber": 321,
+      "employmentRecordType": "PRIMARY",
+      "employmentStatus": "Live",
+      "jobTitle": "IT Consultant",
+      "worksNumber": "12345",
+      "startingTaxCode": "1257L",
+      "taxCodeOperation": "Cumulative",
+      "startTaxCodeOperation": "Cumulative",
+      "otherIncomeSource": true,
+      "payrolledCurrentYear": true,
+      "payrolledNextYear": true,
+      "jobSeekersAllowance": true,
+      "activeOccupationalPension": true,
+      "directorIdentifier": true,
+      "employerManualCorrespondence": true,
+      "p161Identifier": true,
+      "creationMediaType": "BACS",
+      "employmentRecordSourceType": "ECC",
+      "startDateSource": "ECC",
+      "startDate": "2000-01-02",
+      "cessationMediaType": "BACS",
+      "endDateSource": "ECC",
+      "endDate": "2023-06-27",
+      "cessationPayForEmployment": 15000.12,
+      "payrolledBenefitTaxYearCYList": {
+        "taxYear": 2023,
+        "payrolledBenefitDetailsList": [
+          {
+            "payrolledBenefitSequenceNumber": 1,
+            "iabdType": "Gift Aid Payments (001)",
+            "alreadyPayrolled": true,
+            "payrolledBenefitStartDate": "2023-02-07",
+            "payrolledBenefitEndDate": "2023-06-07",
+            "payrolledBenefitInKindStatus": "Invalid Payrolling Benefit In Kind (PBIK)"
+          }
+        ]
+      },
+      "payrolledBenefitTaxYearCY1List": {
+        "taxYear": 2024,
+        "payrolledBenefitDetailsList": [
+          {
+            "payrolledBenefitSequenceNumber": 1,
+            "iabdType": "Gift Aid Payments (001)",
+            "alreadyPayrolled": true,
+            "payrolledBenefitStartDate": "2023-02-07",
+            "payrolledBenefitEndDate": "2023-06-07",
+            "payrolledBenefitInKindStatus": "Invalid Payrolling Benefit In Kind (PBIK)"
+          }
+        ]
+      }
+    }
+  ]
+}

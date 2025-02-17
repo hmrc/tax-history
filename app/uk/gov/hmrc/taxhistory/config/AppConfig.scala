@@ -35,6 +35,9 @@ class AppConfig @Inject() (config: ServicesConfig) {
 
   lazy val desBaseUrl: String            = config.baseUrl("des")
   lazy val citizenDetailsBaseUrl: String = config.baseUrl("citizen-details")
+  lazy val isUsingHIP: Boolean           = config.getBoolean("feature.isUsingHIP")
+  lazy val hipBaseUrl: String            = config.baseUrl("hip")
+  lazy val hipOriginatorId: String       = config.getConfString("hip.originator-id", "local")
 
   def newRetryInstance(name: String, actorSystem: ActorSystem): Retry = {
     val times    = config.getInt(s"microservice.services.$name.retry.times")

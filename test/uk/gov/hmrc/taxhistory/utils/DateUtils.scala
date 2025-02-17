@@ -21,6 +21,7 @@ trait DateUtils {
   val YEAR_2015 = 2015
   val YEAR_2016 = 2016
   val YEAR_2017 = 2017
+  val YEAR_2000 = 2000
 
   val JANUARY  = 1
   val FEBRUARY = 2
