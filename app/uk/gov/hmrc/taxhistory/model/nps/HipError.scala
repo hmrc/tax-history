@@ -17,9 +17,7 @@
 package uk.gov.hmrc.taxhistory.model.nps
 
 import play.api.libs.json.OFormat.oFormatFromReadsAndOWrites
-import play.api.libs.json.{JsSuccess, JsValue, Json, OFormat, OWrites, Reads}
-
-import java.time.LocalDate
+import play.api.libs.json.{JsSuccess, JsValue, Json, OWrites, Reads}
 
 case class HipError(
   reason: String,

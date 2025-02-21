@@ -18,11 +18,11 @@ package uk.gov.hmrc.taxhistory.model.nps
 
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.{AnyWordSpec, AnyWordSpecLike}
-import play.api.libs.json.{JsValue, Json}
+import org.scalatest.wordspec.AnyWordSpecLike
+import play.api.libs.json.JsValue
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 
-class HipErrorsSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
+class HipErrorSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
 
   "HipErrors" must {
     "read from json" when {

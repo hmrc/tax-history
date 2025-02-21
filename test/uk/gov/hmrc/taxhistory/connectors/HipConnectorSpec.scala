@@ -16,19 +16,13 @@
 
 package uk.gov.hmrc.taxhistory.connectors
 
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.when
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http._
 import uk.gov.hmrc.taxhistory.model.nps.HIPNpsEmployments.toListOfHIPNpsEmployment
-import uk.gov.hmrc.taxhistory.model.nps.{HIPNpsEmployment, HIPNpsEmployments, Iabd, NpsEmployment, NpsTaxAccount}
-
+import uk.gov.hmrc.taxhistory.model.nps.{HIPNpsEmployment, HIPNpsEmployments, NpsEmployment}
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class HipConnectorSpec extends BaseConnectorSpec {
   override lazy val app: Application = new GuiceApplicationBuilder().configure(configForHip).build()

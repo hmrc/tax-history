@@ -19,12 +19,9 @@ package uk.gov.hmrc.taxhistory.model.nps
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
 import uk.gov.hmrc.taxhistory.model.api.{Employment, EmploymentPaymentType}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
-
-import java.time.LocalDate
 
 class HIPNpsEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with DateUtils {
 
