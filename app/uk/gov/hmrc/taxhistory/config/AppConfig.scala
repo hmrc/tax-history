@@ -23,6 +23,7 @@ import uk.gov.hmrc.taxhistory.utils.Retry
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import java.util.Base64
 
 @Singleton
 class AppConfig @Inject() (config: ServicesConfig) {
@@ -36,8 +37,12 @@ class AppConfig @Inject() (config: ServicesConfig) {
   lazy val desBaseUrl: String            = config.baseUrl("des")
   lazy val citizenDetailsBaseUrl: String = config.baseUrl("citizen-details")
   lazy val isUsingHIP: Boolean           = config.getBoolean("feature.isUsingHIP")
-  lazy val hipBaseUrl: String            = config.baseUrl("hip")
-  lazy val hipOriginatorId: String       = config.getConfString("hip.originator-id", "local")
+  lazy val hipBaseUrl: String            = config.baseUrl("nps.hip")
+  private val clientIdV1: String         = config.getString("microservice.services.nps.hip.clientId")
+  private val secretV1: String           = config.getString("microservice.services.nps.hip.secret")
+  def authorizationToken: String         = Base64.getEncoder.encodeToString(s"$clientIdV1:$secretV1".getBytes("UTF-8"))
+  val hipServiceOriginatorIdKey: String  = config.getString("microservice.services.nps.hip.originatoridkey")
+  val hipServiceOriginatorId: String     = config.getString("microservice.services.nps.hip.originatoridvalue")
 
   def newRetryInstance(name: String, actorSystem: ActorSystem): Retry = {
     val times    = config.getInt(s"microservice.services.$name.retry.times")

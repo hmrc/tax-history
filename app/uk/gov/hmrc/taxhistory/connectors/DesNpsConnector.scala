@@ -56,8 +56,9 @@ class DesNpsConnector @Inject() (
 
   def buildHIPHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
     Seq(
-      "correlationId"        -> getCorrelationId(hc),
-      "gov-uk-originator-id" -> config.hipOriginatorId
+      config.hipServiceOriginatorIdKey -> config.hipServiceOriginatorId,
+      HIP_CORRELATION_HEADER           -> getCorrelationId(hc),
+      HIP_AUTHORIZATION_HEADER         -> s"Basic ${config.authorizationToken}"
     )
 
   def buildHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =

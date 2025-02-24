@@ -54,8 +54,9 @@ class HipConnectorSpec extends BaseConnectorSpec {
   "create the correct hip headers" in {
     val headers = testDesNpsConnector.buildHIPHeaders(hc)
     headers mustBe List(
+      ("gov-uk-originator-id", "MDTP-PAYE-TES-2"),
       ("correlationId", "123f4567-g89c-42c3-b456-557742330000"),
-      ("gov-uk-originator-id", "testId")
+      ("Authorization", "Basic YXBpLWNsaWVudC1pZDphcGktY2xpZW50LXNlY3JldA==")
     )
   }
 
