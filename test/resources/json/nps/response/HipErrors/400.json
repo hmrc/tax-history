@@ -1,0 +1,15 @@
+{
+  "origin": "HoD",
+  "response": {
+    "failures": [
+      {
+        "reason": "HTTP message not readable",
+        "code": "400.2"
+      },
+      {
+        "reason": "Constraint Violation - Invalid/Missing input parameter",
+        "code": "400.1"
+      }
+    ]
+  }
+}

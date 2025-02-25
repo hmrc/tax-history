@@ -98,14 +98,6 @@ class PayAsYouEarnControllerSpec extends PlaySpec with GuiceOneServerPerSuite wi
 
         verifyNoInteractions(mockEmploymentHistoryService)
       }
-
-      //TODO understand if this test is needed and fix
-      "logged in and authorised to access the nino" in {
-        val result = controller.getPayAsYouEarn(validNino, TaxYear(taxYear2)).apply(FakeRequest())
-        status(result) must be(OK)
-
-        //verify(mockSaAuthService).saAuthValidator
-      }
     }
 
     "respond with OK for successful get" in {

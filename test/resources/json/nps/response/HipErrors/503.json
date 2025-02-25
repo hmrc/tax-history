@@ -1,0 +1,11 @@
+{
+  "origin": "HIP",
+  "response": {
+    "failures": [
+      {
+        "type": "string",
+        "reason": "string"
+      }
+    ]
+  }
+}

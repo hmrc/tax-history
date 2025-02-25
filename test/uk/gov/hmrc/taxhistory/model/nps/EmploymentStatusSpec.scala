@@ -20,7 +20,7 @@ import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json._
-import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.{Ceased, Live, PotentiallyCeased, Unknown}
+import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.{Ceased, Live, PermanentlyCeased, PotentiallyCeased, Unknown}
 
 class EmploymentStatusSpec extends AnyWordSpec with Matchers with OptionValues {
 
@@ -29,6 +29,11 @@ class EmploymentStatusSpec extends AnyWordSpec with Matchers with OptionValues {
       EmploymentStatus.jsonReads.reads(EmploymentStatus.jsonWrites.writes(EmploymentStatus.Live))    shouldBe JsSuccess(
         Live
       )
+      EmploymentStatus.jsonReads.reads(
+        EmploymentStatus.jsonWrites.writes(EmploymentStatus.PermanentlyCeased)
+      )                                                                                              shouldBe JsSuccess(
+        PermanentlyCeased
+      )
       EmploymentStatus.jsonReads.reads(EmploymentStatus.jsonWrites.writes(EmploymentStatus.Ceased))  shouldBe JsSuccess(
         Ceased
       )
@@ -36,6 +41,19 @@ class EmploymentStatusSpec extends AnyWordSpec with Matchers with OptionValues {
         EmploymentStatus.jsonWrites.writes(EmploymentStatus.PotentiallyCeased)
       )                                                                                              shouldBe JsSuccess(PotentiallyCeased)
       EmploymentStatus.jsonReads.reads(EmploymentStatus.jsonWrites.writes(EmploymentStatus.Unknown)) shouldBe JsSuccess(
+        Unknown
+      )
+    }
+    "read the json correctly" in {
+      EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Live")) shouldBe JsSuccess(Live)
+      EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "PotentiallyCeased")) shouldBe JsSuccess(
+        PotentiallyCeased
+      )
+      EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Ceased")) shouldBe JsSuccess(Ceased)
+      EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "PermanentlyCeased")) shouldBe JsSuccess(
+        PermanentlyCeased
+      )
+      EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Unknown")) shouldBe JsSuccess(
         Unknown
       )
     }
