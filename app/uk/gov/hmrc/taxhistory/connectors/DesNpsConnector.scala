@@ -41,15 +41,18 @@ class DesNpsConnector @Inject() (
 
   private val servicePrefix = "/pay-as-you-earn"
 
-  val withRetry: Retry = config.newRetryInstance("des", system)
+  val withNPSDESRetry: Retry = config.newRetryInstance("nps.des", system)
+  val withRTIDESRetry: Retry = config.newRetryInstance("rti.des", system)
+  val withHIPRetry: Retry    = config.newRetryInstance("nps.hip", system)
 
   def iabdsUrl(nino: Nino, year: Int): String =
-    s"${config.desBaseUrl}$servicePrefix/individuals/${nino.value}/iabds/tax-year/$year"
+    s"${config.npsDesBaseUrl}$servicePrefix/individuals/${nino.value}/iabds/tax-year/$year"
 
   def taxAccountUrl(nino: Nino, year: Int): String  =
-    s"${config.desBaseUrl}$servicePrefix/individuals/${nino.value}/tax-account/tax-year/$year"
+    s"${config.npsDesBaseUrl}$servicePrefix/individuals/${nino.value}/tax-account/tax-year/$year"
 //TODO: remove employmentsUrl
-  def employmentsUrl(nino: Nino, year: Int): String = s"${config.desBaseUrl}/individuals/${nino.value}/employment/$year"
+  def employmentsUrl(nino: Nino, year: Int): String =
+    s"${config.npsDesBaseUrl}/individuals/${nino.value}/employment/$year"
 
   def employmentsHIPUrl(nino: Nino, year: Int): String =
     s"${config.hipBaseUrl}/employment/employee/${nino.value}/tax-year/$year/employment-details"
@@ -71,7 +74,7 @@ class DesNpsConnector @Inject() (
   def getIabds(nino: Nino, year: Int): Future[List[Iabd]] = {
     implicit val hc: HeaderCarrier = HeaderCarrier()
     withMetrics(MetricsEnum.NPS_GET_IABDS) {
-      withRetry {
+      withRTIDESRetry {
         val fullURL = iabdsUrl(nino, year)
         http
           .get(url"$fullURL")
@@ -93,7 +96,7 @@ class DesNpsConnector @Inject() (
   def getTaxAccount(nino: Nino, year: Int): Future[Option[NpsTaxAccount]] = {
     implicit val hc: HeaderCarrier = HeaderCarrier()
     withMetrics(MetricsEnum.NPS_GET_TAX_ACCOUNT) {
-      withRetry {
+      withNPSDESRetry {
         val fullURL = taxAccountUrl(nino, year)
         http
           .get(url"$fullURL")
@@ -119,7 +122,7 @@ class DesNpsConnector @Inject() (
       //to be changed
       implicit val hc: HeaderCarrier = HeaderCarrier()
       withMetrics(MetricsEnum.NPS_GET_EMPLOYMENTS) {
-        withRetry {
+        withHIPRetry {
           val fullURL = employmentsHIPUrl(nino, year)
           http
             .get(url"$fullURL")
@@ -150,7 +153,7 @@ class DesNpsConnector @Inject() (
     } else {
       implicit val hc: HeaderCarrier = HeaderCarrier()
       withMetrics(MetricsEnum.NPS_GET_EMPLOYMENTS) {
-        withRetry {
+        withNPSDESRetry {
           val fullURL = employmentsUrl(nino, year)
           http
             .get(url"$fullURL")

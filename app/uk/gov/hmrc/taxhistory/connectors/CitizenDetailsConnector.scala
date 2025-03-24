@@ -38,7 +38,7 @@ class CitizenDetailsConnector @Inject() (
 )(implicit executionContext: ExecutionContext)
     extends ConnectorMetrics {
 
-  val withRetry: Retry = config.newRetryInstance("des", system)
+  val withRetry: Retry = config.newRetryInstance("citizen-details", system)
 
   private def extractSaUtr(json: JsValue): Option[SaUtr] = (json \ "ids" \ "sautr").asOpt[SaUtr]
 

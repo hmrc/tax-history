@@ -34,7 +34,8 @@ class AppConfig @Inject() (config: ServicesConfig) {
   lazy val desEnv: String        = config.getConfString("des.env", "local")
   lazy val desAuth: String       = config.getConfString("des.authorizationToken", "Local")
 
-  lazy val desBaseUrl: String            = config.baseUrl("des")
+  lazy val npsDesBaseUrl: String         = config.baseUrl("nps.des")
+  lazy val rtiDesBaseUrl: String         = config.baseUrl("rti.des")
   lazy val citizenDetailsBaseUrl: String = config.baseUrl("citizen-details")
   lazy val isUsingHIP: Boolean           = config.getBoolean("feature.isUsingHIP")
   lazy val hipBaseUrl: String            = config.baseUrl("nps.hip")
