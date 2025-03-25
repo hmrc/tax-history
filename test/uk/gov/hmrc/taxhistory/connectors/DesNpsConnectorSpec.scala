@@ -82,7 +82,7 @@ class DesNpsConnectorSpec extends BaseConnectorSpec {
     val headers = testDesNpsConnector.buildHeaders(hc)
     headers mustBe List(
       ("Environment", "local"),
-      ("Authorization", "Bearer local"),
+      ("Authorization", "Bearer Local"),
       ("CorrelationId", "123f4567-g89c-42c3-b456-557742330000")
     )
   }

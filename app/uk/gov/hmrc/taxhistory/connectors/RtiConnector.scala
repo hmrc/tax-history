@@ -39,11 +39,11 @@ class RtiConnector @Inject() (
 )(implicit executionContext: ExecutionContext)
     extends ConnectorMetrics {
 
-  val withRetry: Retry = config.newRetryInstance("des", system)
+  val withRetry: Retry = config.newRetryInstance("rti.des", system)
 
   def rtiEmploymentsUrl(nino: Nino, taxYear: TaxYear): String = {
     val formattedTaxYear = s"${taxYear.startYear % 100}-${taxYear.finishYear % 100}"
-    s"${config.desBaseUrl}/rti/individual/payments/nino/${nino.withoutSuffix}/tax-year/$formattedTaxYear"
+    s"${config.rtiDesBaseUrl}/rti/individual/payments/nino/${nino.withoutSuffix}/tax-year/$formattedTaxYear"
   }
 
   def buildHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
