@@ -31,8 +31,8 @@ class AppConfig @Inject() (config: ServicesConfig) {
   lazy val appName: String       = config.getString("appName")
   lazy val mongoExpiry: Duration = Duration(config.getInt("mongodb.cache.expire.seconds"), TimeUnit.SECONDS)
   lazy val mongoName: String     = config.getString("mongodb.name")
-  lazy val desEnv: String        = config.getConfString("des.env", "local")
-  lazy val desAuth: String       = config.getConfString("des.authorizationToken", "Local")
+  lazy val desEnv: String        = config.getConfString("nps.des.env", "local")
+  lazy val desAuth: String       = config.getConfString("nps.des.authorizationToken", "Local")
 
   lazy val npsDesBaseUrl: String         = config.baseUrl("nps.des")
   lazy val rtiDesBaseUrl: String         = config.baseUrl("rti.des")
