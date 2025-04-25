@@ -34,16 +34,21 @@ class AppConfig @Inject() (config: ServicesConfig) {
   lazy val desEnv: String        = config.getConfString("nps.des.env", "local")
   lazy val desAuth: String       = config.getConfString("nps.des.authorizationToken", "Local")
 
-  lazy val npsDesBaseUrl: String         = config.baseUrl("nps.des")
-  lazy val rtiDesBaseUrl: String         = config.baseUrl("rti.des")
-  lazy val citizenDetailsBaseUrl: String = config.baseUrl("citizen-details")
-  lazy val isUsingHIP: Boolean           = config.getBoolean("feature.isUsingHIP")
-  lazy val hipBaseUrl: String            = config.baseUrl("nps.hip")
-  private val clientIdV1: String         = config.getString("microservice.services.nps.hip.clientId")
-  private val secretV1: String           = config.getString("microservice.services.nps.hip.secret")
-  def authorizationToken: String         = Base64.getEncoder.encodeToString(s"$clientIdV1:$secretV1".getBytes("UTF-8"))
-  val hipServiceOriginatorIdKey: String  = config.getString("microservice.services.nps.hip.originatoridkey")
-  val hipServiceOriginatorId: String     = config.getString("microservice.services.nps.hip.originatoridvalue")
+  lazy val npsDesBaseUrl: String           = config.baseUrl("nps.des")
+  lazy val rtiDesBaseUrl: String           = config.baseUrl("rti.des")
+  lazy val citizenDetailsBaseUrl: String   = config.baseUrl("citizen-details")
+  lazy val isUsingHIP: Boolean             = config.getBoolean("feature.isUsingHIP")
+  lazy val hipBaseUrl: String              = config.baseUrl("nps.hip")
+  private val employmentClientIdV1: String = config.getString("microservice.services.nps.hip.employment.clientId")
+  private val employmentSecretV1: String   = config.getString("microservice.services.nps.hip.employment.secret")
+  def employmentAuthorizationToken: String =
+    Base64.getEncoder.encodeToString(s"$employmentClientIdV1:$employmentSecretV1".getBytes("UTF-8"))
+  private val taxAccountClientIdV1: String = config.getString("microservice.services.nps.hip.taxAccount.clientId")
+  private val taxAccountSecretV1: String   = config.getString("microservice.services.nps.hip.taxAccount.secret")
+  def taxAccountAuthorizationToken: String =
+    Base64.getEncoder.encodeToString(s"$taxAccountClientIdV1:$taxAccountSecretV1".getBytes("UTF-8"))
+  val hipServiceOriginatorIdKey: String    = config.getString("microservice.services.nps.hip.originatoridkey")
+  val hipServiceOriginatorId: String       = config.getString("microservice.services.nps.hip.originatoridvalue")
 
   def newRetryInstance(name: String, actorSystem: ActorSystem): Retry = {
     val times    = config.getInt(s"microservice.services.$name.retry.times")
