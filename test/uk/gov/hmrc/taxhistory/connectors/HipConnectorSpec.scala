@@ -57,23 +57,13 @@ class HipConnectorSpec extends BaseConnectorSpec {
   val testNino: Nino                            = randomNino()
   val testYear: Int                             = 2016
 
-  "create the correct hip headers" when {
-    "Employment url is used" in {
-      val headers = testDesNpsConnector.buildHIPEmploymentHeaders(hc)
-      headers mustBe List(
-        ("gov-uk-originator-id", "MDTP-PAYE-TES-2"),
-        ("correlationId", "123f4567-g89c-42c3-b456-557742330000"),
-        ("Authorization", "Basic YXBpLWNsaWVudC1pZDphcGktY2xpZW50LXNlY3JldA==")
-      )
-    }
-    "taxAccount url is used" in {
-      val headers = testDesNpsConnector.buildHIPTaxAccountHeaders(hc)
-      headers mustBe List(
-        ("gov-uk-originator-id", "MDTP-PAYE-TES-2"),
-        ("correlationId", "123f4567-g89c-42c3-b456-557742330000"),
-        ("Authorization", "Basic YXBpLWNsaWVudC1pZDphcGktY2xpZW50LXNlY3JldA==")
-      )
-    }
+  "create the correct hip headers" in {
+    val headers = testDesNpsConnector.buildHIPHeaders(hc)
+    headers mustBe List(
+      ("gov-uk-originator-id", "MDTP-PAYE-TES-2"),
+      ("correlationId", "123f4567-g89c-42c3-b456-557742330000"),
+      ("Authorization", "Basic YXBpLWNsaWVudC1pZDphcGktY2xpZW50LXNlY3JldA==")
+    )
   }
 
   "create the correct Hip url" when {

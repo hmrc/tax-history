@@ -28,22 +28,17 @@ case class AllowanceOrDeduction(
 
 object AllowanceOrDeduction {
   implicit val reader: Reads[AllowanceOrDeduction]                = (js: JsValue) => {
-    val typeAndDescription = (js \ "type").validate[String].getOrElse("")
-    var `type`             = 0
-    var npsDescription     = ""
-    if (typeAndDescription.contains("(")) {
-      npsDescription = typeAndDescription.substring(0, typeAndDescription.indexOf("(")).trim
-      `type` = typeAndDescription
-        .substring(typeAndDescription.indexOf("(") + 1, typeAndDescription.indexOf(")"))
-        .toIntOption
-        .getOrElse(0)
+    val typeAndDescription         = (js \ "type").validate[String].getOrElse("")
+    val (npsDescription, typeCode) = typeAndDescription.split("[(]") match {
+      case Array(desc, code) => (Some(desc.trim), code.substring(0, code.indexOf(")")).toIntOption)
+      case _                 => (None, None)
     }
     for {
       amount       <- (js \ "adjustedAmount").validate[BigDecimal]
       sourceAmount <- (js \ "sourceAmount").validateOpt[BigDecimal]
     } yield AllowanceOrDeduction(
-      `type` = `type`,
-      npsDescription = npsDescription,
+      `type` = typeCode.getOrElse(0),
+      npsDescription = npsDescription.getOrElse(""),
       amount = amount,
       sourceAmount = sourceAmount
     )
@@ -68,41 +63,38 @@ case class HIPNpsIncomeSource(
   employmentPayeRef: Option[String]
 ) {
   def toIncomeSource: Option[IncomeSource] =
-    if (taxCode.isEmpty || employmentType.isEmpty || employmentTaxDistrictNumber.isEmpty || employmentPayeRef.isEmpty) {
-      None
-    } else {
-      Some(
-        IncomeSource(
-          employmentId = this.employmentId,
-          employmentType = this.employmentType.get,
-          actualPUPCodedInCYPlusOneTaxYear = this.actualPUPCodedInCYPlusOneTaxYear,
-          deductions = this.deductions.map(AllowanceOrDeduction.toTaDeduction),
-          allowances = this.allowances.map(AllowanceOrDeduction.toTaAllowance),
-          taxCode = this.taxCode.get,
-          basisOperation = this.basisOperation,
-          employmentTaxDistrictNumber = this.employmentTaxDistrictNumber.get,
-          employmentPayeRef = this.employmentPayeRef.get
-        )
-      )
-    }
+    for {
+      etype   <- employmentType
+      code    <- taxCode
+      distNum <- employmentTaxDistrictNumber
+      ref     <- employmentPayeRef
+    } yield IncomeSource(
+      employmentId = this.employmentId,
+      employmentType = etype,
+      actualPUPCodedInCYPlusOneTaxYear = this.actualPUPCodedInCYPlusOneTaxYear,
+      deductions = this.deductions.map(AllowanceOrDeduction.toTaDeduction),
+      allowances = this.allowances.map(AllowanceOrDeduction.toTaAllowance),
+      taxCode = code,
+      basisOperation = this.basisOperation,
+      employmentTaxDistrictNumber = distNum,
+      employmentPayeRef = ref
+    )
 }
 
 object HIPNpsIncomeSource {
   implicit val reader: Reads[HIPNpsIncomeSource]                                 = (js: JsValue) => {
-    val typeAndDescription                       = (js \ "employerReference").validate[String].getOrElse("")
-    var employmentTaxDistrictNumber: Option[Int] = None
-    var employmentPayeRef: Option[String]        = None
-    if (typeAndDescription.contains("/")) {
-      employmentTaxDistrictNumber = typeAndDescription.substring(0, typeAndDescription.indexOf("/")).toIntOption
-      employmentPayeRef = Option(typeAndDescription.substring(typeAndDescription.indexOf("/") + 1))
+    val employerReference                                = (js \ "employerReference").validate[String].getOrElse("")
+    val (employmentTaxDistrictNumber, employmentPayeRef) = employerReference.split("/") match {
+      case Array(taxDistrict, payeRef) => (taxDistrict.toIntOption, Some(payeRef))
+      case _                           => (None, None)
     }
     //TODO: what if the string doesnt contain /
-    val employmentType                           = (js \ "employmentRecordType").validateOpt[String].getOrElse("") match {
+    val employmentType                                   = (js \ "employmentRecordType").validateOpt[String].getOrElse("") match {
       case Some("PRIMARY")   => Some(1)
       case Some("SECONDARY") => Some(2)
       case _                 => None
     }
-    val basisOperation                           = (js \ "basisOfOperation").validateOpt[String].getOrElse("") match {
+    val basisOperation                                   = (js \ "basisOfOperation").validateOpt[String].getOrElse("") match {
       case Some("Week1/Month1")              => Some(1)
       case Some("Cumulative")                => Some(2)
       case Some("Week1/Month1,Not Operated") => Some(3)

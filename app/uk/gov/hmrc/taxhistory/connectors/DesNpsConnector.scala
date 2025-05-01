@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxhistory.connectors
 
 import org.apache.pekko.actor.ActorSystem
+import play.api.http.Status.{NOT_FOUND, OK}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
@@ -61,17 +62,11 @@ class DesNpsConnector @Inject() (
   def taxAccountHIPUrl(nino: Nino, taxYear: Int): String =
     s"${config.npsDesBaseUrl}/person/${nino.value}/tax-account/$taxYear"
 
-  def buildHIPEmploymentHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
+  def buildHIPHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
     Seq(
-      config.hipServiceOriginatorIdKey -> config.hipServiceOriginatorId,
-      HIP_CORRELATION_HEADER           -> getCorrelationId(hc),
-      HIP_AUTHORIZATION_HEADER         -> s"Basic ${config.employmentAuthorizationToken}"
-    )
-  def buildHIPTaxAccountHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
-    Seq(
-      config.hipServiceOriginatorIdKey -> config.hipServiceOriginatorId,
-      HIP_CORRELATION_HEADER           -> getCorrelationId(hc),
-      HIP_AUTHORIZATION_HEADER         -> s"Basic ${config.taxAccountAuthorizationToken}"
+      config.ServiceOriginatorIdKey -> config.ServiceOriginatorIDValue,
+      HIP_CORRELATION_HEADER        -> getCorrelationId(hc),
+      HIP_AUTHORIZATION_HEADER      -> s"Basic ${config.authorizationToken}"
     )
 
   def buildHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
@@ -111,22 +106,19 @@ class DesNpsConnector @Inject() (
           val fullURL = taxAccountHIPUrl(nino, year)
           http
             .get(url"$fullURL")
-            .setHeader(buildHIPTaxAccountHeaders: _*)
+            .setHeader(buildHIPHeaders: _*)
             .execute[HttpResponse]
             .map { response =>
               response.status match {
-                case 404 =>
+                case NOT_FOUND =>
                   logger.warn(
                     s"[HIPConnector][getTaxAccount] NPS getTaxAccount returned a 404 response"
                   )
                   None
-                case 200 =>
-                  response.json.asOpt[HIPNpsTaxAccount] match {
-                    case Some(x) => Some(toNpsTaxAccount(x))
-                    case _       => None
-                  }
+                case OK        =>
+                  response.json.asOpt[HIPNpsTaxAccount].map(toNpsTaxAccount)
                 //TODO: Remove the match and toNpsTaxAccount
-                case _   =>
+                case _         =>
                   throw UpstreamErrorResponse(
                     response.json.validate[HipErrors].toString,
                     response.status,
@@ -169,21 +161,21 @@ class DesNpsConnector @Inject() (
           val fullURL = employmentsHIPUrl(nino, year)
           http
             .get(url"$fullURL")
-            .setHeader(buildHIPEmploymentHeaders: _*)
+            .setHeader(buildHIPHeaders: _*)
             .execute[HttpResponse]
             .map { response =>
               response.status match {
-                case 404                                         =>
+                case NOT_FOUND                                  =>
                   logger.warn(
-                    s"[HIPConnector][getEmployments] NPS getEmployments returned a 404 response: ${response.body}"
+                    s"[DesNpsConnector][getEmployments] NPS getEmployments returned a 404 response: ${response.body}"
                   )
                   List.empty
-                case 200 if response.body.equalsIgnoreCase("{}") => List.empty
-                case 200                                         =>
+                case OK if response.body.equalsIgnoreCase("{}") => List.empty
+                case OK                                         =>
                   toListOfHIPNpsEmployment(response.json.as[HIPNpsEmployments])
                     .map[NpsEmployment](HIPNpsEmployment.toNpsEmployment)
                 //TODO:Remove .map as it maps to des NpsEmployment
-                case _                                           =>
+                case _                                          =>
                   throw UpstreamErrorResponse(
                     response.json.validate[HipErrors].toString,
                     response.status,
