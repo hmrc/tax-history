@@ -10,7 +10,7 @@
 # Failing to follow this rule may result in test routes deployed in production.
 
 # Add all the application routes to the prod.routes file
-GET        /tax-history/test-only/clear-cache     @uk.gov.hmrc.taxhistory.controllers.TestOnlyController.clearCache()
+GET        /tax-history/test-only/clear-cache     @uk.gov.hmrc.taxhistory.controllers.test.TestOnlyController.clearCache()
 
 ->         /                          prod.Routes
 
