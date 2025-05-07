@@ -89,12 +89,12 @@ object HIPNpsIncomeSource {
       case _                           => (None, None)
     }
     //TODO: what if the string doesnt contain /
-    val employmentType                                   = (js \ "employmentRecordType").validateOpt[String].getOrElse("") match {
+    val employmentType                                   = (js \ "employmentRecordType").asOpt[String] match {
       case Some("PRIMARY")   => Some(1)
       case Some("SECONDARY") => Some(2)
       case _                 => None
     }
-    val basisOperation                                   = (js \ "basisOfOperation").validateOpt[String].getOrElse("") match {
+    val basisOperation                                   = (js \ "basisOfOperation").asOpt[String] match {
       case Some("Week1/Month1")              => Some(1)
       case Some("Cumulative")                => Some(2)
       case Some("Week1/Month1,Not Operated") => Some(3)

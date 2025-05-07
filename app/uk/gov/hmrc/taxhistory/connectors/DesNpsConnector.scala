@@ -26,7 +26,7 @@ import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.nps.HIPNpsEmployments.toListOfHIPNpsEmployment
 import uk.gov.hmrc.taxhistory.model.nps.HIPNpsTaxAccount.toNpsTaxAccount
-import uk.gov.hmrc.taxhistory.model.nps.{HIPNpsEmployment, HIPNpsEmployments, HIPNpsTaxAccount, HipErrors, Iabd, NpsEmployment, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.utils.Retry
 
 import javax.inject.{Inject, Singleton}
@@ -64,7 +64,7 @@ class DesNpsConnector @Inject() (
 
   def buildHIPHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
     Seq(
-      config.ServiceOriginatorIdKey -> config.ServiceOriginatorIDValue,
+      config.serviceOriginatorIdKey -> config.serviceOriginatorIDValue,
       HIP_CORRELATION_HEADER        -> getCorrelationId(hc),
       HIP_AUTHORIZATION_HEADER      -> s"Basic ${config.authorizationToken}"
     )
@@ -112,7 +112,7 @@ class DesNpsConnector @Inject() (
               response.status match {
                 case NOT_FOUND =>
                   logger.warn(
-                    s"[HIPConnector][getTaxAccount] NPS getTaxAccount returned a 404 response"
+                    s"[DesNpsConnector][getTaxAccount] NPS getTaxAccount returned a 404 response: ${response.body}"
                   )
                   None
                 case OK        =>

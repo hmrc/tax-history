@@ -22,7 +22,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.taxhistory.model.nps.HIPNpsEmployments.toListOfHIPNpsEmployment
 import uk.gov.hmrc.taxhistory.model.nps.HIPNpsTaxAccount.toNpsTaxAccount
-import uk.gov.hmrc.taxhistory.model.nps.{HIPNpsEmployment, HIPNpsEmployments, HIPNpsTaxAccount, NpsEmployment, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.model.nps._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

@@ -43,8 +43,8 @@ class AppConfig @Inject() (config: ServicesConfig) {
   private val secret: String             = config.getString("microservice.services.nps.hip.secret")
   def authorizationToken: String         =
     Base64.getEncoder.encodeToString(s"$clientId:$secret".getBytes("UTF-8"))
-  val ServiceOriginatorIdKey: String     = "gov-uk-originator-id"
-  val ServiceOriginatorIDValue: String   = config.getString("microservice.services.nps.hip.originatoridvalue")
+  val serviceOriginatorIdKey: String     = "gov-uk-originator-id"
+  val serviceOriginatorIDValue: String   = config.getString("microservice.services.nps.hip.originatoridvalue")
 
   def newRetryInstance(name: String, actorSystem: ActorSystem): Retry = {
     val times    = config.getInt(s"microservice.services.$name.retry.times")
