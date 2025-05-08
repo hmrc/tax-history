@@ -110,7 +110,7 @@ class DesNpsConnector @Inject() (
             .execute[HttpResponse]
             .map { response =>
               response.status match {
-                case 404 =>
+                case NOT_FOUND =>
                   logger.warn(
                     s"[DesNpsConnector][getTaxAccount] NPS getTaxAccount returned a 404 response: ${response.body}"
                   )
