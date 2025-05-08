@@ -110,20 +110,15 @@ class DesNpsConnector @Inject() (
             .execute[HttpResponse]
             .map { response =>
               response.status match {
-                case NOT_FOUND =>
+                case 404 =>
                   logger.warn(
                     s"[DesNpsConnector][getTaxAccount] NPS getTaxAccount returned a 404 response: ${response.body}"
                   )
                   None
-                case OK        =>
+                case OK  =>
                   response.json.asOpt[HIPNpsTaxAccount].map(toNpsTaxAccount)
                 //TODO: Remove the match and toNpsTaxAccount
-                case _         =>
-                  throw UpstreamErrorResponse(
-                    response.json.validate[HipErrors].toString,
-                    response.status,
-                    response.status
-                  )
+                case _   => throw UpstreamErrorResponse(response.body, response.status, response.status)
               }
             }
         }
@@ -177,7 +172,7 @@ class DesNpsConnector @Inject() (
                 //TODO:Remove .map as it maps to des NpsEmployment
                 case _                                          =>
                   throw UpstreamErrorResponse(
-                    response.json.validate[HipErrors].toString,
+                    response.body,
                     response.status,
                     response.status
                   )
