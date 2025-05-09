@@ -65,7 +65,7 @@ class DesNpsConnector @Inject() (
   def buildHIPHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
     Seq(
       config.serviceOriginatorIdKey -> config.serviceOriginatorIDValue,
-      HIP_CORRELATION_HEADER        -> getCorrelationId(hc),
+      HIP_CORRELATION_HEADER        -> getHIPCorrelationId(hc),
       HIP_AUTHORIZATION_HEADER      -> s"Basic ${config.authorizationToken}"
     )
 

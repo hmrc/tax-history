@@ -32,11 +32,21 @@ protected trait ConnectorCorrelationId extends Logging {
   def generateNewUUID: String = randomUUID.toString
 
   def getCorrelationId(hc: HeaderCarrier): String =
+    hc.requestId match {
+      case Some(requestId) =>
+        requestId.value match {
+          case CorrelationIdPattern(prefix) => prefix + "-" + generateNewUUID.substring(twentyFour)
+          case _                            => generateNewUUID
+        }
+      case _               => generateNewUUID
+    }
+
+  def getHIPCorrelationId(hc: HeaderCarrier): String =
     try {
       val candidateUUID = hc.requestId
         .map(_.value)
         .flatMap(rid => CorrelationIdPattern.findFirstMatchIn(rid).map(_.group(1)))
-        .map(prefix => s"$prefix-${generateNewUUID.substring(twentyFour)}")
+        .map(prefix => s"$prefix-${generateNewUUID.takeRight(12)}")
         .getOrElse(generateNewUUID)
       java.util.UUID.fromString(candidateUUID)
       candidateUUID
