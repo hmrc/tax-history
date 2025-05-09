@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxhistory.connectors
 
 import org.apache.pekko.actor.ActorSystem
+import play.api.http.Status.{NOT_FOUND, OK}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
@@ -24,7 +25,8 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.nps.HIPNpsEmployments.toListOfHIPNpsEmployment
-import uk.gov.hmrc.taxhistory.model.nps.{HIPNpsEmployment, HIPNpsEmployments, HipErrors, Iabd, NpsEmployment, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.model.nps.HIPNpsTaxAccount.toNpsTaxAccount
+import uk.gov.hmrc.taxhistory.model.nps._
 import uk.gov.hmrc.taxhistory.utils.Retry
 
 import javax.inject.{Inject, Singleton}
@@ -45,23 +47,26 @@ class DesNpsConnector @Inject() (
   val withRTIDESRetry: Retry = config.newRetryInstance("rti.des", system)
   val withHIPRetry: Retry    = config.newRetryInstance("nps.hip", system)
 
-  def iabdsUrl(nino: Nino, year: Int): String =
+  def iabdsUrl(nino: Nino, year: Int): String       =
     s"${config.npsDesBaseUrl}$servicePrefix/individuals/${nino.value}/iabds/tax-year/$year"
-
+  //TODO: remove taxAccountUrl
   def taxAccountUrl(nino: Nino, year: Int): String  =
     s"${config.npsDesBaseUrl}$servicePrefix/individuals/${nino.value}/tax-account/tax-year/$year"
-//TODO: remove employmentsUrl
+  //TODO: remove employmentsUrl
   def employmentsUrl(nino: Nino, year: Int): String =
     s"${config.npsDesBaseUrl}/individuals/${nino.value}/employment/$year"
 
   def employmentsHIPUrl(nino: Nino, year: Int): String =
     s"${config.hipBaseUrl}/employment/employee/${nino.value}/tax-year/$year/employment-details"
 
+  def taxAccountHIPUrl(nino: Nino, taxYear: Int): String =
+    s"${config.npsDesBaseUrl}/person/${nino.value}/tax-account/$taxYear"
+
   def buildHIPHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
     Seq(
-      config.hipServiceOriginatorIdKey -> config.hipServiceOriginatorId,
-      HIP_CORRELATION_HEADER           -> getCorrelationId(hc),
-      HIP_AUTHORIZATION_HEADER         -> s"Basic ${config.authorizationToken}"
+      config.serviceOriginatorIdKey -> config.serviceOriginatorIDValue,
+      HIP_CORRELATION_HEADER        -> getHIPCorrelationId(hc),
+      HIP_AUTHORIZATION_HEADER      -> s"Basic ${config.authorizationToken}"
     )
 
   def buildHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
@@ -95,31 +100,56 @@ class DesNpsConnector @Inject() (
 
   def getTaxAccount(nino: Nino, year: Int): Future[Option[NpsTaxAccount]] = {
     implicit val hc: HeaderCarrier = HeaderCarrier()
-    withMetrics(MetricsEnum.NPS_GET_TAX_ACCOUNT) {
-      withNPSDESRetry {
-        val fullURL = taxAccountUrl(nino, year)
-        http
-          .get(url"$fullURL")
-          .setHeader(buildHeaders: _*)
-          .execute[HttpResponse]
-          .map { response =>
-            response.status match {
-              case 404 =>
-                logger.warn(
-                  s"[DesNpsConnector][getTaxAccount] NPS getTaxAccount returned a 404 response: ${response.body}"
-                )
-                None
-              case 200 => response.json.asOpt[NpsTaxAccount]
-              case _   => throw UpstreamErrorResponse(response.body, response.status, response.status)
+    if (config.isUsingHIP) {
+      withMetrics(MetricsEnum.NPS_GET_TAX_ACCOUNT) {
+        withHIPRetry {
+          val fullURL = taxAccountHIPUrl(nino, year)
+          http
+            .get(url"$fullURL")
+            .setHeader(buildHIPHeaders: _*)
+            .execute[HttpResponse]
+            .map { response =>
+              response.status match {
+                case NOT_FOUND =>
+                  logger.warn(
+                    s"[DesNpsConnector][getTaxAccount] NPS getTaxAccount returned a 404 response: ${response.body}"
+                  )
+                  None
+                case OK        =>
+                  response.json.asOpt[HIPNpsTaxAccount].map(toNpsTaxAccount)
+                //TODO: Remove the match and toNpsTaxAccount
+                case _         => throw UpstreamErrorResponse(response.body, response.status, response.status)
+              }
             }
-          }
+        }
+      }
+    } else {
+      withMetrics(MetricsEnum.NPS_GET_TAX_ACCOUNT) {
+        withNPSDESRetry {
+          val fullURL = taxAccountUrl(nino, year)
+          http
+            .get(url"$fullURL")
+            .setHeader(buildHeaders: _*)
+            .execute[HttpResponse]
+            .map { response =>
+              response.status match {
+                case 404 =>
+                  logger.warn(
+                    s"[DesNpsConnector][getTaxAccount] NPS getTaxAccount returned a 404 response: ${response.body}"
+                  )
+                  None
+                case 200 => response.json.asOpt[NpsTaxAccount]
+                case _   => throw UpstreamErrorResponse(response.body, response.status, response.status)
+              }
+            }
+        }
       }
     }
   }
 
   def getEmployments(nino: Nino, year: Int): Future[List[NpsEmployment]] =
     if (config.isUsingHIP) {
-      //to be changed
+      //TODO: to be changed
       implicit val hc: HeaderCarrier = HeaderCarrier()
       withMetrics(MetricsEnum.NPS_GET_EMPLOYMENTS) {
         withHIPRetry {
@@ -130,19 +160,19 @@ class DesNpsConnector @Inject() (
             .execute[HttpResponse]
             .map { response =>
               response.status match {
-                case 404                                         =>
+                case NOT_FOUND                                  =>
                   logger.warn(
                     s"[DesNpsConnector][getEmployments] NPS getEmployments returned a 404 response: ${response.body}"
                   )
                   List.empty
-                case 200 if response.body.equalsIgnoreCase("{}") => List.empty
-                case 200                                         =>
+                case OK if response.body.equalsIgnoreCase("{}") => List.empty
+                case OK                                         =>
                   toListOfHIPNpsEmployment(response.json.as[HIPNpsEmployments])
                     .map[NpsEmployment](HIPNpsEmployment.toNpsEmployment)
                 //TODO:Remove .map as it maps to des NpsEmployment
-                case _                                           =>
+                case _                                          =>
                   throw UpstreamErrorResponse(
-                    response.json.validate[HipErrors].toString,
+                    response.body,
                     response.status,
                     response.status
                   )

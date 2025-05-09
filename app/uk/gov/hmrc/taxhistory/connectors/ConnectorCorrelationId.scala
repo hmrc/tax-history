@@ -40,4 +40,17 @@ protected trait ConnectorCorrelationId extends Logging {
         }
       case _               => generateNewUUID
     }
+
+  def getHIPCorrelationId(hc: HeaderCarrier): String =
+    try {
+      val candidateUUID = hc.requestId
+        .map(_.value)
+        .flatMap(rid => CorrelationIdPattern.findFirstMatchIn(rid).map(_.group(1)))
+        .map(prefix => s"$prefix-${generateNewUUID.takeRight(12)}")
+        .getOrElse(generateNewUUID)
+      java.util.UUID.fromString(candidateUUID)
+      candidateUUID
+    } catch {
+      case _: Exception => generateNewUUID
+    }
 }

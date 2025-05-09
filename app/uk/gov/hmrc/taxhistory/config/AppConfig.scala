@@ -39,11 +39,12 @@ class AppConfig @Inject() (config: ServicesConfig) {
   lazy val citizenDetailsBaseUrl: String = config.baseUrl("citizen-details")
   lazy val isUsingHIP: Boolean           = config.getBoolean("feature.isUsingHIP")
   lazy val hipBaseUrl: String            = config.baseUrl("nps.hip")
-  private val clientIdV1: String         = config.getString("microservice.services.nps.hip.clientId")
-  private val secretV1: String           = config.getString("microservice.services.nps.hip.secret")
-  def authorizationToken: String         = Base64.getEncoder.encodeToString(s"$clientIdV1:$secretV1".getBytes("UTF-8"))
-  val hipServiceOriginatorIdKey: String  = config.getString("microservice.services.nps.hip.originatoridkey")
-  val hipServiceOriginatorId: String     = config.getString("microservice.services.nps.hip.originatoridvalue")
+  private val clientId: String           = config.getString("microservice.services.nps.hip.clientId")
+  private val secret: String             = config.getString("microservice.services.nps.hip.secret")
+  def authorizationToken: String         =
+    Base64.getEncoder.encodeToString(s"$clientId:$secret".getBytes("UTF-8"))
+  val serviceOriginatorIdKey: String     = "gov-uk-originator-id"
+  val serviceOriginatorIDValue: String   = config.getString("microservice.services.nps.hip.originatoridvalue")
 
   def newRetryInstance(name: String, actorSystem: ActorSystem): Retry = {
     val times    = config.getInt(s"microservice.services.$name.retry.times")

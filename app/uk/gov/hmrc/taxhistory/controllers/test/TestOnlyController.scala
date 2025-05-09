@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxhistory.controllers
+package uk.gov.hmrc.taxhistory.controllers.test
 
 import org.mongodb.scala.model.Filters
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.taxhistory.controllers.TaxHistoryController
 import uk.gov.hmrc.taxhistory.services.TaxHistoryMongoCacheService
 
 import javax.inject.{Inject, Singleton}

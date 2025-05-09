@@ -49,7 +49,7 @@ class RtiConnectorSpec extends BaseConnectorSpec {
   lazy val testRtiDataAsObject: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
 
   "return new ID pre-appending the requestID when the requestID matches the format(8-4-4-4)" in {
-    val requestId  = "dcba0000-ij12-df34-jk56"
+    val requestId  = "123f4567-g89c-42c3-b456"
     val beginIndex = 24
     testRtiConnector.getCorrelationId(HeaderCarrier(requestId = Some(RequestId(requestId)))) shouldBe
       s"$requestId-${uuid.substring(beginIndex)}"
