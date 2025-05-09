@@ -115,10 +115,10 @@ class DesNpsConnector @Inject() (
                     s"[DesNpsConnector][getTaxAccount] NPS getTaxAccount returned a 404 response: ${response.body}"
                   )
                   None
-                case OK  =>
+                case OK        =>
                   response.json.asOpt[HIPNpsTaxAccount].map(toNpsTaxAccount)
                 //TODO: Remove the match and toNpsTaxAccount
-                case _   => throw UpstreamErrorResponse(response.body, response.status, response.status)
+                case _         => throw UpstreamErrorResponse(response.body, response.status, response.status)
               }
             }
         }
