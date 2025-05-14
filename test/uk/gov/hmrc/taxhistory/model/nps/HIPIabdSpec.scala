@@ -118,4 +118,10 @@ class HIPIabdSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
       }
     }
   }
+
+  "HIPIabdList" should {
+    "returen empty list when getListOfIabd is called with empty HIPIabdList" in {
+      Json.obj().as[HIPIabdList].getListOfIabd shouldBe List.empty
+    }
+  }
 }
