@@ -62,6 +62,9 @@ class DesNpsConnector @Inject() (
   def taxAccountHIPUrl(nino: Nino, taxYear: Int): String =
     s"${config.hipBaseUrl}/person/${nino.value}/tax-account/$taxYear"
 
+  def iabdsHIPUrl(nino: Nino, year: Int): String =
+    s"${config.hipBaseUrl}/paye/iabd/taxpayer/$nino/tax-year/$year"
+
   def buildHIPHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
     Seq(
       config.serviceOriginatorIdKey -> config.serviceOriginatorIDValue,
@@ -78,22 +81,43 @@ class DesNpsConnector @Inject() (
 
   def getIabds(nino: Nino, year: Int): Future[List[Iabd]] = {
     implicit val hc: HeaderCarrier = HeaderCarrier()
-    withMetrics(MetricsEnum.NPS_GET_IABDS) {
-      withRTIDESRetry {
-        val fullURL = iabdsUrl(nino, year)
-        http
-          .get(url"$fullURL")
-          .setHeader(buildHeaders: _*)
-          .execute[HttpResponse]
-          .map { response =>
-            response.status match {
-              case 404 =>
-                logger.warn(s"[DesNpsConnector][getIabds] NPS getIabds returned a 404 response: ${response.body}")
-                List.empty
-              case 200 => response.json.as[List[Iabd]]
-              case _   => throw UpstreamErrorResponse(response.body, response.status, response.status)
+    if (config.isUsingHIP) {
+      withMetrics(MetricsEnum.NPS_GET_IABDS) {
+        withHIPRetry {
+          val fullURL = iabdsHIPUrl(nino, year)
+          http
+            .get(url"$fullURL")
+            .setHeader(buildHIPHeaders: _*)
+            .execute[HttpResponse]
+            .map { response =>
+              response.status match {
+                case NOT_FOUND =>
+                  logger.warn(s"[DesNpsConnector][getIabds] NPS getIabds returned a 404 response: ${response.body}")
+                  List.empty
+                case OK        => response.json.as[HIPIabdList].getListOfIabd
+                case _         => throw UpstreamErrorResponse(response.body, response.status, response.status)
+              }
             }
-          }
+        }
+      }
+    } else {
+      withMetrics(MetricsEnum.NPS_GET_IABDS) {
+        withRTIDESRetry {
+          val fullURL = iabdsUrl(nino, year)
+          http
+            .get(url"$fullURL")
+            .setHeader(buildHeaders: _*)
+            .execute[HttpResponse]
+            .map { response =>
+              response.status match {
+                case 404 =>
+                  logger.warn(s"[DesNpsConnector][getIabds] NPS getIabds returned a 404 response: ${response.body}")
+                  List.empty
+                case 200 => response.json.as[List[Iabd]]
+                case _   => throw UpstreamErrorResponse(response.body, response.status, response.status)
+              }
+            }
+        }
       }
     }
   }
