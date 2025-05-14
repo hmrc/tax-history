@@ -37,10 +37,10 @@ class HIPIabdSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
        |        "type": "Total gift aid Payments (8)",
        |        "source": "FPS(RTI)",
        |        "grossAmount": $grossAmount,
-       |        "captureDate": "10/04/2017",
+       |        "captureDate": "10-04-2017",
        |        "netAmount": 100,
        |        "paymentFrequency": "4 WEEKLY",
-       |        "startDate": "23/02/2018"
+       |        "startDate": "23-02-2018"
        |
        |}
     """.stripMargin
@@ -55,7 +55,7 @@ class HIPIabdSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
       iabd.grossAmount      shouldBe Some(grossAmount)
       iabd.typeDescription  shouldBe Some("Total gift aid Payments")
       iabd.paymentFrequency shouldBe Some(1)
-      iabd.startDate        shouldBe Some("23/02/2018")
+      iabd.startDate        shouldBe Some("23-02-2018")
     }
 
     "handle paymentFrequency with a null value" in {
@@ -99,7 +99,7 @@ class HIPIabdSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
         "there a paymentFrequency of 1" in {
           val paymentFrequency  = 1
           val iabdNoPaymentFreq =
-            testIabd.copy(paymentFrequency = Some(paymentFrequency), startDate = Some("23/04/2018"))
+            testIabd.copy(paymentFrequency = Some(paymentFrequency), startDate = Some("23-04-2018"))
           val statePension      = iabdNoPaymentFreq.toStatePension
 
           statePension.paymentFrequency shouldBe Some(1)

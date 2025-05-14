@@ -102,7 +102,7 @@ case class HIPIabd(
     val paymentStartDate: Option[LocalDate] =
       paymentFrequency match {
         case Some(1)            => // Weekly
-          startDate.map(date => LocalDate.parse(date, DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+          startDate.map(date => LocalDate.parse(date, DateTimeFormatter.ofPattern("dd-MM-yyyy")))
         case Some(5)            => // Annual
           None
         case Some(unknownValue) =>
