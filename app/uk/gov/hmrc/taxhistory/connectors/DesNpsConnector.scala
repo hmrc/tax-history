@@ -57,10 +57,10 @@ class DesNpsConnector @Inject() (
     s"${config.npsDesBaseUrl}/individuals/${nino.value}/employment/$year"
 
   def employmentsHIPUrl(nino: Nino, year: Int): String =
-    s"${config.hipBaseUrl}/employment/employee/${nino.value}/tax-year/$year/employment-details"
+    s"${config.hipBaseUrl}/paye/employment/employee/${nino.value}/tax-year/$year/employment-details"
 
   def taxAccountHIPUrl(nino: Nino, taxYear: Int): String =
-    s"${config.hipBaseUrl}/person/${nino.value}/tax-account/$taxYear"
+    s"${config.hipBaseUrl}/paye/person/${nino.value}/tax-account/$taxYear"
 
   def buildHIPHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
     Seq(
