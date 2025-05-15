@@ -93,12 +93,12 @@ class HipConnectorSpec extends BaseConnectorSpec {
   "create the correct Hip url" when {
     "employment is read" in {
       testDesNpsConnector.employmentsHIPUrl(testNino, testYear) must be(
-        s"http://localhost:9998/employment/employee/$testNino/tax-year/$testYear/employment-details"
+        s"http://localhost:9998/paye/employment/employee/$testNino/tax-year/$testYear/employment-details"
       )
     }
     "taxAccount is read" in {
       testDesNpsConnector.taxAccountHIPUrl(testNino, testYear) must be(
-        s"http://localhost:9998/person/$testNino/tax-account/$testYear"
+        s"http://localhost:9998/paye/person/$testNino/tax-account/$testYear"
       )
     }
   }
