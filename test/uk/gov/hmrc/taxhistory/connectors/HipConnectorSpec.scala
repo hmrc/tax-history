@@ -48,7 +48,7 @@ class HipConnectorSpec extends BaseConnectorSpec {
     config = mockAppConfig,
     system = system
   )
-  lazy val DesNpsConnectorWithUUID: DesNpsConnector  = new DesNpsConnector(
+  lazy val desNpsConnectorWithUUID: DesNpsConnector  = new DesNpsConnector(
     http = mockHttpClient,
     metrics = mockMetrics,
     config = mockAppConfig,
@@ -64,26 +64,26 @@ class HipConnectorSpec extends BaseConnectorSpec {
     "requestID is present in the headerCarrier" should {
       "return new ID pre-appending the requestID when the requestID matches the format(8-4-4-4)" in {
         val requestId = "8c5d7809-0eec-4257-b4ad"
-        DesNpsConnectorWithUUID.getCorrelationId(HeaderCarrier(requestId = Some(RequestId(requestId)))) mustBe
+        desNpsConnectorWithUUID.getCorrelationId(HeaderCarrier(requestId = Some(RequestId(requestId)))) mustBe
           s"$requestId-${uuid.substring(24)}"
       }
 
       "return new ID when the requestID does not match the format(8-4-4-4)" in {
         val requestId = "1a2b-ij12-df34-jk56"
-        DesNpsConnectorWithUUID.getCorrelationId(HeaderCarrier(requestId = Some(RequestId(requestId)))) mustBe uuid
+        desNpsConnectorWithUUID.getCorrelationId(HeaderCarrier(requestId = Some(RequestId(requestId)))) mustBe uuid
       }
     }
 
     "requestID is not present in the headerCarrier should return a new ID" should {
       "return the uuid" in {
         val uuid: String = "123f4567-g89c-42c3-b456-557742330000"
-        DesNpsConnectorWithUUID.getCorrelationId(HeaderCarrier()) mustBe uuid
+        desNpsConnectorWithUUID.getCorrelationId(HeaderCarrier()) mustBe uuid
       }
     }
   }
 
   "create the correct hip headers" in {
-    val headers = DesNpsConnectorWithUUID.buildHIPHeaders(hc)
+    val headers = desNpsConnectorWithUUID.buildHIPHeaders(hc)
     headers mustBe List(
       ("gov-uk-originator-id", "MDTP-PAYE-TES-2"),
       ("correlationId", "123f4567-g89c-42c3-b456-557742330000"),
@@ -93,13 +93,13 @@ class HipConnectorSpec extends BaseConnectorSpec {
 
   "create the correct Hip url" when {
     "employment is read" in {
-      DesNpsConnectorWithUUID.employmentsHIPUrl(testNino, testYear) must be(
-        s"http://localhost:9998/employment/employee/$testNino/tax-year/$testYear/employment-details"
+      desNpsConnectorWithUUID.employmentsHIPUrl(testNino, testYear) must be(
+        s"http://localhost:9998/paye/employment/employee/$testNino/tax-year/$testYear/employment-details"
       )
     }
     "taxAccount is read" in {
-      DesNpsConnectorWithUUID.taxAccountHIPUrl(testNino, testYear) must be(
-        s"http://localhost:9998/person/$testNino/tax-account/$testYear"
+      desNpsConnectorWithUUID.taxAccountHIPUrl(testNino, testYear) must be(
+        s"http://localhost:9998/paye/person/$testNino/tax-account/$testYear"
       )
     }
   }
@@ -108,7 +108,7 @@ class HipConnectorSpec extends BaseConnectorSpec {
     "given a valid Nino and TaxYear" in {
       mockExecuteMethod(testHipNpsEmploymentAsString, OK)
 
-      val result = DesNpsConnectorWithUUID.getEmployments(testNino, testYear)
+      val result = desNpsConnectorWithUUID.getEmployments(testNino, testYear)
 
       await(result) mustBe testNpsEmployment
     }
@@ -116,7 +116,7 @@ class HipConnectorSpec extends BaseConnectorSpec {
     "return an empty list if the response from HIP is 404 (Not Found)" in {
       mockExecuteMethod(NOT_FOUND)
 
-      val result = DesNpsConnectorWithUUID.getEmployments(testNino, testYear)
+      val result = desNpsConnectorWithUUID.getEmployments(testNino, testYear)
 
       await(result) mustBe List.empty
     }
@@ -125,7 +125,7 @@ class HipConnectorSpec extends BaseConnectorSpec {
     "given a valid Nino and TaxYear" in {
       mockExecuteMethod(testHipTaxAccountResponseAsString, OK)
 
-      val result = DesNpsConnectorWithUUID.getTaxAccount(testNino, testYear)
+      val result = desNpsConnectorWithUUID.getTaxAccount(testNino, testYear)
 
       await(result) mustBe Some(testHipTaxAccount)
     }
@@ -133,7 +133,7 @@ class HipConnectorSpec extends BaseConnectorSpec {
     "return an empty list if the response from HIP is 404 (Not Found)" in {
       mockExecuteMethod(NOT_FOUND)
 
-      val result = DesNpsConnectorWithUUID.getTaxAccount(testNino, testYear)
+      val result = desNpsConnectorWithUUID.getTaxAccount(testNino, testYear)
 
       await(result) mustBe None
     }
@@ -142,7 +142,7 @@ class HipConnectorSpec extends BaseConnectorSpec {
     "given a valid Nino and TaxYear" in {
       mockExecuteMethod(testIabdResponseAsString, OK)
 
-      val result = DesNpsConnectorWithUUID.getIabds(testNino, testYear)
+      val result = desNpsConnectorWithUUID.getIabds(testNino, testYear)
 
       await(result) mustBe testIabd
     }
@@ -150,7 +150,7 @@ class HipConnectorSpec extends BaseConnectorSpec {
     "return an empty list if the response from HIP is 404 (Not Found)" in {
       mockExecuteMethod(NOT_FOUND)
 
-      val result = DesNpsConnectorWithUUID.getIabds(testNino, testYear)
+      val result = desNpsConnectorWithUUID.getIabds(testNino, testYear)
 
       await(result) mustBe List.empty
     }
