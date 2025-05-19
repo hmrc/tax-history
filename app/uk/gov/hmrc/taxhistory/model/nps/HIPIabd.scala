@@ -128,9 +128,9 @@ case class HIPIabd(
     grossAmount,
     typeDescription,
     source,
-    captureDate,
+    captureDate.map(x => x.replaceAll("-", "/")),
     paymentFrequency,
-    startDate
+    startDate.map(x => x.replaceAll("-", "/"))
   )
 }
 
