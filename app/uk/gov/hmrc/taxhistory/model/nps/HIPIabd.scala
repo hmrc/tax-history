@@ -78,12 +78,18 @@ object IabdSource {
     "TELEPHONE CALL",
     "HICBC PAYE"
   )
-  def getInt(sourceText: Option[String] = None): Option[Int] = sourceText.map(x => sources.indexOf(x) + 1)
+  def getInt(sourceText: Option[String] = None): Option[Int] = sourceText match {
+    case Some(x) if sources.contains(x) => Some(sources.indexOf(x) + 1)
+    case _                              => None
+  }
 }
 object IabdPaymentFrequency {
   private val paymentFrequencies: List[String]               =
-    List("4 WEEKLY", "ANNUALLY", "FORTNIGHTLY", "MONTHLY", "QUARTERLY", "WEEKLY")
-  def getInt(sourceText: Option[String] = None): Option[Int] = sourceText.map(x => paymentFrequencies.indexOf(x) + 1)
+    List("WEEKLY", "QUARTERLY", "MONTHLY", "FORTNIGHTLY", "ANNUALLY", "4 WEEKLY")
+  def getInt(sourceText: Option[String] = None): Option[Int] = sourceText match {
+    case Some(x) if paymentFrequencies.contains(x) => Some(paymentFrequencies.indexOf(x) + 1)
+    case _                                         => None
+  }
 }
 
 case class HIPIabd(
@@ -99,16 +105,18 @@ case class HIPIabd(
 ) extends Logging {
 
   def toStatePension: StatePension = {
+    val weeklyPaymentFrequency              = IabdPaymentFrequency.getInt(Some("WEEKLY"))
+    val annualPaymentFrequency              = IabdPaymentFrequency.getInt(Some("ANNUALLY"))
     val paymentStartDate: Option[LocalDate] =
       paymentFrequency match {
-        case Some(1)            => // Weekly
+        case `weeklyPaymentFrequency` =>
           startDate.map(date => LocalDate.parse(date, DateTimeFormatter.ofPattern("dd-MM-yyyy")))
-        case Some(5)            => // Annual
+        case `annualPaymentFrequency` =>
           None
-        case Some(unknownValue) =>
+        case Some(unknownValue)       =>
           logger.warn(s"[Iabd][toStatePension] Unknown value for IABD's 'paymentFrequency': $unknownValue")
           None
-        case _                  =>
+        case _                        =>
           None
       }
 
