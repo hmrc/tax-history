@@ -1,0 +1,86 @@
+{
+  "iabdDetails": [
+    {
+      "nationalInsuranceNumber": "AA000001A",
+      "iabdSequenceNumber": 456,
+      "taxYear": 2022,
+      "type": "Employment and Support Allowance (123)",
+      "grossAmount": 10.56,
+      "estimatedEmploymentSurplusAllowance": true,
+      "actualEmploymentSurplusAllowance": true
+    },
+    {
+      "nationalInsuranceNumber": "AA000001A",
+      "iabdSequenceNumber": 456,
+      "taxYear": 2022,
+      "type": "Entertaining (042)",
+      "source": "AGENT CONTACT",
+      "grossAmount": 10.56,
+      "receiptDate": "2022-06-27",
+      "captureDate": "2022-06-27",
+      "netAmount": 10.56,
+      "earlierYearsAdjustmentClaimDetails": [
+        {
+          "claimTaxYear": 2022,
+          "earlierYearSequenceNumber": 456,
+          "claimAmount": 10.56,
+          "earlierYearAdjustmentsTaxRate": 12,
+          "repaymentAmount": 10.56
+        }
+      ]
+    },
+    {
+      "nationalInsuranceNumber": "AA000001A",
+      "iabdSequenceNumber": 456,
+      "taxYear": 2022,
+      "type": "Married Couples Allowance to Wife (MAW) (097)",
+      "source": "AGENT CONTACT",
+      "grossAmount": 10.56,
+      "receiptDate": "2022-06-27",
+      "captureDate": "2022-06-27",
+      "surplusTransferredMarriageAllowance": true,
+      "allowanceCessationDate": "2022-06-27",
+      "blindPersonAllowanceRegDate": "2022-06-27",
+      "eldestChildDateOfBirth": "1999-01-01",
+      "marriageAllowanceToWife": "FULL",
+      "marriageAllowanceTransferEligible": true
+    },
+    {
+      "nationalInsuranceNumber": "AA000001A",
+      "iabdSequenceNumber": 456,
+      "taxYear": 2022,
+      "type": "Assets (039)",
+      "source": "P11D (ECS)",
+      "grossAmount": 10.56,
+      "receiptDate": "2022-06-27",
+      "captureDate": "2022-06-27",
+      "taxDeducted": 10.56,
+      "netAmount": 10.56,
+      "employmentSequenceNumber": 1
+    },
+    {
+      "nationalInsuranceNumber": "AA000001A",
+      "iabdSequenceNumber": 456,
+      "taxYear": 2022,
+      "type": "Employment and Support Allowance (123)",
+      "source": "575T",
+      "grossAmount": 10.56,
+      "captureDate": "2022-06-27",
+      "estimatedEmploymentSurplusAllowance": true,
+      "actualEmploymentSurplusAllowance": true
+    },
+    {
+      "nationalInsuranceNumber": "AA000001A",
+      "iabdSequenceNumber": 456,
+      "taxYear": 2022,
+      "type": "Child Benefit (124)",
+      "source": "P161",
+      "grossAmount": 10.56,
+      "childBenefitPeriodDetails": [
+        {
+          "childSequenceNumber": 1
+        }
+      ]
+    }
+  ]
+}
