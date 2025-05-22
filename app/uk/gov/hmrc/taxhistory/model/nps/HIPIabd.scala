@@ -151,7 +151,7 @@ object HIPIabd {
     }
     for {
       nino                     <- (js \ "nationalInsuranceNumber").validate[String]
-      employmentSequenceNumber <- (js \ "iabdSequenceNumber").validateOpt[Int]
+      employmentSequenceNumber <- (js \ "employmentSequenceNumber").validateOpt[Int]
       grossAmount              <- (js \ "grossAmount").validateOpt[BigDecimal]
       sourceText               <- (js \ "source").validateOpt[String]
       captureDate              <- (js \ "captureDate").validateOpt[String]
