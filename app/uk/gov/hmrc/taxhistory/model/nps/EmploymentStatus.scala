@@ -44,10 +44,10 @@ object EmploymentStatus {
       case "99"                => Reads(_ => JsSuccess(Unknown))
       case "6"                 => Reads(_ => JsSuccess(PermanentlyCeased))
       case "Live"              => Reads(_ => JsSuccess(Live))
-      case "PotentiallyCeased" => Reads(_ => JsSuccess(PotentiallyCeased))
+      case "Potentially Ceased" => Reads(_ => JsSuccess(PotentiallyCeased))
       case "Ceased"            => Reads(_ => JsSuccess(Ceased))
       case "Unknown"           => Reads(_ => JsSuccess(Unknown))
-      case "PermanentlyCeased" => Reads(_ => JsSuccess(PermanentlyCeased))
+      case "Permanently Ceased" => Reads(_ => JsSuccess(PermanentlyCeased))
       case _                   => Reads(_ => JsError(JsPath \ s"employmentStatus", JsonValidationError("Invalid EmploymentStatus")))
     }
 
