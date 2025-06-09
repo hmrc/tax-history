@@ -57,6 +57,22 @@ object JsonUtils {
     }
   )
 
+  lazy val hipnpsDateFormat: Format[LocalDate] = Format(
+    new Reads[LocalDate] {
+      val dateRegex: Regex                                   = """^(\d\d\d\d)-(\d\d)-(\d\d)$""".r
+      override def reads(json: JsValue): JsResult[LocalDate] = json match {
+        case JsString(dateRegex(y, m, d)) =>
+          JsSuccess(LocalDate.of(y.toInt, m.toInt, d.toInt))
+        case invalid                      => JsError(JsonValidationError(s"Invalid date format [yyyy-MM-dd]: $invalid"))
+      }
+    },
+    new Writes[LocalDate] {
+      val dateFormat: DateTimeFormatter             = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+      override def writes(date: LocalDate): JsValue =
+        JsString(date.format(dateFormat))
+    }
+  )
+
   lazy val npsDateFormat: Format[LocalDate] = Format(
     new Reads[LocalDate] {
       val dateRegex: Regex                                   = """^(\d\d)/(\d\d)/(\d\d\d\d)$""".r

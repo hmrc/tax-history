@@ -110,7 +110,7 @@ case class HIPIabd(
     val paymentStartDate: Option[LocalDate] =
       paymentFrequency match {
         case `weeklyPaymentFrequency` =>
-          startDate.map(date => LocalDate.parse(date, DateTimeFormatter.ofPattern("dd-MM-yyyy")))
+          startDate.map(date => LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-mm-dd")))
         case `annualPaymentFrequency` =>
           None
         case Some(unknownValue)       =>
@@ -136,9 +136,9 @@ case class HIPIabd(
     grossAmount,
     typeDescription,
     source,
-    captureDate.map(x => x.replaceAll("-", "/")),
+    captureDate,
     paymentFrequency,
-    startDate.map(x => x.replaceAll("-", "/"))
+    startDate
   )
 }
 
@@ -148,6 +148,11 @@ object HIPIabd {
     val (typeDescription, typeCode) = typeAndDescription.split("[(]") match {
       case Array(desc, code) => (Some(desc.trim), code.substring(0, code.indexOf(")")).toIntOption)
       case _                 => (None, None)
+    }
+    def dateFormating (date : String) = {
+      val localDate: LocalDate = LocalDate.parse(date)
+      val formatters = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+      localDate.format(formatters)
     }
     for {
       nino                     <- (js \ "nationalInsuranceNumber").validate[String]
@@ -164,9 +169,9 @@ object HIPIabd {
       employmentSequenceNumber = employmentSequenceNumber,
       grossAmount = grossAmount,
       source = IabdSource.getInt(sourceText),
-      captureDate = captureDate,
+      captureDate = captureDate.map(dateFormating),
       paymentFrequency = IabdPaymentFrequency.getInt(paymentFrequencyString),
-      startDate = startDate
+      startDate = startDate.map(dateFormating)
     )
   }
   implicit val writer: OWrites[HIPIabd] = Json.writes[HIPIabd]
