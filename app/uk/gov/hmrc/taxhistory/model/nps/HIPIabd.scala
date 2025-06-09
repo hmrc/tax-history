@@ -150,15 +150,18 @@ object HIPIabd extends Logging {
       case Array(desc, code) => (Some(desc.trim), code.substring(0, code.indexOf(")")).toIntOption)
       case _                 => (None, None)
     }
-    def formatDate(date: String) = {
-      val dateRegex: Regex = """\d\d\d\d-\d\d-\d\d""".r
+    def formatDate(date: Option[String]) = {
+      val dateRegex: Regex = """\d{4}-\d{2}-\d{2}""".r
       date match {
-        case dateRegex() => LocalDate.parse(date).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-        case _           => {logger.error(s"Invalid date format [yyyy-MM-dd]: $date")
-          ""
-        }
+        case Some(x) if dateRegex.matches(x) =>
+          try Some(LocalDate.parse(x).format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+          catch {
+            case _: Exception => None
+          }
+        case _                               =>
+          logger.error(s"Invalid date format [yyyy-MM-dd]: $date")
+          None
       }
-
     }
     for {
       nino                     <- (js \ "nationalInsuranceNumber").validate[String]
@@ -175,9 +178,9 @@ object HIPIabd extends Logging {
       employmentSequenceNumber = employmentSequenceNumber,
       grossAmount = grossAmount,
       source = IabdSource.getInt(sourceText),
-      captureDate = captureDate.map(formatDate),
+      captureDate = formatDate(captureDate),
       paymentFrequency = IabdPaymentFrequency.getInt(paymentFrequencyString),
-      startDate = startDate.map(formatDate)
+      startDate = formatDate(startDate)
     )
   }
   implicit val writer: OWrites[HIPIabd] = Json.writes[HIPIabd]
