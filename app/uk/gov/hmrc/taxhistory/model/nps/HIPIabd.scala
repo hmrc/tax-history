@@ -21,6 +21,7 @@ import play.api.libs.json.{JsValue, Json, OFormat, OWrites, Reads}
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import scala.util.matching.Regex
 
 object IabdSource {
   private val sources: List[String]                          = List(
@@ -110,7 +111,7 @@ case class HIPIabd(
     val paymentStartDate: Option[LocalDate] =
       paymentFrequency match {
         case `weeklyPaymentFrequency` =>
-          startDate.map(date => LocalDate.parse(date, DateTimeFormatter.ofPattern("dd-MM-yyyy")))
+          startDate.map(date => LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy/MM/dd")))
         case `annualPaymentFrequency` =>
           None
         case Some(unknownValue)       =>
@@ -136,18 +137,31 @@ case class HIPIabd(
     grossAmount,
     typeDescription,
     source,
-    captureDate.map(x => x.replaceAll("-", "/")),
+    captureDate,
     paymentFrequency,
-    startDate.map(x => x.replaceAll("-", "/"))
+    startDate
   )
 }
 
-object HIPIabd {
+object HIPIabd extends Logging {
   implicit val reader: Reads[HIPIabd]   = (js: JsValue) => {
     val typeAndDescription          = (js \ "type").as[String]
     val (typeDescription, typeCode) = typeAndDescription.split("[(]") match {
       case Array(desc, code) => (Some(desc.trim), code.substring(0, code.indexOf(")")).toIntOption)
       case _                 => (None, None)
+    }
+    def formatDate(date: Option[String]) = {
+      val dateRegex: Regex = """\d{4}-\d{2}-\d{2}""".r
+      date match {
+        case Some(x) if dateRegex.matches(x) =>
+          try Some(LocalDate.parse(x).format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+          catch {
+            case _: Exception => None
+          }
+        case _                               =>
+          logger.error(s"Invalid date format [yyyy-MM-dd]: $date")
+          None
+      }
     }
     for {
       nino                     <- (js \ "nationalInsuranceNumber").validate[String]
@@ -164,9 +178,9 @@ object HIPIabd {
       employmentSequenceNumber = employmentSequenceNumber,
       grossAmount = grossAmount,
       source = IabdSource.getInt(sourceText),
-      captureDate = captureDate,
+      captureDate = formatDate(captureDate),
       paymentFrequency = IabdPaymentFrequency.getInt(paymentFrequencyString),
-      startDate = startDate
+      startDate = formatDate(startDate)
     )
   }
   implicit val writer: OWrites[HIPIabd] = Json.writes[HIPIabd]

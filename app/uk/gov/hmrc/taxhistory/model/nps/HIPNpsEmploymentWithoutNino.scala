@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxhistory.model.nps
 
 import java.time.LocalDate
 import play.api.libs.json._
+import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
 
 case class HIPNpsEmploymentWithoutNino(
   sequenceNumber: Int,
@@ -55,8 +56,8 @@ object HIPNpsEmploymentWithoutNino {
       otherIncomeSourceIndicator   <- (js \ "otherIncomeSource").validate[Boolean]
       receivingOccupationalPension <- (js \ "activeOccupationalPension").validate[Boolean]
       employmentStatus             <- js.validate[EmploymentStatus]
-      startDate                    <- (js \ "startDate").validateOpt[LocalDate]
-      endDate                      <- (js \ "endDate").validateOpt[LocalDate]
+      startDate                    <- (js \ "startDate").validateOpt[LocalDate](JsonUtils.hipnpsDateFormat)
+      endDate                      <- (js \ "endDate").validateOpt[LocalDate](JsonUtils.hipnpsDateFormat)
       //employmentStatus with values Live =1, PotentiallyCeased=2, Ceased=3, PermanentlyCeased=6
     } yield HIPNpsEmploymentWithoutNino(
       sequenceNumber = sequenceNumber,

@@ -42,10 +42,10 @@ class HIPIabdSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
        |        "type": "Total gift aid Payments (8)",
        |        "source": "FPS(RTI)",
        |        "grossAmount": $grossAmount,
-       |        "captureDate": "10-04-2017",
+       |        "captureDate": "2017-04-10",
        |        "netAmount": 100,
        |        "paymentFrequency": "4 WEEKLY",
-       |        "startDate": "23-02-2018"
+       |        "startDate": "2018-02-23"
        |
        |}
     """.stripMargin
@@ -59,7 +59,7 @@ class HIPIabdSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
       iabd.grossAmount      shouldBe Some(grossAmount)
       iabd.typeDescription  shouldBe Some("Total gift aid Payments")
       iabd.paymentFrequency shouldBe Some(6)
-      iabd.startDate        shouldBe Some("23-02-2018")
+      iabd.startDate        shouldBe Some("23/02/2018")
     }
     "fail to parse HIPIabd when required field nino is missing" in {
       val invalidJson = Json.parse("""{ "type": "foo (8)" }""")
@@ -122,7 +122,7 @@ class HIPIabdSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
         "there a paymentFrequency of 1" in {
           val paymentFrequency  = 1
           val iabdNoPaymentFreq =
-            testIabd.copy(paymentFrequency = Some(paymentFrequency), startDate = Some("23-04-2018"))
+            testIabd.copy(paymentFrequency = Some(paymentFrequency), startDate = Some("2018/04/23"))
           val statePension      = iabdNoPaymentFreq.toStatePension
 
           statePension.paymentFrequency shouldBe Some(1)
@@ -132,7 +132,7 @@ class HIPIabdSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
         "there is a paymentFrequency of 1" in {
           val paymentFrequency  = 1
           val iabdNoPaymentFreq =
-            testIabd.copy(paymentFrequency = Some(paymentFrequency), startDate = Some("23-04-2018"))
+            testIabd.copy(paymentFrequency = Some(paymentFrequency), startDate = Some("2018/04/23"))
           val statePension      = iabdNoPaymentFreq.toStatePension
 
           statePension.paymentFrequency shouldBe Some(paymentFrequency)
