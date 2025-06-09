@@ -110,7 +110,7 @@ case class HIPIabd(
     val paymentStartDate: Option[LocalDate] =
       paymentFrequency match {
         case `weeklyPaymentFrequency` =>
-          startDate.map(date => LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-mm-dd")))
+          startDate.map(date => LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy/MM/dd")))
         case `annualPaymentFrequency` =>
           None
         case Some(unknownValue)       =>
@@ -149,9 +149,9 @@ object HIPIabd {
       case Array(desc, code) => (Some(desc.trim), code.substring(0, code.indexOf(")")).toIntOption)
       case _                 => (None, None)
     }
-    def dateFormating (date : String) = {
+    def dateFormating(date: String) = {
       val localDate: LocalDate = LocalDate.parse(date)
-      val formatters = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+      val formatters           = DateTimeFormatter.ofPattern("dd/MM/yyyy")
       localDate.format(formatters)
     }
     for {
