@@ -21,6 +21,7 @@ import play.api.libs.json.{JsValue, Json, OFormat, OWrites, Reads}
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import scala.util.matching.Regex
 
 object IabdSource {
   private val sources: List[String]                          = List(
@@ -142,17 +143,22 @@ case class HIPIabd(
   )
 }
 
-object HIPIabd {
+object HIPIabd extends Logging {
   implicit val reader: Reads[HIPIabd]   = (js: JsValue) => {
     val typeAndDescription          = (js \ "type").as[String]
     val (typeDescription, typeCode) = typeAndDescription.split("[(]") match {
       case Array(desc, code) => (Some(desc.trim), code.substring(0, code.indexOf(")")).toIntOption)
       case _                 => (None, None)
     }
-    def dateFormating(date: String) = {
-      val localDate: LocalDate = LocalDate.parse(date)
-      val formatters           = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-      localDate.format(formatters)
+    def formatDate(date: String) = {
+      val dateRegex: Regex = """^(\d\d\d\d)-(\d\d)-(\d\d)$""".r
+      date match {
+        case dateRegex() => LocalDate.parse(date).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+        case _           =>
+          logger.error(s"Invalid date format [yyyy-MM-dd]: $date")
+          ""
+      }
+
     }
     for {
       nino                     <- (js \ "nationalInsuranceNumber").validate[String]
@@ -169,9 +175,9 @@ object HIPIabd {
       employmentSequenceNumber = employmentSequenceNumber,
       grossAmount = grossAmount,
       source = IabdSource.getInt(sourceText),
-      captureDate = captureDate.map(dateFormating),
+      captureDate = captureDate.map(formatDate),
       paymentFrequency = IabdPaymentFrequency.getInt(paymentFrequencyString),
-      startDate = startDate.map(dateFormating)
+      startDate = startDate.map(formatDate)
     )
   }
   implicit val writer: OWrites[HIPIabd] = Json.writes[HIPIabd]
