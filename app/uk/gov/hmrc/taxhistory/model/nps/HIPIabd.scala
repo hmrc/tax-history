@@ -151,12 +151,12 @@ object HIPIabd extends Logging {
       case _                 => (None, None)
     }
     def formatDate(date: String) = {
-      val dateRegex: Regex = """^(\d\d\d\d)-(\d\d)-(\d\d)$""".r
+      val dateRegex: Regex = """\d\d\d\d-\d\d-\d\d""".r
       date match {
         case dateRegex() => LocalDate.parse(date).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-        case _           =>
-          logger.error(s"Invalid date format [yyyy-MM-dd]: $date")
+        case _           => {logger.error(s"Invalid date format [yyyy-MM-dd]: $date")
           ""
+        }
       }
 
     }
