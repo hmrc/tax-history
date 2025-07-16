@@ -35,8 +35,6 @@ case class HIPNpsEmploymentWithoutNino(
 ) {}
 
 object HIPNpsEmploymentWithoutNino {
-  private def withPadding(taxDistrictNumber: String): String =
-    taxDistrictNumber.reverse.padTo(3, '0').reverse.mkString
 
   implicit val reader: Reads[HIPNpsEmploymentWithoutNino]   = (js: JsValue) => {
     val employerReference = (js \ "employerReference").validate[String].getOrElse("")
@@ -44,7 +42,7 @@ object HIPNpsEmploymentWithoutNino {
     var taxDistrictNumber = ""
     var payeNumber        = ""
     if (employerReference.contains("/")) {
-      taxDistrictNumber = withPadding(employerReference.substring(0, employerReference.indexOf("/")))
+      taxDistrictNumber = employerReference.substring(0, employerReference.indexOf("/"))
       payeNumber = employerReference.substring(employerReference.indexOf("/") + 1)
     }
 //TODO: what if employerReference does not contain /

@@ -65,29 +65,6 @@ class NpsEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with
       employment.employmentStatus             shouldBe EmploymentStatus.Live
     }
 
-    "create an NpsEmployment with a 3 digit taxDistrictNumber when the Json response has a 2 digit taxDistrictNumber" in {
-      val employmentResponse: String =
-        """ {
-          |    "nino": "AA000000",
-          |    "sequenceNumber": 6,
-          |    "employmentStatus": 1,
-          |    "worksNumber": "00191048716",
-          |    "taxDistrictNumber": "46",
-          |    "payeNumber": "T2PP",
-          |    "employerName": "Aldi",
-          |    "receivingJobseekersAllowance" : true,
-          |    "otherIncomeSourceIndicator": true,
-          |    "receivingOccupationalPension": true,
-          |    "startDate": "21/01/2015",
-          |    "endDate": "08/01/2016"
-          |    }
-        """.stripMargin
-
-      val employment = Json.parse(employmentResponse).as[NpsEmployment]
-
-      employment.taxDistrictNumber shouldBe "046"
-    }
-
     "deserialise NPS Employment Response Json" when {
       "startDate is missing" in {
         val employmentNoStartDateJson: JsObject = Json.parse(employmentResponse).as[JsObject] - "startDate"

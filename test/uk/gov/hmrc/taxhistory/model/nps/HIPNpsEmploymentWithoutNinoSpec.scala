@@ -63,26 +63,6 @@ class HIPNpsEmploymentWithoutNinoSpec
       employment.employmentStatus             shouldBe EmploymentStatus.Live
     }
 
-    "create an NpsEmployment with a 3 digit taxDistrictNumber when the Json response has a 2 digit taxDistrictNumber" in {
-      val employmentResponse: String =
-        """ {
-          |  "payeSchemeOperatorName": "Scheme Y",
-          | "employerReference": "98/Z654321",
-          |"employmentSequenceNumber": 321,
-          |  "employmentStatus": "Live",
-          | "worksNumber": "12345",
-          |"otherIncomeSource": true,
-          |  "jobSeekersAllowance": true,
-          | "activeOccupationalPension": true,
-          |"startDate": "2015-01-21",
-          |"endDate": "2017-06-08"
-          |}
-        """.stripMargin
-      val employment                 = Json.parse(employmentResponse).as[HIPNpsEmploymentWithoutNino]
-
-      employment.taxDistrictNumber shouldBe "098"
-    }
-
     "deserialise HIPNpsEmploymentWithoutNino Response Json" when {
       "startDate is missing" in {
         val employmentNoStartDateJson: JsObject = Json.parse(employmentResponse).as[JsObject] - "startDate"
