@@ -149,6 +149,10 @@ object RtiEarlierYearUpdate {
 }
 
 object RtiEmployment {
+
+  private def withPadding(officeNumberWithoutPadding: String): String =
+    officeNumberWithoutPadding.reverse.padTo(3, '0').reverse.mkString
+
   implicit val reader: Reads[RtiEmployment]   = (js: JsValue) =>
     for {
       sequenceNo         <- (js \ "sequenceNumber").validate[Int]
@@ -160,7 +164,7 @@ object RtiEmployment {
     } yield RtiEmployment(
       sequenceNo = sequenceNo,
       payeRef = payeRef,
-      officeNumber = officeNumber,
+      officeNumber = withPadding(officeNumber),
       currentPayId = currentPayId,
       payments = payments.getOrElse(List.empty),
       earlierYearUpdates = earlierYearUpdates.getOrElse(Nil)
