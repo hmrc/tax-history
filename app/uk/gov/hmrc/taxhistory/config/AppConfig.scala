@@ -34,10 +34,8 @@ class AppConfig @Inject() (config: ServicesConfig) {
   lazy val desEnv: String        = config.getConfString("nps.des.env", "local")
   lazy val desAuth: String       = config.getConfString("nps.des.authorizationToken", "Local")
 
-  lazy val npsDesBaseUrl: String         = config.baseUrl("nps.des")
   lazy val rtiDesBaseUrl: String         = config.baseUrl("rti.des")
   lazy val citizenDetailsBaseUrl: String = config.baseUrl("citizen-details")
-  lazy val isUsingHIP: Boolean           = config.getBoolean("feature.isUsingHIP")
   lazy val hipBaseUrl: String            = config.baseUrl("nps.hip")
   private val clientId: String           = config.getString("microservice.services.nps.hip.clientId")
   private val secret: String             = config.getString("microservice.services.nps.hip.secret")

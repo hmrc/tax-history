@@ -102,7 +102,7 @@ class EmploymentHistoryServiceSpec
 
         val employments = testEmploymentHistoryService.getEmployments(Nino("AA000000A"), taxYear).futureValue
 
-        employments.head.employmentStatus shouldBe EmploymentStatus.Unknown
+        employments.head.employmentStatus shouldBe EmploymentStatus.PermanentlyCeased
         employments.head.startDate        shouldBe Some(taxYear.starts.withMonth(april).withDayOfMonth(dayOfMonth6))
         employments.head.endDate          shouldBe Some(taxYear.finishes.withMonth(january).withDayOfMonth(dayOfMonth20))
         employments                         should contain(testEmployment2)
@@ -386,7 +386,7 @@ class EmploymentHistoryServiceSpec
         val dayOfMonth20 = 20
 
         val employments = testEmploymentHistoryService.getEmployments(Nino("AA000000A"), taxYear).futureValue
-        employments.head.employmentStatus shouldBe EmploymentStatus.Unknown
+        employments.head.employmentStatus shouldBe EmploymentStatus.PermanentlyCeased
 
         employments.head.startDate shouldBe Some(taxYear.starts.withMonth(april).withDayOfMonth(dayOfMonth6))
         employments.head.endDate   shouldBe Some(taxYear.finishes.withMonth(january).withDayOfMonth(dayOfMonth20))
@@ -501,7 +501,7 @@ class EmploymentHistoryServiceSpec
     ".addFillers" should {
 
       def isNoRecordEmployment(employment: Employment): Boolean =
-        employment.employerName == "No record held" && employment.employmentStatus == EmploymentStatus.Unknown
+        employment.employerName == "No record held" && employment.employmentStatus == EmploymentStatus.PermanentlyCeased
 
       "return the original list when no employment gaps exist" in {
         val employments = List(liveOngoingEmployment)

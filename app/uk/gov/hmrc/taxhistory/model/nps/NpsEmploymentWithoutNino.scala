@@ -20,7 +20,7 @@ import java.time.LocalDate
 import play.api.libs.json._
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
 
-case class HIPNpsEmploymentWithoutNino(
+case class NpsEmploymentWithoutNino(
   sequenceNumber: Int,
   taxDistrictNumber: String,
   payeNumber: String,
@@ -34,20 +34,18 @@ case class HIPNpsEmploymentWithoutNino(
   employmentStatus: EmploymentStatus
 ) {}
 
-object HIPNpsEmploymentWithoutNino {
+object NpsEmploymentWithoutNino {
   private def withPadding(taxDistrictNumber: String): String =
     taxDistrictNumber.reverse.padTo(3, '0').reverse.mkString
 
-  implicit val reader: Reads[HIPNpsEmploymentWithoutNino]   = (js: JsValue) => {
+  implicit val reader: Reads[NpsEmploymentWithoutNino]   = (js: JsValue) => {
     val employerReference = (js \ "employerReference").validate[String].getOrElse("")
-    //check substring functions
     var taxDistrictNumber = ""
     var payeNumber        = ""
     if (employerReference.contains("/")) {
       taxDistrictNumber = withPadding(employerReference.substring(0, employerReference.indexOf("/")))
       payeNumber = employerReference.substring(employerReference.indexOf("/") + 1)
     }
-//TODO: what if employerReference does not contain /
     for {
       sequenceNumber               <- (js \ "employmentSequenceNumber").validate[Int]
       employerName                 <- (js \ "payeSchemeOperatorName").validate[String]
@@ -56,10 +54,10 @@ object HIPNpsEmploymentWithoutNino {
       otherIncomeSourceIndicator   <- (js \ "otherIncomeSource").validate[Boolean]
       receivingOccupationalPension <- (js \ "activeOccupationalPension").validate[Boolean]
       employmentStatus             <- js.validate[EmploymentStatus]
-      startDate                    <- (js \ "startDate").validateOpt[LocalDate](JsonUtils.hipnpsDateFormat)
-      endDate                      <- (js \ "endDate").validateOpt[LocalDate](JsonUtils.hipnpsDateFormat)
+      startDate                    <- (js \ "startDate").validateOpt[LocalDate](JsonUtils.npsDateFormat)
+      endDate                      <- (js \ "endDate").validateOpt[LocalDate](JsonUtils.npsDateFormat)
       //employmentStatus with values Live =1, PotentiallyCeased=2, Ceased=3, PermanentlyCeased=6
-    } yield HIPNpsEmploymentWithoutNino(
+    } yield NpsEmploymentWithoutNino(
       sequenceNumber = sequenceNumber,
       taxDistrictNumber = taxDistrictNumber,
       payeNumber = payeNumber,
@@ -73,5 +71,5 @@ object HIPNpsEmploymentWithoutNino {
       employmentStatus = employmentStatus
     )
   }
-  implicit val writer: OWrites[HIPNpsEmploymentWithoutNino] = Json.writes[HIPNpsEmploymentWithoutNino]
+  implicit val writer: OWrites[NpsEmploymentWithoutNino] = Json.writes[NpsEmploymentWithoutNino]
 }

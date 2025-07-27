@@ -1,13 +1,60 @@
-[{
-  "nino": "AA000000",
-  "sequenceNumber": 1,
-  "worksNumber": "6044041000000",
-  "taxDistrictNumber": "531",
-  "payeNumber": "J4816",
-  "employerName": "Aldi",
-  "receivingJobseekersAllowance" : false,
-  "otherIncomeSourceIndicator" : false,
-  "receivingOccupationalPension": false,
-  "startDate": "21/01/2015",
-  "employmentStatus":1
-}]
+{
+  "nationalInsuranceNumber": "AA000000",
+  "individualsEmploymentDetails": [
+    {
+      "payeSchemeOperatorName": "Scheme X",
+      "employerReference": "531/J4816",
+      "employmentIdentifier": "0010123456789",
+      "employmentSequenceNumber": 123,
+      "employmentRecordType": "PRIMARY",
+      "employmentStatus": "Live",
+      "jobTitle": "IT Consultant",
+      "worksNumber": "12345",
+      "startingTaxCode": "1257L",
+      "taxCodeOperation": "Cumulative",
+      "startTaxCodeOperation": "Cumulative",
+      "otherIncomeSource": true,
+      "payrolledCurrentYear": true,
+      "payrolledNextYear": true,
+      "jobSeekersAllowance": true,
+      "activeOccupationalPension": true,
+      "directorIdentifier": true,
+      "employerManualCorrespondence": true,
+      "p161Identifier": true,
+      "creationMediaType": "BACS",
+      "employmentRecordSourceType": "ECC",
+      "startDateSource": "ECC",
+      "startDate": "2000-01-02",
+      "cessationMediaType": "BACS",
+      "endDateSource": "ECC",
+      "endDate": "2023-06-27",
+      "cessationPayForEmployment": 15000.12,
+      "payrolledBenefitTaxYearCYList": {
+        "taxYear": 2023,
+        "payrolledBenefitDetailsList": [
+          {
+            "payrolledBenefitSequenceNumber": 1,
+            "iabdType": "Gift Aid Payments (001)",
+            "alreadyPayrolled": true,
+            "payrolledBenefitStartDate": "2023-02-07",
+            "payrolledBenefitEndDate": "2023-06-07",
+            "payrolledBenefitInKindStatus": "Invalid Payrolling Benefit In Kind (PBIK)"
+          }
+        ]
+      },
+      "payrolledBenefitTaxYearCY1List": {
+        "taxYear": 2024,
+        "payrolledBenefitDetailsList": [
+          {
+            "payrolledBenefitSequenceNumber": 1,
+            "iabdType": "Gift Aid Payments (001)",
+            "alreadyPayrolled": true,
+            "payrolledBenefitStartDate": "2023-02-07",
+            "payrolledBenefitEndDate": "2023-06-07",
+            "payrolledBenefitInKindStatus": "Invalid Payrolling Benefit In Kind (PBIK)"
+          }
+        ]
+      }
+    }
+  ]
+}
