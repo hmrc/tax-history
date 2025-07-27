@@ -61,22 +61,7 @@ trait TestUtil {
     if (TaxYear.taxYearFor(startYear) == taxYear) startYear else endYear
   }
 
-  val config: Map[String, Any]       = Map(
-    "appName"                                          -> "appName",
-    "mongoExpiry"                                      -> (60 * 30),
-    "desEnv"                                           -> "local",
-    "desAuth"                                          -> "local",
-    "mongoName"                                        -> "mongodb.name",
-    "npsDesBaseUrl"                                    -> "http://localhost:9998",
-    "rtiDesBaseUrl"                                    -> "http://localhost:9998",
-    "citizenDetailsBaseUrl"                            -> "citizen-details",
-    "microservice.services.nps.des.authorizationToken" -> "local",
-    "microservice.services.nps.des.env"                -> "local",
-    "microservice.services.rti.des.authorizationToken" -> "local",
-    "microservice.services.rti.des.env"                -> "local",
-    "feature.isUsingHIP"                               -> "false"
-  )
-  val configForHip: Map[String, Any] = Map(
+  val config: Map[String, Any] = Map(
     "appName"                                      -> "appName",
     "mongoExpiry"                                  -> (60 * 30),
     "desEnv"                                       -> "local",

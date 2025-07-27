@@ -16,11 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
-import play.api.Logging
 import play.api.libs.json._
-
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 sealed trait IabdType
 
@@ -144,43 +140,4 @@ object IabdType {
 
     def writes(iabdType: IabdType): JsNumber = JsNumber(IabdType.unapply(iabdType))
   }
-}
-
-case class Iabd(
-  nino: String,
-  employmentSequenceNumber: Option[Int] = None,
-  `type`: IabdType,
-  grossAmount: Option[BigDecimal] = None,
-  typeDescription: Option[String] = None,
-  source: Option[Int] = None,
-  captureDate: Option[String],
-  paymentFrequency: Option[Int] = None,
-  startDate: Option[String] = None
-) extends Logging {
-
-  def toStatePension: StatePension = {
-    val paymentStartDate: Option[LocalDate] =
-      paymentFrequency match {
-        case Some(1)            => // Weekly
-          startDate.map(date => LocalDate.parse(date, DateTimeFormatter.ofPattern("dd/MM/yyyy")))
-        case Some(5)            => // Annual
-          None
-        case Some(unknownValue) =>
-          logger.warn(s"[Iabd][toStatePension] Unknown value for IABD's 'paymentFrequency': $unknownValue")
-          None
-        case _                  =>
-          None
-      }
-
-    StatePension(
-      grossAmount = grossAmount.getOrElse(0.0),
-      typeDescription.getOrElse(""),
-      paymentFrequency = paymentFrequency,
-      startDate = paymentStartDate
-    )
-  }
-}
-
-object Iabd {
-  implicit val formats: OFormat[Iabd] = Json.format[Iabd]
 }

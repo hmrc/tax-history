@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxhistory.services
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.taxhistory.auditable.Auditable
-import uk.gov.hmrc.taxhistory.connectors.{DesNpsConnector, RtiConnector}
+import uk.gov.hmrc.taxhistory.connectors.{HipNpsConnector, RtiConnector}
 import uk.gov.hmrc.taxhistory.model.api.Employment._
 import uk.gov.hmrc.taxhistory.model.api.FillerState._
 import uk.gov.hmrc.taxhistory.model.api._
@@ -36,7 +36,7 @@ import scala.annotation.tailrec
 import scala.concurrent.{ExecutionContext, Future}
 
 class EmploymentHistoryService @Inject() (
-  val desNpsConnector: DesNpsConnector,
+  val desNpsConnector: HipNpsConnector,
   val rtiConnector: RtiConnector,
   val cacheService: PayeCacheService,
   val auditable: Auditable

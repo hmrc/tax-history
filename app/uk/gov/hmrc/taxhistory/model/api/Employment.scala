@@ -67,7 +67,8 @@ object Employment {
       payeReference = noRecord,
       employerName = noRecord,
       employmentPaymentType = None,
-      employmentStatus = EmploymentStatus.Unknown,
+      employmentStatus = EmploymentStatus.PotentiallyCeased,
+      //TODO: Please verify that this is correct
       worksNumber = noRecord
     )
   }

@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
-import java.time.LocalDate
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -27,27 +26,24 @@ import uk.gov.hmrc.taxhistory.model.api.IncomeSource
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 
+import java.time.LocalDate
+
 class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with DateUtils {
+  lazy val getHipTaxAccountResponseURLDummy: JsValue = loadFile("/json/nps/response/HIPGetTaxAccount.json")
 
-  lazy val getTaxAcoountResponseURLDummy: JsValue = loadFile("/json/nps/response/GetTaxAccount.json")
-
-  private val primaryEmploymentId              = 12
-  private val actualPupCodedInCYPlusOne        = 240
-  private val outStandingDebt                  = 145.75
-  private val underPayment                     = 15423.29
+  private val primaryEmploymentId              = 1
+  private val actualPupCodedInCYPlusOne        = 99999.98
   private val sequenceNumberInt                = 6
-  private val taDeductionType                  = 32
-  private val taAllowanceType                  = 11
-  private val taAllowanceSourceAmount          = 11500
+  private val taDeductionType                  = 15
+  private val taAllowanceType                  = 8
   private val testNpsIncomeSourceEmpId         = 6
   private val testNpsIncomeSourceEmpTDN        = 961
   private val testNpsIncomeSourceEmpType       = 23
   private val testNpsIncomeBasisOperation      = 64
-  private val incomeSource1DeserialisedEmpId   = 12
+  private val incomeSource1DeserialisedEmpId   = 1
   private val incomeSource1DeserialisedEmpType = 1
-  private val incomeSource1DeserialisedEmpTDN  = 961
-
-  private val taxAccount = getTaxAcoountResponseURLDummy.as[NpsTaxAccount](NpsTaxAccount.formats)
+  private val incomeSource1DeserialisedEmpTDN  = 111
+  private val taxAccount: NpsTaxAccount        = getHipTaxAccountResponseURLDummy.as[NpsTaxAccount]
 
   private val testNpsEmployment = NpsEmployment(
     nino = "AA000000",
@@ -62,19 +58,19 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
   )
 
   private val testDeductions      = List(
-    TaDeduction(
+    AllowanceOrDeduction(
       `type` = taDeductionType,
-      npsDescription = "savings income taxable at higher rate",
-      amount = BigDecimal("38625"),
-      sourceAmount = Some(0)
+      npsDescription = "balancing charge",
+      amount = BigDecimal("212"),
+      sourceAmount = Some(212)
     )
   )
   private val testAllowances      = List(
-    TaAllowance(
+    AllowanceOrDeduction(
       `type` = taAllowanceType,
-      npsDescription = "personal allowance",
+      npsDescription = "loan interest",
       amount = BigDecimal("11500"),
-      sourceAmount = Some(taAllowanceSourceAmount)
+      sourceAmount = Some(0)
     )
   )
   private val testNpsIncomeSource = NpsIncomeSource(
@@ -94,21 +90,21 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
       taxAccount                              shouldBe a[NpsTaxAccount]
       taxAccount.getPrimaryEmploymentId       shouldBe Some(primaryEmploymentId)
       taxAccount.getActualPupCodedInCYPlusOne shouldBe Some(actualPupCodedInCYPlusOne)
-      taxAccount.getOutStandingDebt           shouldBe Some(outStandingDebt)
-      taxAccount.getUnderPayment              shouldBe Some(underPayment)
+      taxAccount.getOutStandingDebt           shouldBe None
+      taxAccount.getUnderPayment              shouldBe None
     }
 
     "deserialising the 'incomeSources' field" should {
       val incomeSource1Deserialised = NpsIncomeSource(
         employmentId = incomeSource1DeserialisedEmpId,
         employmentType = Some(incomeSource1DeserialisedEmpType),
-        actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal("240")),
+        actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal("99999.98")),
         deductions = testDeductions,
         allowances = testAllowances,
-        taxCode = Some("K7757"),
-        basisOperation = None,
+        taxCode = Some("K20"),
+        basisOperation = Some(1),
         employmentTaxDistrictNumber = Some(incomeSource1DeserialisedEmpTDN),
-        employmentPayeRef = Some("AZ00010")
+        employmentPayeRef = Some("A11111")
       )
       val incomeSourcesDeserialised = List(incomeSource1Deserialised)
 
@@ -132,14 +128,15 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
         """.stripMargin)
 
       "deserialise from an empty json array" in {
-        val jsonIncomeSourcesMissing = getTaxAcoountResponseURLDummy.as[JsObject] + ("incomeSources" -> JsArray())
-        fromJson[NpsTaxAccount](jsonIncomeSourcesMissing).get.incomeSources shouldBe empty
+        val jsonIncomeSourcesMissing = getHipTaxAccountResponseURLDummy.as[JsObject] + ("incomeSources" -> JsArray())
+        fromJson[NpsTaxAccount](jsonIncomeSourcesMissing).get.employmentDetailsList shouldBe empty
       }
 
       "deserialise from a non-empty json array of allowances" in {
         val jsonIncomeSourcesPresent =
-          getTaxAcoountResponseURLDummy.as[JsObject] + ("incomeSources"           -> incomeSourcesSerialised)
-        fromJson[NpsTaxAccount](jsonIncomeSourcesPresent).get.incomeSources shouldBe incomeSourcesDeserialised
+          getHipTaxAccountResponseURLDummy.as[JsObject] + ("incomeSources" -> incomeSourcesSerialised)
+        fromJson[NpsTaxAccount](jsonIncomeSourcesPresent).get.employmentDetailsList
+          .take(1)                                                   shouldBe incomeSourcesDeserialised
       }
 
       "deserialise when 'employmentType' contains a null value (ASA-265)" in {
@@ -181,7 +178,7 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
         val npsEmployment  = NpsEmployment(
           "AA000000",
           sequenceNumber,
-          "999",
+          "111",
           "AZ00010",
           "Aldi",
           Some("6044041000000"),
@@ -197,12 +194,12 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
       }
 
       "return a single income source when income sources match the employment" in {
-        val targetEmploymentId = 6
+        val targetEmploymentId = 1
         val npsEmployment      = NpsEmployment(
           "AA000000",
           targetEmploymentId,
-          "961",
-          "AZ00010",
+          "111",
+          "A11111",
           "Aldi",
           Some("6044041000000"),
           receivingJobSeekersAllowance = false,
@@ -290,7 +287,7 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
     "getOutStandingDebt is called" should {
       val employmentTypePrimaryIncome  = 1
       val deductionTypeOutstandingDebt = 41
-      val deductionWithOutstandingDebt = TaDeduction(
+      val deductionWithOutstandingDebt = AllowanceOrDeduction(
         `type` = deductionTypeOutstandingDebt,
         npsDescription = "desc",
         amount = BigDecimal("123"),
@@ -323,7 +320,7 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
     "getUnderPayment is called" should {
       val employmentTypePrimaryIncome     = 1
       val deductionTypeUnderpaymentAmount = 35
-      val deductionWithUnderpayment       = TaDeduction(
+      val deductionWithUnderpayment       = AllowanceOrDeduction(
         `type` = deductionTypeUnderpaymentAmount,
         npsDescription = "desc",
         amount = BigDecimal("123"),

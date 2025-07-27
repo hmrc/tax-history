@@ -24,7 +24,7 @@ import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 
 import java.time.LocalDate
 
-class HIPNpsEmploymentWithoutNinoSpec
+class NpsEmploymentWithoutNinoSpec
     extends TestUtil
     with AnyWordSpecLike
     with Matchers
@@ -48,8 +48,8 @@ class HIPNpsEmploymentWithoutNinoSpec
 
   "HIPNpsEmploymentWithoutNino" should {
     "transform Nps Employment Response Json correctly to Employment Model " in {
-      val employment = Json.parse(employmentResponse).as[HIPNpsEmploymentWithoutNino]
-      employment                              shouldBe a[HIPNpsEmploymentWithoutNino]
+      val employment = Json.parse(employmentResponse).as[NpsEmploymentWithoutNino]
+      employment                              shouldBe a[NpsEmploymentWithoutNino]
       employment.sequenceNumber               shouldBe 321
       employment.worksNumber                  shouldBe Some("12345")
       employment.taxDistrictNumber            shouldBe "987"
@@ -78,7 +78,7 @@ class HIPNpsEmploymentWithoutNinoSpec
           |"endDate": "2017-06-08"
           |}
         """.stripMargin
-      val employment                 = Json.parse(employmentResponse).as[HIPNpsEmploymentWithoutNino]
+      val employment                 = Json.parse(employmentResponse).as[NpsEmploymentWithoutNino]
 
       employment.taxDistrictNumber shouldBe "098"
     }
@@ -86,20 +86,20 @@ class HIPNpsEmploymentWithoutNinoSpec
     "deserialise HIPNpsEmploymentWithoutNino Response Json" when {
       "startDate is missing" in {
         val employmentNoStartDateJson: JsObject = Json.parse(employmentResponse).as[JsObject] - "startDate"
-        val deserialised                        = employmentNoStartDateJson.as[HIPNpsEmploymentWithoutNino]
+        val deserialised                        = employmentNoStartDateJson.as[NpsEmploymentWithoutNino]
         deserialised.startDate shouldBe None
       }
       "startDate is null" in {
         val employmentNullStartDateJson: JsObject =
           Json.parse(employmentResponse).as[JsObject] + ("startDate" -> JsNull)
-        val deserialised = employmentNullStartDateJson.as[HIPNpsEmploymentWithoutNino]
+        val deserialised = employmentNullStartDateJson.as[NpsEmploymentWithoutNino]
         deserialised.startDate shouldBe None
       }
     }
 
     "Multiple HIPNpsEmploymentWithoutNino Json" should {
       "transform List of NpsEmployment Model " in {
-        noException shouldBe thrownBy(employmentsResponse.as[List[HIPNpsEmploymentWithoutNino]])
+        noException shouldBe thrownBy(employmentsResponse.as[List[NpsEmploymentWithoutNino]])
       }
     }
   }

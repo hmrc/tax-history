@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxhistory.model.api
+package uk.gov.hmrc.taxhistory.model.nps
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.taxhistory.model.nps.AllowanceOrDeduction
+case class NpsEmployments(
+  nationalInsuranceNumber: String,
+  individualsEmploymentDetails: List[NpsEmploymentWithoutNino]
+) {
+  def toListOfNpsEmployment: List[NpsEmployment] =
+    individualsEmploymentDetails.map(NpsEmployment(nationalInsuranceNumber))
+}
 
-case class IncomeSource(
-  employmentId: Int,
-  employmentType: Int,
-  actualPUPCodedInCYPlusOneTaxYear: Option[BigDecimal],
-  deductions: List[AllowanceOrDeduction],
-  allowances: List[AllowanceOrDeduction],
-  taxCode: String,
-  basisOperation: Option[Int],
-  employmentTaxDistrictNumber: Int,
-  employmentPayeRef: String
-)
-
-object IncomeSource {
-  implicit val formats: OFormat[IncomeSource] = Json.format[IncomeSource]
+object NpsEmployments {
+  implicit val formats: OFormat[NpsEmployments] = Json.format[NpsEmployments]
 }

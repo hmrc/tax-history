@@ -20,29 +20,26 @@ import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json._
-import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.{Ceased, Live, PermanentlyCeased, PotentiallyCeased, Unknown}
+import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.{Ceased, Live, PermanentlyCeased, PotentiallyCeased}
 
 class EmploymentStatusSpec extends AnyWordSpec with Matchers with OptionValues {
 
   "EmploymentStatus" must {
     "read and write json successfully" in {
-      EmploymentStatus.jsonReads.reads(EmploymentStatus.jsonWrites.writes(EmploymentStatus.Live))    shouldBe JsSuccess(
+      EmploymentStatus.jsonReads.reads(EmploymentStatus.jsonWrites.writes(EmploymentStatus.Live))   shouldBe JsSuccess(
         Live
       )
       EmploymentStatus.jsonReads.reads(
         EmploymentStatus.jsonWrites.writes(EmploymentStatus.PermanentlyCeased)
-      )                                                                                              shouldBe JsSuccess(
+      )                                                                                             shouldBe JsSuccess(
         PermanentlyCeased
       )
-      EmploymentStatus.jsonReads.reads(EmploymentStatus.jsonWrites.writes(EmploymentStatus.Ceased))  shouldBe JsSuccess(
+      EmploymentStatus.jsonReads.reads(EmploymentStatus.jsonWrites.writes(EmploymentStatus.Ceased)) shouldBe JsSuccess(
         Ceased
       )
       EmploymentStatus.jsonReads.reads(
         EmploymentStatus.jsonWrites.writes(EmploymentStatus.PotentiallyCeased)
-      )                                                                                              shouldBe JsSuccess(PotentiallyCeased)
-      EmploymentStatus.jsonReads.reads(EmploymentStatus.jsonWrites.writes(EmploymentStatus.Unknown)) shouldBe JsSuccess(
-        Unknown
-      )
+      )                                                                                             shouldBe JsSuccess(PotentiallyCeased)
     }
     "read the json correctly" in {
       EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Live")) shouldBe JsSuccess(Live)
@@ -52,9 +49,6 @@ class EmploymentStatusSpec extends AnyWordSpec with Matchers with OptionValues {
       EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Ceased")) shouldBe JsSuccess(Ceased)
       EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Permanently Ceased")) shouldBe JsSuccess(
         PermanentlyCeased
-      )
-      EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Unknown")) shouldBe JsSuccess(
-        Unknown
       )
     }
 
