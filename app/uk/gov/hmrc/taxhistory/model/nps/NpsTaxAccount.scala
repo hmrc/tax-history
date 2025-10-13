@@ -101,7 +101,9 @@ case class NpsTaxAccount(incomeSources: List[NpsIncomeSource]) {
   def matchedIncomeSource(npsEmployment: NpsEmployment): Option[IncomeSource] = {
     val iSs = incomeSources.filter { iS =>
       val taxDistrictNumMatches =
-        npsEmployment.taxDistrictNumber.toIntOption.exists(_ == iS.employmentTaxDistrictNumber.getOrElse(-1))
+        iS.employmentTaxDistrictNumber.exists { empNum =>
+          npsEmployment.taxDistrictNumber.toIntOption.contains(empNum)
+        }
       val payeRefMatches        = iS.employmentPayeRef.contains(npsEmployment.payeNumber)
       taxDistrictNumMatches && payeRefMatches
     }
