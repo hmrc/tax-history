@@ -252,7 +252,7 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
           ).matchedIncomeSource(npsEmployment) shouldBe None
         }
 
-      "match employmentTaxDistrictNumber even if NpsEmployment taxDistrictNumber is zero-padded" in {
+      "match employmentTaxDistrictNumber even if NpsEmployment taxDistrictNumber is zero-padded string" in {
         val incomeSource  = NpsIncomeSource(
           employmentId = 1,
           employmentType = Some(1),
