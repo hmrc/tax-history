@@ -251,6 +251,33 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
             )
           ).matchedIncomeSource(npsEmployment) shouldBe None
         }
+
+      "match employmentTaxDistrictNumber even if NpsEmployment taxDistrictNumber is zero-padded string" in {
+        val incomeSource  = NpsIncomeSource(
+          employmentId = 1,
+          employmentType = Some(1),
+          actualPUPCodedInCYPlusOneTaxYear = None,
+          deductions = Nil,
+          allowances = Nil,
+          taxCode = Some("123L"),
+          basisOperation = None,
+          employmentTaxDistrictNumber = Some(80),
+          employmentPayeRef = Some("AB123")
+        )
+        val taxAccount    = NpsTaxAccount(List(incomeSource))
+        val npsEmployment = NpsEmployment(
+          nino = "AA000000",
+          sequenceNumber = 1,
+          taxDistrictNumber = "080", // zero-padded
+          payeNumber = "AB123",
+          employerName = "Test",
+          worksNumber = None,
+          startDate = None,
+          endDate = None,
+          employmentStatus = EmploymentStatus.Live
+        )
+        taxAccount.matchedIncomeSource(npsEmployment) shouldBe defined
+      }
     }
 
     "getPrimaryEmploymentId is called" should {
