@@ -144,7 +144,8 @@ class DesNpsConnector @Inject() (
                   response.json.validate[HIPNpsTaxAccount] match {
                     case JsSuccess(value, _) => Some(toNpsTaxAccount(value))
                     case JsError(errors)     =>
-                      logger.warn(s"Failed to parse HIPNpsTaxAccount: $errors")
+                      logger.warn(s"[DesNpsConnector][getTaxAccount] Failed to parse HIPNpsTaxAccount: $errors")
+                      None
                   }
                 //TODO: Remove the match and toNpsTaxAccount
                 case _         => throw UpstreamErrorResponse(response.body, response.status, response.status)
