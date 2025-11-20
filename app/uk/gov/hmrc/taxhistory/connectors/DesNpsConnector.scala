@@ -199,7 +199,6 @@ class DesNpsConnector @Inject() (
                 case OK                                         =>
                   toListOfHIPNpsEmployment(response.json.as[HIPNpsEmployments])
                     .map[NpsEmployment](HIPNpsEmployment.toNpsEmployment)
-
                 //TODO:Remove .map as it maps to des NpsEmployment
                 case _ =>
                   throw UpstreamErrorResponse(
