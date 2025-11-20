@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxhistory.connectors
 
 import org.apache.pekko.actor.ActorSystem
 import play.api.http.Status.{NOT_FOUND, OK}
+import play.api.libs.json.{JsError, JsSuccess}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
@@ -140,7 +141,11 @@ class DesNpsConnector @Inject() (
                   )
                   None
                 case OK        =>
-                  response.json.asOpt[HIPNpsTaxAccount].map(toNpsTaxAccount)
+                  response.json.validate[HIPNpsTaxAccount] match {
+                    case JsSuccess(value, _) => Some(toNpsTaxAccount(value))
+                    case JsError(errors)     =>
+                      logger.warn(s"Failed to parse HIPNpsTaxAccount: $errors")
+                  }
                 //TODO: Remove the match and toNpsTaxAccount
                 case _         => throw UpstreamErrorResponse(response.body, response.status, response.status)
               }
@@ -193,8 +198,9 @@ class DesNpsConnector @Inject() (
                 case OK                                         =>
                   toListOfHIPNpsEmployment(response.json.as[HIPNpsEmployments])
                     .map[NpsEmployment](HIPNpsEmployment.toNpsEmployment)
+
                 //TODO:Remove .map as it maps to des NpsEmployment
-                case _                                          =>
+                case _ =>
                   throw UpstreamErrorResponse(
                     response.body,
                     response.status,

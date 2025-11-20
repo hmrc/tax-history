@@ -104,15 +104,15 @@ object HIPNpsIncomeSource {
     for {
       employmentId                     <- (js \ "employmentSequenceNumber").validate[Int]
       actualPUPCodedInCYPlusOneTaxYear <- (js \ "actualPUPCodedInNextYear").validateOpt[BigDecimal]
-      deductions                       <- (js \ "deductionsDetails").validate[List[AllowanceOrDeduction]]
-      allowances                       <- (js \ "allowancesDetails").validate[List[AllowanceOrDeduction]]
+      deductionsOpt                    <- (js \ "deductionsDetails").validateOpt[List[AllowanceOrDeduction]]
+      allowancesOpt                    <- (js \ "allowancesDetails").validateOpt[List[AllowanceOrDeduction]]
       taxCode                          <- (js \ "taxCode").validateOpt[String]
     } yield HIPNpsIncomeSource(
       employmentId = employmentId,
       employmentType = employmentType,
       actualPUPCodedInCYPlusOneTaxYear = actualPUPCodedInCYPlusOneTaxYear,
-      deductions = deductions,
-      allowances = allowances,
+      deductions = deductionsOpt.getOrElse(List.empty),
+      allowances = allowancesOpt.getOrElse(List.empty),
       taxCode = taxCode,
       basisOperation = basisOperation,
       employmentTaxDistrictNumber = employmentTaxDistrictNumber,
