@@ -109,22 +109,22 @@ class HIPNpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers w
       val incomeSourcesDeserialised = List(incomeSource1Deserialised)
 
       val incomeSourcesSerialised = Json.parse(s"""
-           | [
-           |   {
-           |     "employmentId":12,
-           |     "employmentType":1,
-           |     "actualPUPCodedInCYPlusOneTaxYear":240,
-           |     "deductions":[
-           |       {"type":32,"npsDescription":"savings income taxable at higher rate","amount":38625,"sourceAmount":0}
-           |     ],
-           |     "allowances":[
-           |       {"type":11,"npsDescription":"personal allowance","amount":11500,"sourceAmount":11500}
-           |     ],
-           |     "taxCode":"K7757",
-           |     "employmentTaxDistrictNumber":961,
-           |     "employmentPayeRef":"AZ00010"
-           |   }
-           | ]
+            [
+              {
+                "employmentId":12,
+                "employmentType":1,
+                "actualPUPCodedInCYPlusOneTaxYear":240,
+                "deductions":[
+                  {"type":32,"npsDescription":"savings income taxable at higher rate","amount":38625,"sourceAmount":0}
+                ],
+                "allowances":[
+                  {"type":11,"npsDescription":"personal allowance","amount":11500,"sourceAmount":11500}
+                ],
+                "taxCode":"K7757",
+                "employmentTaxDistrictNumber":961,
+                "employmentPayeRef":"AZ00010"
+              }
+            ]
         """.stripMargin)
 
       "deserialise from an empty json array" in {
@@ -170,6 +170,53 @@ class HIPNpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers w
         jsResult             shouldBe a[JsSuccess[_]]
         jsResult.get.taxCode shouldBe Some(unusualTaxCode)
       }
+
+      "handle missing deductionsDetails and allowancesDetails" should {
+
+        "tolerate a missing deductionsDetails field and default to empty list" in {
+
+          val json = Json.parse(
+            """ {  "employmentDetailsList": [  {  "employmentSequenceNumber": 9,  "employmentRecordType": "PRIMARY",  "employerReference": "961/A11111",  "allowancesDetails": [  {  "sourceAmount": 12570,  "adjustedAmount": 12570,  "type": "personal allowance (011)",  "summaryIABDDetailsList": [  { "amount": 12570, "type": "Personal Allowance (PA) (118)" }  ]  }  ],  "payAndTax": { "totalIncomeDetails": { "amount": 41052 } }  }  ] } """.stripMargin
+          )
+
+          val account = json.as[HIPNpsTaxAccount]
+          account.incomeSources                   should not be empty
+          account.incomeSources.head.deductions shouldBe empty
+          account.incomeSources.head.allowances   should not be empty
+        }
+
+        "tolerate a missing allowancesDetails field and default to empty list" in {
+
+          val json = Json.parse(
+            """ {  "employmentDetailsList": [  {  "employmentSequenceNumber": 9,  "employmentRecordType": "PRIMARY",  "employerReference": "961/A11111",  "deductionsDetails": [  { "type": 32, "npsDescription": "desc", "adjustedAmount": 12570, "sourceAmount": 12570 }  ],  "payAndTax": { "totalIncomeDetails": { "amount": 41052 } }  }  ] } """.stripMargin
+          )
+
+          val account = json.as[HIPNpsTaxAccount]
+          account.incomeSources                   should not be empty
+          account.incomeSources.head.allowances shouldBe empty
+          account.incomeSources.head.deductions   should not be empty
+        }
+
+        "tolerate both deductionsDetails and allowancesDetails missing and default both to empty lists" in {
+
+          val json = Json.parse(
+            """ {  "employmentDetailsList": [  {  "employmentSequenceNumber": 9,  "employmentRecordType": "PRIMARY",  "employerReference": "961/A11111",  "payAndTax": { "totalIncomeDetails": { "amount": 41052 } }  }  ] } """.stripMargin
+          )
+
+          val account = json.as[HIPNpsTaxAccount]
+          account.incomeSources.head.deductions shouldBe empty
+          account.incomeSources.head.allowances shouldBe empty
+        }
+
+        "parse the real HIPGetTaxAccount.json that omits deductionsDetails" in {
+
+          val real = loadFile("/json/nps/response/HIPGetTaxAccountWithNoDeductions.json").as[HIPNpsTaxAccount]
+
+          real.incomeSources                   should not be empty
+          real.incomeSources.head.deductions shouldBe empty
+        }
+      }
+
     }
 
     "matchedIncomeSource is called" should {
