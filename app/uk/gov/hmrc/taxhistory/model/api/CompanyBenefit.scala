@@ -56,13 +56,13 @@ case class CompanyBenefit(
 
 object CompanyBenefit {
 
-  implicit val formatTaxYear: OFormat[TaxYear] = Json.format[TaxYear]
+  given formatTaxYear: OFormat[TaxYear] = Json.format[TaxYear]
 
-  implicit val reads: Reads[CompanyBenefit] = Json.reads[CompanyBenefit]
+  given reads: Reads[CompanyBenefit] = Json.reads[CompanyBenefit]
 
-  private val defaultWrites: Writes[CompanyBenefit] = Json.writes[CompanyBenefit]
-  private val writes: Writes[CompanyBenefit]        = (cb: CompanyBenefit) =>
+  given defaultWrites: Writes[CompanyBenefit] = Json.writes[CompanyBenefit]
+  given writes: Writes[CompanyBenefit]        = (cb: CompanyBenefit) =>
     Json.toJson(cb)(defaultWrites).as[JsObject] + ("isForecastBenefit" -> JsBoolean(cb.isForecastBenefit))
 
-  implicit val formats: Format[CompanyBenefit]      = Format[CompanyBenefit](reads, writes)
+  given formats: Format[CompanyBenefit] = Format[CompanyBenefit](reads, writes)
 }

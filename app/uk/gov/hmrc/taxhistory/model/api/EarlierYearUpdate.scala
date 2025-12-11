@@ -30,5 +30,5 @@ case class EarlierYearUpdate(
 )
 
 object EarlierYearUpdate {
-  implicit val formats: OFormat[EarlierYearUpdate] = Json.format[EarlierYearUpdate]
+  given formats: OFormat[EarlierYearUpdate] = Json.format[EarlierYearUpdate]
 }

@@ -2,7 +2,11 @@ import sbt.*
 
 object AppDependencies {
 
+<<<<<<< HEAD
   private lazy val hmrcBootstrapPlayVersion = "10.5.0"
+=======
+  private lazy val hmrcBootstrapPlayVersion = "10.4.0"
+>>>>>>> ac1ed52 (upgrade to scala 3)
   private lazy val hmrcMongoPlayVersion     = "2.11.0"
 
   private val compile = Seq(
@@ -10,7 +14,7 @@ object AppDependencies {
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-30"        % hmrcMongoPlayVersion,
     "uk.gov.hmrc"       %% "domain-play-30"            % "11.0.0",
     "uk.gov.hmrc"       %% "tax-year"                  % "6.0.0",
-    "uk.gov.hmrc"       %% "agent-mtd-identifiers"     % "2.2.0"
+    "uk.gov.hmrc"       %% "agent-mtd-identifiers"     % "3.0.0"
   )
 
   private val test: Seq[ModuleID] = Seq(
@@ -18,6 +22,6 @@ object AppDependencies {
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-30" % hmrcMongoPlayVersion
   ).map(_ % Test)
 
-  def apply(): Seq[ModuleID]      = compile ++ test
+  def apply(): Seq[ModuleID] = compile ++ test
 
 }

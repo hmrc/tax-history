@@ -27,7 +27,7 @@ case class AllowanceOrDeduction(
 )
 
 object AllowanceOrDeduction {
-  implicit val reader: Reads[AllowanceOrDeduction]                = (js: JsValue) => {
+  given reader: Reads[AllowanceOrDeduction]                = (js: JsValue) => {
     val typeAndDescription         = (js \ "type").validate[String].getOrElse("")
     val (npsDescription, typeCode) = typeAndDescription.split("[(]") match {
       case Array(desc, code) => (Some(desc.trim), code.substring(0, code.indexOf(")")).toIntOption)
@@ -43,8 +43,8 @@ object AllowanceOrDeduction {
       sourceAmount = sourceAmount
     )
   }
-  implicit val writer: OWrites[AllowanceOrDeduction]              = Json.writes[AllowanceOrDeduction]
-  //TODO: to be removed
+  given writer: OWrites[AllowanceOrDeduction]              = Json.writes[AllowanceOrDeduction]
+  // TODO: to be removed
   def toTaAllowance(allowance: AllowanceOrDeduction): TaAllowance =
     TaAllowance(allowance.`type`, allowance.npsDescription, allowance.amount, allowance.sourceAmount)
   def toTaDeduction(deduction: AllowanceOrDeduction): TaDeduction =
@@ -82,13 +82,13 @@ case class HIPNpsIncomeSource(
 }
 
 object HIPNpsIncomeSource {
-  implicit val reader: Reads[HIPNpsIncomeSource]                                 = (js: JsValue) => {
+  given reader: Reads[HIPNpsIncomeSource]                                 = (js: JsValue) => {
     val employerReference                                = (js \ "employerReference").validate[String].getOrElse("")
     val (employmentTaxDistrictNumber, employmentPayeRef) = employerReference.split("/") match {
       case Array(taxDistrict, payeRef) => (taxDistrict.toIntOption, Some(payeRef))
       case _                           => (None, None)
     }
-    //TODO: what if the string doesnt contain /
+    // TODO: what if the string doesnt contain /
     val employmentType                                   = (js \ "employmentRecordType").asOpt[String] match {
       case Some("PRIMARY")   => Some(1)
       case Some("SECONDARY") => Some(2)
@@ -119,7 +119,7 @@ object HIPNpsIncomeSource {
       employmentPayeRef = employmentPayeRef
     )
   }
-  //TODO: to be removed
+  // TODO: to be removed
   def toNpsIncomeSource(hipNpsIncomeSource: HIPNpsIncomeSource): NpsIncomeSource = NpsIncomeSource(
     hipNpsIncomeSource.employmentId,
     hipNpsIncomeSource.employmentType,
@@ -186,11 +186,11 @@ case class HIPNpsTaxAccount(incomeSources: List[HIPNpsIncomeSource]) {
 }
 
 object HIPNpsTaxAccount {
-  implicit val reader: Reads[HIPNpsTaxAccount]                           = (js: JsValue) =>
+  given reader: Reads[HIPNpsTaxAccount]                           = (js: JsValue) =>
     for {
       incomeSources <- (js \ "employmentDetailsList").validate[List[HIPNpsIncomeSource]]
     } yield HIPNpsTaxAccount(incomeSources)
-  //TODO: to be removed
+  // TODO: to be removed
   def toNpsTaxAccount(hipNpsTaxAccount: HIPNpsTaxAccount): NpsTaxAccount = NpsTaxAccount(
     hipNpsTaxAccount.incomeSources.map(HIPNpsIncomeSource.toNpsIncomeSource)
   )

@@ -1,12 +1,12 @@
 import uk.gov.hmrc.DefaultBuildSettings.itSettings
 
 ThisBuild / majorVersion := 3
-ThisBuild / scalaVersion := "2.13.16"
+ThisBuild / scalaVersion := "3.5.2"
 
 lazy val microservice =
   Project("tax-history", file("."))
     .enablePlugins(PlayScala, SbtDistributablesPlugin)
-    .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
+    .disablePlugins(JUnitXmlReportPlugin) // Required to prevent https://github.com/scalatest/scalatest/issues/1427
     .settings(PlayKeys.playDefaultPort := 9997)
     .settings(CodeCoverageSettings.settings)
     .settings(routesImport ++= Seq("uk.gov.hmrc.taxhistory.binders.PathBinders._"))

@@ -34,5 +34,5 @@ case class PayAndTax(
 )
 
 object PayAndTax {
-  implicit val formats: OFormat[PayAndTax] = Json.format[PayAndTax]
+  given formats: OFormat[PayAndTax] = Json.format[PayAndTax]
 }

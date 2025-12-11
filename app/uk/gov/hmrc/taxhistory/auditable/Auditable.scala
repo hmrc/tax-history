@@ -42,7 +42,7 @@ class Auditable @Inject() (config: AppConfig, val audit: AuditConnector)(implici
           config.appName,
           auditType = eventType.toString,
           tags = AuditExtensions.auditHeaderCarrier(hc).toAuditTags(transactionName.toString, path) ++ tags,
-          detail = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails(detail.detail.toSeq: _*)
+          detail = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails(detail.detail.toSeq*)
         )
       )
     )

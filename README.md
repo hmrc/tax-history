@@ -18,7 +18,7 @@ sbt run
 In order to run all tests(+ coverage, + scalafmt):
 
 ```bash
-run_all_tests.sh
+./run_all_tests.sh
 ```
 
 In order to run unit tests and coverage:

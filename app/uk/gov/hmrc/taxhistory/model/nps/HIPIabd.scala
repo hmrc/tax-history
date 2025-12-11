@@ -129,7 +129,7 @@ case class HIPIabd(
     )
   }
 
-  //TODO: to be removed in code cleanup
+  // TODO: to be removed in code cleanup
   def toIabd: Iabd = Iabd(
     nino,
     employmentSequenceNumber,
@@ -144,9 +144,9 @@ case class HIPIabd(
 }
 
 object HIPIabd extends Logging {
-  implicit val reader: Reads[HIPIabd]   = (js: JsValue) => {
-    val typeAndDescription          = (js \ "type").as[String]
-    val (typeDescription, typeCode) = typeAndDescription.split("[(]") match {
+  given reader: Reads[HIPIabd]   = (js: JsValue) => {
+    val typeAndDescription               = (js \ "type").as[String]
+    val (typeDescription, typeCode)      = typeAndDescription.split("[(]") match {
       case Array(desc, code) => (Some(desc.trim), code.substring(0, code.indexOf(")")).toIntOption)
       case _                 => (None, None)
     }
@@ -183,7 +183,7 @@ object HIPIabd extends Logging {
       startDate = formatDate(startDate)
     )
   }
-  implicit val writer: OWrites[HIPIabd] = Json.writes[HIPIabd]
+  given writer: OWrites[HIPIabd] = Json.writes[HIPIabd]
 }
 
 case class HIPIabdList(iabdDetails: Option[List[HIPIabd]]) {
@@ -194,5 +194,5 @@ case class HIPIabdList(iabdDetails: Option[List[HIPIabd]]) {
 }
 
 object HIPIabdList {
-  implicit val formats: OFormat[HIPIabdList] = Json.format[HIPIabdList]
+  given formats: OFormat[HIPIabdList] = Json.format[HIPIabdList]
 }

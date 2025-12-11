@@ -116,7 +116,7 @@ class CitizenDetailsConnectorSpec extends BaseConnectorSpec {
   class CitizenDetailsFailsOnceThenRespondsWithUtr(status: Int, val forThisNino: Nino) {
     val expectedUtr: SaUtr = SaUtr("1097133333")
     when(mockMetrics.startTimer(any())).thenReturn(mockTimerContext)
-    when(mockRequestBuilder.execute(any[HttpReads[HttpResponse]], any()))
+    when(mockRequestBuilder.execute(using any[HttpReads[HttpResponse]], any()))
       .thenReturn(Future.successful(buildHttpResponse(status)))
       .thenReturn(Future.successful(buildHttpResponse(responseWithUtr(forThisNino, expectedUtr))))
   }

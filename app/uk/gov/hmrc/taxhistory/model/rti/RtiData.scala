@@ -97,8 +97,8 @@ case class RtiEarlierYearUpdate(
 }
 
 object RtiPayment {
-  implicit val reader: Reads[RtiPayment] = (js: JsValue) => {
-    implicit val stringMapFormat: Format[Map[String, BigDecimal]]   =
+  given reader: Reads[RtiPayment] = (js: JsValue) => {
+    given stringMapFormat: Format[Map[String, BigDecimal]]   =
       JsonUtils.mapFormat[String, BigDecimal]("type", "amount")
     val mandatoryMonetaryAmountMap: Option[Map[String, BigDecimal]] =
       (js \ "mandatoryMonetaryAmount").asOpt[Map[String, BigDecimal]]
@@ -129,12 +129,12 @@ object RtiPayment {
     )
   }
 
-  implicit val writer: OWrites[RtiPayment] = Json.writes[RtiPayment]
+  given writer: OWrites[RtiPayment] = Json.writes[RtiPayment]
 }
 
 object RtiEarlierYearUpdate {
-  implicit val reader: Reads[RtiEarlierYearUpdate]   = (js: JsValue) => {
-    implicit val stringMapFormat: Format[Map[String, BigDecimal]]    =
+  given reader: Reads[RtiEarlierYearUpdate]   = (js: JsValue) => {
+    given stringMapFormat: Format[Map[String, BigDecimal]]    =
       JsonUtils.mapFormat[String, BigDecimal]("type", "amount")
     val optionalAdjustmentAmountMap: Option[Map[String, BigDecimal]] =
       (js \ "optionalAdjustmentAmount").asOpt[Map[String, BigDecimal]]
@@ -154,12 +154,12 @@ object RtiEarlierYearUpdate {
       )
     )
   }
-  implicit val writer: OWrites[RtiEarlierYearUpdate] = Json.writes[RtiEarlierYearUpdate]
+  given writer: OWrites[RtiEarlierYearUpdate] = Json.writes[RtiEarlierYearUpdate]
 }
 
 object RtiEmployment {
 
-  implicit val reader: Reads[RtiEmployment]   = (js: JsValue) =>
+  given reader: Reads[RtiEmployment]   = (js: JsValue) =>
     for {
       sequenceNo         <- (js \ "sequenceNumber").validate[Int]
       officeNumber       <- (js \ "empRefs" \ "officeNo").validate[String]
@@ -175,14 +175,14 @@ object RtiEmployment {
       payments = payments.getOrElse(List.empty),
       earlierYearUpdates = earlierYearUpdates.getOrElse(Nil)
     )
-  implicit val writer: OWrites[RtiEmployment] = Json.writes[RtiEmployment]
+  given writer: OWrites[RtiEmployment] = Json.writes[RtiEmployment]
 }
 
 object RtiData {
-  implicit val reader: Reads[RtiData]   = (js: JsValue) =>
+  given reader: Reads[RtiData]   = (js: JsValue) =>
     for {
       nino        <- (js \ "request" \ "nino").validate[String]
       employments <- (js \ "individual" \ "employments" \ "employment").validate[List[RtiEmployment]]
     } yield RtiData(nino = nino, employments = employments)
-  implicit val writer: OWrites[RtiData] = Json.writes[RtiData]
+  given writer: OWrites[RtiData] = Json.writes[RtiData]
 }

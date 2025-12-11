@@ -54,7 +54,7 @@ case class NpsEmployment(
 }
 
 object NpsEmployment {
-  implicit val reader: Reads[NpsEmployment]   = (js: JsValue) => {
+  given reader: Reads[NpsEmployment]   = (js: JsValue) => {
     val startDate = (js \ "startDate").asOpt[LocalDate](JsonUtils.npsDateFormat)
     val endDate   = (js \ "endDate").asOpt[LocalDate](JsonUtils.npsDateFormat)
     for {
@@ -83,7 +83,7 @@ object NpsEmployment {
       employmentStatus = employmentStatus
     )
   }
-  implicit val writer: OWrites[NpsEmployment] = Json.writes[NpsEmployment]
+  given writer: OWrites[NpsEmployment] = Json.writes[NpsEmployment]
 
   /*
   in some seen cases taxDistrictNumber is two digits - we assume this is because the first digit was 0 and was

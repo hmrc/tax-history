@@ -52,8 +52,8 @@ class PayAndTaxControllerSpec
   val taxYear              = 2016
   val employmentId: String = UUID.randomUUID().toString
 
-  val testPayAndTax: PayAndTax                    = PayAndTax(earlierYearUpdates = Nil)
-  val testPayAndTaxMap: Map[String, PayAndTax]    =
+  val testPayAndTax: PayAndTax                 = PayAndTax(earlierYearUpdates = Nil)
+  val testPayAndTaxMap: Map[String, PayAndTax] =
     Map(s"${testPayAndTax.payAndTaxId}" -> testPayAndTax, s"${testPayAndTax.payAndTaxId}" -> testPayAndTax)
 
   val cc: ControllerComponents                    = stubControllerComponents()

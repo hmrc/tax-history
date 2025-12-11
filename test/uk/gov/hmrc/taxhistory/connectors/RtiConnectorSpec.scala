@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxhistory.connectors
 
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.*
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
@@ -98,7 +98,7 @@ class RtiConnectorSpec extends BaseConnectorSpec {
       }
 
       "retrying after the first call failed and the second call succeeds" in {
-        when(mockRequestBuilder.execute(any[HttpReads[HttpResponse]], any()))
+        when(mockRequestBuilder.execute(using any[HttpReads[HttpResponse]], any()))
           .thenReturn(Future.successful(buildHttpResponse(INTERNAL_SERVER_ERROR)))
           .thenReturn(Future.successful(buildHttpResponse(testRtiData)))
 

@@ -23,5 +23,5 @@ import play.api.libs.json.{Json, OFormat}
 case class Allowance(allowanceId: UUID = UUID.randomUUID(), iabdType: String, amount: BigDecimal)
 
 object Allowance {
-  implicit val formats: OFormat[Allowance] = Json.format[Allowance]
+  given formats: OFormat[Allowance] = Json.format[Allowance]
 }

@@ -36,7 +36,7 @@ object EmploymentStatus {
     99 // Code 99, Unknown, is internal to tax-history, and is not an wider HMRC employment status
   private val PermanentlyCeasedCode = 6
 
-  implicit val jsonReads: Reads[EmploymentStatus] =
+  given jsonReads: Reads[EmploymentStatus] =
     (__ \ "employmentStatus").read(Reads.of[String].orElse(Reads.of[Int].map(x => s"$x"))).flatMap[EmploymentStatus] {
       case "1"                  => Reads(_ => JsSuccess(Live))
       case "2"                  => Reads(_ => JsSuccess(PotentiallyCeased))
@@ -51,7 +51,7 @@ object EmploymentStatus {
       case _                    => Reads(_ => JsError(JsPath \ s"employmentStatus", JsonValidationError("Invalid EmploymentStatus")))
     }
 
-  implicit val jsonWrites: Writes[EmploymentStatus] = Writes[EmploymentStatus] {
+  given jsonWrites: Writes[EmploymentStatus] = Writes[EmploymentStatus] {
     case Live              => Json.obj("employmentStatus" -> LiveCode)
     case PotentiallyCeased => Json.obj("employmentStatus" -> PotentiallyCeasedCode)
     case Ceased            => Json.obj("employmentStatus" -> CeasedCode)

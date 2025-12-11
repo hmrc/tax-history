@@ -22,12 +22,12 @@ import org.scalatest.OptionValues
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{BadRequestException, NotFoundException}
 import uk.gov.hmrc.taxhistory.fixtures.Employments
 import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType.OccupationalPension
-import uk.gov.hmrc.taxhistory.model.api._
+import uk.gov.hmrc.taxhistory.model.api.*
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.utils.PlaceHolder
@@ -767,7 +767,58 @@ class EmploymentHistoryServiceSpec
         }
 
         exception.message shouldBe s"IncomeSource not found for NINO ${testNino.nino}, tax year ${TaxYear.current
-          .toString()}, and employmentId $empRefId"
+            .toString()}, and employmentId $empRefId"
+      }
+
+      "get Income Source return Data for current year when no data" in {
+
+        val empRefId = payAsYouEarn.incomeSources.keys.head
+
+        testEmploymentHistoryService.cacheService
+          .insertOrUpdate((testNino, TaxYear.current), payAsYouEarn)
+          .futureValue
+        val incomeSource =
+          result(testEmploymentHistoryService.getIncomeSource(testNino, TaxYear.current, empRefId), Duration.Inf)
+
+        incomeSource shouldBe payAsYouEarn.incomeSources.get(empRefId)
+      }
+
+      "get Income Source return Data for previous year when no data" in {
+
+        val empRefId = payAsYouEarn.incomeSources.keys.head
+
+        testEmploymentHistoryService.cacheService
+          .insertOrUpdate((testNino, TaxYear.current), payAsYouEarn)
+          .futureValue
+        testEmploymentHistoryService.cacheService
+          .insertOrUpdate((testNino, TaxYear.current.previous), payAsYouEarn)
+          .futureValue
+        val incomeSource =
+          result(
+            testEmploymentHistoryService.getIncomeSource(testNino, TaxYear.current.previous, empRefId),
+            Duration.Inf
+          )
+
+        incomeSource shouldBe payAsYouEarn.incomeSources.get(empRefId)
+      }
+    }
+
+    ".getStatePension" should {
+
+      "get State Pension return None when no data" in {
+
+//        val empRefId = "invalidEmpId"
+
+        testEmploymentHistoryService.cacheService
+          .insertOrUpdate((testNino, TaxYear.current), payAsYouEarn)
+          .futureValue
+
+        val exception = intercept[NotFoundException] {
+          result(testEmploymentHistoryService.getStatePension(testNino, TaxYear.current), Duration.Inf)
+        }
+
+        exception.message shouldBe s"StatePension not found for NINO ${testNino.nino} and tax year ${TaxYear.current
+            .toString()}"
       }
 
       "get Income Source return Data for current year when no data" in {

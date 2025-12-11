@@ -101,7 +101,7 @@ object IabdType {
 
   def apply(id: Int): IabdType = idMap.getOrElse(id, UnKnown)
 
-  def unapply(iabdType: IabdType): Int  =
+  def unapply(iabdType: IabdType): Int =
     idMap.collectFirst { case (key, value) if value == iabdType => key }.getOrElse(UnknownIabdTypeId)
 
   private val idMap: Map[Int, IabdType] = Map(
@@ -139,7 +139,7 @@ object IabdType {
     66  -> StatePensions
   )
 
-  implicit val format: Format[IabdType] = new Format[IabdType] {
+  given format: Format[IabdType] = new Format[IabdType] {
     def reads(json: JsValue): JsSuccess[IabdType] = JsSuccess(IabdType.apply(json.as[Int]))
 
     def writes(iabdType: IabdType): JsNumber = JsNumber(IabdType.unapply(iabdType))
@@ -182,5 +182,5 @@ case class Iabd(
 }
 
 object Iabd {
-  implicit val formats: OFormat[Iabd] = Json.format[Iabd]
+  given formats: OFormat[Iabd] = Json.format[Iabd]
 }

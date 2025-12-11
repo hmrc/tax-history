@@ -170,7 +170,7 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
         val withUnusualTaxCodeJson =
           (incomeSourcesSerialised \ 0).as[JsObject] + ("taxCode" -> JsString(unusualTaxCode))
         val jsResult = fromJson[NpsIncomeSource](withUnusualTaxCodeJson)
-        jsResult             shouldBe a[JsSuccess[_]]
+        jsResult             shouldBe a[JsSuccess[?]]
         jsResult.get.taxCode shouldBe Some(unusualTaxCode)
       }
     }

@@ -50,10 +50,10 @@ class DesNpsConnector @Inject() (
 
   def iabdsUrl(nino: Nino, year: Int): String       =
     s"${config.npsDesBaseUrl}$servicePrefix/individuals/${nino.value}/iabds/tax-year/$year"
-  //TODO: remove taxAccountUrl
+  // TODO: remove taxAccountUrl
   def taxAccountUrl(nino: Nino, year: Int): String  =
     s"${config.npsDesBaseUrl}$servicePrefix/individuals/${nino.value}/tax-account/tax-year/$year"
-  //TODO: remove employmentsUrl
+  // TODO: remove employmentsUrl
   def employmentsUrl(nino: Nino, year: Int): String =
     s"${config.npsDesBaseUrl}/individuals/${nino.value}/employment/$year"
 
@@ -88,7 +88,7 @@ class DesNpsConnector @Inject() (
           val fullURL = iabdsHIPUrl(nino, year)
           http
             .get(url"$fullURL")
-            .setHeader(buildHIPHeaders: _*)
+            .setHeader(buildHIPHeaders*)
             .execute[HttpResponse]
             .map { response =>
               response.status match {
@@ -107,7 +107,7 @@ class DesNpsConnector @Inject() (
           val fullURL = iabdsUrl(nino, year)
           http
             .get(url"$fullURL")
-            .setHeader(buildHeaders: _*)
+            .setHeader(buildHeaders*)
             .execute[HttpResponse]
             .map { response =>
               response.status match {
@@ -131,7 +131,7 @@ class DesNpsConnector @Inject() (
           val fullURL = taxAccountHIPUrl(nino, year)
           http
             .get(url"$fullURL")
-            .setHeader(buildHIPHeaders: _*)
+            .setHeader(buildHIPHeaders*)
             .execute[HttpResponse]
             .map { response =>
               response.status match {
@@ -147,7 +147,7 @@ class DesNpsConnector @Inject() (
                       logger.warn(s"[DesNpsConnector][getTaxAccount] Failed to parse HIPNpsTaxAccount: $errors")
                       None
                   }
-                //TODO: Remove the match and toNpsTaxAccount
+                // TODO: Remove the match and toNpsTaxAccount
                 case _         => throw UpstreamErrorResponse(response.body, response.status, response.status)
               }
             }
@@ -159,7 +159,7 @@ class DesNpsConnector @Inject() (
           val fullURL = taxAccountUrl(nino, year)
           http
             .get(url"$fullURL")
-            .setHeader(buildHeaders: _*)
+            .setHeader(buildHeaders*)
             .execute[HttpResponse]
             .map { response =>
               response.status match {
@@ -179,14 +179,14 @@ class DesNpsConnector @Inject() (
 
   def getEmployments(nino: Nino, year: Int): Future[List[NpsEmployment]] =
     if (config.isUsingHIP) {
-      //TODO: to be changed
+      // TODO: to be changed
       implicit val hc: HeaderCarrier = HeaderCarrier()
       withMetrics(MetricsEnum.NPS_GET_EMPLOYMENTS) {
         withHIPRetry {
           val fullURL = employmentsHIPUrl(nino, year)
           http
             .get(url"$fullURL")
-            .setHeader(buildHIPHeaders: _*)
+            .setHeader(buildHIPHeaders*)
             .execute[HttpResponse]
             .map { response =>
               response.status match {
@@ -199,8 +199,8 @@ class DesNpsConnector @Inject() (
                 case OK                                         =>
                   toListOfHIPNpsEmployment(response.json.as[HIPNpsEmployments])
                     .map[NpsEmployment](HIPNpsEmployment.toNpsEmployment)
-                //TODO:Remove .map as it maps to des NpsEmployment
-                case _ =>
+                // TODO:Remove .map as it maps to des NpsEmployment
+                case _                                          =>
                   throw UpstreamErrorResponse(
                     response.body,
                     response.status,
@@ -217,7 +217,7 @@ class DesNpsConnector @Inject() (
           val fullURL = employmentsUrl(nino, year)
           http
             .get(url"$fullURL")
-            .setHeader(buildHeaders: _*)
+            .setHeader(buildHeaders*)
             .execute[HttpResponse]
             .map { response =>
               response.status match {

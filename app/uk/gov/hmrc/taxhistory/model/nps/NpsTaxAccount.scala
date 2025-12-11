@@ -22,13 +22,13 @@ import uk.gov.hmrc.taxhistory.model.api.{IncomeSource, TaxAccount}
 case class TaDeduction(`type`: Int, npsDescription: String, amount: BigDecimal, sourceAmount: Option[BigDecimal])
 
 object TaDeduction {
-  implicit val formats: OFormat[TaDeduction] = Json.format[TaDeduction]
+  given formats: OFormat[TaDeduction] = Json.format[TaDeduction]
 }
 
 case class TaAllowance(`type`: Int, npsDescription: String, amount: BigDecimal, sourceAmount: Option[BigDecimal])
 
 object TaAllowance {
-  implicit val formats: OFormat[TaAllowance] = Json.format[TaAllowance]
+  given formats: OFormat[TaAllowance] = Json.format[TaAllowance]
 }
 
 case class NpsIncomeSource(
@@ -63,7 +63,7 @@ case class NpsIncomeSource(
 }
 
 object NpsIncomeSource {
-  implicit val formats: OFormat[NpsIncomeSource] = Json.format[NpsIncomeSource]
+  given formats: OFormat[NpsIncomeSource] = Json.format[NpsIncomeSource]
 }
 
 case class NpsTaxAccount(incomeSources: List[NpsIncomeSource]) {
@@ -119,5 +119,5 @@ case class NpsTaxAccount(incomeSources: List[NpsIncomeSource]) {
 }
 
 object NpsTaxAccount {
-  implicit val formats: OFormat[NpsTaxAccount] = Json.format[NpsTaxAccount]
+  given formats: OFormat[NpsTaxAccount] = Json.format[NpsTaxAccount]
 }

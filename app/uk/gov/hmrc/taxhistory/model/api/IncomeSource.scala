@@ -32,5 +32,5 @@ case class IncomeSource(
 )
 
 object IncomeSource {
-  implicit val formats: OFormat[IncomeSource] = Json.format[IncomeSource]
+  given formats: OFormat[IncomeSource] = Json.format[IncomeSource]
 }

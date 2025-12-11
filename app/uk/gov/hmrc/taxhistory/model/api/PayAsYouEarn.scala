@@ -30,5 +30,5 @@ case class PayAsYouEarn(
 )
 
 object PayAsYouEarn {
-  implicit val formats: OFormat[PayAsYouEarn] = Json.format[PayAsYouEarn]
+  given formats: OFormat[PayAsYouEarn] = Json.format[PayAsYouEarn]
 }
