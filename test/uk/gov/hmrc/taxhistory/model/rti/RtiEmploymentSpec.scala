@@ -53,6 +53,15 @@ class RtiEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with
         payAndTax.earlierYearUpdates.size should be(1)
       }
 
+      "convert itself to PayAndTax (using STUDENT_LOAN_YTD variation)" in {
+        val rtiData   = rtiEmploymentResponseWithStudentLoanYTDVariation.as[RtiData]
+        val payAndTax = rtiData.employments.head.toPayAndTax
+        payAndTax.taxablePayTotal         should be(Some(rtiERTaxablePayTotal))
+        payAndTax.taxTotal                should be(Some(rtiERTaxTotal))
+        payAndTax.studentLoan             should be(Some(testEmploymentStudentLoansYTD))
+        payAndTax.earlierYearUpdates.size should be(1)
+      }
+
       "calculate taxablePayTotalIncludingEYU" when {
         "there are EYUs of type 'TaxablePayDelta', it sums them all together with the 'taxablePayTotal'" in {
           val payAndTax = testEmployment

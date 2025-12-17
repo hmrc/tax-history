@@ -22,9 +22,12 @@ import uk.gov.hmrc.taxhistory.utils.TestUtil
 
 trait RtiEmployments extends TestUtil {
 
-  lazy val rtiEmploymentResponse: JsValue = loadFile("/json/rti/response/dummyRti.json")
-  val rtiERTaxablePayTotal: BigDecimal    = BigDecimal.valueOf(20000.00)
-  val rtiERTaxTotal: BigDecimal           = BigDecimal.valueOf(1880.00)
+  lazy val rtiEmploymentResponse: JsValue                            = loadFile("/json/rti/response/dummyRti.json")
+  lazy val rtiEmploymentResponseWithStudentLoanYTDVariation: JsValue = loadFile(
+    "/json/rti/response/dummyRtiWithStudentLoanYTDVariation.json"
+  )
+  val rtiERTaxablePayTotal: BigDecimal                               = BigDecimal.valueOf(20000.00)
+  val rtiERTaxTotal: BigDecimal                                      = BigDecimal.valueOf(1880.00)
 
   lazy val rtiPartialDuplicateEmploymentsResponse: JsValue = loadFile(
     "/json/rti/response/dummyRtiPartialDuplicateEmployments.json"
