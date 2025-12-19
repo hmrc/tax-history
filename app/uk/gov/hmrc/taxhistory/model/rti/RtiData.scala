@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.taxhistory.model.rti
 
-import play.api.libs.json._
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.json.*
 import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, PayAndTax}
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
+
 import java.time.LocalDate
 import scala.math.Ordered.orderingToOrdered
 
@@ -98,8 +100,9 @@ case class RtiEarlierYearUpdate(
 
 object RtiPayment {
   given reader: Reads[RtiPayment] = (js: JsValue) => {
-    given stringMapFormat: Format[Map[String, BigDecimal]]   =
+    given stringMapFormat: Format[Map[String, BigDecimal]] =
       JsonUtils.mapFormat[String, BigDecimal]("type", "amount")
+
     val mandatoryMonetaryAmountMap: Option[Map[String, BigDecimal]] =
       (js \ "mandatoryMonetaryAmount").asOpt[Map[String, BigDecimal]]
 
@@ -121,7 +124,7 @@ object RtiPayment {
 
     JsSuccess(
       RtiPayment(
-        paidOnDate = (js \ "pmtDate").as[LocalDate](JsonUtils.rtiDateFormat),
+        paidOnDate = (js \ "pmtDate").as[LocalDate](using JsonUtils.rtiDateFormat),
         taxablePayYTD = taxablePay,
         totalTaxYTD = totalTax,
         studentLoansYTD = studentLoan
@@ -129,12 +132,20 @@ object RtiPayment {
     )
   }
 
-  given writer: OWrites[RtiPayment] = Json.writes[RtiPayment]
+  given writer: Writes[RtiPayment] = Writes { data =>
+    Json.obj(
+      "paidOnDate"      -> data.paidOnDate,
+      "taxablePayYTD"   -> data.taxablePayYTD,
+      "totalTaxYTD"     -> data.totalTaxYTD,
+      "studentLoansYTD" -> data.studentLoansYTD
+    )
+  }
+
 }
 
 object RtiEarlierYearUpdate {
-  given reader: Reads[RtiEarlierYearUpdate]   = (js: JsValue) => {
-    given stringMapFormat: Format[Map[String, BigDecimal]]    =
+  given reader: Reads[RtiEarlierYearUpdate]  = (js: JsValue) => {
+    given stringMapFormat: Format[Map[String, BigDecimal]]           =
       JsonUtils.mapFormat[String, BigDecimal]("type", "amount")
     val optionalAdjustmentAmountMap: Option[Map[String, BigDecimal]] =
       (js \ "optionalAdjustmentAmount").asOpt[Map[String, BigDecimal]]
@@ -143,7 +154,7 @@ object RtiEarlierYearUpdate {
     val totalTaxDelta: BigDecimal                     = optionalAdjustmentAmountMap.getOrElse(Map.empty).getOrElse("TotalTaxDelta", 0.0)
     val studentLoanRecoveredDelta: Option[BigDecimal] =
       optionalAdjustmentAmountMap.getOrElse(Map.empty).get("StudentLoanRecoveredDelta")
-    val receivedDate                                  = (js \ "rcvdDate").as[LocalDate](JsonUtils.rtiDateFormat)
+    val receivedDate                                  = (js \ "rcvdDate").as[LocalDate](using JsonUtils.rtiDateFormat)
 
     JsSuccess(
       RtiEarlierYearUpdate(
@@ -154,12 +165,19 @@ object RtiEarlierYearUpdate {
       )
     )
   }
-  given writer: OWrites[RtiEarlierYearUpdate] = Json.writes[RtiEarlierYearUpdate]
+  given writer: Writes[RtiEarlierYearUpdate] = Writes { data =>
+    Json.obj(
+      "taxablePayDelta"           -> data.taxablePayDelta,
+      "totalTaxDelta"             -> data.totalTaxDelta,
+      "studentLoanRecoveredDelta" -> data.studentLoanRecoveredDelta,
+      "receivedDate"              -> data.receivedDate
+    )
+  }
 }
 
 object RtiEmployment {
 
-  given reader: Reads[RtiEmployment]   = (js: JsValue) =>
+  given reader: Reads[RtiEmployment]  = (js: JsValue) =>
     for {
       sequenceNo         <- (js \ "sequenceNumber").validate[Int]
       officeNumber       <- (js \ "empRefs" \ "officeNo").validate[String]
@@ -175,14 +193,28 @@ object RtiEmployment {
       payments = payments.getOrElse(List.empty),
       earlierYearUpdates = earlierYearUpdates.getOrElse(Nil)
     )
-  given writer: OWrites[RtiEmployment] = Json.writes[RtiEmployment]
+  given writer: Writes[RtiEmployment] = Writes { data =>
+    Json.obj(
+      "sequenceNo"         -> data.sequenceNo,
+      "payeRef"            -> data.payeRef,
+      "officeNumber"       -> data.officeNumber,
+      "currentPayId"       -> data.currentPayId,
+      "payments"           -> data.payments,
+      "earlierYearUpdates" -> data.earlierYearUpdates
+    )
+  }
 }
 
 object RtiData {
-  given reader: Reads[RtiData]   = (js: JsValue) =>
+  given reader: Reads[RtiData]  = (js: JsValue) =>
     for {
       nino        <- (js \ "request" \ "nino").validate[String]
       employments <- (js \ "individual" \ "employments" \ "employment").validate[List[RtiEmployment]]
     } yield RtiData(nino = nino, employments = employments)
-  given writer: OWrites[RtiData] = Json.writes[RtiData]
+  given writer: Writes[RtiData] = Writes { data =>
+    Json.obj(
+      "nino"        -> data.nino,
+      "employments" -> data.employments
+    )
+  }
 }

@@ -16,10 +16,14 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
+
 import java.time.LocalDate
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.taxhistory.model.api.{Employment, EmploymentPaymentType}
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
+
+import java.util.UUID
 
 case class NpsEmployment(
   nino: String,
@@ -54,9 +58,9 @@ case class NpsEmployment(
 }
 
 object NpsEmployment {
-  given reader: Reads[NpsEmployment]   = (js: JsValue) => {
-    val startDate = (js \ "startDate").asOpt[LocalDate](JsonUtils.npsDateFormat)
-    val endDate   = (js \ "endDate").asOpt[LocalDate](JsonUtils.npsDateFormat)
+  given reader: Reads[NpsEmployment] = (js: JsValue) => {
+    val startDate = (js \ "startDate").asOpt[LocalDate](using JsonUtils.npsDateFormat)
+    val endDate   = (js \ "endDate").asOpt[LocalDate](using JsonUtils.npsDateFormat)
     for {
       nino                         <- (js \ "nino").validate[String]
       sequenceNumber               <- (js \ "sequenceNumber").validate[Int]
@@ -83,7 +87,21 @@ object NpsEmployment {
       employmentStatus = employmentStatus
     )
   }
-  given writer: OWrites[NpsEmployment] = Json.writes[NpsEmployment]
+
+  given writer: OWrites[NpsEmployment] = (
+    (__ \ "nino").write[String] and
+      (__ \ "sequenceNumber").write[Int] and
+      (__ \ "taxDistrictNumber").write[String] and
+      (__ \ "payeNumber").write[String] and
+      (__ \ "employerName").write[String] and
+      (__ \ "worksNumber").writeNullable[String] and
+      (__ \ "receivingJobSeekersAllowance").write[Boolean] and
+      (__ \ "otherIncomeSourceIndicator").write[Boolean] and
+      (__ \ "startDate").writeNullable[LocalDate] and
+      (__ \ " endDate").writeNullable[LocalDate] and
+      (__ \ "receivingOccupationalPension").write[Boolean] and
+      (__ \ "employmentStatus").write[EmploymentStatus]
+  )(o => Tuple.fromProductTyped(o))
 
   /*
   in some seen cases taxDistrictNumber is two digits - we assume this is because the first digit was 0 and was

@@ -20,7 +20,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.time.TaxYear
 
 object PathBinders {
-  given ninoBinder: SimpleObjectBinder[Nino]       = new SimpleObjectBinder[Nino](Nino.apply, _.value)
-  given taxYearBinder: SimpleObjectBinder[TaxYear] =
+  implicit val ninoBinder: SimpleObjectBinder[Nino]       = new SimpleObjectBinder[Nino](Nino.apply, _.value)
+  implicit val taxYearBinder: SimpleObjectBinder[TaxYear] =
     new SimpleObjectBinder[TaxYear](yearStr => TaxYear(yearStr.toInt), _.startYear.toString)
 }

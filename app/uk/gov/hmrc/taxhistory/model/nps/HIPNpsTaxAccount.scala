@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
-import play.api.libs.json.{JsValue, Json, OWrites, Reads}
+import play.api.libs.json.{JsValue, Json, OWrites, Reads, Writes}
 import uk.gov.hmrc.taxhistory.model.api.{IncomeSource, TaxAccount}
 
 case class AllowanceOrDeduction(
@@ -27,7 +27,7 @@ case class AllowanceOrDeduction(
 )
 
 object AllowanceOrDeduction {
-  given reader: Reads[AllowanceOrDeduction]                = (js: JsValue) => {
+  given reader: Reads[AllowanceOrDeduction]                       = (js: JsValue) => {
     val typeAndDescription         = (js \ "type").validate[String].getOrElse("")
     val (npsDescription, typeCode) = typeAndDescription.split("[(]") match {
       case Array(desc, code) => (Some(desc.trim), code.substring(0, code.indexOf(")")).toIntOption)
@@ -43,7 +43,14 @@ object AllowanceOrDeduction {
       sourceAmount = sourceAmount
     )
   }
-  given writer: OWrites[AllowanceOrDeduction]              = Json.writes[AllowanceOrDeduction]
+  given writer: Writes[AllowanceOrDeduction]                      = Writes { data =>
+    Json.obj(
+      "`type`"         -> data.`type`,
+      "npsDescription" -> data.npsDescription,
+      "amount"         -> data.amount,
+      "sourceAmount"   -> data.sourceAmount
+    )
+  }
   // TODO: to be removed
   def toTaAllowance(allowance: AllowanceOrDeduction): TaAllowance =
     TaAllowance(allowance.`type`, allowance.npsDescription, allowance.amount, allowance.sourceAmount)
@@ -82,7 +89,7 @@ case class HIPNpsIncomeSource(
 }
 
 object HIPNpsIncomeSource {
-  given reader: Reads[HIPNpsIncomeSource]                                 = (js: JsValue) => {
+  given reader: Reads[HIPNpsIncomeSource]                                        = (js: JsValue) => {
     val employerReference                                = (js \ "employerReference").validate[String].getOrElse("")
     val (employmentTaxDistrictNumber, employmentPayeRef) = employerReference.split("/") match {
       case Array(taxDistrict, payeRef) => (taxDistrict.toIntOption, Some(payeRef))
@@ -186,7 +193,7 @@ case class HIPNpsTaxAccount(incomeSources: List[HIPNpsIncomeSource]) {
 }
 
 object HIPNpsTaxAccount {
-  given reader: Reads[HIPNpsTaxAccount]                           = (js: JsValue) =>
+  given reader: Reads[HIPNpsTaxAccount]                                  = (js: JsValue) =>
     for {
       incomeSources <- (js \ "employmentDetailsList").validate[List[HIPNpsIncomeSource]]
     } yield HIPNpsTaxAccount(incomeSources)

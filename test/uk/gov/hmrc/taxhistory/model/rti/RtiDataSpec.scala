@@ -33,7 +33,7 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
 
   "RtiData" should {
 
-    val rtiDetails = rtiSuccessfulResponseURLDummy.as[RtiData](RtiData.reader)
+    val rtiDetails = rtiSuccessfulResponseURLDummy.as[RtiData](using RtiData.reader)
 
     "transform Rti Response Json correctly to RtiData Model " in {
       rtiDetails      shouldBe a[RtiData]
@@ -95,7 +95,7 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
 
     "transform Rti Response Json containing inYear payment but no eyu payment" in {
       val rtiResponse: JsValue = loadFile("/json/rti/response/dummyRtiHasOnlyInYearPayments.json")
-      val rtiDetails           = rtiResponse.as[RtiData](RtiData.reader)
+      val rtiDetails           = rtiResponse.as[RtiData](using RtiData.reader)
       val employment           = rtiDetails.employments.head
 
       employment.earlierYearUpdates shouldBe List.empty
@@ -104,7 +104,7 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
 
     "transform Rti Response Json containing eyu payment but no inYear payment" in {
       val rtiResponse: JsValue = loadFile("/json/rti/response/dummyRtiHasOnlyEyuPayments.json")
-      val rtiDetails           = rtiResponse.as[RtiData](RtiData.reader)
+      val rtiDetails           = rtiResponse.as[RtiData](using RtiData.reader)
       val employment           = rtiDetails.employments.head
 
       employment.earlierYearUpdates.size shouldBe 2

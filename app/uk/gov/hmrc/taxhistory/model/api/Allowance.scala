@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
+import play.api.libs.functional.syntax.*
 import java.util.UUID
-
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.*
 
 case class Allowance(allowanceId: UUID = UUID.randomUUID(), iabdType: String, amount: BigDecimal)
 

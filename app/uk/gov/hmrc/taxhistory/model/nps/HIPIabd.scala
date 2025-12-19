@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxhistory.model.nps
 
 import play.api.Logging
-import play.api.libs.json.{JsValue, Json, OFormat, OWrites, Reads}
+import play.api.libs.json.{Format, JsPath, JsValue, Json, OFormat, OWrites, Reads, Writes, __}
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -144,7 +144,7 @@ case class HIPIabd(
 }
 
 object HIPIabd extends Logging {
-  given reader: Reads[HIPIabd]   = (js: JsValue) => {
+  given reader: Reads[HIPIabd]  = (js: JsValue) => {
     val typeAndDescription               = (js \ "type").as[String]
     val (typeDescription, typeCode)      = typeAndDescription.split("[(]") match {
       case Array(desc, code) => (Some(desc.trim), code.substring(0, code.indexOf(")")).toIntOption)
@@ -183,7 +183,19 @@ object HIPIabd extends Logging {
       startDate = formatDate(startDate)
     )
   }
-  given writer: OWrites[HIPIabd] = Json.writes[HIPIabd]
+  given writer: Writes[HIPIabd] = Writes { data =>
+    Json.obj(
+      "nino"                     -> data.nino,
+      "`type`"                   -> data.`type`,
+      "typeDescription"          -> data.typeDescription,
+      "employmentSequenceNumber" -> data.employmentSequenceNumber,
+      "grossAmount"              -> data.grossAmount,
+      "source"                   -> data.source,
+      "captureDate"              -> data.captureDate,
+      "paymentFrequency"         -> data.paymentFrequency,
+      "startDate"                -> data.startDate
+    )
+  }
 }
 
 case class HIPIabdList(iabdDetails: Option[List[HIPIabd]]) {
@@ -194,5 +206,8 @@ case class HIPIabdList(iabdDetails: Option[List[HIPIabd]]) {
 }
 
 object HIPIabdList {
-  given formats: OFormat[HIPIabdList] = Json.format[HIPIabdList]
+  given formats: OFormat[HIPIabdList] = OFormat(
+    (JsPath \ "iabdDetails").readNullable[List[HIPIabd]].map(HIPIabdList.apply),
+    (JsPath \ "iabdDetails").write[List[Iabd]].contramap[HIPIabdList](_.getListOfIabd)
+  )
 }

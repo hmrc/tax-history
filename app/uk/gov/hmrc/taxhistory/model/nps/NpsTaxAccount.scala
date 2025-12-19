@@ -16,8 +16,12 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
-import play.api.libs.json._
-import uk.gov.hmrc.taxhistory.model.api.{IncomeSource, TaxAccount}
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.*
+import uk.gov.hmrc.taxhistory.model.api.{CompanyBenefit, IncomeSource, TaxAccount}
+import uk.gov.hmrc.time.TaxYear
+
+import java.util.UUID
 
 case class TaDeduction(`type`: Int, npsDescription: String, amount: BigDecimal, sourceAmount: Option[BigDecimal])
 

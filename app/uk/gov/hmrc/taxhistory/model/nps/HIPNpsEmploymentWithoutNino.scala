@@ -38,7 +38,7 @@ object HIPNpsEmploymentWithoutNino {
   private def withPadding(taxDistrictNumber: String): String =
     taxDistrictNumber.reverse.padTo(3, '0').reverse.mkString
 
-  given reader: Reads[HIPNpsEmploymentWithoutNino]   = (js: JsValue) => {
+  given reader: Reads[HIPNpsEmploymentWithoutNino]  = (js: JsValue) => {
     val employerReference = (js \ "employerReference").validate[String].getOrElse("")
     // check substring functions
     var taxDistrictNumber = ""
@@ -56,8 +56,8 @@ object HIPNpsEmploymentWithoutNino {
       otherIncomeSourceIndicator   <- (js \ "otherIncomeSource").validate[Boolean]
       receivingOccupationalPension <- (js \ "activeOccupationalPension").validate[Boolean]
       employmentStatus             <- js.validate[EmploymentStatus]
-      startDate                    <- (js \ "startDate").validateOpt[LocalDate](JsonUtils.hipnpsDateFormat)
-      endDate                      <- (js \ "endDate").validateOpt[LocalDate](JsonUtils.hipnpsDateFormat)
+      startDate                    <- (js \ "startDate").validateOpt[LocalDate](using JsonUtils.hipnpsDateFormat)
+      endDate                      <- (js \ "endDate").validateOpt[LocalDate](using JsonUtils.hipnpsDateFormat)
       // employmentStatus with values Live =1, PotentiallyCeased=2, Ceased=3, PermanentlyCeased=6
     } yield HIPNpsEmploymentWithoutNino(
       sequenceNumber = sequenceNumber,
@@ -73,5 +73,19 @@ object HIPNpsEmploymentWithoutNino {
       employmentStatus = employmentStatus
     )
   }
-  given writer: OWrites[HIPNpsEmploymentWithoutNino] = Json.writes[HIPNpsEmploymentWithoutNino]
+  given writer: Writes[HIPNpsEmploymentWithoutNino] = Writes { data =>
+    Json.obj(
+      "sequenceNumber"               -> data.sequenceNumber,
+      "taxDistrictNumber"            -> data.taxDistrictNumber,
+      "payeNumber"                   -> data.payeNumber,
+      "employerName"                 -> data.employerName,
+      "worksNumber"                  -> data.worksNumber,
+      "receivingJobSeekersAllowance" -> data.receivingJobSeekersAllowance,
+      "otherIncomeSourceIndicator"   -> data.otherIncomeSourceIndicator,
+      "startDate"                    -> data.startDate,
+      "endDate"                      -> data.endDate,
+      "receivingOccupationalPension" -> data.receivingOccupationalPension,
+      "employmentStatus"             -> data.employmentStatus
+    )
+  }
 }

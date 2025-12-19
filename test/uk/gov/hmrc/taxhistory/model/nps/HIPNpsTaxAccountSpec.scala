@@ -19,8 +19,8 @@ package uk.gov.hmrc.taxhistory.model.nps
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.libs.json.Json.fromJson
-import play.api.libs.json._
+import play.api.libs.json.Json.{fromJson, toJson}
+import play.api.libs.json.*
 import uk.gov.hmrc.domain.TaxCode
 import uk.gov.hmrc.taxhistory.model.api.IncomeSource
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live

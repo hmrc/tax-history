@@ -18,10 +18,11 @@ package uk.gov.hmrc.taxhistory.model.nps
 
 import java.time.LocalDate
 import org.scalatest.OptionValues
+import org.scalatest.matchers.must.Matchers.mustBe
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json.fromJson
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.domain.TaxCode
 import uk.gov.hmrc.taxhistory.model.api.IncomeSource
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
@@ -449,4 +450,60 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
       }
     }
   }
+
+//  "TaDeduction" should {
+//    val json: JsValue = Json.parse(
+//      """
+//        |{
+//        |    "type": 7,
+//        |    "npsDescription": "npsDescription",
+//        |    "amount": 65,
+//        |    "sourceAmount": 65
+//        |}
+//        """.stripMargin
+//    )
+//
+//    val model: TaDeduction = TaDeduction(
+//      `type` = 7,
+//      npsDescription = "npsDescription",
+//      amount = BigDecimal("65"),
+//      sourceAmount = Some(BigDecimal("65"))
+//    )
+//
+//    "should deserialise from JSON" in {
+//      json.as[TaDeduction] mustBe model
+//    }
+//
+//    "should serialise to JSON" in {
+//      Json.toJson(model) mustBe json
+//    }
+//  }
+//
+//  "TaAllowance" should {
+//    val json: JsValue = Json.parse(
+//      """
+//        |{
+//        |    "type": 7,
+//        |    "npsDescription": "npsDescription",
+//        |    "amount": 65,
+//        |    "sourceAmount": 65
+//        |}
+//        """.stripMargin
+//    )
+//
+//    val model: TaAllowance = TaAllowance(
+//      `type` = 7,
+//      npsDescription = "npsDescription",
+//      amount = BigDecimal("65"),
+//      sourceAmount = Some(BigDecimal("65"))
+//    )
+//
+//    "should deserialise from JSON" in {
+//      json.as[TaAllowance] mustBe model
+//    }
+//
+//    "should serialise to JSON" in {
+//      Json.toJson(model) mustBe json
+//    }
+//  }
 }

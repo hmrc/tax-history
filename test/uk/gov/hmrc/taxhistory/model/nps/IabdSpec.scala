@@ -20,7 +20,7 @@ import java.time.LocalDate
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
+import play.api.libs.json.{JsError, JsNull, JsObject, JsSuccess, JsValue, Json}
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 
 class IabdSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
@@ -46,9 +46,11 @@ class IabdSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionVa
        |}
     """.stripMargin
 
+  val iabd: Iabd = Json.parse(iabdJsonResponse).as[Iabd]
+
   "Iabd Json" should {
     "transform Iabds Response Json correctly to Employment Model " in {
-      val iabd = Json.parse(iabdJsonResponse).as[Iabd]
+
       iabd                  shouldBe a[Iabd]
       iabd.nino             shouldBe "QQ00000AB"
       iabd.`type`           shouldBe a[CompanyBenefits]
@@ -57,6 +59,68 @@ class IabdSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionVa
       iabd.typeDescription  shouldBe Some("Total gift aid Payments")
       iabd.paymentFrequency shouldBe Some(1)
       iabd.startDate        shouldBe Some("23/02/2018")
+    }
+
+    "read from valid JSON" should {
+
+      "an optional field is missing" in {
+        val missingIabdJsonResponse: JsObject = Json.obj(
+          "nino"             -> "QQ00000AB",
+          "taxYear"          -> 2017,
+          "type"             -> 8,
+          "source"           -> 15,
+          "grossAmount"      -> grossAmount,
+          "receiptDate"      -> null,
+          "captureDate"      -> "10/04/2017",
+          "typeDescription"  -> "Total gift aid Payments",
+          "netAmount"        -> 100,
+          "paymentFrequency" -> 1,
+          "startDate"        -> "23/02/2018"
+        )
+
+        missingIabdJsonResponse.validate[Iabd] shouldBe JsSuccess(iabd.copy(employmentSequenceNumber = None))
+      }
+    }
+
+    "fail to read from json" when {
+      "there is type mismatch" in {
+        val mismatchIabdJsonResponse: JsObject = Json.obj(
+          "nino"             -> false,
+          "sequenceNumber"   -> 201700001,
+          "taxYear"          -> 2017,
+          "type"             -> 8,
+          "source"           -> 15,
+          "grossAmount"      -> grossAmount,
+          "receiptDate"      -> null,
+          "typeDescription"  -> "Total gift aid Payments",
+          "netAmount"        -> 100,
+          "paymentFrequency" -> 1,
+          "startDate"        -> "23/02/2018"
+        )
+
+        mismatchIabdJsonResponse.validate[Iabd] shouldBe a[JsError]
+      }
+
+      "a required field is missing" in {
+        Json
+          .obj(
+            "sequenceNumber"   -> "201700001",
+            "taxYear"          -> 2017,
+            "type"             -> 8,
+            "source"           -> 15,
+            "grossAmount"      -> grossAmount,
+            "receiptDate"      -> null,
+            "typeDescription"  -> "Total gift aid Payments",
+            "netAmount"        -> 100,
+            "paymentFrequency" -> 1,
+            "startDate"        -> "23/02/2018"
+          )
+          .validate[Iabd] shouldBe a[JsError]
+      }
+
+      "empty json" in {
+        Json.obj().validate[Iabd] shouldBe a[JsError]
+      }
     }
 
     "handle paymentFrequency with a null value" in {
