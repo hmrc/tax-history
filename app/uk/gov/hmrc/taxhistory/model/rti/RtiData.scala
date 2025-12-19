@@ -109,10 +109,10 @@ object RtiPayment {
     val optionalMonetaryAmountMap: Option[Map[String, BigDecimal]] =
       (js \ "optionalMonetaryAmount").asOpt[Map[String, BigDecimal]]
 
-    val taxablePay: BigDecimal = mandatoryMonetaryAmountMap.getOrElse(Map.empty).getOrElse("TaxablePayYTD", 0.0)
-    val totalTax: BigDecimal   = mandatoryMonetaryAmountMap.getOrElse(Map.empty).getOrElse("TotalTaxYTD", 0.0)
-    //TODO: Revert this back once a fix as been issued on API 1001
-    //val studentLoan: Option[BigDecimal] = optionalMonetaryAmountMap.getOrElse(Map.empty).get("StudentLoansYTD")
+    val taxablePay: BigDecimal          = mandatoryMonetaryAmountMap.getOrElse(Map.empty).getOrElse("TaxablePayYTD", 0.0)
+    val totalTax: BigDecimal            = mandatoryMonetaryAmountMap.getOrElse(Map.empty).getOrElse("TotalTaxYTD", 0.0)
+    // TODO: Revert this back once a fix as been issued on API 1001
+    // val studentLoan: Option[BigDecimal] = optionalMonetaryAmountMap.getOrElse(Map.empty).get("StudentLoansYTD")
     val studentLoan: Option[BigDecimal] = {
       val normalizedMap = optionalMonetaryAmountMap
         .getOrElse(Map.empty)

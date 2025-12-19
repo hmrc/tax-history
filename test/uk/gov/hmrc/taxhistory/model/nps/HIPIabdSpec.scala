@@ -129,14 +129,14 @@ class HIPIabdSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
           statePension.startDate        shouldBe Some(LocalDate.parse("2018-04-23"))
         }
 
-        "there is a paymentFrequency of 1" in {
-          val paymentFrequency  = 1
+        "there is a paymentFrequency of 12" in {
+          val paymentFrequency  = 12
           val iabdNoPaymentFreq =
             testIabd.copy(paymentFrequency = Some(paymentFrequency), startDate = Some("2018/04/23"))
           val statePension      = iabdNoPaymentFreq.toStatePension
 
           statePension.paymentFrequency shouldBe Some(paymentFrequency)
-          statePension.startDate        shouldBe Some(LocalDate.parse("2018-04-23"))
+          statePension.startDate        shouldBe None
         }
       }
     }
