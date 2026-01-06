@@ -48,7 +48,7 @@ class IabdSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionVa
 
   val iabd: Iabd = Json.parse(iabdJsonResponse).as[Iabd]
 
-  "Iabd Json" should {
+  "Iabd" should {
     "transform Iabds Response Json correctly to Employment Model " in {
 
       iabd                  shouldBe a[Iabd]

@@ -52,6 +52,28 @@ class EmploymentPaymentTypeSpec extends TestUtil with AnyWordSpecLike with Match
         val serialisedObj = Json.parse("""{ "employmentPaymentType": "SomethingPeculiar" }""")
         fromJson[TestObj](serialisedObj) shouldBe a[JsError]
       }
+
+      "fail to read from json" when {
+        "there is type mismatch" in {
+          Json
+            .obj(
+              "employmentPaymentType" -> "type"
+            )
+            .validate[EmploymentPaymentType] shouldBe a[JsError]
+        }
+
+        "a required field is missing" in {
+          Json
+            .obj(
+              "employmentPaymentType" -> "OccupationalPension"
+            )
+            .validate[EmploymentPaymentType] shouldBe a[JsError]
+        }
+
+        "empty json" in {
+          Json.obj().validate[EmploymentPaymentType] shouldBe a[JsError]
+        }
+      }
     }
   }
 

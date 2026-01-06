@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.model.rti
 
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.*
 import uk.gov.hmrc.taxhistory.model.api.{EarlierYearUpdate, PayAndTax}
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils

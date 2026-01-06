@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxhistory.model.api
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsError, JsValue, Json}
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 
 class IndividualTaxYearSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
@@ -56,6 +56,33 @@ class IndividualTaxYearSpec extends TestUtil with AnyWordSpecLike with Matchers 
     }
     "transform into object list from json correctly " in {
       indiviualTaxYearListJson.as[List[IndividualTaxYear]] shouldBe taxYearList
+    }
+
+    "fail to read from json" when {
+      "there is type mismatch" in {
+        Json
+          .obj(
+            "year"           -> taxYear1,
+            "allowancesURI"  -> 2016,
+            "employmentsURI" -> "/2016/employments",
+            "taxAccountURI"  -> "/2016/tax-account"
+          )
+          .validate[IndividualTaxYear] shouldBe a[JsError]
+      }
+
+      "a required field is missing" in {
+        Json
+          .obj(
+            "year"           -> taxYear1,
+            "allowancesURI"  -> "/2016/allowances",
+            "employmentsURI" -> "/2016/employments"
+          )
+          .validate[IndividualTaxYear] shouldBe a[JsError]
+      }
+
+      "empty json" in {
+        Json.obj().validate[IndividualTaxYear] shouldBe a[JsError]
+      }
     }
   }
 }

@@ -191,6 +191,8 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
       }
     }
 
+
+
     "toEarlierYearUpdate is called" should {
       val testUuid = UUID.randomUUID()
 

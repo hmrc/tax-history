@@ -47,6 +47,151 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
       "deserialise from a json object to PayAsYouEarn" in {
         fromJson[PayAsYouEarn](fullPayeJson).get shouldBe a[PayAsYouEarn]
       }
+
+      "fail to read from json" when {
+        "there is type mismatch" in {
+          Json
+            .obj(
+              "employments"   -> "employments",
+              "allowances"    -> List(
+                Allowance(
+                  allowanceId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
+                  iabdType = "payeType",
+                  amount = BigDecimal("12.00")
+                )
+              ),
+              "incomeSources" -> IncomeSource(
+                employmentId = 1,
+                employmentType = 1,
+                actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal("0")),
+                taxCode = "227L",
+                basisOperation = Some(2),
+                employmentTaxDistrictNumber = incomeSource1DeserialisedEmpTDN,
+                employmentPayeRef = "P32",
+                allowances = List(
+                  TaAllowance(
+                    `type` = taAllowanceType,
+                    npsDescription = "personal allowance",
+                    amount = BigDecimal("11000"),
+                    sourceAmount = Some(BigDecimal("11000"))
+                  )
+                ),
+                deductions = List(
+                  TaDeduction(
+                    `type` = taDeductionType1,
+                    npsDescription = "employer benefits ",
+                    amount = BigDecimal("65"),
+                    sourceAmount = Some(BigDecimal("65"))
+                  ),
+                  TaDeduction(
+                    `type` = taDeductionType2,
+                    npsDescription = "car benefit",
+                    amount = BigDecimal("8026"),
+                    sourceAmount = Some(BigDecimal("8026"))
+                  ),
+                  TaDeduction(
+                    `type` = taDeductionType3,
+                    npsDescription = "medical insurance",
+                    amount = BigDecimal("637"),
+                    sourceAmount = Some(BigDecimal("637"))
+                  )
+                )
+              ),
+              "benefits"      -> CompanyBenefit(
+                companyBenefitId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
+                iabdType = "companyBenefitType",
+                amount = BigDecimal("12.00"),
+                source = None,
+                captureDate = Some("5/4/2022"),
+                TaxYear(2022)
+              ),
+              "payAndTax"     -> PayAndTax(
+                payAndTaxId = UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"),
+                taxablePayTotal = Some(BigDecimal("2222.22")),
+                taxablePayTotalIncludingEYU = Some(BigDecimal("2222.23")),
+                taxTotal = Some(BigDecimal("111.11")),
+                taxTotalIncludingEYU = Some(BigDecimal("111.12")),
+                paymentDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_20)),
+                studentLoan = Some(BigDecimal("333.33")),
+                earlierYearUpdates = Nil
+              ),
+              "taxAccount"    -> None,
+              "statePension"  -> None
+            )
+            .validate[PayAsYouEarn] shouldBe a[JsError]
+        }
+
+        "a required field is missing" in {
+          Json
+            .obj(
+              "allowances"    -> List(
+                Allowance(
+                  allowanceId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
+                  iabdType = "payeType",
+                  amount = BigDecimal("12.00")
+                )
+              ),
+              "incomeSources" -> IncomeSource(
+                employmentId = 1,
+                employmentType = 1,
+                actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal("0")),
+                taxCode = "227L",
+                basisOperation = Some(2),
+                employmentTaxDistrictNumber = incomeSource1DeserialisedEmpTDN,
+                employmentPayeRef = "P32",
+                allowances = List(
+                  TaAllowance(
+                    `type` = taAllowanceType,
+                    npsDescription = "personal allowance",
+                    amount = BigDecimal("11000"),
+                    sourceAmount = Some(BigDecimal("11000"))
+                  )
+                ),
+                deductions = List(
+                  TaDeduction(
+                    `type` = taDeductionType1,
+                    npsDescription = "employer benefits ",
+                    amount = BigDecimal("65"),
+                    sourceAmount = Some(BigDecimal("65"))
+                  ),
+                  TaDeduction(
+                    `type` = taDeductionType2,
+                    npsDescription = "car benefit",
+                    amount = BigDecimal("8026"),
+                    sourceAmount = Some(BigDecimal("8026"))
+                  ),
+                  TaDeduction(
+                    `type` = taDeductionType3,
+                    npsDescription = "medical insurance",
+                    amount = BigDecimal("637"),
+                    sourceAmount = Some(BigDecimal("637"))
+                  )
+                )
+              ),
+              "benefits"      -> CompanyBenefit(
+                companyBenefitId = UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
+                iabdType = "companyBenefitType",
+                amount = BigDecimal("12.00"),
+                source = None,
+                captureDate = Some("5/4/2022"),
+                TaxYear(2022)
+              ),
+              "payAndTax"     -> PayAndTax(
+                payAndTaxId = UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"),
+                taxablePayTotal = Some(BigDecimal("2222.22")),
+                taxablePayTotalIncludingEYU = Some(BigDecimal("2222.23")),
+                taxTotal = Some(BigDecimal("111.11")),
+                taxTotalIncludingEYU = Some(BigDecimal("111.12")),
+                paymentDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_20)),
+                studentLoan = Some(BigDecimal("333.33")),
+                earlierYearUpdates = Nil
+              ),
+              "taxAccount"    -> None,
+              "statePension"  -> None
+            )
+            .validate[PayAsYouEarn] shouldBe a[JsError]
+        }
+      }
     }
 
     "(de)serialising the 'employments' field" should {

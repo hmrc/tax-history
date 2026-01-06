@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxhistory.model.nps
 
 import play.api.Logging
-import play.api.libs.json.{Format, JsPath, JsValue, Json, OFormat, OWrites, Reads, Writes, __}
+import play.api.libs.json.{JsPath, JsValue, Json, OFormat, Reads, Writes}
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

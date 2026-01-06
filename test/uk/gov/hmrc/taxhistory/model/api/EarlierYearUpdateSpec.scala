@@ -20,7 +20,7 @@ import java.time.LocalDate
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsError, JsValue, Json}
 import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 
 import java.util.UUID
@@ -68,6 +68,33 @@ class EarlierYearUpdateSpec extends TestUtil with AnyWordSpecLike with Matchers 
     }
     "transform into object list from json correctly " in {
       earlierYearUpdateListJson.as[List[EarlierYearUpdate]] shouldBe earlierYearUpdateList
+    }
+
+    "fail to read from json" when {
+      "there is type mismatch" in {
+        Json
+          .obj(
+            "earlierYearUpdateId" -> UUID.fromString("effa7845-aa97-454f-88da-ffa099eba7f2"),
+            "taxablePayEYU"       -> BigDecimal(123.45),
+            "taxEYU"              -> BigDecimal(67.89),
+            "receivedDate"        -> "date"
+          )
+          .validate[EarlierYearUpdate] shouldBe a[JsError]
+      }
+
+      "a required field is missing" in {
+        Json
+          .obj(
+            "earlierYearUpdateId" -> UUID.fromString("effa7845-aa97-454f-88da-ffa099eba7f2"),
+            "taxablePayEYU"       -> BigDecimal(123.45),
+            "taxEYU"              -> BigDecimal(67.89)
+          )
+          .validate[EarlierYearUpdate] shouldBe a[JsError]
+      }
+
+      "empty json" in {
+        Json.obj().validate[EarlierYearUpdate] shouldBe a[JsError]
+      }
     }
   }
 }

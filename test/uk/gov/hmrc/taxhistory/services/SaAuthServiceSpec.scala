@@ -64,20 +64,20 @@ class SaAuthServiceSpec extends PlaySpec {
 
     "use individual authorisation predicate if no SA UTR is found for the NINO" in new Setup {
 
-      when(mockCitizenDetailsConnector.lookupSaUtr(meq(validNino))(any()))
+      when(mockCitizenDetailsConnector.lookupSaUtr(meq(validNino))(using any()))
         .thenReturn(Future.successful(None))
 
-      val result: Predicate = await(mockSaAuthService.authorisationPredicate(validNino)(hc, global))
+      val result: Predicate = await(mockSaAuthService.authorisationPredicate(validNino)(using hc, global))
 
       result mustBe (individualPredicate or agentServicesAccountWithDigitalHandshakePredicate)
     }
 
     "use individual or agent authorisation predicate if an SA UTR is found for the NINO" in new Setup {
 
-      when(mockCitizenDetailsConnector.lookupSaUtr(meq(validNino))(any()))
+      when(mockCitizenDetailsConnector.lookupSaUtr(meq(validNino))(using any()))
         .thenReturn(Future.successful(Some(foundSaUtr)))
 
-      val result: Predicate = await(mockSaAuthService.authorisationPredicate(validNino)(hc, global))
+      val result: Predicate = await(mockSaAuthService.authorisationPredicate(validNino)(using hc, global))
 
       result mustBe (individualPredicate or agentServicesAccountWithDigitalHandshakePredicate or selfAssessmentForAgents648Predicate)
     }
@@ -100,13 +100,13 @@ class SaAuthServiceSpec extends PlaySpec {
         )
       )
 
-      when(mockCitizenDetailsConnector.lookupSaUtr(meq(validNino))(any()))
+      when(mockCitizenDetailsConnector.lookupSaUtr(meq(validNino))(using any()))
         .thenReturn(Future.successful(None))
     }
 
     "invoke code block and respond with its result when auth predicate passes" in
       new Setup {
-        when(mockAuthConnector.authorise(any(), meq(EmptyRetrieval))(any(), any()))
+        when(mockAuthConnector.authorise(any(), meq(EmptyRetrieval))(using any(), any()))
           .thenReturn(Future.successful(()))
 
         val result: Result = await(mockSaAuthService.withSaAuthorisation(validNino) { _ =>
@@ -117,7 +117,7 @@ class SaAuthServiceSpec extends PlaySpec {
       }
 
     "not invoke code block and respond with UNAUTHORIZED when auth predicate fails with NoActiveSession" in new Setup {
-      when(mockAuthConnector.authorise(any(), meq(EmptyRetrieval))(any(), any()))
+      when(mockAuthConnector.authorise(any(), meq(EmptyRetrieval))(using any(), any()))
         .thenReturn(Future.failed(BearerTokenExpired()))
 
       val result: Future[Result] = mockSaAuthService.withSaAuthorisation(validNino) { _ =>
@@ -128,7 +128,7 @@ class SaAuthServiceSpec extends PlaySpec {
     }
 
     "not invoke block and respond with FORBIDDEN when auth predicate fails with AuthorisationException" in new Setup {
-      when(mockAuthConnector.authorise(any(), meq(EmptyRetrieval))(any(), any()))
+      when(mockAuthConnector.authorise(any(), meq(EmptyRetrieval))(using any(), any()))
         .thenReturn(Future.failed(InsufficientEnrolments()))
 
       val result: Future[Result] = mockSaAuthService.withSaAuthorisation(validNino) { _ =>

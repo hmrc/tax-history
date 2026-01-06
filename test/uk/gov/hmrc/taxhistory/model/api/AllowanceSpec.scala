@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxhistory.model.api
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsError, JsValue, Json}
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 
 import java.util.UUID
@@ -39,6 +39,7 @@ class AllowanceSpec extends TestUtil with AnyWordSpecLike with Matchers with Opt
 
   "Allowance" should {
     "transform into Json from object correctly " in {
+      println("AllowanceJsonExample: " + allowanceJson)
       Json.toJson(allowance1) shouldBe allowanceJson
     }
     "transform into object from json correctly " in {
@@ -54,6 +55,31 @@ class AllowanceSpec extends TestUtil with AnyWordSpecLike with Matchers with Opt
     }
     "transform into object list from json correctly " in {
       allowanceListJson.as[List[Allowance]] shouldBe allowanceList
+    }
+
+    "fail to read from json" when {
+      "there is type mismatch" in {
+        Json
+          .obj(
+            "allowanceId"   -> UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
+            "iabdType"      -> 12345678,
+            "allowancetype" -> BigDecimal(12.00)
+          )
+          .validate[Allowance] shouldBe a[JsError]
+      }
+
+      "a required field is missing" in {
+        Json
+          .obj(
+            "allowanceId" -> UUID.fromString("c9923a63-4208-4e03-926d-7c7c88adc7ee"),
+            "iabdType"    -> "allowanceType"
+          )
+          .validate[Allowance] shouldBe a[JsError]
+      }
+
+      "empty json" in {
+        Json.obj().validate[Allowance] shouldBe a[JsError]
+      }
     }
   }
 }

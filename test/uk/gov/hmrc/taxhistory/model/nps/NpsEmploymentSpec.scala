@@ -20,7 +20,7 @@ import java.time.LocalDate
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
-import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
+import play.api.libs.json.{JsError, JsNull, JsObject, JsValue, Json}
 import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 
 class NpsEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with DateUtils {

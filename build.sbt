@@ -1,7 +1,7 @@
 import uk.gov.hmrc.DefaultBuildSettings.itSettings
 
 ThisBuild / majorVersion := 3
-ThisBuild / scalaVersion := "3.5.2"
+ThisBuild / scalaVersion := "3.7.1"
 
 lazy val microservice =
   Project("tax-history", file("."))

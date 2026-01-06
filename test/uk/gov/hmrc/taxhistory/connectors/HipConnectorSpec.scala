@@ -64,20 +64,20 @@ class HipConnectorSpec extends BaseConnectorSpec {
     "requestID is present in the headerCarrier" should {
       "return new ID pre-appending the requestID when the requestID matches the format(8-4-4-4)" in {
         val requestId = "8c5d7809-0eec-4257-b4ad"
-        desNpsConnectorWithUUID.getCorrelationId(HeaderCarrier(requestId = Some(RequestId(requestId)))) mustBe
+        desNpsConnectorWithUUID.getHIPCorrelationId(HeaderCarrier(requestId = Some(RequestId(requestId)))) mustBe
           s"$requestId-${uuid.substring(24)}"
       }
 
       "return new ID when the requestID does not match the format(8-4-4-4)" in {
         val requestId = "1a2b-ij12-df34-jk56"
-        desNpsConnectorWithUUID.getCorrelationId(HeaderCarrier(requestId = Some(RequestId(requestId)))) mustBe uuid
+        desNpsConnectorWithUUID.getHIPCorrelationId(HeaderCarrier(requestId = Some(RequestId(requestId)))) mustBe uuid
       }
     }
 
     "requestID is not present in the headerCarrier should return a new ID" should {
       "return the uuid" in {
         val uuid: String = "123f4567-g89c-42c3-b456-557742330000"
-        desNpsConnectorWithUUID.getCorrelationId(HeaderCarrier()) mustBe uuid
+        desNpsConnectorWithUUID.getHIPCorrelationId(HeaderCarrier()) mustBe uuid
       }
     }
   }

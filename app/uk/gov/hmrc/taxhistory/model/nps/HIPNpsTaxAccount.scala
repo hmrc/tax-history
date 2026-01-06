@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
-import play.api.libs.json.{JsValue, Json, OWrites, Reads, Writes}
+import play.api.libs.json.{JsValue, Json, Reads, Writes}
 import uk.gov.hmrc.taxhistory.model.api.{IncomeSource, TaxAccount}
 
 case class AllowanceOrDeduction(
