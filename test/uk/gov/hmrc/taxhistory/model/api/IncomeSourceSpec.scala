@@ -20,10 +20,8 @@ import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsError, JsValue, Json}
-import uk.gov.hmrc.taxhistory.model.nps.{AllowanceOrDeduction, TaAllowance, TaDeduction}
+import uk.gov.hmrc.taxhistory.model.nps.{TaAllowance, TaDeduction}
 import uk.gov.hmrc.taxhistory.utils.TestUtil
-
-import java.util.UUID
 
 class IncomeSourceSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
 

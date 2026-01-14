@@ -60,7 +60,7 @@ class AllowanceControllerSpec extends PlaySpec with GuiceOneServerPerSuite with 
   "getAllowances" must {
 
     "respond with OK for successful get" in {
-      when(mockEmploymentHistoryService.getAllowances(any(), any())(any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getAllowances(any(), any())(using any[HeaderCarrier]))
         .thenReturn(Future.successful(testAllowances))
 
       val result = testAllowanceController.getAllowances(ninoWithAgent.nino, taxYear).apply(FakeRequest())
@@ -69,7 +69,7 @@ class AllowanceControllerSpec extends PlaySpec with GuiceOneServerPerSuite with 
 
     "propagate error responses from upstream microservices" in {
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-        when(mockEmploymentHistoryService.getAllowances(any(), any())(any[HeaderCarrier]))
+        when(mockEmploymentHistoryService.getAllowances(any(), any())(using any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
         val result = testAllowanceController.getAllowances(ninoWithAgent.nino, taxYear).apply(FakeRequest())
         status(result) must be(expectedStatus)
@@ -77,7 +77,7 @@ class AllowanceControllerSpec extends PlaySpec with GuiceOneServerPerSuite with 
     }
 
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
-      when(mockEmploymentHistoryService.getAllowances(any(), any())(any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getAllowances(any(), any())(using any[HeaderCarrier]))
         .thenReturn(Future.successful(testAllowances))
       val result = testAllowanceController.getAllowances(ninoWithoutAgent.nino, taxYear).apply(FakeRequest())
       status(result) must be(UNAUTHORIZED)

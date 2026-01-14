@@ -19,8 +19,7 @@ package uk.gov.hmrc.taxhistory.model.api
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.libs.json.Json.{fromJson, toJson}
-import play.api.libs.json.{JsArray, JsDefined, JsError, JsValue, Json}
+import play.api.libs.json.{JsArray, JsError, JsValue, Json}
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 import uk.gov.hmrc.time.TaxYear
 

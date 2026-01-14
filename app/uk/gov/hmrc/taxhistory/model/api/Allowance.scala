@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
-import play.api.libs.functional.syntax.*
 import java.util.UUID
 import play.api.libs.json.*
 

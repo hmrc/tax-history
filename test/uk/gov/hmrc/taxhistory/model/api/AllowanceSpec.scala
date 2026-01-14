@@ -39,7 +39,6 @@ class AllowanceSpec extends TestUtil with AnyWordSpecLike with Matchers with Opt
 
   "Allowance" should {
     "transform into Json from object correctly " in {
-      println("AllowanceJsonExample: " + allowanceJson)
       Json.toJson(allowance1) shouldBe allowanceJson
     }
     "transform into object from json correctly " in {

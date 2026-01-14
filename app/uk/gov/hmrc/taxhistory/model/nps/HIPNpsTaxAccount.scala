@@ -43,14 +43,7 @@ object AllowanceOrDeduction {
       sourceAmount = sourceAmount
     )
   }
-  given writer: Writes[AllowanceOrDeduction]                      = Writes { data =>
-    Json.obj(
-      "`type`"         -> data.`type`,
-      "npsDescription" -> data.npsDescription,
-      "amount"         -> data.amount,
-      "sourceAmount"   -> data.sourceAmount
-    )
-  }
+  given writer: Writes[AllowanceOrDeduction]                      = Json.writes[AllowanceOrDeduction]
   // TODO: to be removed
   def toTaAllowance(allowance: AllowanceOrDeduction): TaAllowance =
     TaAllowance(allowance.`type`, allowance.npsDescription, allowance.amount, allowance.sourceAmount)

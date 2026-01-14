@@ -79,7 +79,7 @@ class DesNpsConnectorSpec extends BaseConnectorSpec {
   }
 
   "create the correct headers" in {
-    val headers = testDesNpsConnector.buildHeaders(hc)
+    val headers = testDesNpsConnector.buildHeaders(using hc)
     headers mustBe List(
       ("Environment", "local"),
       ("Authorization", "Bearer local"),

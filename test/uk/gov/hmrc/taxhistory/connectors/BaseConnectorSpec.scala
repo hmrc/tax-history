@@ -56,7 +56,7 @@ trait BaseConnectorSpec extends PlaySpec with TestUtil with BeforeAndAfterEach w
     reset(mockTimerContext)
     reset(mockRequestBuilder)
 
-    when(mockHttpClient.get(any())(any())).thenReturn(mockRequestBuilder)
+    when(mockHttpClient.get(any())(using any())).thenReturn(mockRequestBuilder)
     when(mockRequestBuilder.setHeader(any())).thenReturn(mockRequestBuilder)
 
     when(mockMetrics.startTimer(any())).thenReturn(mockTimerContext)

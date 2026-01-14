@@ -23,8 +23,6 @@ import play.api.libs.json.*
 import uk.gov.hmrc.taxhistory.model.api.{Employment, EmploymentPaymentType}
 import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
 
-import java.util.UUID
-
 case class NpsEmployment(
   nino: String,
   sequenceNumber: Int,

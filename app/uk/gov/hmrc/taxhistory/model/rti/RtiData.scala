@@ -131,19 +131,12 @@ object RtiPayment {
     )
   }
 
-  given writer: Writes[RtiPayment] = Writes { data =>
-    Json.obj(
-      "paidOnDate"      -> data.paidOnDate,
-      "taxablePayYTD"   -> data.taxablePayYTD,
-      "totalTaxYTD"     -> data.totalTaxYTD,
-      "studentLoansYTD" -> data.studentLoansYTD
-    )
-  }
+  given writer: Writes[RtiPayment] = Json.writes[RtiPayment]
 
 }
 
 object RtiEarlierYearUpdate {
-  given reader: Reads[RtiEarlierYearUpdate]  = (js: JsValue) => {
+  given reader: Reads[RtiEarlierYearUpdate] = (js: JsValue) => {
     given stringMapFormat: Format[Map[String, BigDecimal]]           =
       JsonUtils.mapFormat[String, BigDecimal]("type", "amount")
     val optionalAdjustmentAmountMap: Option[Map[String, BigDecimal]] =
@@ -164,14 +157,8 @@ object RtiEarlierYearUpdate {
       )
     )
   }
-  given writer: Writes[RtiEarlierYearUpdate] = Writes { data =>
-    Json.obj(
-      "taxablePayDelta"           -> data.taxablePayDelta,
-      "totalTaxDelta"             -> data.totalTaxDelta,
-      "studentLoanRecoveredDelta" -> data.studentLoanRecoveredDelta,
-      "receivedDate"              -> data.receivedDate
-    )
-  }
+
+  given writer: Writes[RtiEarlierYearUpdate] = Json.writes[RtiEarlierYearUpdate]
 }
 
 object RtiEmployment {
@@ -192,16 +179,8 @@ object RtiEmployment {
       payments = payments.getOrElse(List.empty),
       earlierYearUpdates = earlierYearUpdates.getOrElse(Nil)
     )
-  given writer: Writes[RtiEmployment] = Writes { data =>
-    Json.obj(
-      "sequenceNo"         -> data.sequenceNo,
-      "payeRef"            -> data.payeRef,
-      "officeNumber"       -> data.officeNumber,
-      "currentPayId"       -> data.currentPayId,
-      "payments"           -> data.payments,
-      "earlierYearUpdates" -> data.earlierYearUpdates
-    )
-  }
+  given writer: Writes[RtiEmployment] = Json.writes[RtiEmployment]
+
 }
 
 object RtiData {
@@ -210,10 +189,5 @@ object RtiData {
       nino        <- (js \ "request" \ "nino").validate[String]
       employments <- (js \ "individual" \ "employments" \ "employment").validate[List[RtiEmployment]]
     } yield RtiData(nino = nino, employments = employments)
-  given writer: Writes[RtiData] = Writes { data =>
-    Json.obj(
-      "nino"        -> data.nino,
-      "employments" -> data.employments
-    )
-  }
+  given writer: Writes[RtiData] = Json.writes[RtiData]
 }

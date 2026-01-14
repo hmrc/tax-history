@@ -183,19 +183,7 @@ object HIPIabd extends Logging {
       startDate = formatDate(startDate)
     )
   }
-  given writer: Writes[HIPIabd] = Writes { data =>
-    Json.obj(
-      "nino"                     -> data.nino,
-      "`type`"                   -> data.`type`,
-      "typeDescription"          -> data.typeDescription,
-      "employmentSequenceNumber" -> data.employmentSequenceNumber,
-      "grossAmount"              -> data.grossAmount,
-      "source"                   -> data.source,
-      "captureDate"              -> data.captureDate,
-      "paymentFrequency"         -> data.paymentFrequency,
-      "startDate"                -> data.startDate
-    )
-  }
+  given writer: Writes[HIPIabd] = Json.writes[HIPIabd]
 }
 
 case class HIPIabdList(iabdDetails: Option[List[HIPIabd]]) {

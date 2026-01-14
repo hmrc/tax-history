@@ -83,7 +83,7 @@ class HipConnectorSpec extends BaseConnectorSpec {
   }
 
   "create the correct hip headers" in {
-    val headers = desNpsConnectorWithUUID.buildHIPHeaders(hc)
+    val headers = desNpsConnectorWithUUID.buildHIPHeaders(using hc)
     headers mustBe List(
       ("gov-uk-originator-id", "MDTP-PAYE-TES-2"),
       ("correlationId", "123f4567-g89c-42c3-b456-557742330000"),

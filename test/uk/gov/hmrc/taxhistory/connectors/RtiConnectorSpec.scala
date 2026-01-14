@@ -79,7 +79,7 @@ class RtiConnectorSpec extends BaseConnectorSpec {
     }
 
     "create the correct headers" in {
-      val headers = testRtiConnector.buildHeaders(hc)
+      val headers = testRtiConnector.buildHeaders(using hc)
       headers mustBe List(
         ("Environment", "local"),
         ("Authorization", "Bearer local"),

@@ -70,7 +70,7 @@ class PayAndTaxControllerSpec
 
   "getPayAndTax" should {
     "respond with OK for successful get" in {
-      when(mockEmploymentHistoryService.getPayAndTax(any(), any(), any())(any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getPayAndTax(any(), any(), any())(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(testPayAndTax)))
       val result = testPayAndTaxController.getPayAndTax(ninoWithAgent.nino, taxYear, employmentId).apply(FakeRequest())
       status(result) shouldBe OK
@@ -78,7 +78,7 @@ class PayAndTaxControllerSpec
 
     "propagate error responses from upstream microservices" in {
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-        when(mockEmploymentHistoryService.getPayAndTax(any(), any(), any())(any[HeaderCarrier]))
+        when(mockEmploymentHistoryService.getPayAndTax(any(), any(), any())(using any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
         val result =
           testPayAndTaxController.getPayAndTax(ninoWithAgent.nino, taxYear, employmentId).apply(FakeRequest())
@@ -87,7 +87,7 @@ class PayAndTaxControllerSpec
     }
 
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
-      when(mockEmploymentHistoryService.getPayAndTax(any(), any(), any())(any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getPayAndTax(any(), any(), any())(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(testPayAndTax)))
       val result =
         testPayAndTaxController.getPayAndTax(ninoWithoutAgent.nino, taxYear, employmentId).apply(FakeRequest())
@@ -97,7 +97,7 @@ class PayAndTaxControllerSpec
 
   "getAllPayAndTax" should {
     "respond with OK for successful get" in {
-      when(mockEmploymentHistoryService.getAllPayAndTax(any(), any())(any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getAllPayAndTax(any(), any())(using any[HeaderCarrier]))
         .thenReturn(Future.successful(testPayAndTaxMap))
       val result = testPayAndTaxController.getAllPayAndTax(ninoWithAgent.nino, taxYear).apply(FakeRequest())
       status(result) shouldBe OK
@@ -105,7 +105,7 @@ class PayAndTaxControllerSpec
 
     "propagate error responses from upstream microservices" in {
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-        when(mockEmploymentHistoryService.getAllPayAndTax(any(), any())(any[HeaderCarrier]))
+        when(mockEmploymentHistoryService.getAllPayAndTax(any(), any())(using any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
         val result = testPayAndTaxController.getAllPayAndTax(ninoWithAgent.nino, taxYear).apply(FakeRequest())
         status(result) shouldBe expectedStatus
@@ -113,7 +113,7 @@ class PayAndTaxControllerSpec
     }
 
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
-      when(mockEmploymentHistoryService.getAllPayAndTax(any(), any())(any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getAllPayAndTax(any(), any())(using any[HeaderCarrier]))
         .thenReturn(Future.successful(testPayAndTaxMap))
       val result =
         testPayAndTaxController.getPayAndTax(ninoWithoutAgent.nino, taxYear, employmentId).apply(FakeRequest())

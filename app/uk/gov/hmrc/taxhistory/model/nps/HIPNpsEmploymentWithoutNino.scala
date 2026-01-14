@@ -73,19 +73,5 @@ object HIPNpsEmploymentWithoutNino {
       employmentStatus = employmentStatus
     )
   }
-  given writer: Writes[HIPNpsEmploymentWithoutNino] = Writes { data =>
-    Json.obj(
-      "sequenceNumber"               -> data.sequenceNumber,
-      "taxDistrictNumber"            -> data.taxDistrictNumber,
-      "payeNumber"                   -> data.payeNumber,
-      "employerName"                 -> data.employerName,
-      "worksNumber"                  -> data.worksNumber,
-      "receivingJobSeekersAllowance" -> data.receivingJobSeekersAllowance,
-      "otherIncomeSourceIndicator"   -> data.otherIncomeSourceIndicator,
-      "startDate"                    -> data.startDate,
-      "endDate"                      -> data.endDate,
-      "receivingOccupationalPension" -> data.receivingOccupationalPension,
-      "employmentStatus"             -> data.employmentStatus
-    )
-  }
+  given writer: Writes[HIPNpsEmploymentWithoutNino] = Json.writes[HIPNpsEmploymentWithoutNino]
 }

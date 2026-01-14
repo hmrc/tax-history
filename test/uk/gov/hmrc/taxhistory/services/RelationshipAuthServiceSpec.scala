@@ -60,7 +60,7 @@ class RelationshipAuthServiceSpec extends PlaySpec with TestUtil {
   "RelationshipAuthService" should {
 
     "authorise when a correct relationship is present" in {
-      when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(any(), any()))
+      when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(using any(), any()))
         .thenReturn(
           Future.successful(
             new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(newEnrolments))
@@ -76,7 +76,7 @@ class RelationshipAuthServiceSpec extends PlaySpec with TestUtil {
 
     "respond with UNAUTHORIZED for enrolments which are not HMRC Agents" in {
 
-      when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(any(), any()))
+      when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(using any(), any()))
         .thenReturn(
           Future.successful(
             new ~[Option[AffinityGroup], Enrolments](Some(AffinityGroup.Agent), Enrolments(UnAuthorisedAgentEnrolments))
@@ -91,7 +91,7 @@ class RelationshipAuthServiceSpec extends PlaySpec with TestUtil {
     }
 
     "respond with UNAUTHORIZED where the affinity group is not retrieved" in {
-      when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(any(), any()))
+      when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(using any(), any()))
         .thenReturn(Future.failed(new UnauthorizedException("Failed to retrieve affinity group or enrolments")))
 
       val result = testRelationshipAuthService.withAuthorisedRelationship(ninoWithAgent) { arn =>
@@ -102,7 +102,7 @@ class RelationshipAuthServiceSpec extends PlaySpec with TestUtil {
     }
 
     "respond with UNAUTHORIZED when the user is not logged in" in {
-      when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(any(), any()))
+      when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(using any(), any()))
         .thenReturn(Future.failed(new UnauthorizedException("Unauthorized")))
 
       val result = testRelationshipAuthService.withAuthorisedRelationship(ninoWithAgent) { arn =>
@@ -113,7 +113,7 @@ class RelationshipAuthServiceSpec extends PlaySpec with TestUtil {
     }
 
     "respond with UNAUTHORIZED when there are insufficient enrolments" in {
-      when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(any(), any()))
+      when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(using any(), any()))
         .thenReturn(Future.failed(new InsufficientEnrolments))
 
       val result = testRelationshipAuthService.withAuthorisedRelationship(ninoWithAgent) { arn =>
@@ -124,7 +124,7 @@ class RelationshipAuthServiceSpec extends PlaySpec with TestUtil {
     }
 
     "respond with INTERNAL_SERVER_ERROR when there is an auth error" in {
-      when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(any(), any()))
+      when(mockAuthConnector.authorise(any(), any[Retrieval[Option[AffinityGroup] ~ Enrolments]]())(using any(), any()))
         .thenReturn(Future.failed(new MissingBearerToken))
 
       val result = testRelationshipAuthService.withAuthorisedRelationship(ninoWithAgent) { arn =>
