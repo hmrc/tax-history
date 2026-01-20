@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.taxhistory.model.nps
 
+import org.scalatest.matchers.must.Matchers.{mustBe, mustEqual}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.libs.json.Json
+import play.api.libs.json.{JsError, Json}
 
 class IabdTypeSpec extends AnyWordSpecLike with Matchers {
   "IabdTypeSpec" should {

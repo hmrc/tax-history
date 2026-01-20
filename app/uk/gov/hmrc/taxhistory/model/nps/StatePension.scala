@@ -27,5 +27,5 @@ case class StatePension(
 )
 
 object StatePension {
-  implicit val formats: OFormat[StatePension] = Json.format[StatePension]
+  given formats: OFormat[StatePension] = Json.format[StatePension]
 }

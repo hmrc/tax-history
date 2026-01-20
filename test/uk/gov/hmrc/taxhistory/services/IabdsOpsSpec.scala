@@ -86,8 +86,8 @@ class IabdsOpsSpec extends PlaySpec with TestUtil with DateUtils {
 
       val matchedIabds = iabdList.matchedCompanyBenefits(npsEmploymentResponse.head)
       matchedIabds.size mustBe 2
-      matchedIabds.toString contains "VanBenefit" mustBe true
-      matchedIabds.toString contains "CarFuelBenefit" mustBe true
+      matchedIabds.toString.contains("VanBenefit") mustBe true
+      matchedIabds.toString.contains("CarFuelBenefit") mustBe true
     }
 
     "Get CompanyBenfits from Iabd data and ignore Benefit In Kind (type 28)" in {
@@ -132,7 +132,7 @@ class IabdsOpsSpec extends PlaySpec with TestUtil with DateUtils {
 
       allowances.size mustBe 1
       allowances.head.amount mustBe expectedGrossDecimal
-      allowances.toString() contains "FlatRateJobExpenses" mustBe true
+      allowances.toString().contains("FlatRateJobExpenses") mustBe true
     }
 
     "Return Iabds converted to company benefits when no gross amount default it to 0" in {
@@ -152,7 +152,7 @@ class IabdsOpsSpec extends PlaySpec with TestUtil with DateUtils {
 
       allowances.size mustBe 1
       allowances.head.amount mustBe expectedGross
-      allowances.toString() contains "FlatRateJobExpenses" mustBe true
+      allowances.toString().contains("FlatRateJobExpenses") mustBe true
     }
 
   }

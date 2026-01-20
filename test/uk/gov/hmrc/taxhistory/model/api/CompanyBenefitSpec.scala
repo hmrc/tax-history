@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxhistory.model.api
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.libs.json.{JsArray, JsValue, Json}
+import play.api.libs.json.{JsArray, JsError, JsValue, Json}
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 import uk.gov.hmrc.time.TaxYear
 
@@ -81,6 +81,35 @@ class CompanyBenefitSpec extends TestUtil with AnyWordSpecLike with Matchers wit
 
     "transform into object list from json correctly" in {
       companyBenefitListJson.as[List[CompanyBenefit]] shouldBe companyBenefitList
+    }
+
+    "fail to read from json" when {
+      "there is type mismatch" in {
+        Json
+          .obj(
+            "iabdType"    -> 12345678,
+            "amount"      -> BigDecimal(10.00),
+            "source"      -> None,
+            "captureDate" -> Some("05/04/2022"),
+            "taxYear"     -> 2022
+          )
+          .validate[CompanyBenefit] shouldBe a[JsError]
+      }
+
+      "a required field is missing" in {
+        Json
+          .obj(
+            "iabdType"    -> "otherCompanyBenefitType",
+            "amount"      -> BigDecimal(10.00),
+            "source"      -> None,
+            "captureDate" -> Some("05/04/2022")
+          )
+          .validate[CompanyBenefit] shouldBe a[JsError]
+      }
+
+      "empty json" in {
+        Json.obj().validate[CompanyBenefit] shouldBe a[JsError]
+      }
     }
 
     ".isForecastBenefit()" when {

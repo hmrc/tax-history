@@ -20,6 +20,7 @@ import java.time.LocalDate
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import play.api.libs.json.{JsError, JsSuccess, Json}
 import uk.gov.hmrc.taxhistory.fixtures.RtiEmployments
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 
@@ -43,6 +44,30 @@ class RtiEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with
   )
 
   "RtiEmployment" when {
+
+    "serialize to JSON" when {
+      "all fields are valid" in {
+        Json.toJson(testEmployment) shouldBe Json.obj(
+          "sequenceNo"         -> 1,
+          "officeNumber"       -> "1",
+          "payeRef"            -> "1",
+          "currentPayId"       -> Some("1"),
+          "payments"           -> List(testRtiPayment),
+          "earlierYearUpdates" -> Json.arr()
+        )
+      }
+
+      "an optional field is missing" in {
+        Json.toJson(testEmployment.copy(currentPayId = None)) shouldBe Json.obj(
+          "sequenceNo"         -> 1,
+          "officeNumber"       -> "1",
+          "payeRef"            -> "1",
+          "payments"           -> List(testRtiPayment),
+          "earlierYearUpdates" -> Json.arr()
+        )
+      }
+    }
+
     "toPayAndTax is called" should {
       "convert itself to PayAndTax" in {
         val rtiData   = rtiEmploymentResponse.as[RtiData]

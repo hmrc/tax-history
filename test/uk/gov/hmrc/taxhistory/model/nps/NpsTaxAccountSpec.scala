@@ -18,10 +18,11 @@ package uk.gov.hmrc.taxhistory.model.nps
 
 import java.time.LocalDate
 import org.scalatest.OptionValues
+import org.scalatest.matchers.must.Matchers.mustBe
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json.fromJson
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.domain.TaxCode
 import uk.gov.hmrc.taxhistory.model.api.IncomeSource
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
@@ -47,7 +48,7 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
   private val incomeSource1DeserialisedEmpType = 1
   private val incomeSource1DeserialisedEmpTDN  = 961
 
-  private val taxAccount = getTaxAcoountResponseURLDummy.as[NpsTaxAccount](NpsTaxAccount.formats)
+  private val taxAccount = getTaxAcoountResponseURLDummy.as[NpsTaxAccount](using NpsTaxAccount.formats)
 
   private val testNpsEmployment = NpsEmployment(
     nino = "AA000000",
@@ -170,7 +171,7 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
         val withUnusualTaxCodeJson =
           (incomeSourcesSerialised \ 0).as[JsObject] + ("taxCode" -> JsString(unusualTaxCode))
         val jsResult = fromJson[NpsIncomeSource](withUnusualTaxCodeJson)
-        jsResult             shouldBe a[JsSuccess[_]]
+        jsResult             shouldBe a[JsSuccess[?]]
         jsResult.get.taxCode shouldBe Some(unusualTaxCode)
       }
     }
@@ -446,6 +447,340 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
       }
       "return None if there is no employmentPayeRef" in {
         testNpsIncomeSource.copy(employmentPayeRef = None).toIncomeSource shouldBe None
+      }
+    }
+  }
+
+  "TaDeduction" should {
+    val taDeduction = TaDeduction(
+      `type` = 7,
+      npsDescription = "employer benefits ",
+      amount = BigDecimal("65"),
+      sourceAmount = Some(BigDecimal("65"))
+    )
+
+    "serialize to JSON" when {
+      "all fields are valid" in {
+        Json.toJson(taDeduction) shouldBe Json.obj(
+          "type"           -> 7,
+          "npsDescription" -> "employer benefits ",
+          "amount"         -> BigDecimal("65"),
+          "sourceAmount"   -> Some(BigDecimal("65"))
+        )
+      }
+
+      "an optional field is missing" in {
+        Json.toJson(taDeduction.copy(sourceAmount = None)) shouldBe Json.obj(
+          "type"           -> 7,
+          "npsDescription" -> "employer benefits ",
+          "amount"         -> BigDecimal("65")
+        )
+      }
+    }
+
+    "deserialize from JSON" when {
+      "all fields are valid" in {
+        val json = Json.obj(
+          "type"           -> 7,
+          "npsDescription" -> "employer benefits ",
+          "amount"         -> BigDecimal("65"),
+          "sourceAmount"   -> Some(BigDecimal("65"))
+        )
+
+        json.validate[TaDeduction] shouldBe JsSuccess(taDeduction)
+      }
+
+      "sourceAmount is empty" in {
+        val json = Json.obj(
+          "type"           -> 7,
+          "npsDescription" -> "employer benefits ",
+          "amount"         -> BigDecimal("65")
+        )
+
+        json.validate[TaDeduction] shouldBe JsSuccess(taDeduction.copy(sourceAmount = None))
+      }
+    }
+
+    "fail to read from json" when {
+      "there is type mismatch" in {
+        Json
+          .obj(
+            "type"           -> "7",
+            "npsDescription" -> "employer benefits ",
+            "amount"         -> BigDecimal("65"),
+            "sourceAmount"   -> Some(BigDecimal("65"))
+          )
+          .validate[TaDeduction] shouldBe a[JsError]
+      }
+
+      "a required field is missing" in {
+        Json
+          .obj(
+            "type"         -> 7,
+            "amount"       -> BigDecimal("65"),
+            "sourceAmount" -> Some(BigDecimal("65"))
+          )
+          .validate[TaDeduction] shouldBe a[JsError]
+      }
+
+      "empty json" in {
+        Json.obj().validate[TaDeduction] shouldBe a[JsError]
+      }
+    }
+  }
+
+  "TaAllowance" should {
+    val taAllowance = TaAllowance(
+      `type` = 7,
+      npsDescription = "employer benefits ",
+      amount = BigDecimal("65"),
+      sourceAmount = Some(BigDecimal("65"))
+    )
+
+    "serialize to JSON" when {
+      "all fields are valid" in {
+        Json.toJson(taAllowance) shouldBe Json.obj(
+          "type"           -> 7,
+          "npsDescription" -> "employer benefits ",
+          "amount"         -> BigDecimal("65"),
+          "sourceAmount"   -> Some(BigDecimal("65"))
+        )
+      }
+
+      "an optional field is missing" in {
+        Json.toJson(taAllowance.copy(sourceAmount = None)) shouldBe Json.obj(
+          "type"           -> 7,
+          "npsDescription" -> "employer benefits ",
+          "amount"         -> BigDecimal("65")
+        )
+      }
+    }
+
+    "deserialize from JSON" when {
+      "all fields are valid" in {
+        val json = Json.obj(
+          "type"           -> 7,
+          "npsDescription" -> "employer benefits ",
+          "amount"         -> BigDecimal("65"),
+          "sourceAmount"   -> Some(BigDecimal("65"))
+        )
+
+        json.validate[TaAllowance] shouldBe JsSuccess(taAllowance)
+      }
+
+      "sourceAmount is empty" in {
+        val json = Json.obj(
+          "type"           -> 7,
+          "npsDescription" -> "employer benefits ",
+          "amount"         -> BigDecimal("65")
+        )
+
+        json.validate[TaAllowance] shouldBe JsSuccess(taAllowance.copy(sourceAmount = None))
+      }
+    }
+
+    "fail to read from json" when {
+      "there is type mismatch" in {
+        Json
+          .obj(
+            "type"           -> "7",
+            "npsDescription" -> "employer benefits ",
+            "amount"         -> BigDecimal("65"),
+            "sourceAmount"   -> Some(BigDecimal("65"))
+          )
+          .validate[TaAllowance] shouldBe a[JsError]
+      }
+
+      "a required field is missing" in {
+        Json
+          .obj(
+            "type"         -> 7,
+            "amount"       -> BigDecimal("65"),
+            "sourceAmount" -> Some(BigDecimal("65"))
+          )
+          .validate[TaAllowance] shouldBe a[JsError]
+      }
+
+      "empty json" in {
+        Json.obj().validate[TaAllowance] shouldBe a[JsError]
+      }
+    }
+  }
+
+  "NpsIncomeSource" should {
+    val npsIncomeSource = testNpsIncomeSource
+
+    "serialize to JSON" when {
+      "all fields are valid" in {
+        Json.toJson(testNpsIncomeSource) shouldBe Json.obj(
+          "employmentId"                     -> testNpsIncomeSourceEmpId,
+          "employmentTaxDistrictNumber"      -> Some(testNpsIncomeSourceEmpTDN),
+          "employmentPayeRef"                -> Some("AZ00010"),
+          "actualPUPCodedInCYPlusOneTaxYear" -> Some(BigDecimal(3.14)),
+          "deductions"                       -> testDeductions,
+          "allowances"                       -> testAllowances,
+          "employmentType"                   -> Some(testNpsIncomeSourceEmpType),
+          "taxCode"                          -> Some("TAX1234"),
+          "basisOperation"                   -> Some(testNpsIncomeBasisOperation)
+        )
+      }
+
+      "an optional field is missing" in {
+        Json.toJson(testNpsIncomeSource.copy(taxCode = None)) shouldBe Json.obj(
+          "employmentId"                     -> testNpsIncomeSourceEmpId,
+          "employmentTaxDistrictNumber"      -> Some(testNpsIncomeSourceEmpTDN),
+          "employmentPayeRef"                -> Some("AZ00010"),
+          "actualPUPCodedInCYPlusOneTaxYear" -> Some(BigDecimal(3.14)),
+          "deductions"                       -> testDeductions,
+          "allowances"                       -> testAllowances,
+          "employmentType"                   -> Some(testNpsIncomeSourceEmpType),
+          "basisOperation"                   -> Some(testNpsIncomeBasisOperation)
+        )
+      }
+    }
+
+    "deserialize from JSON" when {
+      "all fields are valid" in {
+        val json = Json.obj(
+          "employmentId"                     -> testNpsIncomeSourceEmpId,
+          "employmentTaxDistrictNumber"      -> Some(testNpsIncomeSourceEmpTDN),
+          "employmentPayeRef"                -> Some("AZ00010"),
+          "actualPUPCodedInCYPlusOneTaxYear" -> Some(BigDecimal(3.14)),
+          "deductions"                       -> testDeductions,
+          "allowances"                       -> testAllowances,
+          "employmentType"                   -> Some(testNpsIncomeSourceEmpType),
+          "taxCode"                          -> Some("TAX1234"),
+          "basisOperation"                   -> Some(testNpsIncomeBasisOperation)
+        )
+
+        json.validate[NpsIncomeSource] shouldBe JsSuccess(npsIncomeSource)
+      }
+
+      "an optional field is empty" in {
+        val json = Json.obj(
+          "employmentId"                     -> testNpsIncomeSourceEmpId,
+          "employmentTaxDistrictNumber"      -> Some(testNpsIncomeSourceEmpTDN),
+          "employmentPayeRef"                -> Some("AZ00010"),
+          "actualPUPCodedInCYPlusOneTaxYear" -> Some(BigDecimal(3.14)),
+          "deductions"                       -> testDeductions,
+          "allowances"                       -> testAllowances,
+          "employmentType"                   -> Some(testNpsIncomeSourceEmpType),
+          "taxCode"                          -> Some("TAX1234")
+        )
+
+        json.validate[NpsIncomeSource] shouldBe JsSuccess(npsIncomeSource.copy(basisOperation = None))
+      }
+    }
+
+    "fail to read from json" when {
+      "there is type mismatch" in {
+        Json
+          .obj(
+            "employmentId"                     -> "testNpsIncomeSourceEmpId",
+            "employmentTaxDistrictNumber"      -> Some(testNpsIncomeSourceEmpTDN),
+            "employmentPayeRef"                -> Some("AZ00010"),
+            "actualPUPCodedInCYPlusOneTaxYear" -> Some(BigDecimal(3.14)),
+            "deductions"                       -> testDeductions,
+            "allowances"                       -> testAllowances,
+            "employmentType"                   -> Some(testNpsIncomeSourceEmpType),
+            "taxCode"                          -> Some("TAX1234"),
+            "basisOperation"                   -> Some(testNpsIncomeBasisOperation)
+          )
+          .validate[NpsIncomeSource] shouldBe a[JsError]
+      }
+
+      "a required field is missing" in {
+        Json
+          .obj(
+            "employmentTaxDistrictNumber"      -> Some(testNpsIncomeSourceEmpTDN),
+            "employmentPayeRef"                -> Some("AZ00010"),
+            "actualPUPCodedInCYPlusOneTaxYear" -> Some(BigDecimal(3.14)),
+            "deductions"                       -> testDeductions,
+            "allowances"                       -> testAllowances,
+            "employmentType"                   -> Some(testNpsIncomeSourceEmpType),
+            "taxCode"                          -> Some("TAX1234"),
+            "basisOperation"                   -> Some(testNpsIncomeBasisOperation)
+          )
+          .validate[NpsIncomeSource] shouldBe a[JsError]
+      }
+
+      "empty json" in {
+        Json.obj().validate[NpsIncomeSource] shouldBe a[JsError]
+      }
+    }
+  }
+
+  "NpsTaxAccount" should {
+    val npsTaxAccount = NpsTaxAccount(List(testNpsIncomeSource))
+
+    "serialize to JSON" when {
+      "all fields are valid" in {
+        Json.toJson(npsTaxAccount) shouldBe Json.obj(
+          "incomeSources" -> List(testNpsIncomeSource)
+        )
+      }
+
+      "an optional field is missing" in {
+        Json.toJson(npsTaxAccount.copy(List(testNpsIncomeSource.copy(taxCode = None)))) shouldBe Json.obj(
+          "incomeSources" -> List(testNpsIncomeSource.copy(taxCode = None))
+        )
+      }
+    }
+
+    "deserialize from JSON" when {
+      "all fields are valid" in {
+        val json = Json.obj(
+          "incomeSources" -> List(testNpsIncomeSource)
+        )
+
+        json.validate[NpsTaxAccount] shouldBe JsSuccess(npsTaxAccount)
+      }
+
+      "an optional field is empty" in {
+        val json = Json.obj(
+          "incomeSources" -> List(testNpsIncomeSource.copy(basisOperation = None))
+        )
+
+        json.validate[NpsTaxAccount] shouldBe JsSuccess(
+          npsTaxAccount.copy(List(testNpsIncomeSource.copy(basisOperation = None)))
+        )
+      }
+    }
+
+    "fail to read from json" when {
+      "there is type mismatch" in {
+        Json
+          .obj(
+            "employmentId"                     -> "testNpsIncomeSourceEmpId",
+            "employmentTaxDistrictNumber"      -> Some(testNpsIncomeSourceEmpTDN),
+            "employmentPayeRef"                -> Some("AZ00010"),
+            "actualPUPCodedInCYPlusOneTaxYear" -> Some(BigDecimal(3.14)),
+            "deductions"                       -> testDeductions,
+            "allowances"                       -> testAllowances,
+            "employmentType"                   -> Some(testNpsIncomeSourceEmpType),
+            "taxCode"                          -> Some("TAX1234"),
+            "basisOperation"                   -> Some(testNpsIncomeBasisOperation)
+          )
+          .validate[NpsTaxAccount] shouldBe a[JsError]
+      }
+
+      "a required field is missing" in {
+        Json
+          .obj(
+            "employmentTaxDistrictNumber"      -> Some(testNpsIncomeSourceEmpTDN),
+            "employmentPayeRef"                -> Some("AZ00010"),
+            "actualPUPCodedInCYPlusOneTaxYear" -> Some(BigDecimal(3.14)),
+            "deductions"                       -> testDeductions,
+            "allowances"                       -> testAllowances,
+            "employmentType"                   -> Some(testNpsIncomeSourceEmpType),
+            "taxCode"                          -> Some("TAX1234"),
+            "basisOperation"                   -> Some(testNpsIncomeBasisOperation)
+          )
+          .validate[NpsTaxAccount] shouldBe a[JsError]
+      }
+
+      "empty json" in {
+        Json.obj().validate[NpsTaxAccount] shouldBe a[JsError]
       }
     }
   }

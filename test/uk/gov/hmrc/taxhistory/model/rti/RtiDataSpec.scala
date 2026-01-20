@@ -21,7 +21,7 @@ import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json.fromJson
-import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
+import play.api.libs.json.{JsArray, JsError, JsObject, JsSuccess, JsValue, Json}
 import uk.gov.hmrc.taxhistory.model.api.EarlierYearUpdate
 import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 
@@ -33,7 +33,117 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
 
   "RtiData" should {
 
-    val rtiDetails = rtiSuccessfulResponseURLDummy.as[RtiData](RtiData.reader)
+    val rtiDetails = rtiSuccessfulResponseURLDummy.as[RtiData](using RtiData.reader)
+
+    val rtiJson = Json.parse(s"""
+         |  {
+         |  "nino":"AA000000",
+         |  "employments":[
+         |    {
+         |    "sequenceNo":49,
+         |    "officeNumber":"531",
+         |    "payeRef":"J4816",
+         |    "currentPayId":"6044041000000",
+         |    "payments":[
+         |        {
+         |          "paidOnDate":"2016-03-31",
+         |          "taxablePayYTD":20000,
+         |          "totalTaxYTD":1880,
+         |          "studentLoansYTD":333.33
+         |          },
+         |        {
+         |          "paidOnDate":"2016-02-29",
+         |          "taxablePayYTD":18000,
+         |          "totalTaxYTD":1680,
+         |          "studentLoansYTD":0
+         |          },
+         |        {
+         |          "paidOnDate":"2016-01-29",
+         |          "taxablePayYTD":16000,
+         |          "totalTaxYTD":1480,
+         |          "studentLoansYTD":0
+         |          },
+         |        {
+         |          "paidOnDate":"2015-12-31",
+         |          "taxablePayYTD":12000,
+         |          "totalTaxYTD":1080,
+         |          "studentLoansYTD":0
+         |          },
+         |        {
+         |          "paidOnDate":"2015-11-30",
+         |          "taxablePayYTD":8000,
+         |          "totalTaxYTD":880,
+         |          "studentLoansYTD":0
+         |          }
+         |        ],
+         |     "earlierYearUpdates":[
+         |      {
+         |        "taxablePayDelta":-600.99,
+         |        "totalTaxDelta":-10.99,
+         |        "receivedDate":"2016-06-01"
+         |        },
+         |        {
+         |        "taxablePayDelta":0,
+         |        "totalTaxDelta":0,
+         |        "receivedDate":"2016-06-01"
+         |        }
+         |      ]
+         |    },
+         |    {
+         |      "sequenceNo":39,
+         |      "officeNumber":"267",
+         |      "payeRef":"G697",
+         |      "currentPayId":"111111",
+         |      "payments":[
+         |         {
+         |          "paidOnDate":"2015-04-30",
+         |          "taxablePayYTD":20000,
+         |          "totalTaxYTD":1880,
+         |          "studentLoansYTD":0
+         |          },
+         |          {
+         |          "paidOnDate":"2015-05-29",
+         |          "taxablePayYTD":20000,
+         |          "totalTaxYTD":1880,
+         |          "studentLoansYTD":0
+         |          },
+         |          {
+         |          "paidOnDate":"2015-06-30",
+         |          "taxablePayYTD":20000,
+         |          "totalTaxYTD":1880,
+         |          "studentLoansYTD":0
+         |          },
+         |          {
+         |          "paidOnDate":"2016-02-28",
+         |          "taxablePayYTD":19000,
+         |          "totalTaxYTD":5250
+         |          },
+         |          {
+         |          "paidOnDate":"2015-07-31",
+         |          "taxablePayYTD":11000,
+         |          "totalTaxYTD":3250
+         |          },
+         |          {"paidOnDate":"2015-04-30",
+         |          "taxablePayYTD":5000,
+         |          "totalTaxYTD":1500
+         |          },
+         |          {
+         |          "paidOnDate":"2015-10-31",
+         |          "taxablePayYTD":15000,
+         |          "totalTaxYTD":4250
+         |          }
+         |          ],
+         |          "earlierYearUpdates":[]
+         |          }
+         |          ]
+         |          }
+         | """.stripMargin)
+
+    "serialize to JSON" when {
+      "all fields are valid" in {
+        Json.toJson(rtiDetails) shouldBe rtiJson
+      }
+    }
 
     "transform Rti Response Json correctly to RtiData Model " in {
       rtiDetails      shouldBe a[RtiData]
@@ -95,7 +205,7 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
 
     "transform Rti Response Json containing inYear payment but no eyu payment" in {
       val rtiResponse: JsValue = loadFile("/json/rti/response/dummyRtiHasOnlyInYearPayments.json")
-      val rtiDetails           = rtiResponse.as[RtiData](RtiData.reader)
+      val rtiDetails           = rtiResponse.as[RtiData](using RtiData.reader)
       val employment           = rtiDetails.employments.head
 
       employment.earlierYearUpdates shouldBe List.empty
@@ -104,7 +214,7 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
 
     "transform Rti Response Json containing eyu payment but no inYear payment" in {
       val rtiResponse: JsValue = loadFile("/json/rti/response/dummyRtiHasOnlyEyuPayments.json")
-      val rtiDetails           = rtiResponse.as[RtiData](RtiData.reader)
+      val rtiDetails           = rtiResponse.as[RtiData](using RtiData.reader)
       val employment           = rtiDetails.employments.head
 
       employment.earlierYearUpdates.size shouldBe 2
@@ -141,6 +251,25 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
       studentLoanRecoveredDelta = Some(333.33),
       receivedDate = LocalDate.parse("2016-06-01")
     )
+
+    "serialize to JSON" when {
+      "all fields are valid" in {
+        Json.toJson(eyuDeserialised) shouldBe Json.obj(
+          "taxablePayDelta"           -> BigDecimal(-600.99),
+          "totalTaxDelta"             -> BigDecimal(-10.99),
+          "studentLoanRecoveredDelta" -> BigDecimal(333.33),
+          "receivedDate"              -> "2016-06-01"
+        )
+      }
+
+      "an optional field is missing" in {
+        Json.toJson(eyuDeserialised.copy(studentLoanRecoveredDelta = None)) shouldBe Json.obj(
+          "taxablePayDelta" -> BigDecimal(-600.99),
+          "totalTaxDelta"   -> BigDecimal(-10.99),
+          "receivedDate"    -> "2016-06-01"
+        )
+      }
+    }
 
     "deserialising from an RTI EYU json object" should {
       "deserialise to an RtiEarlierYearUpdate" when {
@@ -212,7 +341,58 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
 
         eyu1.copy(earlierYearUpdateId = testUuid) shouldBe eyu2.copy(earlierYearUpdateId = testUuid)
       }
+    }
+  }
 
+  "RtiPayment" should {
+
+    val validRtiPayment = RtiPayment(
+      paidOnDate = LocalDate.parse("2014-04-28"),
+      taxablePayYTD = BigDecimal("20000.00"),
+      totalTaxYTD = BigDecimal("1880.00"),
+      studentLoansYTD = Some(BigDecimal("333.33"))
+    )
+
+    val rtiPaymentJson = Json.obj(
+      "paidOnDate"      -> "2014-04-28",
+      "taxablePayYTD"   -> BigDecimal(20000),
+      "totalTaxYTD"     -> BigDecimal(1880),
+      "studentLoansYTD" -> 333.33
+    )
+
+    "serialize to JSON" when {
+      "all fields are valid" in {
+        Json.toJson(validRtiPayment) shouldBe rtiPaymentJson
+      }
+
+      "an optional field is missing" in {
+        Json.toJson(validRtiPayment.copy(studentLoansYTD = None)) shouldBe Json.obj(
+          "paidOnDate"    -> "2014-04-28",
+          "taxablePayYTD" -> BigDecimal(20000),
+          "totalTaxYTD"   -> BigDecimal(1880)
+        )
+      }
+    }
+
+    "deserialize from JSON" should {
+
+      "when all fields are present" in {
+        Json
+          .obj(
+            "pmtDate"         -> "2014-04-28",
+            "taxablePayYTD"   -> BigDecimal(20000),
+            "totalTaxYTD"     -> BigDecimal(1880),
+            "studentLoansYTD" -> 333.33
+          )
+          .validate[RtiPayment] shouldEqual JsSuccess(
+          RtiPayment(
+            paidOnDate = LocalDate.parse("2014-04-28"),
+            taxablePayYTD = BigDecimal(0),
+            totalTaxYTD = BigDecimal(0),
+            studentLoansYTD = None
+          )
+        )
+      }
     }
   }
 }

@@ -19,8 +19,8 @@ package uk.gov.hmrc.taxhistory.model.nps
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.libs.json.Json.fromJson
-import play.api.libs.json._
+import play.api.libs.json.Json.{fromJson, toJson}
+import play.api.libs.json.*
 import uk.gov.hmrc.domain.TaxCode
 import uk.gov.hmrc.taxhistory.model.api.IncomeSource
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
@@ -167,7 +167,7 @@ class HIPNpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers w
         val withUnusualTaxCodeJson =
           (incomeSourcesSerialised \ 0).as[JsObject] + ("taxCode" -> JsString(unusualTaxCode))
         val jsResult = fromJson[NpsIncomeSource](withUnusualTaxCodeJson)
-        jsResult             shouldBe a[JsSuccess[_]]
+        jsResult             shouldBe a[JsSuccess[?]]
         jsResult.get.taxCode shouldBe Some(unusualTaxCode)
       }
 
@@ -490,6 +490,67 @@ class HIPNpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers w
       }
       "return None if there is no employmentPayeRef" in {
         testNpsIncomeSource.copy(employmentPayeRef = None).toIncomeSource shouldBe None
+      }
+    }
+  }
+
+  "AllowanceOrDeduction" should {
+
+    val allowanceOrDeduction = AllowanceOrDeduction(
+      `type` = taAllowanceType,
+      npsDescription = "loan interest",
+      amount = BigDecimal("11500"),
+      sourceAmount = Some(0)
+    )
+
+    val allowanceOrDeductionJson = Json.obj(
+      "type"           -> taAllowanceType,
+      "npsDescription" -> "loan interest",
+      "amount"         -> BigDecimal("11500"),
+      "sourceAmount"   -> Some(0)
+    )
+
+    "transform into Json from object correctly" in {
+      Json.toJson(allowanceOrDeduction) shouldBe allowanceOrDeductionJson
+    }
+
+    "transform into object from json correctly if an optional field is missing" in {
+      val allowanceOrDeduction = AllowanceOrDeduction(
+        `type` = taAllowanceType,
+        npsDescription = "loan interest",
+        amount = BigDecimal(10.00),
+        sourceAmount = None
+      )
+      allowanceOrDeduction.`type`         shouldBe 8
+      allowanceOrDeduction.npsDescription shouldBe "loan interest"
+      allowanceOrDeduction.amount         shouldBe 10.00
+      allowanceOrDeduction.sourceAmount   shouldBe None
+    }
+
+    "fail to read from json" when {
+      "there is type mismatch" in {
+        Json
+          .obj(
+            "`type`"         -> taAllowanceType,
+            "npsDescription" -> "loan interest",
+            "amount"         -> BigDecimal("11500"),
+            "sourceAmount"   -> 0
+          )
+          .validate[AllowanceOrDeduction] shouldBe a[JsError]
+      }
+
+      "a required field is missing" in {
+        Json
+          .obj(
+            "npsDescription" -> "loan interest",
+            "amount"         -> BigDecimal("11500"),
+            "sourceAmount"   -> Some(0)
+          )
+          .validate[AllowanceOrDeduction] shouldBe a[JsError]
+      }
+
+      "empty json" in {
+        Json.obj().validate[AllowanceOrDeduction] shouldBe a[JsError]
       }
     }
   }

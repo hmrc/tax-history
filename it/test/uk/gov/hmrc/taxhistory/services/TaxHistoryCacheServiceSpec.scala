@@ -34,6 +34,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 import scala.util.Random
+import org.mongodb.scala.SingleObservableFuture
 
 class TaxHistoryCacheServiceSpec
     extends AnyWordSpecLike

@@ -38,9 +38,9 @@ object HIPNpsEmploymentWithoutNino {
   private def withPadding(taxDistrictNumber: String): String =
     taxDistrictNumber.reverse.padTo(3, '0').reverse.mkString
 
-  implicit val reader: Reads[HIPNpsEmploymentWithoutNino]   = (js: JsValue) => {
+  given reader: Reads[HIPNpsEmploymentWithoutNino]  = (js: JsValue) => {
     val employerReference = (js \ "employerReference").validate[String].getOrElse("")
-    //check substring functions
+    // check substring functions
     var taxDistrictNumber = ""
     var payeNumber        = ""
     if (employerReference.contains("/")) {
@@ -56,9 +56,9 @@ object HIPNpsEmploymentWithoutNino {
       otherIncomeSourceIndicator   <- (js \ "otherIncomeSource").validate[Boolean]
       receivingOccupationalPension <- (js \ "activeOccupationalPension").validate[Boolean]
       employmentStatus             <- js.validate[EmploymentStatus]
-      startDate                    <- (js \ "startDate").validateOpt[LocalDate](JsonUtils.hipnpsDateFormat)
-      endDate                      <- (js \ "endDate").validateOpt[LocalDate](JsonUtils.hipnpsDateFormat)
-      //employmentStatus with values Live =1, PotentiallyCeased=2, Ceased=3, PermanentlyCeased=6
+      startDate                    <- (js \ "startDate").validateOpt[LocalDate](using JsonUtils.hipnpsDateFormat)
+      endDate                      <- (js \ "endDate").validateOpt[LocalDate](using JsonUtils.hipnpsDateFormat)
+      // employmentStatus with values Live =1, PotentiallyCeased=2, Ceased=3, PermanentlyCeased=6
     } yield HIPNpsEmploymentWithoutNino(
       sequenceNumber = sequenceNumber,
       taxDistrictNumber = taxDistrictNumber,
@@ -73,5 +73,5 @@ object HIPNpsEmploymentWithoutNino {
       employmentStatus = employmentStatus
     )
   }
-  implicit val writer: OWrites[HIPNpsEmploymentWithoutNino] = Json.writes[HIPNpsEmploymentWithoutNino]
+  given writer: Writes[HIPNpsEmploymentWithoutNino] = Json.writes[HIPNpsEmploymentWithoutNino]
 }

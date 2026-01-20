@@ -17,11 +17,10 @@
 package uk.gov.hmrc.taxhistory.model.api
 
 import java.util.UUID
-
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.*
 
 case class Allowance(allowanceId: UUID = UUID.randomUUID(), iabdType: String, amount: BigDecimal)
 
 object Allowance {
-  implicit val formats: OFormat[Allowance] = Json.format[Allowance]
+  given formats: OFormat[Allowance] = Json.format[Allowance]
 }

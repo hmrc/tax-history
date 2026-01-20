@@ -23,6 +23,7 @@ import uk.gov.hmrc.taxhistory.services.TaxHistoryMongoCacheService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
+import org.mongodb.scala.SingleObservableFuture
 
 @Singleton
 class TestOnlyController @Inject() (val cacheService: TaxHistoryMongoCacheService, val cc: ControllerComponents)(

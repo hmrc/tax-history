@@ -69,7 +69,7 @@ class TaxAccountControllerSpec
   "getTaxAccount" must {
 
     "respond with OK for successful get" in {
-      when(mockEmploymentHistoryService.getTaxAccount(any[Nino], any[TaxYear])(any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getTaxAccount(any[Nino], any[TaxYear])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(testTaxAccount)))
 
       val result = testTaxAccountController.getTaxAccount(ninoWithAgent.nino, testTaxYear).apply(FakeRequest())
@@ -78,7 +78,7 @@ class TaxAccountControllerSpec
 
     "propagate error responses from upstream microservices" in {
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-        when(mockEmploymentHistoryService.getTaxAccount(any(), any())(any[HeaderCarrier]))
+        when(mockEmploymentHistoryService.getTaxAccount(any(), any())(using any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
         val result = testTaxAccountController.getTaxAccount(ninoWithAgent.nino, testTaxYear).apply(FakeRequest())
         status(result) shouldBe expectedStatus
@@ -86,7 +86,7 @@ class TaxAccountControllerSpec
     }
 
     "respond with UNAUTHORIZED Status for enrolments which is not HMRC Agent" in {
-      when(mockEmploymentHistoryService.getTaxAccount(any[Nino], any[TaxYear])(any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getTaxAccount(any[Nino], any[TaxYear])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(testTaxAccount)))
 
       val result = testTaxAccountController.getTaxAccount(ninoWithoutAgent.nino, testTaxYear).apply(FakeRequest())
@@ -100,7 +100,7 @@ class TaxAccountControllerSpec
     val testIncomeSource = IncomeSource(1, 1, None, List.empty, List.empty, testTaxCode, None, 1, "")
 
     "respond with OK for successful get" in {
-      when(mockEmploymentHistoryService.getIncomeSource(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getIncomeSource(any[Nino], any[TaxYear], any[String])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(testIncomeSource)))
 
       val result =
@@ -110,7 +110,7 @@ class TaxAccountControllerSpec
 
     "propagate error responses from upstream microservices" in {
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-        when(mockEmploymentHistoryService.getIncomeSource(any(), any(), any[String])(any[HeaderCarrier]))
+        when(mockEmploymentHistoryService.getIncomeSource(any(), any(), any[String])(using any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
         val result = testTaxAccountController
           .getIncomeSource(ninoWithAgent.nino, testTaxYear, testEmploymentId)
@@ -120,7 +120,7 @@ class TaxAccountControllerSpec
     }
 
     "respond with UNAUTHORIZED Status for enrolments which is not HMRC Agent" in {
-      when(mockEmploymentHistoryService.getIncomeSource(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getIncomeSource(any[Nino], any[TaxYear], any[String])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(testIncomeSource)))
 
       val result = testTaxAccountController

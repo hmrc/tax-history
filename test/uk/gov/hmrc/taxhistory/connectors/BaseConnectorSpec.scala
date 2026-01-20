@@ -56,7 +56,7 @@ trait BaseConnectorSpec extends PlaySpec with TestUtil with BeforeAndAfterEach w
     reset(mockTimerContext)
     reset(mockRequestBuilder)
 
-    when(mockHttpClient.get(any())(any())).thenReturn(mockRequestBuilder)
+    when(mockHttpClient.get(any())(using any())).thenReturn(mockRequestBuilder)
     when(mockRequestBuilder.setHeader(any())).thenReturn(mockRequestBuilder)
 
     when(mockMetrics.startTimer(any())).thenReturn(mockTimerContext)
@@ -70,11 +70,11 @@ trait BaseConnectorSpec extends PlaySpec with TestUtil with BeforeAndAfterEach w
     HttpResponse(status, body = "", Map.empty[String, Seq[String]])
 
   def mockExecuteMethod(body: String, status: Int): Unit =
-    when(mockRequestBuilder.execute(any[HttpReads[HttpResponse]], any()))
+    when(mockRequestBuilder.execute(using any[HttpReads[HttpResponse]], any()))
       .thenReturn(Future.successful(buildHttpResponse(body, status)))
 
   def mockExecuteMethod(status: Int): Unit =
-    when(mockRequestBuilder.execute(any[HttpReads[HttpResponse]], any()))
+    when(mockRequestBuilder.execute(using any[HttpReads[HttpResponse]], any()))
       .thenReturn(Future.successful(buildHttpResponse("", status)))
 
 }

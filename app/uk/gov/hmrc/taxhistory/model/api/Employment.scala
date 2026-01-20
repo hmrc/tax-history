@@ -72,7 +72,7 @@ object Employment {
     )
   }
 
-  implicit val jsonReads: Reads[Employment] = (
+  given jsonReads: Reads[Employment] = (
     (__ \ "employmentId").read[UUID] and
       (__ \ "startDate").readNullable[LocalDate] and
       (__ \ "endDate").readNullable[LocalDate] and
@@ -84,9 +84,9 @@ object Employment {
       (__ \ "employmentPaymentType").readNullable[EmploymentPaymentType] and
       __.read[EmploymentStatus] and
       (__ \ "worksNumber").read[String]
-  )(Employment.apply _)
+  )(Employment.apply)
 
-  implicit val jsonWrites: Writes[Employment] = (
+  given jsonWrites: Writes[Employment] = (
     (__ \ "employmentId").write[UUID] and
       (__ \ "startDate").writeNullable[LocalDate] and
       (__ \ "endDate").writeNullable[LocalDate] and
@@ -98,6 +98,6 @@ object Employment {
       (__ \ "employmentPaymentType").writeNullable[EmploymentPaymentType] and
       __.write[EmploymentStatus] and
       (__ \ "worksNumber").write[String]
-  )(unlift(Employment.unapply))
+  )(o => Tuple.fromProductTyped(o))
 
 }

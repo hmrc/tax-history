@@ -17,12 +17,12 @@
 package uk.gov.hmrc.taxhistory.services
 
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.when
-import org.mockito.stubbing.OngoingStubbing
+import org.mockito.Mockito.{doReturn, when}
+import org.mockito.stubbing.*
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxhistory.model.api._
+import uk.gov.hmrc.taxhistory.model.api.*
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.rti.RtiData
@@ -205,7 +205,8 @@ trait EmploymentHistoryServiceBaseSpec extends DateUtils with TestUtil {
     incomeSources = Map(employment1.employmentId.toString -> testIncomeSource),
     benefits = Map(employment1.employmentId.toString -> List(companyBenefit)),
     payAndTax = Map(employment1.employmentId.toString -> payAndTax),
-    taxAccount = None
+    taxAccount = None,
+    statePension = None
   )
 
   def stubNpsGetEmploymentsSucceeds(npsEmployments: List[NpsEmployment]): OngoingStubbing[Future[List[NpsEmployment]]] =
@@ -243,14 +244,14 @@ trait EmploymentHistoryServiceBaseSpec extends DateUtils with TestUtil {
       .thenReturn(Future.failed(failure))
 
   class StubConnectors(
-    npsGetEmployments: => OngoingStubbing[Future[List[NpsEmployment]]] = stubNpsGetEmploymentsSucceeds(
+    npsGetEmployments: OngoingStubbing[Future[List[NpsEmployment]]] = stubNpsGetEmploymentsSucceeds(
       npsEmploymentResponse
     ),
-    npsGetTaxAccount: => OngoingStubbing[Future[Option[NpsTaxAccount]]] = stubNpsGetTaxAccountSucceeds(
+    npsGetTaxAccount: OngoingStubbing[Future[Option[NpsTaxAccount]]] = stubNpsGetTaxAccountSucceeds(
       Some(testNpsTaxAccount)
     ),
-    npsGetIabdDetails: => OngoingStubbing[Future[List[Iabd]]] = stubNpsGetIabdsSucceeds(testIabds),
-    rti: => OngoingStubbing[Future[Option[RtiData]]] = stubRtiGetEmploymentsSucceeds(Some(testRtiData))
+    npsGetIabdDetails: OngoingStubbing[Future[List[Iabd]]] = stubNpsGetIabdsSucceeds(testIabds),
+    rti: OngoingStubbing[Future[Option[RtiData]]] = stubRtiGetEmploymentsSucceeds(Some(testRtiData))
   ) {
     npsGetEmployments
     npsGetTaxAccount

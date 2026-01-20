@@ -45,15 +45,15 @@ class EmploymentStatusSpec extends AnyWordSpec with Matchers with OptionValues {
       )
     }
     "read the json correctly" in {
-      EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Live")) shouldBe JsSuccess(Live)
+      EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Live"))               shouldBe JsSuccess(Live)
       EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Potentially Ceased")) shouldBe JsSuccess(
         PotentiallyCeased
       )
-      EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Ceased")) shouldBe JsSuccess(Ceased)
+      EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Ceased"))             shouldBe JsSuccess(Ceased)
       EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Permanently Ceased")) shouldBe JsSuccess(
         PermanentlyCeased
       )
-      EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Unknown")) shouldBe JsSuccess(
+      EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Unknown"))            shouldBe JsSuccess(
         Unknown
       )
     }

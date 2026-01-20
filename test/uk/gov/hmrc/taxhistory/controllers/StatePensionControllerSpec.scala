@@ -67,7 +67,7 @@ class StatePensionControllerSpec
   "getStatePension" must {
 
     "respond with OK for successful get" in {
-      when(mockEmploymentHistoryService.getStatePension(any[Nino], any[TaxYear])(any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getStatePension(any[Nino], any[TaxYear])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(testStatePension)))
 
       val result = testStatePensionController.getStatePension(ninoWithAgent.nino, testTaxYear).apply(FakeRequest())
@@ -76,7 +76,7 @@ class StatePensionControllerSpec
 
     "propagate error responses from upstream microservices" in {
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-        when(mockEmploymentHistoryService.getStatePension(any(), any())(any[HeaderCarrier]))
+        when(mockEmploymentHistoryService.getStatePension(any(), any())(using any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
         val result = testStatePensionController.getStatePension(ninoWithAgent.nino, testTaxYear).apply(FakeRequest())
         status(result) shouldBe expectedStatus
@@ -84,7 +84,7 @@ class StatePensionControllerSpec
     }
 
     "respond with UNAUTHORIZED Status for enrolments which is not HMRC Agent" in {
-      when(mockEmploymentHistoryService.getStatePension(any[Nino], any[TaxYear])(any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getStatePension(any[Nino], any[TaxYear])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(testStatePension)))
 
       val result = testStatePensionController.getStatePension(ninoWithoutAgent.nino, testTaxYear).apply(FakeRequest())

@@ -20,7 +20,7 @@ import java.time.LocalDate
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
+import play.api.libs.json.{JsError, JsNull, JsObject, JsSuccess, JsValue, Json}
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 
 class IabdSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
@@ -28,27 +28,30 @@ class IabdSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionVa
   lazy val employmentsResponse: JsValue = loadFile("/json/nps/response/iabds.json")
   private val grossAmount               = 200
 
-  val iabdJsonResponse: String =
-    s"""{
-       |        "nino": "QQ00000AB",
-       |        "sequenceNumber": 201700001,
-       |        "taxYear": 2017,
-       |        "type": 8,
-       |        "source": 15,
-       |        "grossAmount": $grossAmount,
-       |        "receiptDate": null,
-       |        "captureDate": "10/04/2017",
-       |        "typeDescription": "Total gift aid Payments",
-       |        "netAmount": 100,
-       |        "paymentFrequency": 1,
-       |        "startDate": "23/02/2018"
-       |
-       |}
-    """.stripMargin
+  val iabdJsonResponse: JsObject = Json
+    .parse(s"""{
+        "nino": "QQ00000AB",
+        "sequenceNumber": 201700001,
+        "taxYear": 2017,
+        "type": 8,
+        "source": 15,
+        "grossAmount": $grossAmount,
+        "receiptDate": null,
+        "captureDate": "10/04/2017",
+        "typeDescription": "Total gift aid Payments",
+        "netAmount": 100,
+        "paymentFrequency": 1,
+        "startDate": "23/02/2018"
 
-  "Iabd Json" should {
+}
+    """.stripMargin)
+    .as[JsObject]
+
+  val iabd: Iabd = iabdJsonResponse.as[Iabd]
+
+  "Iabd" should {
     "transform Iabds Response Json correctly to Employment Model " in {
-      val iabd = Json.parse(iabdJsonResponse).as[Iabd]
+
       iabd                  shouldBe a[Iabd]
       iabd.nino             shouldBe "QQ00000AB"
       iabd.`type`           shouldBe a[CompanyBenefits]
@@ -59,13 +62,108 @@ class IabdSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionVa
       iabd.startDate        shouldBe Some("23/02/2018")
     }
 
+    "serialize to JSON" should {
+
+      "an optional field is missing" in {
+        val missingIabd = Iabd(
+          nino = "QQ00000AB",
+          `type` = EmployerProvidedServices,
+          grossAmount = Some(grossAmount),
+          typeDescription = Some("Total gift aid Payments"),
+          source = Some(15),
+          captureDate = Some("10/04/2017"),
+          paymentFrequency = Some(1),
+          startDate = Some("23/02/2018")
+        )
+
+        Json.toJson(missingIabd) shouldBe Json.obj(
+          "nino"             -> "QQ00000AB",
+          "type"             -> 8,
+          "source"           -> Some(15),
+          "grossAmount"      -> Some(grossAmount),
+          "captureDate"      -> Some("10/04/2017"),
+          "typeDescription"  -> Some("Total gift aid Payments"),
+          "paymentFrequency" -> Some(1),
+          "startDate"        -> Some("23/02/2018")
+        )
+      }
+
+    }
+
+    "deserialize from JSON" should {
+
+      "when all fields are present" in {
+        iabdJsonResponse.validate[Iabd] shouldEqual JsSuccess(iabd)
+      }
+
+      "an optional field is missing" in {
+        val missingIabdJsonResponse: JsObject = Json.obj(
+          "nino"             -> "QQ00000AB",
+          "taxYear"          -> 2017,
+          "type"             -> 8,
+          "source"           -> 15,
+          "grossAmount"      -> grossAmount,
+          "receiptDate"      -> null,
+          "captureDate"      -> "10/04/2017",
+          "typeDescription"  -> "Total gift aid Payments",
+          "netAmount"        -> 100,
+          "paymentFrequency" -> 1,
+          "startDate"        -> "23/02/2018"
+        )
+
+        missingIabdJsonResponse.validate[Iabd] shouldBe JsSuccess(iabd.copy(employmentSequenceNumber = None))
+      }
+
+    }
+
+    "fail to read from json" when {
+      "there is type mismatch" in {
+        val mismatchIabdJsonResponse: JsObject = Json.obj(
+          "nino"             -> false,
+          "sequenceNumber"   -> 201700001,
+          "taxYear"          -> 2017,
+          "type"             -> 8,
+          "source"           -> 15,
+          "grossAmount"      -> grossAmount,
+          "receiptDate"      -> null,
+          "typeDescription"  -> "Total gift aid Payments",
+          "netAmount"        -> 100,
+          "paymentFrequency" -> 1,
+          "startDate"        -> "23/02/2018"
+        )
+
+        mismatchIabdJsonResponse.validate[Iabd] shouldBe a[JsError]
+      }
+
+      "a required field is missing" in {
+        Json
+          .obj(
+            "sequenceNumber"   -> "201700001",
+            "taxYear"          -> 2017,
+            "type"             -> 8,
+            "source"           -> 15,
+            "grossAmount"      -> grossAmount,
+            "receiptDate"      -> null,
+            "typeDescription"  -> "Total gift aid Payments",
+            "netAmount"        -> 100,
+            "paymentFrequency" -> 1,
+            "startDate"        -> "23/02/2018"
+          )
+          .validate[Iabd] shouldBe a[JsError]
+      }
+
+      "empty json" in {
+        Json.obj().validate[Iabd] shouldBe a[JsError]
+      }
+    }
+
     "handle paymentFrequency with a null value" in {
-      val jsonWithNullPaymentFreq = Json.parse(iabdJsonResponse).as[JsObject] + ("paymentFrequency" -> JsNull)
+      val jsonWithNullPaymentFreq = iabdJsonResponse.as[JsObject] + ("paymentFrequency" -> JsNull)
       jsonWithNullPaymentFreq.as[Iabd].paymentFrequency shouldBe None
     }
 
     "handle startDate with a null value" in {
-      val jsonWithNullStartDate = Json.parse(iabdJsonResponse).as[JsObject] + ("startDate" -> JsNull)
+      val jsonWithNullStartDate = iabdJsonResponse.as[JsObject] + ("startDate" -> JsNull)
       jsonWithNullStartDate.as[Iabd].startDate shouldBe None
     }
 
@@ -79,7 +177,7 @@ class IabdSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionVa
 
   "Iabd" when {
     "toStatePension is called" should {
-      val testIabd = Json.parse(iabdJsonResponse).as[Iabd]
+      val testIabd = iabdJsonResponse.as[Iabd]
 
       "return StatePension with same grossAmount and typeDescription" in {
         val statePension = testIabd.toStatePension

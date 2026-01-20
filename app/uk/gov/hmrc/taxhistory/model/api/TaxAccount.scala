@@ -28,5 +28,5 @@ case class TaxAccount(
 )
 
 object TaxAccount {
-  implicit val formats: OFormat[TaxAccount] = Json.format[TaxAccount]
+  given formats: OFormat[TaxAccount] = Json.format[TaxAccount]
 }

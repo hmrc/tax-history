@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.taxhistory.model.api
 
-import play.api.libs.json._
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.json.*
 import uk.gov.hmrc.time.TaxYear
 
 import java.time.LocalDate
@@ -56,13 +57,21 @@ case class CompanyBenefit(
 
 object CompanyBenefit {
 
-  implicit val formatTaxYear: OFormat[TaxYear] = Json.format[TaxYear]
+  given formatTaxYear: OFormat[TaxYear] = Json.format[TaxYear]
 
-  implicit val reads: Reads[CompanyBenefit] = Json.reads[CompanyBenefit]
+  given reads: Reads[CompanyBenefit] = (
+    (JsPath \ "companyBenefitId").read[UUID] and
+      (JsPath \ "iabdType").read[String] and
+      (JsPath \ "amount").read[BigDecimal] and
+      (JsPath \ "source").readNullable[Int] and
+      (JsPath \ "captureDate").readNullable[String] and
+      (JsPath \ "taxYear").read[TaxYear]
+  )(CompanyBenefit.apply)
 
-  private val defaultWrites: Writes[CompanyBenefit] = Json.writes[CompanyBenefit]
-  private val writes: Writes[CompanyBenefit]        = (cb: CompanyBenefit) =>
-    Json.toJson(cb)(defaultWrites).as[JsObject] + ("isForecastBenefit" -> JsBoolean(cb.isForecastBenefit))
+  given writes: Writes[CompanyBenefit] = (cb: CompanyBenefit) =>
+    Json.toJson(cb)(using Json.writes[CompanyBenefit]).as[JsObject] + ("isForecastBenefit" -> JsBoolean(
+      cb.isForecastBenefit
+    ))
 
-  implicit val formats: Format[CompanyBenefit]      = Format[CompanyBenefit](reads, writes)
+  given formats: Format[CompanyBenefit] = Format[CompanyBenefit](reads, writes)
 }

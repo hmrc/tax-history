@@ -30,6 +30,9 @@ import uk.gov.hmrc.taxhistory.services.helpers.IabdsOps._
 import uk.gov.hmrc.taxhistory.services.helpers.{EmploymentHistoryServiceHelper, EmploymentMatchingHelper}
 import play.api.Logging
 import uk.gov.hmrc.time.TaxYear
+import uk.gov.hmrc.taxhistory.FutureOptionOps
+import uk.gov.hmrc.taxhistory.FutureMapOps
+import uk.gov.hmrc.taxhistory.FutureListOps
 
 import javax.inject.Inject
 import scala.annotation.tailrec

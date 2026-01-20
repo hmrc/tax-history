@@ -68,14 +68,14 @@ class PayAsYouEarnControllerSpec extends PlaySpec with GuiceOneServerPerSuite wi
   val controller = new PayAsYouEarnController(mockEmploymentHistoryService, testSaAuthService, cc)
 
   def withSuccessfulGetFromCache(testCode: => Any): Unit = {
-    when(mockEmploymentHistoryService.getFromCache(any(), any())(any[HeaderCarrier]))
+    when(mockEmploymentHistoryService.getFromCache(any(), any())(using any[HeaderCarrier]))
       .thenReturn(Future.successful(testPaye))
     testCode
   }
 
   def withFailedGetFromCache(httpException: Exception)(testCode: => Any): Unit = {
     def apply(testCode: => Any) = {
-      when(mockEmploymentHistoryService.getFromCache(meq(unauthorisedNino), any())(any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getFromCache(meq(unauthorisedNino), any())(using any[HeaderCarrier]))
         .thenReturn(Future.failed(httpException))
 
       testCode

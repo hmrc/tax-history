@@ -54,13 +54,13 @@ class RtiConnector @Inject() (
     )
 
   def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[Option[RtiData]] = {
-    implicit val hc: HeaderCarrier = HeaderCarrier()
+    given hc: HeaderCarrier = HeaderCarrier()
     withMetrics(MetricsEnum.RTI_GET_EMPLOYMENTS) {
       withRetry {
         val fullURL = rtiEmploymentsUrl(nino, taxYear)
         http
           .get(url"$fullURL")
-          .setHeader(buildHeaders: _*)
+          .setHeader(buildHeaders*)
           .execute[HttpResponse]
           .map { response =>
             response.status match {

@@ -20,6 +20,7 @@ import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
+import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 
 import java.time.LocalDate
@@ -81,6 +82,34 @@ class HIPNpsEmploymentWithoutNinoSpec
       val employment                 = Json.parse(employmentResponse).as[HIPNpsEmploymentWithoutNino]
 
       employment.taxDistrictNumber shouldBe "098"
+    }
+
+    "create an Nps Employent Json when an optional field is missing" in {
+      val missingOptionalField = HIPNpsEmploymentWithoutNino(
+        sequenceNumber = 1,
+        taxDistrictNumber = "46",
+        payeNumber = "T2PP",
+        employerName = "Aldi",
+        worksNumber = Some("00191048716"),
+        receivingJobSeekersAllowance = true,
+        otherIncomeSourceIndicator = true,
+        receivingOccupationalPension = true,
+        startDate = Some(LocalDate.of(YEAR_2015, JANUARY, DAY_21)),
+        employmentStatus = Live
+      )
+
+      Json.toJson(missingOptionalField) shouldBe Json.obj(
+        "sequenceNumber"               -> 1,
+        "taxDistrictNumber"            -> "46",
+        "payeNumber"                   -> "T2PP",
+        "employerName"                 -> "Aldi",
+        "worksNumber"                  -> "00191048716",
+        "receivingJobSeekersAllowance" -> true,
+        "otherIncomeSourceIndicator"   -> true,
+        "startDate"                    -> LocalDate.of(YEAR_2015, JANUARY, DAY_21),
+        "receivingOccupationalPension" -> true,
+        "employmentStatus"             -> Json.obj("employmentStatus" -> 1)
+      )
     }
 
     "deserialise HIPNpsEmploymentWithoutNino Response Json" when {

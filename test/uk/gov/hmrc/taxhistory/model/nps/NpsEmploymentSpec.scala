@@ -20,7 +20,8 @@ import java.time.LocalDate
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
-import play.api.libs.json.{JsNull, JsObject, JsValue, Json}
+import play.api.libs.json.{JsError, JsNull, JsObject, JsSuccess, JsValue, Json}
+import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
 import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 
 class NpsEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with DateUtils {
@@ -43,6 +44,21 @@ class NpsEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with
       |    "endDate": "08/01/2016"
       |    }
     """.stripMargin
+
+  val employmentObject: NpsEmployment = NpsEmployment(
+    nino = "AA000000",
+    sequenceNumber = 1,
+    taxDistrictNumber = "46",
+    payeNumber = "T2PP",
+    employerName = "Aldi",
+    worksNumber = Some("00191048716"),
+    receivingJobSeekersAllowance = true,
+    otherIncomeSourceIndicator = true,
+    receivingOccupationalPension = true,
+    startDate = Some(LocalDate.of(YEAR_2015, JANUARY, DAY_21)),
+    endDate = Some(LocalDate.of(YEAR_2016, JANUARY, DAY_8)),
+    employmentStatus = Live
+  )
 
   val startDate: LocalDate = LocalDate.of(YEAR_2015, JANUARY, DAY_21)
   val endDate: LocalDate   = LocalDate.of(YEAR_2016, JANUARY, DAY_8)
@@ -86,6 +102,36 @@ class NpsEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with
       val employment = Json.parse(employmentResponse).as[NpsEmployment]
 
       employment.taxDistrictNumber shouldBe "046"
+    }
+
+    "create an Nps Employent Json when an optional field is missing" in {
+      val missingIabd = NpsEmployment(
+        nino = "AA000000",
+        sequenceNumber = 1,
+        taxDistrictNumber = "46",
+        payeNumber = "T2PP",
+        employerName = "Aldi",
+        worksNumber = Some("00191048716"),
+        receivingJobSeekersAllowance = true,
+        otherIncomeSourceIndicator = true,
+        receivingOccupationalPension = true,
+        startDate = Some(LocalDate.of(YEAR_2015, JANUARY, DAY_21)),
+        employmentStatus = Live
+      )
+
+      Json.toJson(missingIabd) shouldBe Json.obj(
+        "nino"                         -> "AA000000",
+        "sequenceNumber"               -> 1,
+        "taxDistrictNumber"            -> "46",
+        "payeNumber"                   -> "T2PP",
+        "employerName"                 -> "Aldi",
+        "worksNumber"                  -> "00191048716",
+        "receivingJobSeekersAllowance" -> true,
+        "otherIncomeSourceIndicator"   -> true,
+        "startDate"                    -> LocalDate.of(YEAR_2015, JANUARY, DAY_21),
+        "receivingOccupationalPension" -> true,
+        "employmentStatus"             -> Json.obj("employmentStatus" -> 1)
+      )
     }
 
     "deserialise NPS Employment Response Json" when {

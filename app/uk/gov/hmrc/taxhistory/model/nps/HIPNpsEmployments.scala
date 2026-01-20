@@ -22,7 +22,7 @@ case class HIPNpsEmployments(nino: String, hipNpsEmploymentsWithoutNino: List[HI
 object HIPNpsEmployments {
   def toListOfHIPNpsEmployment(hipNpsEmployments: HIPNpsEmployments): List[HIPNpsEmployment] =
     hipNpsEmployments.hipNpsEmploymentsWithoutNino.map(HIPNpsEmployment(hipNpsEmployments.nino)).toList
-  implicit val reader: Reads[HIPNpsEmployments]                                              = (js: JsValue) =>
+  given reader: Reads[HIPNpsEmployments]                                                     = (js: JsValue) =>
     for {
       nino                             <- (js \ "nationalInsuranceNumber").validate[String]
       hipNpsEmploymentArrayWithoutNINO <-

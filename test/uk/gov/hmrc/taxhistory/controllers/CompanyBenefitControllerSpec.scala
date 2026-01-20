@@ -70,7 +70,7 @@ class CompanyBenefitControllerSpec extends PlaySpec with GuiceOneServerPerSuite 
   "getBenefits" must {
 
     "respond with OK for successful get" in {
-      when(mockEmploymentHistoryService.getCompanyBenefits(any(), any(), any())(any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getCompanyBenefits(any(), any(), any())(using any[HeaderCarrier]))
         .thenReturn(Future.successful(testCompanyBenefits))
       val result =
         testCompanyBenefitController.getCompanyBenefits(ninoWithAgent.nino, taxYear, employmentId).apply(FakeRequest())
@@ -79,7 +79,7 @@ class CompanyBenefitControllerSpec extends PlaySpec with GuiceOneServerPerSuite 
 
     "propagate error responses from upstream microservices" in {
       HttpErrors.toCheck.foreach { case (httpException, expectedStatus) =>
-        when(mockEmploymentHistoryService.getCompanyBenefits(any(), any(), any())(any[HeaderCarrier]))
+        when(mockEmploymentHistoryService.getCompanyBenefits(any(), any(), any())(using any[HeaderCarrier]))
           .thenReturn(Future.failed(httpException))
         val result =
           testCompanyBenefitController
@@ -90,7 +90,7 @@ class CompanyBenefitControllerSpec extends PlaySpec with GuiceOneServerPerSuite 
     }
 
     "respond with Unauthorised Status for enrolments which is not HMRC Agent" in {
-      when(mockEmploymentHistoryService.getCompanyBenefits(any(), any(), any())(any[HeaderCarrier]))
+      when(mockEmploymentHistoryService.getCompanyBenefits(any(), any(), any())(using any[HeaderCarrier]))
         .thenReturn(Future.successful(testCompanyBenefits))
       val result =
         testCompanyBenefitController

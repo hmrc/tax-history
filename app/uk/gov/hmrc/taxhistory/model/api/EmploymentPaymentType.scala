@@ -59,7 +59,7 @@ object EmploymentPaymentType {
       }
     }
 
-  private implicit val reads: Reads[EmploymentPaymentType] = {
+  private given reads: Reads[EmploymentPaymentType] = {
     case JsString(value) =>
       EmploymentPaymentType(value) match {
         case Some(et) => JsSuccess(et)
@@ -68,7 +68,7 @@ object EmploymentPaymentType {
     case invalid         => JsError(s"Invalid EmploymentPaymentType $invalid")
   }
 
-  private implicit val writes: Writes[EmploymentPaymentType] = (o: EmploymentPaymentType) => JsString(o.name)
+  private given writes: Writes[EmploymentPaymentType] = (o: EmploymentPaymentType) => JsString(o.name)
 
-  implicit val format: Format[EmploymentPaymentType] = Format[EmploymentPaymentType](reads, writes)
+  given format: Format[EmploymentPaymentType] = Format[EmploymentPaymentType](reads, writes)
 }
