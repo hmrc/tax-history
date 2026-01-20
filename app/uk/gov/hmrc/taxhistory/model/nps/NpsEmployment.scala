@@ -96,7 +96,7 @@ object NpsEmployment {
       (__ \ "receivingJobSeekersAllowance").write[Boolean] and
       (__ \ "otherIncomeSourceIndicator").write[Boolean] and
       (__ \ "startDate").writeNullable[LocalDate] and
-      (__ \ " endDate").writeNullable[LocalDate] and
+      (__ \ "endDate").writeNullable[LocalDate] and
       (__ \ "receivingOccupationalPension").write[Boolean] and
       (__ \ "employmentStatus").write[EmploymentStatus]
   )(o => Tuple.fromProductTyped(o))

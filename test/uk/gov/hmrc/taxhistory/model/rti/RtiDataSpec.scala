@@ -362,7 +362,6 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
 
     "serialize to JSON" when {
       "all fields are valid" in {
-        println(Json.toJson(validRtiPayment))
         Json.toJson(validRtiPayment) shouldBe rtiPaymentJson
       }
 

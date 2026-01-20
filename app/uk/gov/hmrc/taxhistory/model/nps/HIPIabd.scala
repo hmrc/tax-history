@@ -194,8 +194,5 @@ case class HIPIabdList(iabdDetails: Option[List[HIPIabd]]) {
 }
 
 object HIPIabdList {
-  given formats: OFormat[HIPIabdList] = OFormat(
-    (JsPath \ "iabdDetails").readNullable[List[HIPIabd]].map(HIPIabdList.apply),
-    (JsPath \ "iabdDetails").write[List[Iabd]].contramap[HIPIabdList](_.getListOfIabd)
-  )
+  given formats: OFormat[HIPIabdList] = Json.format[HIPIabdList]
 }
