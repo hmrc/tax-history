@@ -20,7 +20,7 @@ import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsError, JsValue, Json}
-import uk.gov.hmrc.taxhistory.model.nps.{AllowanceOrDeduction, TaAllowance, TaDeduction}
+import uk.gov.hmrc.taxhistory.model.nps.AllowanceOrDeduction
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 
 import java.time.LocalDate

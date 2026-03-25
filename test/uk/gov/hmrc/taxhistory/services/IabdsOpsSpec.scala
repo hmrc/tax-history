@@ -64,7 +64,7 @@ class IabdsOpsSpec extends PlaySpec with TestUtil with DateUtils {
     )
   )
 
-  lazy val iabdList: List[Iabd]                                   = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
+  lazy val iabdList: List[Iabd]                                   = loadFile("/json/nps/response/iabds-delete.json").as[List[Iabd]]
   lazy val iabdsTotalBenfitInKindJsonResponse: JsValue            = loadFile("/json/nps/response/iabdsTotalBIK.json")
   lazy val iabdsBenfitInKindJsonResponse: JsValue                 = loadFile("/json/nps/response/iabdsBIK.json")
   lazy val iabdsBenfitInKindNoGrossJsonResponse: JsValue          = loadFile("/json/nps/response/iabdsBIKNoGrossAmount.json")

@@ -152,7 +152,7 @@ trait EmploymentHistoryServiceBaseSpec extends DateUtils with TestUtil {
     "/json/rti/response/dummyRtiNonMatchingEmployment.json"
   )
   lazy val testNpsTaxAccount: NpsTaxAccount                = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
-  lazy val testIabds: List[Iabd]                           = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
+  lazy val testIabds: List[Iabd]                           = loadFile("/json/nps/response/iabds-delete.json").as[List[Iabd]]
 
   val startDate: LocalDate = LocalDate.of(YEAR_2015, JANUARY, DAY_21)
 

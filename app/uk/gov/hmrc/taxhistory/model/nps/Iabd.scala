@@ -93,7 +93,7 @@ object IabdPaymentFrequency {
   }
 }
 
-case class HIPIabd(
+case class Iabd(
   nino: String,
   employmentSequenceNumber: Option[Int] = None,
   `type`: IabdType,
@@ -128,23 +128,10 @@ case class HIPIabd(
       startDate = paymentStartDate
     )
   }
-
-  // TODO: to be removed in code cleanup
-  def toIabd: Iabd = Iabd(
-    nino,
-    employmentSequenceNumber,
-    `type`,
-    grossAmount,
-    typeDescription,
-    source,
-    captureDate,
-    paymentFrequency,
-    startDate
-  )
 }
 
-object HIPIabd extends Logging {
-  given reader: Reads[HIPIabd]  = (js: JsValue) => {
+object Iabd extends Logging {
+  given reader: Reads[Iabd]  = (js: JsValue) => {
     val typeAndDescription               = (js \ "type").as[String]
     val (typeDescription, typeCode)      = typeAndDescription.split("[(]") match {
       case Array(desc, code) => (Some(desc.trim), code.substring(0, code.indexOf(")")).toIntOption)
@@ -171,7 +158,7 @@ object HIPIabd extends Logging {
       captureDate              <- (js \ "captureDate").validateOpt[String]
       paymentFrequencyString   <- (js \ "paymentFrequency").validateOpt[String]
       startDate                <- (js \ "startDate").validateOpt[String]
-    } yield HIPIabd(
+    } yield Iabd(
       nino = nino,
       `type` = IabdType.apply(typeCode.getOrElse(0)),
       typeDescription = typeDescription,
@@ -183,16 +170,13 @@ object HIPIabd extends Logging {
       startDate = formatDate(startDate)
     )
   }
-  given writer: Writes[HIPIabd] = Json.writes[HIPIabd]
+  given writer: Writes[Iabd] = Json.writes[Iabd]
 }
 
-case class HIPIabdList(iabdDetails: Option[List[HIPIabd]]) {
-  val getListOfIabd: List[Iabd] = iabdDetails match {
-    case Some(x) => x.map(x => x.toIabd)
-    case None    => List.empty
-  }
+case class IabdList(iabdDetails: Option[List[Iabd]]) {
+  val getListOfIabd: List[Iabd] = iabdDetails.getOrElse(List.empty)
 }
 
-object HIPIabdList {
-  given formats: OFormat[HIPIabdList] = Json.format[HIPIabdList]
+object IabdList {
+  given formats: OFormat[IabdList] = Json.format[IabdList]
 }

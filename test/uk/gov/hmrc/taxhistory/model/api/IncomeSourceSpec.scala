@@ -20,7 +20,7 @@ import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsError, JsValue, Json}
-import uk.gov.hmrc.taxhistory.model.nps.{TaAllowance, TaDeduction}
+import uk.gov.hmrc.taxhistory.model.nps.AllowanceOrDeduction
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 
 class IncomeSourceSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
@@ -55,7 +55,7 @@ class IncomeSourceSpec extends TestUtil with AnyWordSpecLike with Matchers with 
     1,
     Some(BigDecimal(22.22)),
     List(
-      TaDeduction(
+      AllowanceOrDeduction(
         `type` = 15,
         npsDescription = "balancing charge",
         amount = BigDecimal(212),
@@ -63,7 +63,7 @@ class IncomeSourceSpec extends TestUtil with AnyWordSpecLike with Matchers with 
       )
     ),
     List(
-      TaAllowance(
+      AllowanceOrDeduction(
         `type` = 11,
         npsDescription = "personal allowance",
         amount = BigDecimal(11000),

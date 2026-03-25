@@ -50,7 +50,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with TestUtil with Dat
 
   val testTaxCode                = "1150L"
   lazy val testRtiData: RtiData  = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
-  lazy val testIabds: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
+  lazy val testIabds: List[Iabd] = loadFile("/json/nps/response/iabds-delete.json").as[List[Iabd]]
 
   lazy val testIncomeSource: IncomeSource = IncomeSource(1, 1, None, Nil, Nil, testTaxCode, None, 1, "")
 

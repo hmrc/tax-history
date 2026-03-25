@@ -62,7 +62,7 @@ class TaxAccountServiceSpec extends PlaySpec with TestUtil with DateUtils {
 
   lazy val testNpsTaxAccount: NpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
 
-  lazy val iabdsResponse: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
+  lazy val iabdsResponse: List[Iabd] = loadFile("/json/nps/response/iabds-delete.json").as[List[Iabd]]
   lazy val testRtiData: RtiData      = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
 
   "TaxAccount" should {

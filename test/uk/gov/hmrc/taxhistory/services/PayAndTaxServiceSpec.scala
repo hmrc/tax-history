@@ -86,7 +86,7 @@ class PayAndTaxServiceSpec
     )
   )
 
-  lazy val iabdsResponse: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
+  lazy val iabdsResponse: List[Iabd] = loadFile("/json/nps/response/iabds-delete.json").as[List[Iabd]]
 
   lazy val rtiEmploymentResponse: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
 
