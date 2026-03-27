@@ -26,7 +26,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.taxhistory.model.api.{PayAndTax, PayAsYouEarn}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
-import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.model.nps.{Iabd, IabdList, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestEmploymentHistoryService, TestUtil}
 import uk.gov.hmrc.time.TaxYear
@@ -86,10 +86,8 @@ class PayAndTaxServiceSpec
     )
   )
 
-  lazy val iabdsResponse: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
-
-  lazy val rtiEmploymentResponse: RtiData = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
-
+  lazy val iabdsResponse: List[Iabd]        = loadFile("/json/nps/response/iabds.json").as[IabdList].getListOfIabd
+  lazy val rtiEmploymentResponse: RtiData   = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
   lazy val testNpsTaxAccount: NpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
 
   "PayAndTax" should {

@@ -1,99 +1,126 @@
 {
-  "taxAccountId": null,
-  "date": "10/03/2017",
-  "nino": "SY700113",
-  "taxYear": 2017,
-  "previousTaxAccountId": 25,
-  "previousYearTaxAccountId": 23,
-  "nextTaxAccountId": null,
-  "nextYearTaxAccountId": null,
-  "totalEstTax": 28333.6,
-  "totalEstPay": {
-    "npsDescription": null,
-    "amount": 10000,
-    "type": null,
-    "iabdSummaries": [
+  "nationalInsuranceNumber": "RN000001A",
+  "taxAccountIdentifier": 2,
+  "date": "2024-06-01",
+  "isCurrentlyEmployed": false,
+  "taxYear": 2024,
+  "totalEstimatedTax": 102348.6,
+  "totalEstimatedPayDetails": {
+    "amount": 60000,
+    "type": "New Estimated Pay (027)",
+    "summaryIABDDetailsList": [
       {
-        "amount": 10000,
-        "type": 27,
-        "npsDescription": "New Estimated Pay",
-        "employmentId": 12,
-        "defaultEstimatedPay": null
-      }
-    ],
-    "sourceAmount": null
-  },
-  "adjustedNetIncome": {
-    "npsDescription": null,
-    "amount": 80000,
-    "type": null,
-    "iabdSummaries": [
-      {
-        "amount": 10000,
-        "type": 27,
-        "npsDescription": "New Estimated Pay",
-        "employmentId": 12,
-        "defaultEstimatedPay": null
+        "amount": 60000,
+        "type": "New Estimated Pay (027)",
+        "employmentSequenceNumber": 1
       },
       {
-        "amount": 70000,
-        "type": 76,
-        "npsDescription": "UK Dividend",
-        "employmentId": null
+        "amount": 91700,
+        "type": "New Estimated Pay (027)",
+        "employmentSequenceNumber": 3
+      },
+      {
+        "amount": 107300,
+        "type": "New Estimated Pay (027)",
+        "employmentSequenceNumber": 2
       }
-    ],
-    "sourceAmount": null
+    ]
   },
-  "totalLiability": {
+  "actualPayToDateDetailsList": [
+    {
+      "employmentSequenceNumber": 1,
+      "taxablePay": 20000,
+      "payDate": "2024-06-30",
+      "startDate": "2024-01-04",
+      "taxablePayInPeriod": 5785,
+      "paymentFrequency": "4 WEEKLY",
+      "payToDateMonthNumber": 4,
+      "activeOccupationalPension": false,
+      "irregularEmployment": false
+    },
+    {
+      "employmentSequenceNumber": 3,
+      "taxablePay": 22925,
+      "payDate": "2024-06-30",
+      "startDate": "2024-06-1",
+      "taxablePayInPeriod": 2925,
+      "paymentFrequency": "MONTHLY",
+      "payToDateMonthNumber": 3,
+      "activeOccupationalPension": false,
+      "irregularEmployment": false
+    }
+  ],
+  "adjustedNetIncomeDetails": {
+    "amount": 259000,
+    "type": "New Estimated Pay (027)",
+    "summaryIABDDetailsList": [
+      {
+        "amount": 60000,
+        "type": "New Estimated Pay (027)",
+        "employmentSequenceNumber": 1
+      },
+      {
+        "amount": 91700,
+        "type": "New Estimated Pay (027)",
+        "employmentSequenceNumber": 3
+      },
+      {
+        "amount": 107300,
+        "type": "New Estimated Pay (027)",
+        "employmentSequenceNumber": 2
+      }
+    ]
+  },
+  "totalLiabilityDetails": {
     "nonSavings": {
-      "totalIncome": {
-        "npsDescription": null,
-        "amount": 10000,
-        "type": null,
-        "iabdSummaries": [
+      "totalIncomeDetails": {
+        "amount": 259000,
+        "summaryIABDDetailsList": [
           {
-            "amount": 10000,
-            "type": 27,
-            "npsDescription": "New Estimated Pay",
-            "employmentId": 12,
-            "defaultEstimatedPay": null
-          }
-        ],
-        "sourceAmount": null
-      },
-      "allowReliefDeducts": {
-        "npsDescription": null,
-        "amount": 10000,
-        "type": null,
-        "iabdSummaries": [
+            "amount": 60000,
+            "type": "New Estimated Pay (027)",
+            "employmentSequenceNumber": 1
+          },
           {
-            "amount": 11500,
-            "type": 118,
-            "npsDescription": "Personal Allowance (PA)",
-            "employmentId": null
+            "amount": 91700,
+            "type": "New Estimated Pay (027)",
+            "employmentSequenceNumber": 3
+          },
+          {
+            "amount": 107300,
+            "type": "New Estimated Pay (027)"
           }
-        ],
-        "sourceAmount": null
+        ]
       },
-      "totalTax": 0,
-      "totalTaxableIncome": 0,
-      "taxBands": [
+      "allowanceReliefDeductionsDetails": {
+        "amount": 0,
+        "type": "Personal Allowance (PA) (118)",
+        "summaryIABDDetailsList": [
+          {
+            "amount": 0,
+            "type": "Personal Allowance (PA) (118)"
+          }
+        ]
+      },
+      "totalTax": 102350,
+      "totalTaxableIncome": 259000,
+      "taxBandDetails": [
         {
           "bandType": "B",
           "taxCode": "BR",
           "isBasicRate": true,
-          "income": null,
-          "tax": null,
+          "income": 33500,
+          "tax": 6700,
           "lowerBand": 0,
           "upperBand": 33500,
           "rate": 20
         },
         {
-          "bandType": "D0",
+          "bandType": "DO",
           "taxCode": "D0",
           "isBasicRate": false,
-          "income": null,
-          "tax": null,
+          "income": 116500,
+          "tax": 46600,
           "lowerBand": 33500,
           "upperBand": 150000,
           "rate": 40
@@ -102,207 +129,118 @@
           "bandType": "D1",
           "taxCode": "D1",
           "isBasicRate": false,
-          "income": null,
-          "tax": null,
+          "income": 109000,
+          "tax": 49050,
           "lowerBand": 150000,
           "upperBand": 0,
           "rate": 45
         }
       ]
     },
-    "untaxedInterest": null,
-    "bankInterest": null,
-    "ukDividends": {
-      "totalIncome": {
-        "npsDescription": null,
-        "amount": 70000,
-        "type": null,
-        "iabdSummaries": [
-          {
-            "amount": 4762.5,
-            "type": 129,
-            "npsDescription": "Dividends Tax",
-            "employmentId": null
-          },
-          {
-            "amount": 70000,
-            "type": 76,
-            "npsDescription": "UK Dividend",
-            "employmentId": null
-          }
-        ],
-        "sourceAmount": null
-      },
-      "allowReliefDeducts": {
-        "npsDescription": null,
-        "amount": 1500,
-        "type": null,
-        "iabdSummaries": null,
-        "sourceAmount": null
-      },
-      "totalTax": 13512.5,
-      "totalTaxableIncome": 68500,
-      "taxBands": [
-        {
-          "bandType": "SDR",
-          "taxCode": "BR",
-          "isBasicRate": false,
-          "income": 5000,
-          "tax": 0,
-          "lowerBand": 0,
-          "upperBand": 5000,
-          "rate": 0
-        },
-        {
-          "bandType": "LDR",
-          "taxCode": "BR",
-          "isBasicRate": true,
-          "income": 28500,
-          "tax": 2137.5,
-          "lowerBand": 5000,
-          "upperBand": 33500,
-          "rate": 7.5
-        },
-        {
-          "bandType": "HDR1",
-          "taxCode": "D0",
-          "isBasicRate": false,
-          "income": 35000,
-          "tax": 11375,
-          "lowerBand": 33500,
-          "upperBand": 150000,
-          "rate": 32.5
-        },
-        {
-          "bandType": "HDR2",
-          "taxCode": "D1",
-          "isBasicRate": false,
-          "income": null,
-          "tax": null,
-          "lowerBand": 150000,
-          "upperBand": 0,
-          "rate": 38.1
-        }
-      ]
-    },
-    "foreignInterest": null,
-    "foreignDividends": null,
-    "basicRateExtensions": {
-      "npsDescription": null,
-      "amount": 0,
-      "type": null,
-      "iabdSummaries": null,
-      "sourceAmount": null,
-      "personalPensionPayment": null,
-      "giftAidPayments": null,
-      "personalPensionPaymentRelief": null,
-      "giftAidPaymentsRelief": null
-    },
-    "reliefsGivingBackTax": null,
-    "otherTaxDue": null,
-    "alreadyTaxedAtSource": null,
-    "totalLiability": 13512.5
+    "totalLiability": 102350
   },
-  "incomeSources": [
+  "employmentDetailsList": [
     {
-      "employmentId": 12,
-      "employmentType": 1,
-      "employmentStatus": 1,
-      "employmentTaxDistrictNumber": 961,
-      "employmentPayeRef": "AZ00010",
-      "pensionIndicator": false,
-      "otherIncomeSourceIndicator": false,
-      "jsaIndicator": false,
-      "name": "PAYESCHEMEOPERATORNAME01",
-      "taxCode": "K7757",
-      "potentialUnderpayment": 0,
-      "actualPUPCodedInCYPlusOneTaxYear": 240,
-      "allowances": [
+      "employmentSequenceNumber": 1,
+      "employmentRecordType": "SECONDARY",
+      "employmentStatus": "Live",
+      "employerReference": "531/J4816",
+      "taxCode": "1150L",
+      "basisOfOperation": "Cumulative",
+      "actualPUPCodedInNextYear": 240,
+      "deductionsDetails": [
         {
-          "npsDescription": "personal allowance",
-          "amount": 11500,
-          "type": 11,
-          "iabdSummaries": [
-            {
-              "amount": 11500,
-              "type": 118,
-              "npsDescription": "Personal Allowance (PA)",
-              "employmentId": null
-            }
-          ],
-          "sourceAmount": 11500
+          "type": "outstanding debt restriction (041)",
+          "sourceAmount": 145.75,
+          "adjustedAmount": 145.75
+        },
+        {
+          "type": "underpayment amount (035)",
+          "sourceAmount": 15423.29,
+          "adjustedAmount": 15423.29
         }
       ],
-      "deductions": [
+      "allowancesDetails": []
+    },
+    {
+      "employmentSequenceNumber": 1,
+      "employmentRecordType": "PRIMARY",
+      "employmentStatus": "Live",
+      "employerReference": "111/A11111",
+      "jobSeekersAllowance": false,
+      "activePension": false,
+      "otherIncome": false,
+      "payeSchemeOperatorName": "Scheme X",
+      "taxCode": "K20",
+      "basisOfOperation": "Week1/Month1",
+      "potentialUnderpayment": 27544.26,
+      "totalInYearAdjustment": 27544.26,
+      "totalInYearAdjustmentIntoCurrentYear": 0,
+      "totalInYearAdjustmentIntoNextYear": 27544.26,
+      "totalInYearAdjustmentFromPreviousYear": 0,
+      "actualPUPCodedInNextYear": 99999.98,
+      "actualPotentialUnderpaymentPayToDateList": [
         {
-          "npsDescription": "savings income taxable at higher rate",
-          "amount": 38625,
-          "type": 32,
-          "iabdSummaries": [
-            {
-              "amount": 70000,
-              "type": 76,
-              "npsDescription": "UK Dividend",
-              "employmentId": null
-            }
-          ],
-          "sourceAmount": 0
+          "employmentSequenceNumber": 1,
+          "taxablePay": 20000,
+          "totalTax": 0,
+          "payDate": "2024-06-30",
+          "payToDateMonthNumber": 4
         },
         {
-          "npsDescription": "Dividend Tax",
-          "amount": 11906,
-          "type": 44,
-          "iabdSummaries": [
-            {
-              "amount": 4762.5,
-              "type": 129,
-              "npsDescription": "Dividends Tax",
-              "employmentId": null
-            }
-          ],
-          "sourceAmount": 0
+          "employmentSequenceNumber": 2,
+          "taxablePay": 27000,
+          "totalTax": 0,
+          "payDate": "2024-06-30",
+          "payToDateMonthNumber": 3
         },
         {
-          "npsDescription": "Underpayment amount ",
-          "amount": 38558,
-          "type": 35,
-          "iabdSummaries": null,
-          "sourceAmount": 15423.29
-        },
+          "employmentSequenceNumber": 3,
+          "taxablePay": 24000,
+          "totalTax": 0,
+          "payDate": "2024-06-30",
+          "payToDateMonthNumber": 3
+        }
+      ],
+      "allowancesDetails": [
         {
-          "npsDescription": "Outstanding Debt Restriction",
-          "amount": 728,
-          "type": 41,
-          "iabdSummaries": null,
-          "sourceAmount": 145.75
+          "sourceAmount": 0,
+          "adjustedAmount": 11500,
+          "type": "loan interest (008)"
+        }
+      ],
+      "deductionsDetails": [
+        {
+          "sourceAmount": 212,
+          "adjustedAmount": 212,
+          "type": "balancing charge (015)"
         }
       ],
       "payAndTax": {
-        "totalIncome": {
-          "npsDescription": null,
-          "amount": 10000,
-          "type": null,
-          "iabdSummaries": [
+        "totalIncomeDetails": {
+          "amount": 60000,
+          "summaryIABDDetailsList": [
             {
-              "amount": 10000,
-              "type": 27,
-              "npsDescription": "New Estimated Pay",
-              "employmentId": 12,
-              "defaultEstimatedPay": null
+              "amount": 60000,
+              "type": "New Estimated Pay (027)",
+              "employmentSequenceNumber": 1
             }
-          ],
-          "sourceAmount": null
+          ]
         },
-        "allowReliefDeducts": {
-          "npsDescription": null,
-          "amount": -77584,
-          "type": null,
-          "iabdSummaries": null,
-          "sourceAmount": null
+        "allowanceReliefDeductionsDetails": {
+          "amount": -209.04,
+          "type": "New Estimated Pay (027)",
+          "summaryIABDDetailsList": [
+            {
+              "amount": 60000,
+              "type": "New Estimated Pay (027)",
+              "employmentSequenceNumber": 1
+            }
+          ]
         },
-        "totalTax": 28333.6,
-        "totalTaxableIncome": 87584,
-        "taxBands": [
+        "totalTax": 17383,
+        "totalTaxableIncome": 60209,
+        "taxBandDetails": [
           {
             "bandType": "B",
             "taxCode": "BR",
@@ -314,11 +252,11 @@
             "rate": 20
           },
           {
-            "bandType": "D0",
+            "bandType": "DO",
             "taxCode": "D0",
             "isBasicRate": false,
-            "income": 54084,
-            "tax": 21633.6,
+            "income": 116500,
+            "tax": 46600,
             "lowerBand": 33500,
             "upperBand": 150000,
             "rate": 40
@@ -327,8 +265,8 @@
             "bandType": "D1",
             "taxCode": "D1",
             "isBasicRate": false,
-            "income": null,
-            "tax": null,
+            "income": 109000,
+            "tax": 49050,
             "lowerBand": 150000,
             "upperBand": 0,
             "rate": 45
@@ -337,104 +275,84 @@
       }
     },
     {
-      "employmentId": 6,
-      "employmentType": 2,
-      "employmentStatus": 1,
-      "employmentTaxDistrictNumber": 961,
-      "employmentPayeRef": "AZ00010",
-      "pensionIndicator": false,
-      "otherIncomeSourceIndicator": false,
-      "jsaIndicator": false,
-      "name": "PAYESCHEMEOPERATORNAME01",
-      "taxCode": "K7757",
-      "potentialUnderpayment": 0,
-      "actualPUPCodedInCYPlusOneTaxYear": null,
-      "allowances": [
+      "employmentSequenceNumber": 1,
+      "employmentRecordType": "SECONDARY",
+      "employmentStatus": "Live",
+      "employerReference": "111/A11111",
+      "jobSeekersAllowance": false,
+      "activePension": false,
+      "otherIncome": false,
+      "payeSchemeOperatorName": "Scheme X",
+      "taxCode": "K20",
+      "basisOfOperation": "Cumulative",
+      "potentialUnderpayment": 27544.26,
+      "totalInYearAdjustment": 27544.26,
+      "totalInYearAdjustmentIntoCurrentYear": 0,
+      "totalInYearAdjustmentIntoNextYear": 27544.26,
+      "totalInYearAdjustmentFromPreviousYear": 0,
+      "actualPUPCodedInNextYear": 99999.98,
+      "actualPotentialUnderpaymentPayToDateList": [
         {
-          "npsDescription": "personal allowance",
-          "amount": 11500,
-          "type": 11,
-          "iabdSummaries": [
-            {
-              "amount": 11500,
-              "type": 118,
-              "npsDescription": "Personal Allowance (PA)",
-              "employmentId": null
-            }
-          ],
-          "sourceAmount": 11500
+          "employmentSequenceNumber": 1,
+          "taxablePay": 20000,
+          "totalTax": 0,
+          "payDate": "2024-06-30",
+          "payToDateMonthNumber": 4
+        },
+        {
+          "employmentSequenceNumber": 2,
+          "taxablePay": 27000,
+          "totalTax": 0,
+          "payDate": "2024-06-30",
+          "payToDateMonthNumber": 3
+        },
+        {
+          "employmentSequenceNumber": 3,
+          "taxablePay": 24000,
+          "totalTax": 0,
+          "payDate": "2024-06-30",
+          "payToDateMonthNumber": 3
         }
       ],
-      "deductions": [
+      "allowancesDetails": [
         {
-          "npsDescription": "savings income taxable at higher rate",
-          "amount": 38625,
-          "type": 32,
-          "iabdSummaries": [
-            {
-              "amount": 70000,
-              "type": 76,
-              "npsDescription": "UK Dividend",
-              "employmentId": null
-            }
-          ],
-          "sourceAmount": 0
-        },
+          "sourceAmount": 0,
+          "adjustedAmount": 11500,
+          "type": "loan interest (008)"
+        }
+      ],
+      "deductionsDetails": [
         {
-          "npsDescription": "Dividend Tax",
-          "amount": 11906,
-          "type": 44,
-          "iabdSummaries": [
-            {
-              "amount": 4762.5,
-              "type": 129,
-              "npsDescription": "Dividends Tax",
-              "employmentId": null
-            }
-          ],
-          "sourceAmount": 0
-        },
-        {
-          "npsDescription": "Underpayment amount ",
-          "amount": 38558,
-          "type": 35,
-          "iabdSummaries": null,
-          "sourceAmount": null
-        },
-        {
-          "npsDescription": "Outstanding Debt Restriction",
-          "amount": 728,
-          "type": 41,
-          "iabdSummaries": null,
-          "sourceAmount": null
+          "sourceAmount": 212,
+          "adjustedAmount": 212,
+          "type": "balancing charge (015)"
         }
       ],
       "payAndTax": {
-        "totalIncome": {
-          "npsDescription": null,
-          "amount": 10000,
-          "type": null,
-          "iabdSummaries": [
+        "totalIncomeDetails": {
+          "amount": 60000,
+          "summaryIABDDetailsList": [
             {
-              "amount": 10000,
-              "type": 27,
-              "npsDescription": "New Estimated Pay",
-              "employmentId": 12,
-              "defaultEstimatedPay": null
+              "amount": 60000,
+              "type": "New Estimated Pay (027)",
+              "employmentSequenceNumber": 1
             }
-          ],
-          "sourceAmount": null
+          ]
         },
-        "allowReliefDeducts": {
-          "npsDescription": null,
-          "amount": -77584,
-          "type": null,
-          "iabdSummaries": null,
-          "sourceAmount": null
+        "allowanceReliefDeductionsDetails": {
+          "amount": -209.04,
+          "type": "New Estimated Pay (027)",
+          "summaryIABDDetailsList": [
+            {
+              "amount": 60000,
+              "type": "New Estimated Pay (027)",
+              "employmentSequenceNumber": 1
+            }
+          ]
         },
-        "totalTax": 28333.6,
-        "totalTaxableIncome": 87584,
-        "taxBands": [
+        "totalTax": 17383,
+        "totalTaxableIncome": 60209,
+        "taxBandDetails": [
           {
             "bandType": "B",
             "taxCode": "BR",
@@ -446,11 +364,11 @@
             "rate": 20
           },
           {
-            "bandType": "D0",
+            "bandType": "DO",
             "taxCode": "D0",
             "isBasicRate": false,
-            "income": 54084,
-            "tax": 21633.6,
+            "income": 116500,
+            "tax": 46600,
             "lowerBand": 33500,
             "upperBand": 150000,
             "rate": 40
@@ -459,8 +377,341 @@
             "bandType": "D1",
             "taxCode": "D1",
             "isBasicRate": false,
-            "income": null,
-            "tax": null,
+            "income": 109000,
+            "tax": 49050,
+            "lowerBand": 150000,
+            "upperBand": 0,
+            "rate": 45
+          }
+        ]
+      }
+    },
+    {
+      "employmentSequenceNumber": 1,
+      "employmentRecordType": "PRIMARY",
+      "employmentStatus": "Live",
+      "employerReference": "111/A11111",
+      "jobSeekersAllowance": false,
+      "activePension": false,
+      "otherIncome": false,
+      "payeSchemeOperatorName": "Scheme X",
+      "taxCode": "K20",
+      "basisOfOperation": "Week1/Month1,Not Operated",
+      "potentialUnderpayment": 27544.26,
+      "totalInYearAdjustment": 27544.26,
+      "totalInYearAdjustmentIntoCurrentYear": 0,
+      "totalInYearAdjustmentIntoNextYear": 27544.26,
+      "totalInYearAdjustmentFromPreviousYear": 0,
+      "actualPUPCodedInNextYear": 99999.98,
+      "actualPotentialUnderpaymentPayToDateList": [
+        {
+          "employmentSequenceNumber": 1,
+          "taxablePay": 20000,
+          "totalTax": 0,
+          "payDate": "2024-06-30",
+          "payToDateMonthNumber": 4
+        },
+        {
+          "employmentSequenceNumber": 2,
+          "taxablePay": 27000,
+          "totalTax": 0,
+          "payDate": "2024-06-30",
+          "payToDateMonthNumber": 3
+        },
+        {
+          "employmentSequenceNumber": 3,
+          "taxablePay": 24000,
+          "totalTax": 0,
+          "payDate": "2024-06-30",
+          "payToDateMonthNumber": 3
+        }
+      ],
+      "allowancesDetails": [
+        {
+          "sourceAmount": 0,
+          "adjustedAmount": 11500,
+          "type": "loan interest (008)"
+        }
+      ],
+      "deductionsDetails": [
+        {
+          "sourceAmount": 212,
+          "adjustedAmount": 212,
+          "type": "balancing charge (015)"
+        }
+      ],
+      "payAndTax": {
+        "totalIncomeDetails": {
+          "amount": 60000,
+          "summaryIABDDetailsList": [
+            {
+              "amount": 60000,
+              "type": "New Estimated Pay (027)",
+              "employmentSequenceNumber": 1
+            }
+          ]
+        },
+        "allowanceReliefDeductionsDetails": {
+          "amount": -209.04,
+          "type": "New Estimated Pay (027)",
+          "summaryIABDDetailsList": [
+            {
+              "amount": 60000,
+              "type": "New Estimated Pay (027)",
+              "employmentSequenceNumber": 1
+            }
+          ]
+        },
+        "totalTax": 17383,
+        "totalTaxableIncome": 60209,
+        "taxBandDetails": [
+          {
+            "bandType": "B",
+            "taxCode": "BR",
+            "isBasicRate": true,
+            "income": 33500,
+            "tax": 6700,
+            "lowerBand": 0,
+            "upperBand": 33500,
+            "rate": 20
+          },
+          {
+            "bandType": "DO",
+            "taxCode": "D0",
+            "isBasicRate": false,
+            "income": 116500,
+            "tax": 46600,
+            "lowerBand": 33500,
+            "upperBand": 150000,
+            "rate": 40
+          },
+          {
+            "bandType": "D1",
+            "taxCode": "D1",
+            "isBasicRate": false,
+            "income": 109000,
+            "tax": 49050,
+            "lowerBand": 150000,
+            "upperBand": 0,
+            "rate": 45
+          }
+        ]
+      }
+    },
+    {
+      "employmentSequenceNumber": 1,
+      "employmentStatus": "Live",
+      "employerReference": "111/A11111",
+      "jobSeekersAllowance": false,
+      "activePension": false,
+      "otherIncome": false,
+      "payeSchemeOperatorName": "Scheme X",
+      "taxCode": "K20",
+      "basisOfOperation": "Cumulative,Not Operated",
+      "potentialUnderpayment": 27544.26,
+      "totalInYearAdjustment": 27544.26,
+      "totalInYearAdjustmentIntoCurrentYear": 0,
+      "totalInYearAdjustmentIntoNextYear": 27544.26,
+      "totalInYearAdjustmentFromPreviousYear": 0,
+      "actualPUPCodedInNextYear": 99999.98,
+      "actualPotentialUnderpaymentPayToDateList": [
+        {
+          "employmentSequenceNumber": 1,
+          "taxablePay": 20000,
+          "totalTax": 0,
+          "payDate": "2024-06-30",
+          "payToDateMonthNumber": 4
+        },
+        {
+          "employmentSequenceNumber": 2,
+          "taxablePay": 27000,
+          "totalTax": 0,
+          "payDate": "2024-06-30",
+          "payToDateMonthNumber": 3
+        },
+        {
+          "employmentSequenceNumber": 3,
+          "taxablePay": 24000,
+          "totalTax": 0,
+          "payDate": "2024-06-30",
+          "payToDateMonthNumber": 3
+        }
+      ],
+      "allowancesDetails": [
+        {
+          "sourceAmount": 0,
+          "adjustedAmount": 11500,
+          "type": "loan interest (008)"
+        }
+      ],
+      "deductionsDetails": [
+        {
+          "sourceAmount": 212,
+          "adjustedAmount": 212,
+          "type": "balancing charge (015)"
+        }
+      ],
+      "payAndTax": {
+        "totalIncomeDetails": {
+          "amount": 60000,
+          "summaryIABDDetailsList": [
+            {
+              "amount": 60000,
+              "type": "New Estimated Pay (027)",
+              "employmentSequenceNumber": 1
+            }
+          ]
+        },
+        "allowanceReliefDeductionsDetails": {
+          "amount": -209.04,
+          "type": "New Estimated Pay (027)",
+          "summaryIABDDetailsList": [
+            {
+              "amount": 60000,
+              "type": "New Estimated Pay (027)",
+              "employmentSequenceNumber": 1
+            }
+          ]
+        },
+        "totalTax": 17383,
+        "totalTaxableIncome": 60209,
+        "taxBandDetails": [
+          {
+            "bandType": "B",
+            "taxCode": "BR",
+            "isBasicRate": true,
+            "income": 33500,
+            "tax": 6700,
+            "lowerBand": 0,
+            "upperBand": 33500,
+            "rate": 20
+          },
+          {
+            "bandType": "DO",
+            "taxCode": "D0",
+            "isBasicRate": false,
+            "income": 116500,
+            "tax": 46600,
+            "lowerBand": 33500,
+            "upperBand": 150000,
+            "rate": 40
+          },
+          {
+            "bandType": "D1",
+            "taxCode": "D1",
+            "isBasicRate": false,
+            "income": 109000,
+            "tax": 49050,
+            "lowerBand": 150000,
+            "upperBand": 0,
+            "rate": 45
+          }
+        ]
+      }
+    },
+    {
+      "employmentSequenceNumber": 1,
+      "employmentStatus": "Live",
+      "employerReference": "111/A11111",
+      "jobSeekersAllowance": false,
+      "activePension": false,
+      "otherIncome": false,
+      "payeSchemeOperatorName": "Scheme X",
+      "taxCode": "K20",
+      "potentialUnderpayment": 27544.26,
+      "totalInYearAdjustment": 27544.26,
+      "totalInYearAdjustmentIntoCurrentYear": 0,
+      "totalInYearAdjustmentIntoNextYear": 27544.26,
+      "totalInYearAdjustmentFromPreviousYear": 0,
+      "actualPUPCodedInNextYear": 99999.98,
+      "actualPotentialUnderpaymentPayToDateList": [
+        {
+          "employmentSequenceNumber": 1,
+          "taxablePay": 20000,
+          "totalTax": 0,
+          "payDate": "2024-06-30",
+          "payToDateMonthNumber": 4
+        },
+        {
+          "employmentSequenceNumber": 2,
+          "taxablePay": 27000,
+          "totalTax": 0,
+          "payDate": "2024-06-30",
+          "payToDateMonthNumber": 3
+        },
+        {
+          "employmentSequenceNumber": 3,
+          "taxablePay": 24000,
+          "totalTax": 0,
+          "payDate": "2024-06-30",
+          "payToDateMonthNumber": 3
+        }
+      ],
+      "allowancesDetails": [
+        {
+          "sourceAmount": 0,
+          "adjustedAmount": 11500,
+          "type": "loan interest (008)"
+        }
+      ],
+      "deductionsDetails": [
+        {
+          "sourceAmount": 212,
+          "adjustedAmount": 212,
+          "type": "balancing charge (015)"
+        }
+      ],
+      "payAndTax": {
+        "totalIncomeDetails": {
+          "amount": 60000,
+          "summaryIABDDetailsList": [
+            {
+              "amount": 60000,
+              "type": "New Estimated Pay (027)",
+              "employmentSequenceNumber": 1
+            }
+          ]
+        },
+        "allowanceReliefDeductionsDetails": {
+          "amount": -209.04,
+          "type": "New Estimated Pay (027)",
+          "summaryIABDDetailsList": [
+            {
+              "amount": 60000,
+              "type": "New Estimated Pay (027)",
+              "employmentSequenceNumber": 1
+            }
+          ]
+        },
+        "totalTax": 17383,
+        "totalTaxableIncome": 60209,
+        "taxBandDetails": [
+          {
+            "bandType": "B",
+            "taxCode": "BR",
+            "isBasicRate": true,
+            "income": 33500,
+            "tax": 6700,
+            "lowerBand": 0,
+            "upperBand": 33500,
+            "rate": 20
+          },
+          {
+            "bandType": "DO",
+            "taxCode": "D0",
+            "isBasicRate": false,
+            "income": 116500,
+            "tax": 46600,
+            "lowerBand": 33500,
+            "upperBand": 150000,
+            "rate": 40
+          },
+          {
+            "bandType": "D1",
+            "taxCode": "D1",
+            "isBasicRate": false,
+            "income": 109000,
+            "tax": 49050,
             "lowerBand": 150000,
             "upperBand": 0,
             "rate": 45

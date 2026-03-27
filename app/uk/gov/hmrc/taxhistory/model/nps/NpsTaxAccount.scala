@@ -19,61 +19,112 @@ package uk.gov.hmrc.taxhistory.model.nps
 import play.api.libs.json.*
 import uk.gov.hmrc.taxhistory.model.api.{IncomeSource, TaxAccount}
 
-case class TaDeduction(`type`: Int, npsDescription: String, amount: BigDecimal, sourceAmount: Option[BigDecimal])
+case class AllowanceOrDeduction(
+  `type`: Int,
+  npsDescription: String,
+  amount: BigDecimal,
+  sourceAmount: Option[BigDecimal]
+)
 
-object TaDeduction {
-  given formats: OFormat[TaDeduction] = Json.format[TaDeduction]
-}
-
-case class TaAllowance(`type`: Int, npsDescription: String, amount: BigDecimal, sourceAmount: Option[BigDecimal])
-
-object TaAllowance {
-  given formats: OFormat[TaAllowance] = Json.format[TaAllowance]
+object AllowanceOrDeduction {
+  implicit val reader: Reads[AllowanceOrDeduction]   = (js: JsValue) => {
+    val typeAndDescription         = (js \ "type").validate[String].getOrElse("")
+    val (npsDescription, typeCode) = typeAndDescription.split("[(]") match {
+      case Array(desc, code) => (Some(desc.trim), code.substring(0, code.indexOf(")")).toIntOption)
+      case _                 => (None, None)
+    }
+    for {
+      amount       <- (js \ "adjustedAmount").validate[BigDecimal]
+      sourceAmount <- (js \ "sourceAmount").validateOpt[BigDecimal]
+    } yield AllowanceOrDeduction(
+      `type` = typeCode.getOrElse(0),
+      npsDescription = npsDescription.getOrElse(""),
+      amount = amount,
+      sourceAmount = sourceAmount
+    )
+  }
+  implicit val writer: OWrites[AllowanceOrDeduction] = Json.writes[AllowanceOrDeduction]
 }
 
 case class NpsIncomeSource(
   employmentId: Int,
   employmentType: Option[Int],
   actualPUPCodedInCYPlusOneTaxYear: Option[BigDecimal],
-  deductions: List[TaDeduction],
-  allowances: List[TaAllowance],
+  deductions: List[AllowanceOrDeduction],
+  allowances: List[AllowanceOrDeduction],
   taxCode: Option[String],
   basisOperation: Option[Int],
   employmentTaxDistrictNumber: Option[Int],
   employmentPayeRef: Option[String]
 ) {
   def toIncomeSource: Option[IncomeSource] =
-    if (taxCode.isEmpty || employmentType.isEmpty || employmentTaxDistrictNumber.isEmpty || employmentPayeRef.isEmpty) {
-      None
-    } else {
-      Some(
-        IncomeSource(
-          employmentId = this.employmentId,
-          employmentType = this.employmentType.get,
-          actualPUPCodedInCYPlusOneTaxYear = this.actualPUPCodedInCYPlusOneTaxYear,
-          deductions = this.deductions,
-          allowances = this.allowances,
-          taxCode = this.taxCode.get,
-          basisOperation = this.basisOperation,
-          employmentTaxDistrictNumber = this.employmentTaxDistrictNumber.get,
-          employmentPayeRef = this.employmentPayeRef.get
-        )
-      )
-    }
+    for {
+      etype   <- employmentType
+      code    <- taxCode
+      distNum <- employmentTaxDistrictNumber
+      ref     <- employmentPayeRef
+    } yield IncomeSource(
+      employmentId = this.employmentId,
+      employmentType = etype,
+      actualPUPCodedInCYPlusOneTaxYear = this.actualPUPCodedInCYPlusOneTaxYear,
+      deductions = this.deductions,
+      allowances = this.allowances,
+      taxCode = code,
+      basisOperation = this.basisOperation,
+      employmentTaxDistrictNumber = distNum,
+      employmentPayeRef = ref
+    )
 }
 
 object NpsIncomeSource {
-  given formats: OFormat[NpsIncomeSource] = Json.format[NpsIncomeSource]
+  implicit val reader: Reads[NpsIncomeSource] = (js: JsValue) => {
+    val employerReference                                = (js \ "employerReference").validate[String].getOrElse("")
+    val (employmentTaxDistrictNumber, employmentPayeRef) = employerReference.split("/") match {
+      case Array(taxDistrict, payeRef) => (taxDistrict.toIntOption, Some(payeRef))
+      case _                           => (None, None)
+    }
+    val employmentType                                   = (js \ "employmentRecordType").asOpt[String] match {
+      case Some("PRIMARY")   => Some(1)
+      case Some("SECONDARY") => Some(2)
+      case _                 => None
+    }
+    val basisOperation                                   = (js \ "basisOfOperation").asOpt[String] match {
+      case Some("Week1/Month1")              => Some(1)
+      case Some("Cumulative")                => Some(2)
+      case Some("Week1/Month1,Not Operated") => Some(3)
+      case Some("Cumulative,Not Operated")   => Some(4)
+      case _                                 => None
+    }
+    for {
+      employmentId                     <- (js \ "employmentSequenceNumber").validate[Int]
+      actualPUPCodedInCYPlusOneTaxYear <- (js \ "actualPUPCodedInNextYear").validateOpt[BigDecimal]
+      deductions                       <- (js \ "deductionsDetails").validate[List[AllowanceOrDeduction]]
+      allowances                       <- (js \ "allowancesDetails").validate[List[AllowanceOrDeduction]]
+      taxCode                          <- (js \ "taxCode").validateOpt[String]
+    } yield NpsIncomeSource(
+      employmentId = employmentId,
+      employmentType = employmentType,
+      actualPUPCodedInCYPlusOneTaxYear = actualPUPCodedInCYPlusOneTaxYear,
+      deductions = deductions,
+      allowances = allowances,
+      taxCode = taxCode,
+      basisOperation = basisOperation,
+      employmentTaxDistrictNumber = employmentTaxDistrictNumber,
+      employmentPayeRef = employmentPayeRef
+    )
+  }
+
+  implicit val writer: OWrites[NpsIncomeSource] = Json.writes[NpsIncomeSource]
 }
 
-case class NpsTaxAccount(incomeSources: List[NpsIncomeSource]) {
+case class NpsTaxAccount(employmentDetailsList: List[NpsIncomeSource]) {
 
   private val PrimaryEmployment      = 1
   private val OutStandingDebtType    = 41
   private val UnderpaymentAmountType = 35
 
   private def findPrimaryEmployment: Option[NpsIncomeSource] =
-    incomeSources.find(_.employmentType.contains(PrimaryEmployment))
+    employmentDetailsList.find(_.employmentType.contains(PrimaryEmployment))
 
   private[nps] def getPrimaryEmploymentId =
     findPrimaryEmployment.map(_.employmentId)
@@ -99,7 +150,7 @@ case class NpsTaxAccount(incomeSources: List[NpsIncomeSource]) {
     )
 
   def matchedIncomeSource(npsEmployment: NpsEmployment): Option[IncomeSource] = {
-    val iSs = incomeSources.filter { iS =>
+    val iSs = employmentDetailsList.filter { iS =>
       val taxDistrictNumMatches =
         iS.employmentTaxDistrictNumber.exists { empNum =>
           npsEmployment.taxDistrictNumber.toIntOption.contains(empNum)

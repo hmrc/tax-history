@@ -4,6 +4,6 @@
   "employerName": "employer-1",
   "startDate": "2016-01-21",
   "endDate": "2017-01-01",
-  "employmentStatus":"Live",
+  "employmentStatus":1,
   "worksNumber": "00191048716"
 }

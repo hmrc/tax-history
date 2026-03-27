@@ -20,7 +20,7 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
-import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, VanBenefit}
+import uk.gov.hmrc.taxhistory.model.nps.{Iabd, IabdList, NpsEmployment, VanBenefit}
 import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 import uk.gov.hmrc.time.TaxYear
 
@@ -64,7 +64,7 @@ class IabdsOpsSpec extends PlaySpec with TestUtil with DateUtils {
     )
   )
 
-  lazy val iabdList: List[Iabd]                                   = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
+  lazy val iabdList: List[Iabd]                                   = loadFile("/json/nps/response/iabds.json").as[IabdList].getListOfIabd
   lazy val iabdsTotalBenfitInKindJsonResponse: JsValue            = loadFile("/json/nps/response/iabdsTotalBIK.json")
   lazy val iabdsBenfitInKindJsonResponse: JsValue                 = loadFile("/json/nps/response/iabdsBIK.json")
   lazy val iabdsBenfitInKindNoGrossJsonResponse: JsValue          = loadFile("/json/nps/response/iabdsBIKNoGrossAmount.json")
@@ -90,9 +90,9 @@ class IabdsOpsSpec extends PlaySpec with TestUtil with DateUtils {
       matchedIabds.toString.contains("CarFuelBenefit") mustBe true
     }
 
-    "Get CompanyBenfits from Iabd data and ignore Benefit In Kind (type 28)" in {
+    "Get CompanyBenefits from Iabd data and ignore Benefit In Kind (type 28)" in {
 
-      val cbSource = 26
+      val cbSource = 15
       val iabds    = iabdsBenfitInKindJsonResponse.as[List[Iabd]]
 
       val companyBenefits = iabds.companyBenefits(TaxYear(2022))

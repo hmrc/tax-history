@@ -20,8 +20,8 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.PlaySpec
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.model.rti.RtiData
-import uk.gov.hmrc.taxhistory.fixtures.{NpsEmployments, RtiEmployments}
-import uk.gov.hmrc.taxhistory.model.nps.NpsEmployment
+import uk.gov.hmrc.taxhistory.fixtures.{NpsEmploymentsData, RtiEmployments}
+import uk.gov.hmrc.taxhistory.model.nps.NpsEmployments
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 import uk.gov.hmrc.taxhistory.services.helpers.EmploymentMatchingHelper
 
@@ -29,7 +29,7 @@ class EmploymentMatchingHelperSpec
     extends PlaySpec
     with TestUtil
     with BeforeAndAfterEach
-    with NpsEmployments
+    with NpsEmploymentsData
     with RtiEmployments {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -37,7 +37,7 @@ class EmploymentMatchingHelperSpec
   "EmploymentMatchingHelper" should {
     "successfully merge if there are multiple matching rti employments for a single nps employment1" when {
       val rtiData        = rtiPartialDuplicateEmploymentsResponse.as[RtiData]
-      val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
+      val npsEmployments = npsEmploymentResponse.as[NpsEmployments].toListOfNpsEmployment
 
       "there is a single match between the nps 'worksNumber' and rti 'currentPayId'" in {
         val matches = EmploymentMatchingHelper.matchEmployments(npsEmployments, rtiData.employments)
@@ -69,7 +69,7 @@ class EmploymentMatchingHelperSpec
 
     "return Nil constructed list if there are zero matching rti employments for a single nps employment1" in {
       val rtiData        = rtiNonMatchingEmploymentsResponse.as[RtiData]
-      val npsEmployments = npsEmploymentResponse.as[List[NpsEmployment]]
+      val npsEmployments = npsEmploymentResponse.as[NpsEmployments].toListOfNpsEmployment
       val matches        = EmploymentMatchingHelper.matchEmployments(npsEmployments, rtiData.employments)
 
       matches.get(npsEmployments.head) must be(empty)

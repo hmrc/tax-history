@@ -20,12 +20,36 @@ import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsError, JsValue, Json}
-import uk.gov.hmrc.taxhistory.model.nps.{TaAllowance, TaDeduction}
+import uk.gov.hmrc.taxhistory.model.nps.AllowanceOrDeduction
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 
 class IncomeSourceSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
 
-  lazy val json: JsValue          = Json.parse(
+  lazy val readJson: JsValue = Json.parse(
+    """
+      |{
+      |  "employmentId": 1,
+      |  "employmentType": 1,
+      |  "actualPUPCodedInCYPlusOneTaxYear": 22.22,
+      |  "deductions": [{
+      |    "type": "balancing charge (015)",
+      |    "adjustedAmount": 212,
+      |    "sourceAmount": 212
+      |  }],
+      |  "allowances": [{
+      |    "type": "personal allowance (011)",
+      |    "adjustedAmount": 11000,
+      |    "sourceAmount": 11000
+      |  }],
+      |  "taxCode": "1150L",
+      |  "basisOperation": 1,
+      |  "employmentTaxDistrictNumber": 1,
+      |  "employmentPayeRef": "payeRef"
+      |}
+    """.stripMargin
+  )
+
+  lazy val writeJson: JsValue = Json.parse(
     """
       |{
       |  "employmentId": 1,
@@ -38,10 +62,10 @@ class IncomeSourceSpec extends TestUtil with AnyWordSpecLike with Matchers with 
       |    "sourceAmount": 212
       |  }],
       |  "allowances": [{
-      |     "type": 11,
-      |     "npsDescription": "personal allowance",
-      |     "amount": 11000,
-      |     "sourceAmount": 11000
+      |    "type": 11,
+      |    "npsDescription": "personal allowance",
+      |    "amount": 11000,
+      |    "sourceAmount": 11000
       |  }],
       |  "taxCode": "1150L",
       |  "basisOperation": 1,
@@ -50,12 +74,13 @@ class IncomeSourceSpec extends TestUtil with AnyWordSpecLike with Matchers with 
       |}
     """.stripMargin
   )
+
   private val model: IncomeSource = IncomeSource(
     1,
     1,
     Some(BigDecimal(22.22)),
     List(
-      TaDeduction(
+      AllowanceOrDeduction(
         `type` = 15,
         npsDescription = "balancing charge",
         amount = BigDecimal(212),
@@ -63,7 +88,7 @@ class IncomeSourceSpec extends TestUtil with AnyWordSpecLike with Matchers with 
       )
     ),
     List(
-      TaAllowance(
+      AllowanceOrDeduction(
         `type` = 11,
         npsDescription = "personal allowance",
         amount = BigDecimal(11000),
@@ -77,48 +102,44 @@ class IncomeSourceSpec extends TestUtil with AnyWordSpecLike with Matchers with 
   )
 
   "IncomeSource" when {
-    "read from valid JSON" should {
-      "produce the expected Tax Account model" in {
-        json.as[IncomeSource] shouldBe model
-      }
-
-      "fail to read from json" when {
-        "there is type mismatch" in {
-          Json
-            .obj(
-              "employmentId"                     -> "1",
-              "employmentType"                   -> 1,
-              "actualPUPCodedInCYPlusOneTaxYear" -> 22.22,
-              "deductions"                       -> Json.arr(
-                "type"           -> 15,
-                "npsDescription" -> "balancing charge",
-                "amount"         -> 212,
-                "sourceAmount"   -> 212
-              ),
-              "allowances"                       -> Json.arr(
-                "type"           -> 11,
-                "npsDescription" -> "personal allowance",
-                "amount"         -> 11000,
-                "sourceAmount"   -> 11000
-              ),
-              "taxCode"                          -> "1150L",
-              "basisOperation"                   -> 1,
-              "employmentTaxDistrictNumber"      -> 1,
-              "employmentPayeRef"                -> "payeRef"
-            )
-            .validate[IncomeSource] shouldBe a[JsError]
-        }
-
-        "empty json" in {
-          Json.obj().validate[IncomeSource] shouldBe a[JsError]
-        }
-      }
+    "read from valid JSON" in {
+      readJson.as[IncomeSource] shouldBe model
     }
 
-    "written to JSON" should {
-      "produce the expected JSON" in {
-        Json.toJson(model) shouldBe json
+    "fail to read from json" when {
+      "there is type mismatch" in {
+        Json
+          .obj(
+            "employmentId"                     -> "1",
+            "employmentType"                   -> 1,
+            "actualPUPCodedInCYPlusOneTaxYear" -> 22.22,
+            "deductions"                       -> Json.arr(
+              "type"           -> 15,
+              "npsDescription" -> "balancing charge",
+              "amount"         -> 212,
+              "sourceAmount"   -> 212
+            ),
+            "allowances"                       -> Json.arr(
+              "type"           -> 11,
+              "npsDescription" -> "personal allowance",
+              "amount"         -> 11000,
+              "sourceAmount"   -> 11000
+            ),
+            "taxCode"                          -> "1150L",
+            "basisOperation"                   -> 1,
+            "employmentTaxDistrictNumber"      -> 1,
+            "employmentPayeRef"                -> "payeRef"
+          )
+          .validate[IncomeSource] shouldBe a[JsError]
+      }
+
+      "empty json" in {
+        Json.obj().validate[IncomeSource] shouldBe a[JsError]
       }
     }
+  }
+
+  "written to JSON" in {
+    Json.toJson(model) shouldBe writeJson
   }
 }

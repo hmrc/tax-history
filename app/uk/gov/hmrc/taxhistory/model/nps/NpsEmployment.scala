@@ -19,9 +19,7 @@ package uk.gov.hmrc.taxhistory.model.nps
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 
 import java.time.LocalDate
-import play.api.libs.json.*
 import uk.gov.hmrc.taxhistory.model.api.{Employment, EmploymentPaymentType}
-import uk.gov.hmrc.taxhistory.model.utils.JsonUtils
 
 case class NpsEmployment(
   nino: String,
@@ -56,55 +54,18 @@ case class NpsEmployment(
 }
 
 object NpsEmployment {
-  given reader: Reads[NpsEmployment] = (js: JsValue) => {
-    val startDate = (js \ "startDate").asOpt[LocalDate](using JsonUtils.npsDateFormat)
-    val endDate   = (js \ "endDate").asOpt[LocalDate](using JsonUtils.npsDateFormat)
-    for {
-      nino                         <- (js \ "nino").validate[String]
-      sequenceNumber               <- (js \ "sequenceNumber").validate[Int]
-      taxDistrictNumber            <- (js \ "taxDistrictNumber").validate[String]
-      payeNumber                   <- (js \ "payeNumber").validate[String]
-      employerName                 <- (js \ "employerName").validate[String]
-      worksNumber                  <- (js \ "worksNumber").validateOpt[String]
-      receivingJobSeekersAllowance <- (js \ "receivingJobseekersAllowance").validate[Boolean]
-      otherIncomeSourceIndicator   <- (js \ "otherIncomeSourceIndicator").validate[Boolean]
-      receivingOccupationalPension <- (js \ "receivingOccupationalPension").validate[Boolean]
-      employmentStatus             <- js.validate[EmploymentStatus]
-    } yield NpsEmployment(
-      nino = nino,
-      sequenceNumber = sequenceNumber,
-      taxDistrictNumber = withPadding(taxDistrictNumber),
-      payeNumber = payeNumber,
-      employerName = employerName,
-      worksNumber = worksNumber,
-      receivingJobSeekersAllowance = receivingJobSeekersAllowance,
-      otherIncomeSourceIndicator = otherIncomeSourceIndicator,
-      startDate = startDate,
-      endDate = endDate,
-      receivingOccupationalPension = receivingOccupationalPension,
-      employmentStatus = employmentStatus
-    )
-  }
-
-  given writer: OWrites[NpsEmployment] = (
-    (__ \ "nino").write[String] and
-      (__ \ "sequenceNumber").write[Int] and
-      (__ \ "taxDistrictNumber").write[String] and
-      (__ \ "payeNumber").write[String] and
-      (__ \ "employerName").write[String] and
-      (__ \ "worksNumber").writeNullable[String] and
-      (__ \ "receivingJobSeekersAllowance").write[Boolean] and
-      (__ \ "otherIncomeSourceIndicator").write[Boolean] and
-      (__ \ "startDate").writeNullable[LocalDate] and
-      (__ \ "endDate").writeNullable[LocalDate] and
-      (__ \ "receivingOccupationalPension").write[Boolean] and
-      (__ \ "employmentStatus").write[EmploymentStatus]
-  )(o => Tuple.fromProductTyped(o))
-
-  /*
-  in some seen cases taxDistrictNumber is two digits - we assume this is because the first digit was 0 and was
-  dropped since the field type in the NPS API is an integer. In such cases, pad to 3 digits.
-   */
-  private def withPadding(taxDistrictNumber: String): String =
-    taxDistrictNumber.reverse.padTo(3, '0').reverse.mkString
+  def apply(nino: String)(hipNpsEmploymentWithoutNino: NpsEmploymentWithoutNino) = new NpsEmployment(
+    nino,
+    hipNpsEmploymentWithoutNino.sequenceNumber,
+    hipNpsEmploymentWithoutNino.taxDistrictNumber,
+    hipNpsEmploymentWithoutNino.payeNumber,
+    hipNpsEmploymentWithoutNino.employerName,
+    hipNpsEmploymentWithoutNino.worksNumber,
+    hipNpsEmploymentWithoutNino.receivingJobSeekersAllowance,
+    hipNpsEmploymentWithoutNino.otherIncomeSourceIndicator,
+    hipNpsEmploymentWithoutNino.startDate,
+    hipNpsEmploymentWithoutNino.endDate,
+    hipNpsEmploymentWithoutNino.receivingOccupationalPension,
+    hipNpsEmploymentWithoutNino.employmentStatus
+  )
 }

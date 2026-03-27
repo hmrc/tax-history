@@ -1,214 +1,116 @@
-[
-  {
-    "nino": "QQ000003",
-    "sequenceNumber": 1,
-    "payeSchemeType": 0,
-    "employerNumber": 4968,
-    "payeSequenceNumber": 1,
-    "employmentType": 2,
-    "employmentStatus": 1,
-    "jobTitle": null,
-    "worksNumber": "00191048716",
-    "startingTaxCode": null,
-    "weekOneMonthOne": 0,
-    "receivingJobseekersAllowance": false,
-    "receivingOccupationalPension": false,
-    "director": false,
-    "manualCorrespondence": false,
-    "p161Issued": false,
-    "creationMedia": 0,
-    "creationSource": 18,
-    "startDateSource": null,
-    "startDate": "10/11/2015",
-    "cessationMedia": 0,
-    "cessationSource": null,
-    "endDateSource": null,
-    "endDate": null,
-    "taxDistrictNumber": "846",
-    "payeNumber": "T2PP",
-    "employerName": "Aldi",
-    "otherIncomeSourceIndicator": false,
-    "payrolledTaxYear": true,
-    "payrolledTaxYear1": true,
-    "payrolledBenefitsTaxYear": {
-      "taxYear": 2016,
-      "payrolledBenefit": [
-        {
-          "payrolledBenefitSequenceNumber": 1,
-          "iabdType": 30,
-          "active": 1,
-          "payrolledBenefitStartDate": "06/04/2015",
-          "payrolledBenefitEndDate": null,
-          "benefitInKindStatus": 10
-        }
-      ]
+{
+  "nationalInsuranceNumber": "RN000001A",
+  "taxYear": 2023,
+  "individualsEmploymentDetails": [
+    {
+      "payeSchemeOperatorName": "Scheme X",
+      "employerReference": "123/A56789",
+      "employmentIdentifier": "0010123456789",
+      "employmentSequenceNumber": 123,
+      "employmentRecordType": "PRIMARY",
+      "employmentStatus": "Ceased",
+      "jobTitle": "IT Consultant",
+      "worksNumber": "12345",
+      "startingTaxCode": "1257L",
+      "taxCodeOperation": "Cumulative",
+      "startTaxCodeOperation": "Cumulative",
+      "otherIncomeSource": true,
+      "payrolledCurrentYear": true,
+      "payrolledNextYear": true,
+      "jobSeekersAllowance": true,
+      "activeOccupationalPension": true,
+      "directorIdentifier": true,
+      "employerManualCorrespondence": true,
+      "p161Identifier": true,
+      "creationMediaType": "BACS",
+      "employmentRecordSourceType": "ECC",
+      "startDateSource": "ECC",
+      "startDate": "2000-01-02",
+      "cessationMediaType": "BACS",
+      "endDateSource": "ECC",
+      "endDate": "2023-06-27",
+      "cessationPayForEmployment": 15000.12,
+      "payrolledBenefitTaxYearCYList": {
+        "taxYear": 2023,
+        "payrolledBenefitDetailsList": [
+          {
+            "payrolledBenefitSequenceNumber": 1,
+            "iabdType": "Gift Aid Payments (001)",
+            "alreadyPayrolled": true,
+            "payrolledBenefitStartDate": "2023-02-07",
+            "payrolledBenefitEndDate": "2023-06-07",
+            "payrolledBenefitInKindStatus": "Invalid Payrolling Benefit In Kind (PBIK)"
+          }
+        ]
+      },
+      "payrolledBenefitTaxYearCY1List": {
+        "taxYear": 2024,
+        "payrolledBenefitDetailsList": [
+          {
+            "payrolledBenefitSequenceNumber": 1,
+            "iabdType": "Gift Aid Payments (001)",
+            "alreadyPayrolled": true,
+            "payrolledBenefitStartDate": "2023-02-07",
+            "payrolledBenefitEndDate": "2023-06-07",
+            "payrolledBenefitInKindStatus": "Invalid Payrolling Benefit In Kind (PBIK)"
+          }
+        ]
+      }
     },
-    "payrolledBenefitsTaxYear1": {
-      "taxYear": 2017,
-      "payrolledBenefit": [
-        {
-          "payrolledBenefitSequenceNumber": 1,
-          "iabdType": 30,
-          "active": 1,
-          "payrolledBenefitStartDate": "06/04/2015",
-          "payrolledBenefitEndDate": null,
-          "benefitInKindStatus": 10
-        }
-      ]
-    },
-    "cessationPayThisEmployment": null
-  },
-  {
-    "nino": "QQ000003",
-    "sequenceNumber": 2,
-    "payeSchemeType": 0,
-    "employerNumber": 4968,
-    "payeSequenceNumber": 1,
-    "employmentType": 2,
-    "employmentStatus": 1,
-    "jobTitle": null,
-    "worksNumber": "0",
-    "startingTaxCode": null,
-    "weekOneMonthOne": 0,
-    "receivingJobseekersAllowance": false,
-    "receivingOccupationalPension": false,
-    "director": false,
-    "manualCorrespondence": false,
-    "p161Issued": false,
-    "creationMedia": 0,
-    "creationSource": 18,
-    "startDateSource": null,
-    "startDate": "21/01/2016",
-    "cessationMedia": 0,
-    "cessationSource": null,
-    "endDateSource": null,
-    "endDate": null,
-    "taxDistrictNumber": "951",
-    "payeNumber": "VI11",
-    "employerName": "Aldi",
-    "otherIncomeSourceIndicator": false,
-    "payrolledTaxYear": true,
-    "payrolledTaxYear1": true,
-    "payrolledBenefitsTaxYear": {
-      "taxYear": 2016,
-      "payrolledBenefit": [
-        {
-          "payrolledBenefitSequenceNumber": 1,
-          "iabdType": 30,
-          "active": 1,
-          "payrolledBenefitStartDate": "06/04/2015",
-          "payrolledBenefitEndDate": null,
-          "benefitInKindStatus": 10
-        }
-      ]
-    },
-    "payrolledBenefitsTaxYear1": {
-      "taxYear": 2017,
-      "payrolledBenefit": [
-        {
-          "payrolledBenefitSequenceNumber": 1,
-          "iabdType": 30,
-          "active": 1,
-          "payrolledBenefitStartDate": "06/04/2015",
-          "payrolledBenefitEndDate": null,
-          "benefitInKindStatus": 10
-        }
-      ]
-    },
-    "cessationPayThisEmployment": null
-  },
-  {
-    "nino": "QQ000003",
-    "sequenceNumber": 4,
-    "payeSchemeType": 0,
-    "employerNumber": 4968,
-    "payeSequenceNumber": 1,
-    "employmentType": 2,
-    "employmentStatus": 1,
-    "jobTitle": null,
-    "worksNumber": "1",
-    "startingTaxCode": null,
-    "weekOneMonthOne": 0,
-    "receivingJobseekersAllowance": false,
-    "receivingOccupationalPension": true,
-    "director": false,
-    "manualCorrespondence": false,
-    "p161Issued": false,
-    "creationMedia": 0,
-    "creationSource": 18,
-    "startDateSource": null,
-    "startDate": "01/01/2014",
-    "cessationMedia": 0,
-    "cessationSource": null,
-    "endDateSource": null,
-    "endDate": null,
-    "taxDistrictNumber": "419",
-    "payeNumber": "S47019",
-    "employerName": "M&S",
-    "otherIncomeSourceIndicator": false,
-    "payrolledTaxYear": true,
-    "payrolledTaxYear1": true,
-    "payrolledBenefitsTaxYear": {
-      "taxYear": 2016,
-      "payrolledBenefit": [
-        {
-          "payrolledBenefitSequenceNumber": 1,
-          "iabdType": 30,
-          "active": 1,
-          "payrolledBenefitStartDate": "06/04/2015",
-          "payrolledBenefitEndDate": null,
-          "benefitInKindStatus": 10
-        }
-      ]
-    },
-    "payrolledBenefitsTaxYear1": {
-      "taxYear": 2017,
-      "payrolledBenefit": [
-        {
-          "payrolledBenefitSequenceNumber": 1,
-          "iabdType": 30,
-          "active": 1,
-          "payrolledBenefitStartDate": "06/04/2015",
-          "payrolledBenefitEndDate": null,
-          "benefitInKindStatus": 10
-        }
-      ]
-    },
-    "cessationPayThisEmployment": null
-  },
-  {
-    "nino": "QQ000003",
-    "sequenceNumber": 3,
-    "payeSchemeType": 0,
-    "employerNumber": 2448961,
-    "payeSequenceNumber": 4,
-    "employmentType": 1,
-    "employmentStatus": 1,
-    "jobTitle": null,
-    "worksNumber": "1320",
-    "startingTaxCode": "609L",
-    "weekOneMonthOne": 2,
-    "receivingJobseekersAllowance": false,
-    "receivingOccupationalPension": false,
-    "director": false,
-    "manualCorrespondence": false,
-    "p161Issued": false,
-    "creationMedia": 3,
-    "creationSource": 2,
-    "startDateSource": null,
-    "startDate": "04/01/2010",
-    "cessationMedia": 0,
-    "cessationSource": null,
-    "endDateSource": null,
-    "endDate": null,
-    "taxDistrictNumber": "582",
-    "payeNumber": "HE645",
-    "employerName": "PAYESCHEMEOPERATORNAME57510",
-    "otherIncomeSourceIndicator": false,
-    "payrolledTaxYear": false,
-    "payrolledTaxYear1": false,
-    "payrolledBenefitsTaxYear": null,
-    "payrolledBenefitsTaxYear1": null,
-    "cessationPayThisEmployment": null
-  }
-]
+    {
+      "payeSchemeOperatorName": "Scheme Y",
+      "employerReference": "987/Z654321",
+      "employmentIdentifier": "9999123456789",
+      "employmentSequenceNumber": 321,
+      "employmentRecordType": "PRIMARY",
+      "employmentStatus": "Live",
+      "jobTitle": "IT Consultant",
+      "worksNumber": "12345",
+      "startingTaxCode": "1257L",
+      "taxCodeOperation": "Cumulative",
+      "startTaxCodeOperation": "Cumulative",
+      "otherIncomeSource": true,
+      "payrolledCurrentYear": true,
+      "payrolledNextYear": true,
+      "jobSeekersAllowance": true,
+      "activeOccupationalPension": true,
+      "directorIdentifier": true,
+      "employerManualCorrespondence": true,
+      "p161Identifier": true,
+      "creationMediaType": "BACS",
+      "employmentRecordSourceType": "ECC",
+      "startDateSource": "ECC",
+      "startDate": "2000-01-02",
+      "cessationMediaType": "BACS",
+      "endDateSource": "ECC",
+      "endDate": "2023-06-27",
+      "cessationPayForEmployment": 15000.12,
+      "payrolledBenefitTaxYearCYList": {
+        "taxYear": 2023,
+        "payrolledBenefitDetailsList": [
+          {
+            "payrolledBenefitSequenceNumber": 1,
+            "iabdType": "Gift Aid Payments (001)",
+            "alreadyPayrolled": true,
+            "payrolledBenefitStartDate": "2023-02-07",
+            "payrolledBenefitEndDate": "2023-06-07",
+            "payrolledBenefitInKindStatus": "Invalid Payrolling Benefit In Kind (PBIK)"
+          }
+        ]
+      },
+      "payrolledBenefitTaxYearCY1List": {
+        "taxYear": 2024,
+        "payrolledBenefitDetailsList": [
+          {
+            "payrolledBenefitSequenceNumber": 1,
+            "iabdType": "Gift Aid Payments (001)",
+            "alreadyPayrolled": true,
+            "payrolledBenefitStartDate": "2023-02-07",
+            "payrolledBenefitEndDate": "2023-06-07",
+            "payrolledBenefitInKindStatus": "Invalid Payrolling Benefit In Kind (PBIK)"
+          }
+        ]
+      }
+    }
+  ]
+}
