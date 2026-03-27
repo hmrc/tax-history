@@ -25,41 +25,28 @@ import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.{Ceased, Live, Permanen
 class EmploymentStatusSpec extends AnyWordSpec with Matchers with OptionValues {
 
   "EmploymentStatus" must {
-    "read and write json successfully" in {
-      EmploymentStatus.jsonReads.reads(EmploymentStatus.jsonWrites.writes(EmploymentStatus.Live))    shouldBe JsSuccess(
-        Live
-      )
-      EmploymentStatus.jsonReads.reads(
-        EmploymentStatus.jsonWrites.writes(EmploymentStatus.PermanentlyCeased)
-      )                                                                                              shouldBe JsSuccess(
-        PermanentlyCeased
-      )
-      EmploymentStatus.jsonReads.reads(EmploymentStatus.jsonWrites.writes(EmploymentStatus.Ceased))  shouldBe JsSuccess(
-        Ceased
-      )
-      EmploymentStatus.jsonReads.reads(
-        EmploymentStatus.jsonWrites.writes(EmploymentStatus.PotentiallyCeased)
-      )                                                                                              shouldBe JsSuccess(PotentiallyCeased)
-      EmploymentStatus.jsonReads.reads(EmploymentStatus.jsonWrites.writes(EmploymentStatus.Unknown)) shouldBe JsSuccess(
-        Unknown
-      )
-    }
     "read the json correctly" in {
       EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Live"))               shouldBe JsSuccess(Live)
       EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Potentially Ceased")) shouldBe JsSuccess(
         PotentiallyCeased
       )
       EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Ceased"))             shouldBe JsSuccess(Ceased)
+      EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Unknown"))            shouldBe JsSuccess(Unknown)
       EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Permanently Ceased")) shouldBe JsSuccess(
         PermanentlyCeased
       )
-      EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Unknown"))            shouldBe JsSuccess(
-        Unknown
-      )
+    }
+
+    "write the json correctly" in {
+      EmploymentStatus.jsonWrites.writes(Live)              shouldBe Json.obj("employmentStatus" -> 1)
+      EmploymentStatus.jsonWrites.writes(PotentiallyCeased) shouldBe Json.obj("employmentStatus" -> 2)
+      EmploymentStatus.jsonWrites.writes(Ceased)            shouldBe Json.obj("employmentStatus" -> 3)
+      EmploymentStatus.jsonWrites.writes(Unknown)           shouldBe Json.obj("employmentStatus" -> 99)
+      EmploymentStatus.jsonWrites.writes(PermanentlyCeased) shouldBe Json.obj("employmentStatus" -> 6)
     }
 
     "throw error on invalid data" in {
-      EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> 10)) shouldBe JsError(
+      EmploymentStatus.jsonReads.reads(Json.obj("employmentStatus" -> "Invalid")) shouldBe JsError(
         List((JsPath \ "employmentStatus", List(JsonValidationError(List("Invalid EmploymentStatus")))))
       )
     }

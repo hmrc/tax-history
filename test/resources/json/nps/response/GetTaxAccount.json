@@ -142,6 +142,28 @@
   "employmentDetailsList": [
     {
       "employmentSequenceNumber": 1,
+      "employmentRecordType": "SECONDARY",
+      "employmentStatus": "Live",
+      "employerReference": "531/J4816",
+      "taxCode": "1150L",
+      "basisOfOperation": "Cumulative",
+      "actualPUPCodedInNextYear": 240,
+      "deductionsDetails": [
+        {
+          "type": "outstanding debt restriction (041)",
+          "sourceAmount": 145.75,
+          "adjustedAmount": 145.75
+        },
+        {
+          "type": "underpayment amount (035)",
+          "sourceAmount": 15423.29,
+          "adjustedAmount": 15423.29
+        }
+      ],
+      "allowancesDetails": []
+    },
+    {
+      "employmentSequenceNumber": 1,
       "employmentRecordType": "PRIMARY",
       "employmentStatus": "Live",
       "employerReference": "111/A11111",

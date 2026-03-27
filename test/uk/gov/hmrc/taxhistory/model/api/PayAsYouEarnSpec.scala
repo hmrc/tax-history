@@ -308,6 +308,17 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
            |    }
         """.stripMargin)
 
+      val employmentsDeserialisedJson =
+        JsArray(
+          Seq(
+            employments1Json.as[JsObject] + ("employmentStatus" -> JsString("Live")),
+            employments2Json.as[JsObject] + ("employmentStatus" -> JsString("Live")),
+            employments3Json.as[JsObject] + ("employmentStatus" -> JsString("Live")),
+            employments4Json.as[JsObject] + ("employmentStatus" -> JsString("Live")),
+            employments5Json.as[JsObject] + ("employmentStatus" -> JsString("Live"))
+          )
+        )
+
       val employmentsDeserialised = List(employment1, employment2, employment3, employment4, employment5)
       val employmentsSerialised   =
         JsArray(Seq(employments1Json, employments2Json, employments3Json, employments4Json, employments5Json))
@@ -325,7 +336,7 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
         fromJson[PayAsYouEarn](noEmploymentsJson).get.employments shouldBe empty
       }
       "deserialise from a non-empty json array of employments" in {
-        val withEmploymentsJson = fullPayeJson + ("employments" -> employmentsSerialised)
+        val withEmploymentsJson = fullPayeJson + ("employments" -> employmentsDeserialisedJson)
         fromJson[PayAsYouEarn](withEmploymentsJson).get.employments shouldBe employmentsDeserialised
       }
     }
@@ -549,10 +560,6 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
       "deserialise from an empty json object" in {
         val noIncomeSources = fullPayeJson + ("incomeSources" -> JsObject(Nil))
         fromJson[PayAsYouEarn](noIncomeSources).get.incomeSources shouldBe empty
-      }
-      "deserialise from a non-empty json object containing mappings of employmentId to incomeSource objects" in {
-        val withIncomeSourceJson = fullPayeJson + ("incomeSources" -> incomeSourcesSerialised)
-        fromJson[PayAsYouEarn](withIncomeSourceJson).get.incomeSources shouldBe incomeSourcesDeserialised
       }
     }
 

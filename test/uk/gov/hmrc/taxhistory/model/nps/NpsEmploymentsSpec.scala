@@ -23,7 +23,7 @@ import play.api.libs.json.JsValue
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 
 class NpsEmploymentsSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
-  lazy val employmentsResponse: JsValue = loadFile("/json/nps/response/hipEmployments.json")
+  lazy val employmentsResponse: JsValue = loadFile("/json/nps/response/employments.json")
   "HIPNpsEmployments" should {
     "transform Nps Employment Response Json correctly to Employment Model " in {
       val employments = employmentsResponse.as[NpsEmployments]

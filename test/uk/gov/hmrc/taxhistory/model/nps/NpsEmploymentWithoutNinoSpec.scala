@@ -43,7 +43,7 @@ class NpsEmploymentWithoutNinoSpec
     |"startDate": "2015-01-21",
     |"endDate": "2017-06-08"
   }""".stripMargin
-  lazy val employmentsResponse: JsValue = loadFile("/json/nps/response/hipEmploymentsWithoutNINO.json")
+  lazy val employmentsResponse: JsValue = loadFile("/json/nps/response/employmentsWithoutNINO.json")
   val startDate: LocalDate              = LocalDate.of(YEAR_2015, JANUARY, DAY_21)
   val endDate: LocalDate                = LocalDate.of(YEAR_2017, JUNE, DAY_8)
 

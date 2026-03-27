@@ -28,9 +28,12 @@ import java.util.UUID
 
 class EmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with DateUtils {
 
-  lazy val employmentJson: JsValue          = loadFile("/json/model/api/employment.json")
-  lazy val employmentNoEndDateJson: JsValue = loadFile("/json/model/api/employmentNoEndDate.json")
-  lazy val employmentListJson: JsValue      = loadFile("/json/model/api/employments.json")
+  lazy val employmentJson: JsValue                    = loadFile("/json/model/api/employment.json")
+  lazy val employmentSerializedJson: JsValue          = loadFile("/json/model/api/employmentSerialized.json")
+  lazy val employmentNoEndDateJson: JsValue           = loadFile("/json/model/api/employmentNoEndDate.json")
+  lazy val employmentNoEndDateSerializedJson: JsValue = loadFile("/json/model/api/employmentNoEndDateSerialized.json")
+  lazy val employmentListJson: JsValue                = loadFile("/json/model/api/employments.json")
+  lazy val employmentListSerializedJson: JsValue      = loadFile("/json/model/api/employmentsSerialized.json")
 
   lazy val employment1: Employment = Employment(
     employmentId = UUID.fromString("01318d7c-bcd9-47e2-8c38-551e7ccdfae3"),
@@ -56,7 +59,7 @@ class EmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with Op
   "Employment" should {
 
     "transform into Json from object correctly " in {
-      Json.toJson(employment1) shouldBe employmentJson
+      Json.toJson(employment1) shouldBe employmentSerializedJson
     }
     "transform into object from json correctly " in {
       employmentJson.as[Employment] shouldBe employment1
@@ -74,7 +77,7 @@ class EmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with Op
       emp.employmentId                  shouldNot be(employment1.employmentId)
     }
     "transform into Json from object list correctly " in {
-      Json.toJson(employmentList) shouldBe employmentListJson
+      Json.toJson(employmentList) shouldBe employmentListSerializedJson
     }
     "transform into object list from json correctly " in {
       employmentListJson.as[List[Employment]] shouldBe employmentList
@@ -83,11 +86,12 @@ class EmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with Op
       employmentNoEndDateJson.as[Employment] shouldBe employment2
     }
     "allow omission of startDate in json" in {
-      val employmentNoStartDateJson = employmentNoEndDateJson.as[JsObject] - "startDate"
-      val employmentNoStartDate     = employment2.copy(startDate = None)
+      val employmentNoStartDateJson           = employmentNoEndDateJson.as[JsObject] - "startDate"
+      val employmentNoStartDateSerializedJson = employmentNoEndDateSerializedJson.as[JsObject] - "startDate"
+      val employmentNoStartDate               = employment2.copy(startDate = None)
 
       employmentNoStartDateJson.as[Employment] shouldBe employmentNoStartDate
-      Json.toJson(employmentNoStartDate)       shouldBe employmentNoStartDateJson
+      Json.toJson(employmentNoStartDate)       shouldBe employmentNoStartDateSerializedJson
     }
     "enrich employment with URIs" in {
       val taxYear            = 2016

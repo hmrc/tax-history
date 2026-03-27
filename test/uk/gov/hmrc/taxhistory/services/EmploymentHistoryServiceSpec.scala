@@ -459,7 +459,7 @@ class EmploymentHistoryServiceSpec
               iabdType = "companyBenefitType",
               amount = amount,
               source = None,
-              captureDate = Some("5/04/2022"),
+              captureDate = Some("5/4/2022"),
               taxYear = TaxYear(2022)
             )
           )

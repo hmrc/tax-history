@@ -44,7 +44,7 @@ class IabdSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionVa
        |
        |}
     """.stripMargin
-  "HIPIabd Json" should {
+  "Iabd Json" should {
     "transform Iabds Response Json correctly to Employment Model " in {
       val iabd = Json.parse(iabdJsonResponse).as[Iabd]
       iabd                  shouldBe a[Iabd]
@@ -94,7 +94,7 @@ class IabdSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionVa
 
   }
 
-  "HIPIabd" when {
+  "Iabd" when {
     "toStatePension is called" should {
       val testIabd = Json.parse(iabdJsonResponse).as[Iabd]
 
@@ -137,9 +137,39 @@ class IabdSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionVa
     }
   }
 
-  "HIPIabdList" should {
-    "returen empty list when getListOfIabd is called with empty HIPIabdList" in {
+  "IabdList" should {
+    "return empty list when getListOfIabd is called with empty IabdList" in {
       Json.obj().as[IabdList].getListOfIabd shouldBe List.empty
     }
+
+    "serialise an IabdList to Json correctly" in {
+      val iabd     = Json.parse(iabdJsonResponse).as[Iabd]
+      val iabdList = IabdList(Some(List(iabd)))
+      val json     = Json.toJson(iabdList)
+
+      (json \ "iabdDetails").as[List[JsValue]].length shouldBe 1
+      (json \ "iabdDetails" \ 0 \ "nino").as[String]  shouldBe "QQ00000AB"
+      (json \ "iabdDetails" \ 0 \ "type").as[Int]     shouldBe 8
+    }
+
+    "serialise an empty IabdList to Json correctly" in {
+      val json = Json.toJson(IabdList(None))
+      (json \ "iabdDetails").toOption shouldBe None
+    }
+  }
+
+  "serialise an Iabd to Json correctly" in {
+    val iabd = Json.parse(iabdJsonResponse).as[Iabd]
+    val json = Json.toJson(iabd)
+
+    (json \ "nino").as[String]                   shouldBe "QQ00000AB"
+    (json \ "type").as[Int]                      shouldBe 8
+    (json \ "grossAmount").as[BigDecimal]        shouldBe grossAmount
+    (json \ "typeDescription").as[String]        shouldBe "Total gift aid Payments"
+    (json \ "paymentFrequency").as[Int]          shouldBe 6
+    (json \ "startDate").as[String]              shouldBe "23/02/2018"
+    (json \ "source").as[Int]                    shouldBe IabdSource.getInt(Some("FPS(RTI)")).value
+    (json \ "captureDate").as[String]            shouldBe "10/04/2017"
+    (json \ "employmentSequenceNumber").toOption shouldBe None
   }
 }

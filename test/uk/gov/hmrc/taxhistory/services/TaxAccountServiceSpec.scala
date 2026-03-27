@@ -21,13 +21,13 @@ import java.time.LocalDate
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatestplus.play.PlaySpec
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.taxhistory.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.model.api.{PayAsYouEarn, TaxAccount}
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
-import uk.gov.hmrc.taxhistory.model.nps.{Iabd, NpsEmployment, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.model.nps.{Iabd, IabdList, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestEmploymentHistoryService, TestUtil}
 import uk.gov.hmrc.time.TaxYear
 
@@ -60,9 +60,10 @@ class TaxAccountServiceSpec extends PlaySpec with TestUtil with DateUtils {
     )
   )
 
-  lazy val testNpsTaxAccount: NpsTaxAccount = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
+  lazy val testNpsTaxAccount: NpsTaxAccount =
+    loadFile("/json/nps/response/GetTaxAccountServiceSpec.json").as[NpsTaxAccount]
 
-  lazy val iabdsResponse: List[Iabd] = loadFile("/json/nps/response/iabds-delete.json").as[List[Iabd]]
+  lazy val iabdsResponse: List[Iabd] = loadFile("/json/nps/response/iabds.json").as[IabdList].getListOfIabd
   lazy val testRtiData: RtiData      = loadFile("/json/rti/response/dummyRti.json").as[RtiData]
 
   "TaxAccount" should {

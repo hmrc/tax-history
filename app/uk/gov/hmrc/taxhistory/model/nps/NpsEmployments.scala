@@ -18,9 +18,9 @@ package uk.gov.hmrc.taxhistory.model.nps
 
 import play.api.libs.json.{Json, OFormat}
 case class NpsEmployments(
-                           nationalInsuranceNumber: String,
-                           individualsEmploymentDetails: List[NpsEmploymentWithoutNino]
-                         ) {
+  nationalInsuranceNumber: String,
+  individualsEmploymentDetails: List[NpsEmploymentWithoutNino]
+) {
   def toListOfNpsEmployment: List[NpsEmployment] =
     individualsEmploymentDetails.map(NpsEmployment(nationalInsuranceNumber))
 }

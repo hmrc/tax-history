@@ -28,9 +28,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class HipConnectorSpec extends BaseConnectorSpec {
   override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
 
-  lazy val testHipNpsEmploymentAsString: String      = loadFile("/json/nps/response/hipEmployments.json").toString()
+  lazy val testHipNpsEmploymentAsString: String      = loadFile("/json/nps/response/employments.json").toString()
   lazy val testNpsEmployment: List[NpsEmployment]    =
-    loadFile("/json/nps/response/hipEmployments.json").as[NpsEmployments].toListOfNpsEmployment
+    loadFile("/json/nps/response/employments.json").as[NpsEmployments].toListOfNpsEmployment
   lazy val testHipTaxAccountResponseAsString: String = loadFile("/json/nps/response/GetTaxAccount.json").toString()
   lazy val testHipTaxAccount: NpsTaxAccount          = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
   lazy val testIabdResponseAsString: String          = loadFile("/json/nps/response/iabds.json").toString()
