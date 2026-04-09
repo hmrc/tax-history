@@ -24,7 +24,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.model.api.*
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus.Live
-import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, NpsEmployment, NpsTaxAccount}
+import uk.gov.hmrc.taxhistory.model.nps.{EmploymentStatus, Iabd, IabdList, NpsEmployment, NpsTaxAccount}
 import uk.gov.hmrc.taxhistory.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestEmploymentHistoryService, TestUtil}
 import uk.gov.hmrc.time.TaxYear
@@ -152,7 +152,7 @@ trait EmploymentHistoryServiceBaseSpec extends DateUtils with TestUtil {
     "/json/rti/response/dummyRtiNonMatchingEmployment.json"
   )
   lazy val testNpsTaxAccount: NpsTaxAccount                = loadFile("/json/nps/response/GetTaxAccount.json").as[NpsTaxAccount]
-  lazy val testIabds: List[Iabd]                           = loadFile("/json/nps/response/iabds.json").as[List[Iabd]]
+  lazy val testIabds: List[Iabd]                           = loadFile("/json/nps/response/iabds.json").as[IabdList].getListOfIabd
 
   val startDate: LocalDate = LocalDate.of(YEAR_2015, JANUARY, DAY_21)
 

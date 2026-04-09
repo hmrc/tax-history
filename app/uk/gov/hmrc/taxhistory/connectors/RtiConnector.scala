@@ -48,8 +48,8 @@ class RtiConnector @Inject() (
 
   def buildHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
     Seq(
-      "Environment"      -> config.desEnv,
-      "Authorization"    -> s"Bearer ${config.desAuth}",
+      "Environment"      -> config.rtiEnv,
+      "Authorization"    -> s"Bearer ${config.rtiAuth}",
       CORRELATION_HEADER -> getCorrelationId(hc)
     )
 

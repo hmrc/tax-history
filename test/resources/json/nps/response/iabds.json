@@ -1,135 +1,81 @@
-[
-  {
-    "captureDate": null,
-    "employmentSequenceNumber": 8,
-    "grossAmount": 36795,
-    "netAmount": null,
-    "nino": "QQ000001",
-    "receiptDate": null,
-    "sequenceNumber": 201500002,
-    "source": 26,
-    "taxYear": 2015,
-    "type": 27,
-    "typeDescription": "New Estimated Pay"
-  },
-  {
-    "captureDate": null,
-    "grossAmount": 1000,
-    "netAmount": null,
-    "nino": "QQ000002",
-    "receiptDate": null,
-    "sequenceNumber": 201500003,
-    "source": 26,
-    "taxYear": 2015,
-    "type": 60,
-    "typeDescription": "Vehicle Expenses"
-  },
-  {
-    "nino": "AM242413",
-    "sequenceNumber": 201600008,
-    "taxYear": 2016,
-    "type": 66,
-    "source": 17,
-    "grossAmount": 1253.23,
-    "receiptDate": null,
-    "captureDate": "15/03/2017",
-    "typeDescription": "State Pension",
-    "netAmount": null
-  },
-  {
-    "captureDate": null,
-    "grossAmount": 10600,
-    "netAmount": null,
-    "nino": "QQ000003",
-    "receiptDate": null,
-    "sequenceNumber": 201500004,
-    "source": null,
-    "taxYear": 2015,
-    "type": 118,
-    "typeDescription": "Personal Allowance (PA)"
-  },
-  {
-    "nino": "QQ000003",
-    "sequenceNumber": 201700054,
-    "taxYear": 2017,
-    "type": 29,
-    "source": 26,
-    "grossAmount": 100,
-    "receiptDate": null,
-    "captureDate": null,
-    "typeDescription": "Car Fuel Benefit",
-    "netAmount": null,
-    "employmentSequenceNumber": 1,
-    "costAmount": null,
-    "amountMadeGood": null,
-    "cashEquivalent": null,
-    "expensesIncurred": null,
-    "amountOfRelief": null
-  },
-  {
-    "nino": "QQ000003",
-    "sequenceNumber": 201700055,
-    "taxYear": 2017,
-    "type": 35,
-    "source": 26,
-    "grossAmount": 100,
-    "receiptDate": null,
-    "captureDate": null,
-    "typeDescription": "Van Benefit",
-    "netAmount": null,
-    "employmentSequenceNumber": 1,
-    "costAmount": null,
-    "amountMadeGood": null,
-    "cashEquivalent": null,
-    "expensesIncurred": null,
-    "amountOfRelief": null
-  },
-  {
-    "nino": "QQ000003",
-    "sequenceNumber": 201700020,
-    "taxYear": 2017,
-    "type": 56,
-    "source": 26,
-    "grossAmount": 200,
-    "receiptDate": null,
-    "captureDate": null,
-    "typeDescription": "Flat Rate Job Expenses",
-    "netAmount": null
-  },
-  {
-    "nino": "QQ000003",
-    "sequenceNumber": 201700047,
-    "taxYear": 2017,
-    "type": 40,
-    "source": 26,
-    "grossAmount": 100,
-    "receiptDate": null,
-    "captureDate": null,
-    "typeDescription": "Asset Transfer",
-    "netAmount": null,
-    "employmentSequenceNumber": 2,
-    "costAmount": null,
-    "amountMadeGood": null,
-    "cashEquivalent": null,
-    "expensesIncurred": null,
-    "amountOfRelief": null
-  },
-  {
-    "nino": "QQ000003",
-    "sequenceNumber": 201700048,
-    "taxYear": 2017,
-    "type": 51,
-    "source": 26,
-    "grossAmount": 100,
-    "receiptDate": null,
-    "captureDate": null,
-    "typeDescription": "Employer Provided Professional Subscription",
-    "netAmount": null,
-    "employmentSequenceNumber": 2,
-    "costAmount": null,
-    "amountMadeGood": null,
-    "cashEquivalent": null,
-    "expensesIncurred": null,
-    "amountOfRelief": null
-  }
-]
+{
+  "iabdDetails": [
+    {
+      "nationalInsuranceNumber": "QQ000001",
+      "iabdSequenceNumber": 201500002,
+      "taxYear": 2015,
+      "type": "New Estimated Pay (027)",
+      "source": "FPS(RTI)",
+      "grossAmount": 36795,
+      "employmentSequenceNumber": 8
+    },
+    {
+      "nationalInsuranceNumber": "QQ000002",
+      "iabdSequenceNumber": 201500003,
+      "taxYear": 2015,
+      "type": "Vehicle Expenses (060)",
+      "source": "FPS(RTI)",
+      "grossAmount": 1000
+    },
+    {
+      "nationalInsuranceNumber": "AM242413",
+      "iabdSequenceNumber": 201600008,
+      "taxYear": 2016,
+      "type": "State Pension (066)",
+      "source": "Internet",
+      "grossAmount": 1253.23,
+      "captureDate": "2017-03-15"
+    },
+    {
+      "nationalInsuranceNumber": "QQ000003",
+      "iabdSequenceNumber": 201500004,
+      "taxYear": 2015,
+      "type": "Personal Allowance (118)",
+      "grossAmount": 10600
+    },
+    {
+      "nationalInsuranceNumber": "QQ000003",
+      "iabdSequenceNumber": 201700054,
+      "taxYear": 2017,
+      "type": "Car Fuel Benefit (029)",
+      "source": "FPS(RTI)",
+      "grossAmount": 100,
+      "employmentSequenceNumber": 1
+    },
+    {
+      "nationalInsuranceNumber": "QQ000003",
+      "iabdSequenceNumber": 201700055,
+      "taxYear": 2017,
+      "type": "Van Benefit (035)",
+      "source": "FPS(RTI)",
+      "grossAmount": 100,
+      "employmentSequenceNumber": 1
+    },
+    {
+      "nationalInsuranceNumber": "QQ000003",
+      "iabdSequenceNumber": 201700020,
+      "taxYear": 2017,
+      "type": "Flat Rate Job Expenses (056)",
+      "source": "FPS(RTI)",
+      "grossAmount": 200
+    },
+    {
+      "nationalInsuranceNumber": "QQ000003",
+      "iabdSequenceNumber": 201700047,
+      "taxYear": 2017,
+      "type": "Asset Transfer (040)",
+      "source": "FPS(RTI)",
+      "grossAmount": 100,
+      "employmentSequenceNumber": 2
+    },
+    {
+      "nationalInsuranceNumber": "QQ000003",
+      "iabdSequenceNumber": 201700048,
+      "taxYear": 2017,
+      "type": "Employer Provided Professional Subscription (051)",
+      "source": "FPS(RTI)",
+      "grossAmount": 100,
+      "employmentSequenceNumber": 2
+    }
+  ]
+}

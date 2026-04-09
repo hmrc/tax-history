@@ -30,25 +30,24 @@ import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 
 class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues with DateUtils {
 
-  lazy val getTaxAcoountResponseURLDummy: JsValue = loadFile("/json/nps/response/GetTaxAccount.json")
+  lazy val getHipTaxAccountResponseURLDummy: JsValue = loadFile("/json/nps/response/GetTaxAccount.json")
 
-  private val primaryEmploymentId              = 12
-  private val actualPupCodedInCYPlusOne        = 240
+  private val primaryEmploymentId              = 1
+  private val actualPupCodedInCYPlusOne        = 99999.98
   private val outStandingDebt                  = 145.75
   private val underPayment                     = 15423.29
   private val sequenceNumberInt                = 6
-  private val taDeductionType                  = 32
-  private val taAllowanceType                  = 11
-  private val taAllowanceSourceAmount          = 11500
+  private val taDeductionType                  = 15
+  private val taAllowanceType                  = 8
   private val testNpsIncomeSourceEmpId         = 6
   private val testNpsIncomeSourceEmpTDN        = 961
   private val testNpsIncomeSourceEmpType       = 23
   private val testNpsIncomeBasisOperation      = 64
-  private val incomeSource1DeserialisedEmpId   = 12
+  private val incomeSource1DeserialisedEmpId   = 1
   private val incomeSource1DeserialisedEmpType = 1
-  private val incomeSource1DeserialisedEmpTDN  = 961
+  private val incomeSource1DeserialisedEmpTDN  = 111
 
-  private val taxAccount = getTaxAcoountResponseURLDummy.as[NpsTaxAccount](using NpsTaxAccount.formats)
+  private val taxAccount: NpsTaxAccount = getHipTaxAccountResponseURLDummy.as[NpsTaxAccount]
 
   private val testNpsEmployment = NpsEmployment(
     nino = "AA000000",
@@ -63,19 +62,19 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
   )
 
   private val testDeductions      = List(
-    TaDeduction(
+    AllowanceOrDeduction(
       `type` = taDeductionType,
-      npsDescription = "savings income taxable at higher rate",
-      amount = BigDecimal("38625"),
-      sourceAmount = Some(0)
+      npsDescription = "balancing charge",
+      amount = BigDecimal("212"),
+      sourceAmount = Some(212)
     )
   )
   private val testAllowances      = List(
-    TaAllowance(
+    AllowanceOrDeduction(
       `type` = taAllowanceType,
-      npsDescription = "personal allowance",
+      npsDescription = "loan interest",
       amount = BigDecimal("11500"),
-      sourceAmount = Some(taAllowanceSourceAmount)
+      sourceAmount = Some(0)
     )
   )
   private val testNpsIncomeSource = NpsIncomeSource(
@@ -90,72 +89,101 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
     basisOperation = Some(testNpsIncomeBasisOperation)
   )
 
+  private val testNpsIncomeSourceHip = NpsIncomeSource(
+    employmentId = testNpsIncomeSourceEmpId,
+    employmentTaxDistrictNumber = Some(testNpsIncomeSourceEmpTDN),
+    employmentPayeRef = Some("AZ00010"),
+    actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal(3.14)),
+    deductions = testDeductions,
+    allowances = testAllowances,
+    employmentType = Some(1),
+    taxCode = Some("TAX1234"),
+    basisOperation = Some(2)
+  )
+
+  private val testNpsIncomeSourceHipJson = Json.obj(
+    "employmentSequenceNumber" -> testNpsIncomeSourceEmpId,
+    "employmentRecordType"     -> "PRIMARY",
+    "actualPUPCodedInNextYear" -> BigDecimal(3.14),
+    "deductionsDetails"        -> Json.arr(
+      Json.obj("type" -> "balancing charge (015)", "sourceAmount" -> 212, "adjustedAmount" -> 212)
+    ),
+    "allowancesDetails"        -> Json.arr(
+      Json.obj("type" -> "loan interest (008)", "sourceAmount" -> 0, "adjustedAmount" -> 11500)
+    ),
+    "taxCode"                  -> "TAX1234",
+    "basisOfOperation"         -> "Cumulative",
+    "employerReference"        -> s"$testNpsIncomeSourceEmpTDN/AZ00010"
+  )
+
   "NpsTaxAccount" when {
     "transforming NPS Get Tax Account API response Json correctly to NpsTaxAccount Model " in {
       taxAccount                              shouldBe a[NpsTaxAccount]
       taxAccount.getPrimaryEmploymentId       shouldBe Some(primaryEmploymentId)
       taxAccount.getActualPupCodedInCYPlusOne shouldBe Some(actualPupCodedInCYPlusOne)
-      taxAccount.getOutStandingDebt           shouldBe Some(outStandingDebt)
-      taxAccount.getUnderPayment              shouldBe Some(underPayment)
+      taxAccount.getOutStandingDebt           shouldBe None
+      taxAccount.getUnderPayment              shouldBe None
     }
 
     "deserialising the 'incomeSources' field" should {
       val incomeSource1Deserialised = NpsIncomeSource(
         employmentId = incomeSource1DeserialisedEmpId,
         employmentType = Some(incomeSource1DeserialisedEmpType),
-        actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal("240")),
+        actualPUPCodedInCYPlusOneTaxYear = Some(BigDecimal("99999.98")),
         deductions = testDeductions,
         allowances = testAllowances,
-        taxCode = Some("K7757"),
-        basisOperation = None,
+        taxCode = Some("K20"),
+        basisOperation = Some(1),
         employmentTaxDistrictNumber = Some(incomeSource1DeserialisedEmpTDN),
-        employmentPayeRef = Some("AZ00010")
+        employmentPayeRef = Some("A11111")
       )
       val incomeSourcesDeserialised = List(incomeSource1Deserialised)
 
       val incomeSourcesSerialised = Json.parse(s"""
-           | [
-           |   {
-           |     "employmentId":12,
-           |     "employmentType":1,
-           |     "actualPUPCodedInCYPlusOneTaxYear":240,
-           |     "deductions":[
-           |       {"type":32,"npsDescription":"savings income taxable at higher rate","amount":38625,"sourceAmount":0}
-           |     ],
-           |     "allowances":[
-           |       {"type":11,"npsDescription":"personal allowance","amount":11500,"sourceAmount":11500}
-           |     ],
-           |     "taxCode":"K7757",
-           |     "employmentTaxDistrictNumber":961,
-           |     "employmentPayeRef":"AZ00010"
-           |   }
-           | ]
-        """.stripMargin)
+        [
+          {
+            "employmentSequenceNumber": 1,
+            "employmentRecordType": "PRIMARY",
+            "actualPUPCodedInNextYear": 99999.98,
+            "deductionsDetails": [
+              {"type": "balancing charge (015)", "sourceAmount": 212, "adjustedAmount": 212}
+            ],
+            "allowancesDetails": [
+              {"type": "loan interest (008)", "sourceAmount": 0, "adjustedAmount": 11500}
+            ],
+            "taxCode": "K20",
+            "basisOfOperation": "Week1/Month1",
+            "employerReference": "111/A11111"
+          }
+        ]
+      """.stripMargin)
 
       "deserialise from an empty json array" in {
-        val jsonIncomeSourcesMissing = getTaxAcoountResponseURLDummy.as[JsObject] + ("incomeSources" -> JsArray())
-        fromJson[NpsTaxAccount](jsonIncomeSourcesMissing).get.incomeSources shouldBe empty
+        val jsonIncomeSourcesMissing =
+          getHipTaxAccountResponseURLDummy.as[JsObject] + ("employmentDetailsList"        -> JsArray())
+        fromJson[NpsTaxAccount](jsonIncomeSourcesMissing).get.employmentDetailsList shouldBe empty
       }
 
       "deserialise from a non-empty json array of allowances" in {
         val jsonIncomeSourcesPresent =
-          getTaxAcoountResponseURLDummy.as[JsObject] + ("incomeSources"           -> incomeSourcesSerialised)
-        fromJson[NpsTaxAccount](jsonIncomeSourcesPresent).get.incomeSources shouldBe incomeSourcesDeserialised
+          getHipTaxAccountResponseURLDummy.as[JsObject] + ("employmentDetailsList" -> incomeSourcesSerialised)
+        fromJson[NpsTaxAccount](jsonIncomeSourcesPresent).get.employmentDetailsList
+          .take(1)                                                           shouldBe incomeSourcesDeserialised
       }
 
       "deserialise when 'employmentType' contains a null value (ASA-265)" in {
-        val noEmploymentTypeJson = (incomeSourcesSerialised \ 0).as[JsObject] + ("employmentType" -> JsNull)
+        val noEmploymentTypeJson = (incomeSourcesSerialised \ 0).as[JsObject] + ("employmentRecordType" -> JsNull)
         fromJson[NpsIncomeSource](noEmploymentTypeJson).get.employmentType shouldBe None
       }
 
       "deserialise when 'employmentTaxDistrictNumber' contains a null value (ASA-265)" in {
         val noEmplTaxDistrictNumJson =
-          (incomeSourcesSerialised \ 0).as[JsObject] + ("employmentTaxDistrictNumber"             -> JsNull)
+          (incomeSourcesSerialised \ 0).as[JsObject] + ("employerReference"                       -> JsNull)
         fromJson[NpsIncomeSource](noEmplTaxDistrictNumJson).get.employmentTaxDistrictNumber shouldBe None
       }
 
       "deserialise when 'employmentPayeRef' contains a null value (ASA-265)" in {
-        val noEmploymentPayeRefJson = (incomeSourcesSerialised \ 0).as[JsObject] + ("employmentPayeRef" -> JsNull)
+        val noEmploymentPayeRefJson = (incomeSourcesSerialised \ 0).as[JsObject] + ("employerReference" -> JsNull)
         fromJson[NpsIncomeSource](noEmploymentPayeRefJson).get.employmentPayeRef shouldBe None
       }
       "deserialise when 'taxCode' contains a null value (ASA-265)" in {
@@ -182,7 +210,7 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
         val npsEmployment  = NpsEmployment(
           "AA000000",
           sequenceNumber,
-          "999",
+          "111",
           "AZ00010",
           "Aldi",
           Some("6044041000000"),
@@ -198,12 +226,12 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
       }
 
       "return a single income source when income sources match the employment" in {
-        val targetEmploymentId = 6
+        val targetEmploymentId = 1
         val npsEmployment      = NpsEmployment(
           "AA000000",
           targetEmploymentId,
-          "961",
-          "AZ00010",
+          "111",
+          "A11111",
           "Aldi",
           Some("6044041000000"),
           receivingJobSeekersAllowance = false,
@@ -318,7 +346,7 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
     "getOutStandingDebt is called" should {
       val employmentTypePrimaryIncome  = 1
       val deductionTypeOutstandingDebt = 41
-      val deductionWithOutstandingDebt = TaDeduction(
+      val deductionWithOutstandingDebt = AllowanceOrDeduction(
         `type` = deductionTypeOutstandingDebt,
         npsDescription = "desc",
         amount = BigDecimal("123"),
@@ -351,7 +379,7 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
     "getUnderPayment is called" should {
       val employmentTypePrimaryIncome     = 1
       val deductionTypeUnderpaymentAmount = 35
-      val deductionWithUnderpayment       = TaDeduction(
+      val deductionWithUnderpayment       = AllowanceOrDeduction(
         `type` = deductionTypeUnderpaymentAmount,
         npsDescription = "desc",
         amount = BigDecimal("123"),
@@ -451,28 +479,28 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
     }
   }
 
-  "TaDeduction" should {
-    val taDeduction = TaDeduction(
+  "Deduction" should {
+    val allowanceOrDeduction = AllowanceOrDeduction(
       `type` = 7,
-      npsDescription = "employer benefits ",
+      npsDescription = "employer benefits",
       amount = BigDecimal("65"),
       sourceAmount = Some(BigDecimal("65"))
     )
 
     "serialize to JSON" when {
       "all fields are valid" in {
-        Json.toJson(taDeduction) shouldBe Json.obj(
+        Json.toJson(allowanceOrDeduction) shouldBe Json.obj(
           "type"           -> 7,
-          "npsDescription" -> "employer benefits ",
+          "npsDescription" -> "employer benefits",
           "amount"         -> BigDecimal("65"),
           "sourceAmount"   -> Some(BigDecimal("65"))
         )
       }
 
       "an optional field is missing" in {
-        Json.toJson(taDeduction.copy(sourceAmount = None)) shouldBe Json.obj(
+        Json.toJson(allowanceOrDeduction.copy(sourceAmount = None)) shouldBe Json.obj(
           "type"           -> 7,
-          "npsDescription" -> "employer benefits ",
+          "npsDescription" -> "employer benefits",
           "amount"         -> BigDecimal("65")
         )
       }
@@ -481,76 +509,62 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
     "deserialize from JSON" when {
       "all fields are valid" in {
         val json = Json.obj(
-          "type"           -> 7,
-          "npsDescription" -> "employer benefits ",
-          "amount"         -> BigDecimal("65"),
+          "type"           -> "employer benefits (007)",
+          "adjustedAmount" -> BigDecimal("65"),
           "sourceAmount"   -> Some(BigDecimal("65"))
         )
 
-        json.validate[TaDeduction] shouldBe JsSuccess(taDeduction)
+        json.validate[AllowanceOrDeduction] shouldBe JsSuccess(allowanceOrDeduction)
       }
 
       "sourceAmount is empty" in {
         val json = Json.obj(
-          "type"           -> 7,
-          "npsDescription" -> "employer benefits ",
-          "amount"         -> BigDecimal("65")
+          "type"           -> "employer benefits (007)",
+          "adjustedAmount" -> BigDecimal("65")
         )
 
-        json.validate[TaDeduction] shouldBe JsSuccess(taDeduction.copy(sourceAmount = None))
+        json.validate[AllowanceOrDeduction] shouldBe JsSuccess(allowanceOrDeduction.copy(sourceAmount = None))
       }
     }
 
     "fail to read from json" when {
-      "there is type mismatch" in {
-        Json
-          .obj(
-            "type"           -> "7",
-            "npsDescription" -> "employer benefits ",
-            "amount"         -> BigDecimal("65"),
-            "sourceAmount"   -> Some(BigDecimal("65"))
-          )
-          .validate[TaDeduction] shouldBe a[JsError]
-      }
-
       "a required field is missing" in {
         Json
           .obj(
-            "type"         -> 7,
-            "amount"       -> BigDecimal("65"),
-            "sourceAmount" -> Some(BigDecimal("65"))
+            "type"         -> "employer benefits (007)",
+            "sourceAmount" -> BigDecimal("65")
           )
-          .validate[TaDeduction] shouldBe a[JsError]
+          .validate[AllowanceOrDeduction] shouldBe a[JsError]
       }
 
       "empty json" in {
-        Json.obj().validate[TaDeduction] shouldBe a[JsError]
+        Json.obj().validate[AllowanceOrDeduction] shouldBe a[JsError]
       }
     }
   }
 
-  "TaAllowance" should {
-    val taAllowance = TaAllowance(
+  "Allowance" should {
+    val allowanceOrDeduction = AllowanceOrDeduction(
       `type` = 7,
-      npsDescription = "employer benefits ",
+      npsDescription = "employer benefits",
       amount = BigDecimal("65"),
       sourceAmount = Some(BigDecimal("65"))
     )
 
     "serialize to JSON" when {
       "all fields are valid" in {
-        Json.toJson(taAllowance) shouldBe Json.obj(
+        Json.toJson(allowanceOrDeduction) shouldBe Json.obj(
           "type"           -> 7,
-          "npsDescription" -> "employer benefits ",
+          "npsDescription" -> "employer benefits",
           "amount"         -> BigDecimal("65"),
           "sourceAmount"   -> Some(BigDecimal("65"))
         )
       }
 
       "an optional field is missing" in {
-        Json.toJson(taAllowance.copy(sourceAmount = None)) shouldBe Json.obj(
+        Json.toJson(allowanceOrDeduction.copy(sourceAmount = None)) shouldBe Json.obj(
           "type"           -> 7,
-          "npsDescription" -> "employer benefits ",
+          "npsDescription" -> "employer benefits",
           "amount"         -> BigDecimal("65")
         )
       }
@@ -559,50 +573,36 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
     "deserialize from JSON" when {
       "all fields are valid" in {
         val json = Json.obj(
-          "type"           -> 7,
-          "npsDescription" -> "employer benefits ",
-          "amount"         -> BigDecimal("65"),
+          "type"           -> "employer benefits (007)",
+          "adjustedAmount" -> BigDecimal("65"),
           "sourceAmount"   -> Some(BigDecimal("65"))
         )
 
-        json.validate[TaAllowance] shouldBe JsSuccess(taAllowance)
+        json.validate[AllowanceOrDeduction] shouldBe JsSuccess(allowanceOrDeduction)
       }
 
       "sourceAmount is empty" in {
         val json = Json.obj(
-          "type"           -> 7,
-          "npsDescription" -> "employer benefits ",
-          "amount"         -> BigDecimal("65")
+          "type"           -> "employer benefits (007)",
+          "adjustedAmount" -> BigDecimal("65")
         )
 
-        json.validate[TaAllowance] shouldBe JsSuccess(taAllowance.copy(sourceAmount = None))
+        json.validate[AllowanceOrDeduction] shouldBe JsSuccess(allowanceOrDeduction.copy(sourceAmount = None))
       }
     }
 
     "fail to read from json" when {
-      "there is type mismatch" in {
-        Json
-          .obj(
-            "type"           -> "7",
-            "npsDescription" -> "employer benefits ",
-            "amount"         -> BigDecimal("65"),
-            "sourceAmount"   -> Some(BigDecimal("65"))
-          )
-          .validate[TaAllowance] shouldBe a[JsError]
-      }
-
       "a required field is missing" in {
         Json
           .obj(
-            "type"         -> 7,
-            "amount"       -> BigDecimal("65"),
+            "type"         -> "employer benefits (007)",
             "sourceAmount" -> Some(BigDecimal("65"))
           )
-          .validate[TaAllowance] shouldBe a[JsError]
+          .validate[AllowanceOrDeduction] shouldBe a[JsError]
       }
 
       "empty json" in {
-        Json.obj().validate[TaAllowance] shouldBe a[JsError]
+        Json.obj().validate[AllowanceOrDeduction] shouldBe a[JsError]
       }
     }
   }
@@ -639,36 +639,14 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
       }
     }
 
-    "deserialize from JSON" when {
+    "deserialise from JSON" when {
       "all fields are valid" in {
-        val json = Json.obj(
-          "employmentId"                     -> testNpsIncomeSourceEmpId,
-          "employmentTaxDistrictNumber"      -> Some(testNpsIncomeSourceEmpTDN),
-          "employmentPayeRef"                -> Some("AZ00010"),
-          "actualPUPCodedInCYPlusOneTaxYear" -> Some(BigDecimal(3.14)),
-          "deductions"                       -> testDeductions,
-          "allowances"                       -> testAllowances,
-          "employmentType"                   -> Some(testNpsIncomeSourceEmpType),
-          "taxCode"                          -> Some("TAX1234"),
-          "basisOperation"                   -> Some(testNpsIncomeBasisOperation)
-        )
-
-        json.validate[NpsIncomeSource] shouldBe JsSuccess(npsIncomeSource)
+        testNpsIncomeSourceHipJson.validate[NpsIncomeSource] shouldBe JsSuccess(testNpsIncomeSourceHip)
       }
 
       "an optional field is empty" in {
-        val json = Json.obj(
-          "employmentId"                     -> testNpsIncomeSourceEmpId,
-          "employmentTaxDistrictNumber"      -> Some(testNpsIncomeSourceEmpTDN),
-          "employmentPayeRef"                -> Some("AZ00010"),
-          "actualPUPCodedInCYPlusOneTaxYear" -> Some(BigDecimal(3.14)),
-          "deductions"                       -> testDeductions,
-          "allowances"                       -> testAllowances,
-          "employmentType"                   -> Some(testNpsIncomeSourceEmpType),
-          "taxCode"                          -> Some("TAX1234")
-        )
-
-        json.validate[NpsIncomeSource] shouldBe JsSuccess(npsIncomeSource.copy(basisOperation = None))
+        (testNpsIncomeSourceHipJson.as[JsObject] - "basisOfOperation")
+          .validate[NpsIncomeSource] shouldBe JsSuccess(testNpsIncomeSourceHip.copy(basisOperation = None))
       }
     }
 
@@ -716,33 +694,29 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
     "serialize to JSON" when {
       "all fields are valid" in {
         Json.toJson(npsTaxAccount) shouldBe Json.obj(
-          "incomeSources" -> List(testNpsIncomeSource)
+          "employmentDetailsList" -> List(testNpsIncomeSource)
         )
       }
 
       "an optional field is missing" in {
         Json.toJson(npsTaxAccount.copy(List(testNpsIncomeSource.copy(taxCode = None)))) shouldBe Json.obj(
-          "incomeSources" -> List(testNpsIncomeSource.copy(taxCode = None))
+          "employmentDetailsList" -> List(testNpsIncomeSource.copy(taxCode = None))
         )
       }
     }
 
-    "deserialize from JSON" when {
+    "deserialise from JSON" when {
       "all fields are valid" in {
-        val json = Json.obj(
-          "incomeSources" -> List(testNpsIncomeSource)
-        )
-
-        json.validate[NpsTaxAccount] shouldBe JsSuccess(npsTaxAccount)
+        val json = Json.obj("employmentDetailsList" -> Json.arr(testNpsIncomeSourceHipJson))
+        json.validate[NpsTaxAccount] shouldBe JsSuccess(NpsTaxAccount(List(testNpsIncomeSourceHip)))
       }
 
       "an optional field is empty" in {
         val json = Json.obj(
-          "incomeSources" -> List(testNpsIncomeSource.copy(basisOperation = None))
+          "employmentDetailsList" -> Json.arr(testNpsIncomeSourceHipJson.as[JsObject] - "basisOfOperation")
         )
-
         json.validate[NpsTaxAccount] shouldBe JsSuccess(
-          npsTaxAccount.copy(List(testNpsIncomeSource.copy(basisOperation = None)))
+          NpsTaxAccount(List(testNpsIncomeSourceHip.copy(basisOperation = None)))
         )
       }
     }
