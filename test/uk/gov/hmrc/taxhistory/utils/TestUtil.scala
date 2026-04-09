@@ -71,7 +71,6 @@ trait TestUtil {
     "citizenDetailsBaseUrl"                        -> "citizen-details",
     "microservice.services.des.authorizationToken" -> "local",
     "microservice.services.des.env"                -> "local",
-    "feature.isUsingHIP"                           -> "true",
     "microservice.services.hip.originator-id"      -> "testId"
   )
 
