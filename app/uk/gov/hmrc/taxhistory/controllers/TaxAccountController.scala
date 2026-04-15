@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxhistory.controllers
 
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
+import play.api.libs.json.Json
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, RelationshipAuthService}
@@ -51,8 +52,15 @@ class TaxAccountController @Inject() (
   }
 
   private def retrieveIncomeSource(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit
-    hc: HeaderCarrier
-  ): Future[Result] = toResult {
-    employmentHistoryService.getIncomeSource(nino, taxYear, employmentId)
+                                                                                       hc: HeaderCarrier
+  ): Future[Result] = {
+    employmentHistoryService.getIncomeSource(nino, taxYear, employmentId).map {
+      case Some(incomeSource) =>
+        incomeSource.deductions.foreach { ded =>
+        }
+        Ok(Json.toJson(incomeSource))
+      case None =>
+        NotFound
+    }
   }
 }

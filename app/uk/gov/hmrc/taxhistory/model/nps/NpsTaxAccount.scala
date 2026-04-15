@@ -27,14 +27,32 @@ case class AllowanceOrDeduction(
 )
 
 object AllowanceOrDeduction {
-  implicit val reader: Reads[AllowanceOrDeduction]   = (js: JsValue) => {
-    val typeAndDescription         = (js \ "type").validate[String].getOrElse("")
-    val (npsDescription, typeCode) = typeAndDescription.split("[(]") match {
-      case Array(desc, code) => (Some(desc.trim), code.substring(0, code.indexOf(")")).toIntOption)
-      case _                 => (None, None)
+  private val npsReader: Reads[AllowanceOrDeduction] = (js: JsValue) => {
+    val typeAsInt = (js \ "type").asOpt[Int]
+    val typeAsString = (js \ "type").asOpt[String]
+
+    val (npsDescription, typeCode) = typeAsInt match {
+      case Some(intType) =>
+        val desc = (js \ "npsDescription").asOpt[String].getOrElse("")
+        (Some(desc), Some(intType))
+      case None =>
+        typeAsString match {
+          case Some(typeAndDescription) =>
+            typeAndDescription.split("[(]") match {
+              case Array(desc, code) =>
+                val codeStr = code.substring(0, code.indexOf(")"))
+                val parsedInt = codeStr.toIntOption
+                (Some(desc.trim), parsedInt)
+              case parts =>
+                (None, None)
+            }
+          case None =>
+            (None, None)
+        }
     }
+
     for {
-      amount       <- (js \ "adjustedAmount").validate[BigDecimal]
+      amount       <- (js \ "adjustedAmount").validate[BigDecimal].orElse((js \ "amount").validate[BigDecimal])
       sourceAmount <- (js \ "sourceAmount").validateOpt[BigDecimal]
     } yield AllowanceOrDeduction(
       `type` = typeCode.getOrElse(0),
@@ -43,7 +61,17 @@ object AllowanceOrDeduction {
       sourceAmount = sourceAmount
     )
   }
-  implicit val writer: OWrites[AllowanceOrDeduction] = Json.writes[AllowanceOrDeduction]
+
+  private val simpleFormat: OFormat[AllowanceOrDeduction] = Json.format[AllowanceOrDeduction]
+
+  implicit val reader: Reads[AllowanceOrDeduction] = npsReader.orElse(simpleFormat)
+
+  implicit val writer: OWrites[AllowanceOrDeduction] = new OWrites[AllowanceOrDeduction] {
+    override def writes(o: AllowanceOrDeduction): JsObject = {
+      val result = simpleFormat.writes(o)
+      result
+    }
+  }
 }
 
 case class NpsIncomeSource(
@@ -170,5 +198,6 @@ case class NpsTaxAccount(employmentDetailsList: List[NpsIncomeSource]) {
 }
 
 object NpsTaxAccount {
-  given formats: OFormat[NpsTaxAccount] = Json.format[NpsTaxAccount]
+  implicit val reads: Reads[NpsTaxAccount] = Json.reads[NpsTaxAccount]
+  implicit val writes: OWrites[NpsTaxAccount] = Json.writes[NpsTaxAccount]
 }
