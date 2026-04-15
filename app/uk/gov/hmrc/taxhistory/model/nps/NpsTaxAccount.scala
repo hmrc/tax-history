@@ -28,25 +28,30 @@ case class AllowanceOrDeduction(
 
 object AllowanceOrDeduction {
   private val npsReader: Reads[AllowanceOrDeduction] = (js: JsValue) => {
-    val typeAsInt = (js \ "type").asOpt[Int]
+    val typeAsInt    = (js \ "type").asOpt[Int]
     val typeAsString = (js \ "type").asOpt[String]
 
     val (npsDescription, typeCode) = typeAsInt match {
       case Some(intType) =>
         val desc = (js \ "npsDescription").asOpt[String].getOrElse("")
         (Some(desc), Some(intType))
-      case None =>
+      case None          =>
         typeAsString match {
           case Some(typeAndDescription) =>
             typeAndDescription.split("[(]") match {
               case Array(desc, code) =>
-                val codeStr = code.substring(0, code.indexOf(")"))
-                val parsedInt = codeStr.toIntOption
-                (Some(desc.trim), parsedInt)
-              case parts =>
+                val closingParenIndex = code.indexOf(")")
+                if (closingParenIndex > 0) {
+                  val codeStr   = code.substring(0, closingParenIndex)
+                  val parsedInt = codeStr.toIntOption
+                  (Some(desc.trim), parsedInt)
+                } else {
+                  (None, None)
+                }
+              case parts             =>
                 (None, None)
             }
-          case None =>
+          case None                     =>
             (None, None)
         }
     }
@@ -64,14 +69,8 @@ object AllowanceOrDeduction {
 
   private val simpleFormat: OFormat[AllowanceOrDeduction] = Json.format[AllowanceOrDeduction]
 
-  implicit val reader: Reads[AllowanceOrDeduction] = npsReader.orElse(simpleFormat)
-
-  implicit val writer: OWrites[AllowanceOrDeduction] = new OWrites[AllowanceOrDeduction] {
-    override def writes(o: AllowanceOrDeduction): JsObject = {
-      val result = simpleFormat.writes(o)
-      result
-    }
-  }
+  implicit val reads: Reads[AllowanceOrDeduction]    = npsReader.orElse(simpleFormat)
+  implicit val writes: OWrites[AllowanceOrDeduction] = simpleFormat
 }
 
 case class NpsIncomeSource(
@@ -198,6 +197,6 @@ case class NpsTaxAccount(employmentDetailsList: List[NpsIncomeSource]) {
 }
 
 object NpsTaxAccount {
-  implicit val reads: Reads[NpsTaxAccount] = Json.reads[NpsTaxAccount]
+  implicit val reads: Reads[NpsTaxAccount]    = Json.reads[NpsTaxAccount]
   implicit val writes: OWrites[NpsTaxAccount] = Json.writes[NpsTaxAccount]
 }

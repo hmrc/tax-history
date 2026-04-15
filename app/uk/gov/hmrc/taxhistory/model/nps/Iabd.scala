@@ -147,11 +147,11 @@ object Iabd extends Logging {
               logger.error(s"Failed to parse valid date format: $x")
               None
           }
-        case Some(invalidDate) =>
+        case Some(invalidDate)               =>
           logger.error(s"Invalid date format [yyyy-MM-dd]: $invalidDate")
           None
-        case None =>
-          None  // No error - date is simply absent
+        case None                            =>
+          None // No error - date is simply absent
       }
     }
     for {

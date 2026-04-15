@@ -52,15 +52,8 @@ class TaxAccountController @Inject() (
   }
 
   private def retrieveIncomeSource(nino: Nino, taxYear: TaxYear, employmentId: String)(implicit
-                                                                                       hc: HeaderCarrier
-  ): Future[Result] = {
-    employmentHistoryService.getIncomeSource(nino, taxYear, employmentId).map {
-      case Some(incomeSource) =>
-        incomeSource.deductions.foreach { ded =>
-        }
-        Ok(Json.toJson(incomeSource))
-      case None =>
-        NotFound
-    }
+    hc: HeaderCarrier
+  ): Future[Result] = toResult {
+    employmentHistoryService.getIncomeSource(nino, taxYear, employmentId)
   }
 }

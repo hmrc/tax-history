@@ -607,6 +607,317 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
     }
   }
 
+  "AllowanceOrDeduction" should {
+
+    "read from NPS API format" when {
+      "type is a string with description and code" in {
+        val json = Json.obj(
+          "type"           -> "state pension/state benefits (001)",
+          "adjustedAmount" -> BigDecimal("850"),
+          "sourceAmount"   -> BigDecimal("1253")
+        )
+
+        val expected = AllowanceOrDeduction(
+          `type` = 1,
+          npsDescription = "state pension/state benefits",
+          amount = BigDecimal("850"),
+          sourceAmount = Some(BigDecimal("1253"))
+        )
+
+        json.validate[AllowanceOrDeduction] shouldBe JsSuccess(expected)
+      }
+
+      "type string has extra whitespace" in {
+        val json = Json.obj(
+          "type"           -> "  employer benefits   (007)",
+          "adjustedAmount" -> BigDecimal("65"),
+          "sourceAmount"   -> BigDecimal("65")
+        )
+
+        val expected = AllowanceOrDeduction(
+          `type` = 7,
+          npsDescription = "employer benefits",
+          amount = BigDecimal("65"),
+          sourceAmount = Some(BigDecimal("65"))
+        )
+
+        json.validate[AllowanceOrDeduction] shouldBe JsSuccess(expected)
+      }
+
+      "uses adjustedAmount field" in {
+        val json = Json.obj(
+          "type"           -> "personal allowance (011)",
+          "adjustedAmount" -> BigDecimal("11500"),
+          "sourceAmount"   -> BigDecimal("11000")
+        )
+
+        json.validate[AllowanceOrDeduction].get.amount shouldBe BigDecimal("11500")
+      }
+
+      "falls back to amount field when adjustedAmount is missing" in {
+        val json = Json.obj(
+          "type"         -> "personal allowance (011)",
+          "amount"       -> BigDecimal("11500"),
+          "sourceAmount" -> BigDecimal("11000")
+        )
+
+        json.validate[AllowanceOrDeduction].get.amount shouldBe BigDecimal("11500")
+      }
+
+      "sourceAmount is optional" in {
+        val json = Json.obj(
+          "type"           -> "loan interest (008)",
+          "adjustedAmount" -> BigDecimal("11500")
+        )
+
+        val expected = AllowanceOrDeduction(
+          `type` = 8,
+          npsDescription = "loan interest",
+          amount = BigDecimal("11500"),
+          sourceAmount = None
+        )
+
+        json.validate[AllowanceOrDeduction] shouldBe JsSuccess(expected)
+      }
+    }
+
+    "read from cache format" when {
+      "type is an integer and npsDescription is a string" in {
+        val json = Json.obj(
+          "type"           -> 1,
+          "npsDescription" -> "state pension/state benefits",
+          "amount"         -> BigDecimal("850"),
+          "sourceAmount"   -> BigDecimal("1253")
+        )
+
+        val expected = AllowanceOrDeduction(
+          `type` = 1,
+          npsDescription = "state pension/state benefits",
+          amount = BigDecimal("850"),
+          sourceAmount = Some(BigDecimal("1253"))
+        )
+
+        json.validate[AllowanceOrDeduction] shouldBe JsSuccess(expected)
+      }
+
+      "type is integer with no npsDescription" in {
+        val json = Json.obj(
+          "type"           -> 35,
+          "npsDescription" -> "",
+          "amount"         -> BigDecimal("180"),
+          "sourceAmount"   -> BigDecimal("180")
+        )
+
+        val expected = AllowanceOrDeduction(
+          `type` = 35,
+          npsDescription = "",
+          amount = BigDecimal("180"),
+          sourceAmount = Some(BigDecimal("180"))
+        )
+
+        json.validate[AllowanceOrDeduction] shouldBe JsSuccess(expected)
+      }
+
+      "type is integer and npsDescription is missing" in {
+        val json = Json.obj(
+          "type"         -> 41,
+          "amount"       -> BigDecimal("100"),
+          "sourceAmount" -> BigDecimal("100")
+        )
+
+        val result = json.validate[AllowanceOrDeduction].get
+        result.`type`         shouldBe 41
+        result.npsDescription shouldBe ""
+        result.amount         shouldBe BigDecimal("100")
+      }
+
+      "handles all numeric types from MongoDB" in {
+        val json = Json.obj(
+          "type"           -> 11,
+          "npsDescription" -> "personal allowance",
+          "amount"         -> 1250,
+          "sourceAmount"   -> 1250
+        )
+
+        val expected = AllowanceOrDeduction(
+          `type` = 11,
+          npsDescription = "personal allowance",
+          amount = BigDecimal("1250"),
+          sourceAmount = Some(BigDecimal("1250"))
+        )
+
+        json.validate[AllowanceOrDeduction] shouldBe JsSuccess(expected)
+      }
+    }
+
+    "handle edge cases" when {
+      "type code is three digits with leading zeros" in {
+        val json = Json.obj(
+          "type"           -> "state pension/state benefits (001)",
+          "adjustedAmount" -> BigDecimal("850"),
+          "sourceAmount"   -> BigDecimal("1253")
+        )
+
+        json.validate[AllowanceOrDeduction].get.`type` shouldBe 1
+      }
+
+      "type code is two digits" in {
+        val json = Json.obj(
+          "type"           -> "Underpayment amount (35)",
+          "adjustedAmount" -> BigDecimal("180"),
+          "sourceAmount"   -> BigDecimal("180")
+        )
+
+        json.validate[AllowanceOrDeduction].get.`type` shouldBe 35
+      }
+
+      "type string format is invalid - no parentheses" in {
+        val json = Json.obj(
+          "type"           -> "invalid format 007",
+          "adjustedAmount" -> BigDecimal("65"),
+          "sourceAmount"   -> BigDecimal("65")
+        )
+
+        val result = json.validate[AllowanceOrDeduction].get
+        result.`type`         shouldBe 0
+        result.npsDescription shouldBe ""
+      }
+
+      "type string format is invalid - no closing parenthesis" in {
+        val json = Json.obj(
+          "type"           -> "invalid format (007",
+          "adjustedAmount" -> BigDecimal("65"),
+          "sourceAmount"   -> BigDecimal("65")
+        )
+
+        // Should fail gracefully and default to type=0
+        val result = json.validate[AllowanceOrDeduction].get
+        result.`type`         shouldBe 0
+        result.npsDescription shouldBe ""
+        result.amount         shouldBe BigDecimal("65")
+      }
+
+      "type is neither string nor int (null)" in {
+        val json = Json.obj(
+          "type"           -> JsNull,
+          "adjustedAmount" -> BigDecimal("65"),
+          "sourceAmount"   -> BigDecimal("65")
+        )
+
+        val result = json.validate[AllowanceOrDeduction].get
+        result.`type`         shouldBe 0
+        result.npsDescription shouldBe ""
+      }
+    }
+
+    "write to JSON correctly" when {
+      "all fields are present" in {
+        val allowanceOrDeduction = AllowanceOrDeduction(
+          `type` = 1,
+          npsDescription = "state pension/state benefits",
+          amount = BigDecimal("850"),
+          sourceAmount = Some(BigDecimal("1253"))
+        )
+
+        val expected = Json.obj(
+          "type"           -> 1,
+          "npsDescription" -> "state pension/state benefits",
+          "amount"         -> 850,
+          "sourceAmount"   -> 1253
+        )
+
+        Json.toJson(allowanceOrDeduction) shouldBe expected
+      }
+
+      "sourceAmount is None" in {
+        val allowanceOrDeduction = AllowanceOrDeduction(
+          `type` = 8,
+          npsDescription = "loan interest",
+          amount = BigDecimal("11500"),
+          sourceAmount = None
+        )
+
+        val expected = Json.obj(
+          "type"           -> 8,
+          "npsDescription" -> "loan interest",
+          "amount"         -> 11500
+        )
+
+        Json.toJson(allowanceOrDeduction) shouldBe expected
+      }
+
+      "npsDescription is empty string" in {
+        val allowanceOrDeduction = AllowanceOrDeduction(
+          `type` = 0,
+          npsDescription = "",
+          amount = BigDecimal("100"),
+          sourceAmount = Some(BigDecimal("100"))
+        )
+
+        val expected = Json.obj(
+          "type"           -> 0,
+          "npsDescription" -> "",
+          "amount"         -> 100,
+          "sourceAmount"   -> 100
+        )
+
+        Json.toJson(allowanceOrDeduction) shouldBe expected
+      }
+    }
+
+    "round-trip correctly" when {
+      "serializing and deserializing from cache format" in {
+        val original = AllowanceOrDeduction(
+          `type` = 1,
+          npsDescription = "state pension/state benefits",
+          amount = BigDecimal("850"),
+          sourceAmount = Some(BigDecimal("1253"))
+        )
+
+        val json         = Json.toJson(original)
+        val deserialized = json.validate[AllowanceOrDeduction].get
+
+        deserialized shouldBe original
+      }
+
+      "deserializing from NPS and serializing to cache" in {
+        val npsJson = Json.obj(
+          "type"           -> "state pension/state benefits (001)",
+          "adjustedAmount" -> BigDecimal("850"),
+          "sourceAmount"   -> BigDecimal("1253")
+        )
+
+        val deserialized = npsJson.validate[AllowanceOrDeduction].get
+        val cacheJson    = Json.toJson(deserialized)
+
+        cacheJson shouldBe Json.obj(
+          "type"           -> 1,
+          "npsDescription" -> "state pension/state benefits",
+          "amount"         -> 850,
+          "sourceAmount"   -> 1253
+        )
+
+        // And deserialize from cache format should work
+        cacheJson.validate[AllowanceOrDeduction].get shouldBe deserialized
+      }
+    }
+
+    "fail to read from json" when {
+      "amount field is missing" in {
+        Json
+          .obj(
+            "type"         -> "employer benefits (007)",
+            "sourceAmount" -> BigDecimal("65")
+          )
+          .validate[AllowanceOrDeduction] shouldBe a[JsError]
+      }
+
+      "empty json" in {
+        Json.obj().validate[AllowanceOrDeduction] shouldBe a[JsError]
+      }
+    }
+  }
+
   "NpsIncomeSource" should {
     val npsIncomeSource = testNpsIncomeSource
 
