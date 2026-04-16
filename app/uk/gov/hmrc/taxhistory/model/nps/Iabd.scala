@@ -148,7 +148,7 @@ object Iabd extends Logging {
               None
           }
         case Some(invalidDate)               =>
-          logger.error(s"Invalid date format [yyyy-MM-dd]: $invalidDate")
+          logger.error(s"Received date '$invalidDate' which does not match required format yyyy-MM-dd")
           None
         case None                            =>
           None // No error - date is simply absent
