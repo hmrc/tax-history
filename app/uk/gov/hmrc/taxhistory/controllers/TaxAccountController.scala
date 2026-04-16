@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxhistory.controllers
 
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
+import play.api.libs.json.Json
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxhistory.services.{EmploymentHistoryService, RelationshipAuthService}

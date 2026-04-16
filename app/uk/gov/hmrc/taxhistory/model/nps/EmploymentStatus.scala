@@ -39,12 +39,12 @@ object EmploymentStatus {
     (__ \ "employmentStatus")
       .read(using Reads.of[String].orElse(Reads.of[Int].map(x => s"$x")))
       .flatMap[EmploymentStatus] {
-        case "Live"               => Reads(_ => JsSuccess(Live))
-        case "Potentially Ceased" => Reads(_ => JsSuccess(PotentiallyCeased))
-        case "Ceased"             => Reads(_ => JsSuccess(Ceased))
-        case "Unknown"            => Reads(_ => JsSuccess(Unknown))
-        case "Permanently Ceased" => Reads(_ => JsSuccess(PermanentlyCeased))
-        case _                    => Reads(_ => JsError(JsPath \ s"employmentStatus", JsonValidationError("Invalid EmploymentStatus")))
+        case "Live" | "1"               => Reads(_ => JsSuccess(Live))
+        case "Potentially Ceased" | "2" => Reads(_ => JsSuccess(PotentiallyCeased))
+        case "Ceased" | "3"             => Reads(_ => JsSuccess(Ceased))
+        case "Unknown" | "99"           => Reads(_ => JsSuccess(Unknown))
+        case "Permanently Ceased" | "6" => Reads(_ => JsSuccess(PermanentlyCeased))
+        case _                          => Reads(_ => JsError(JsPath \ s"employmentStatus", JsonValidationError("Invalid EmploymentStatus")))
       }
 
   given jsonWrites: Writes[EmploymentStatus] = Writes[EmploymentStatus] {

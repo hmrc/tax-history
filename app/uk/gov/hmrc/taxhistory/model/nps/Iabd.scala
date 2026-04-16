@@ -111,7 +111,7 @@ case class Iabd(
     val paymentStartDate: Option[LocalDate] =
       paymentFrequency match {
         case `weeklyPaymentFrequency` =>
-          startDate.map(date => LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy/MM/dd")))
+          startDate.map(date => LocalDate.parse(date, DateTimeFormatter.ofPattern("dd/MM/yyyy")))
         case `annualPaymentFrequency` =>
           None
         case Some(unknownValue)       =>
@@ -143,11 +143,15 @@ object Iabd extends Logging {
         case Some(x) if dateRegex.matches(x) =>
           try Some(LocalDate.parse(x).format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
           catch {
-            case _: Exception => None
+            case _: Exception =>
+              logger.error(s"Failed to parse valid date format: $x")
+              None
           }
-        case _                               =>
-          logger.error(s"Invalid date format [yyyy-MM-dd]: $date")
+        case Some(invalidDate)               =>
+          logger.error(s"Received date '$invalidDate' which does not match required format yyyy-MM-dd")
           None
+        case None                            =>
+          None // No error - date is simply absent
       }
     }
     for {
