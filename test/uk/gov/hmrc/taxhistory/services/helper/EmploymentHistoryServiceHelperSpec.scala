@@ -88,10 +88,7 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with TestUtil with Dat
 
   lazy val payAndTax: PayAndTax = PayAndTax(
     taxablePayTotal = Some(BigDecimal(2222.22)),
-    taxablePayTotalIncludingEYU = Some(BigDecimal(2222.22)),
-    taxTotal = Some(BigDecimal(111.11)),
-    taxTotalIncludingEYU = Some(BigDecimal(111.11)),
-    earlierYearUpdates = Nil
+    taxTotal = Some(BigDecimal(111.11))
   )
 
   lazy val payAsYouEarn1: PayAsYouEarn = PayAsYouEarn(
@@ -201,7 +198,6 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with TestUtil with Dat
       val payAndTax    = payAsYouEarn.payAndTax.get(employment.employmentId.toString).value
       payAndTax.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       payAndTax.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
-      payAndTax.earlierYearUpdates.size mustBe 1
       payAsYouEarn.employments.head.startDate mustBe Some(startDate)
       payAsYouEarn.employments.head.endDate mustBe None
       payAsYouEarn.incomeSources.head._2 must be(testIncomeSource)
@@ -265,7 +261,6 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with TestUtil with Dat
       val payAndTax       = payAsYouEarn.payAndTax.get(employment.employmentId.toString)
       payAndTax.get.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       payAndTax.get.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
-      payAndTax.get.earlierYearUpdates.size mustBe 1
       val companyBenefits = payAsYouEarn.benefits.get(employment.employmentId.toString)
       companyBenefits mustBe None
     }
@@ -288,7 +283,6 @@ class EmploymentHistoryServiceHelperSpec extends PlaySpec with TestUtil with Dat
       val payAndTax       = payAsYouEarn.payAndTax.get(employment.employmentId.toString)
       payAndTax.get.taxablePayTotal mustBe Some(BigDecimal.valueOf(20000.00))
       payAndTax.get.taxTotal mustBe Some(BigDecimal.valueOf(1880.00))
-      payAndTax.get.earlierYearUpdates.size mustBe 1
       val companyBenefits = payAsYouEarn.benefits.get(employment.employmentId.toString)
       companyBenefits mustBe None
     }

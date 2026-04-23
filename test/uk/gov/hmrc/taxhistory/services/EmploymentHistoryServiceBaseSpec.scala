@@ -189,10 +189,7 @@ trait EmploymentHistoryServiceBaseSpec extends DateUtils with TestUtil {
 
   lazy val payAndTax: PayAndTax = PayAndTax(
     taxablePayTotal = Some(BigDecimal(2222.22)),
-    taxablePayTotalIncludingEYU = Some(BigDecimal(2222.22)),
-    taxTotal = Some(BigDecimal(111.11)),
-    taxTotalIncludingEYU = Some(BigDecimal(111.11)),
-    earlierYearUpdates = Nil
+    taxTotal = Some(BigDecimal(111.11))
   )
 
   val testTaxCode = "1150L"

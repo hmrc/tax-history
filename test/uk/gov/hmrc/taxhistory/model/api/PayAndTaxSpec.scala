@@ -20,7 +20,7 @@ import java.time.LocalDate
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsError, JsValue, Json}
 import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 
 import java.util.UUID
@@ -31,73 +31,58 @@ class PayAndTaxSpec extends TestUtil with AnyWordSpecLike with Matchers with Opt
   lazy val payAndTaxWithEyuJson: JsValue    = loadFile("/json/model/api/payAndTaxWithEyu.json")
   lazy val payAndTaxValuesNoneJson: JsValue = loadFile("/json/model/api/payAndTaxValuesNone.json")
 
-  lazy val eyuList: List[EarlierYearUpdate] = List(
-    EarlierYearUpdate(
-      earlierYearUpdateId = UUID.fromString("e6926848-818b-4d01-baa1-02111eb0f514"),
-      taxablePayEYU = BigDecimal(123.45),
-      taxEYU = BigDecimal(67.89),
-      receivedDate = LocalDate.of(YEAR_2015, MAY, DAY_29)
-    )
-  )
-
   lazy val payAndTaxNoEyu: PayAndTax = PayAndTax(
     payAndTaxId = UUID.fromString("7407debb-5aa2-445d-8633-1875a2ebf559"),
     taxablePayTotal = Some(BigDecimal(76543.21)),
-    taxablePayTotalIncludingEYU = Some(BigDecimal(76543.21)),
     taxTotal = Some(BigDecimal(6666.66)),
-    taxTotalIncludingEYU = Some(BigDecimal(6666.66)),
-    earlierYearUpdates = Nil,
     paymentDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_20))
   )
 
   lazy val payAndTaxValuesNone: PayAndTax = PayAndTax(
     payAndTaxId = UUID.fromString("2dd8910e-95a4-4ede-b8af-977ca27b4a78"),
     taxablePayTotal = None,
-    taxablePayTotalIncludingEYU = None,
     taxTotal = None,
-    taxTotalIncludingEYU = None,
-    earlierYearUpdates = Nil,
     paymentDate = None
   )
 
   lazy val payAndTaxWithEyu: PayAndTax = PayAndTax(
     payAndTaxId = UUID.fromString("bb1c1ea4-04d0-4285-a2e6-4ade1e57f12a"),
     taxablePayTotal = Some(BigDecimal(1234567.89)),
-    taxablePayTotalIncludingEYU = Some(BigDecimal(1234691.34)),
     taxTotal = Some(BigDecimal(2222.22)),
-    taxTotalIncludingEYU = Some(BigDecimal(2290.11)),
-    earlierYearUpdates = eyuList,
     paymentDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_20))
   )
 
   "PayAndTax" should {
 
-    "transform into Json from object correctly without Eyu's" in {
+    "transform into Json from object correctly" in {
       Json.toJson(payAndTaxNoEyu) shouldBe payAndTaxNoEyuJson
     }
-    "transform into object from json correctly without Eyu's" in {
+    "transform into object from json correctly" in {
       payAndTaxNoEyuJson.as[PayAndTax] shouldBe payAndTaxNoEyu
     }
 
-    "transform into Json from object correctly with Eyu's" in {
+    "transform into Json from object when previously containing EYUs" in {
       Json.toJson(payAndTaxWithEyu) shouldBe payAndTaxWithEyuJson
     }
-    "transform into object from json correctly with Eyu's" in {
+    "transform into object from json when previously containing EYUs" in {
       payAndTaxWithEyuJson.as[PayAndTax] shouldBe payAndTaxWithEyu
     }
 
-    "transform into Json from object correctly without pay, tax or Eyu's" in {
+    "transform into Json from object correctly without pay or tax" in {
       Json.toJson(payAndTaxValuesNone) shouldBe payAndTaxValuesNoneJson
     }
-    "transform into object from json correctly without pay, tax or Eyu's" in {
+    "transform into object from json correctly without pay or tax" in {
       payAndTaxValuesNoneJson.as[PayAndTax] shouldBe payAndTaxValuesNone
+    }
+
+    "fail to read from json when payAndTaxId has wrong type" in {
+      Json.obj("payAndTaxId" -> "not-a-valid-uuid").validate[PayAndTax] shouldBe a[JsError]
     }
 
     "generate employmentId when none is supplied" in {
       val payAndTax = PayAndTax(
         taxablePayTotal = Some(BigDecimal(1212.12)),
-        taxTotal = Some(BigDecimal(34.34)),
-        earlierYearUpdates = Nil
+        taxTotal = Some(BigDecimal(34.34))
       )
       payAndTax.payAndTaxId.toString.nonEmpty shouldBe true
       payAndTax.payAndTaxId                  shouldNot be(payAndTaxNoEyu.payAndTaxId)
