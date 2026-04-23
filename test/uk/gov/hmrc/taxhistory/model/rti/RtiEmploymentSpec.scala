@@ -20,7 +20,7 @@ import java.time.LocalDate
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.libs.json.{JsError, JsSuccess, Json}
+import play.api.libs.json.Json
 import uk.gov.hmrc.taxhistory.fixtures.RtiEmployments
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 
@@ -39,31 +39,35 @@ class RtiEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with
     officeNumber = "1",
     payeRef = "1",
     currentPayId = Some("1"),
-    payments = List(testRtiPayment),
-    earlierYearUpdates = Nil
+    payments = List(testRtiPayment)
   )
 
   "RtiEmployment" when {
 
+    "instantiated without optional currentPayId" should {
+      "default currentPayId to None" in {
+        val emp = RtiEmployment(sequenceNo = 1, officeNumber = "1", payeRef = "1", payments = Nil)
+        emp.currentPayId shouldBe None
+      }
+    }
+
     "serialize to JSON" when {
       "all fields are valid" in {
         Json.toJson(testEmployment) shouldBe Json.obj(
-          "sequenceNo"         -> 1,
-          "officeNumber"       -> "1",
-          "payeRef"            -> "1",
-          "currentPayId"       -> Some("1"),
-          "payments"           -> List(testRtiPayment),
-          "earlierYearUpdates" -> Json.arr()
+          "sequenceNo"   -> 1,
+          "officeNumber" -> "1",
+          "payeRef"      -> "1",
+          "currentPayId" -> Some("1"),
+          "payments"     -> List(testRtiPayment)
         )
       }
 
       "an optional field is missing" in {
         Json.toJson(testEmployment.copy(currentPayId = None)) shouldBe Json.obj(
-          "sequenceNo"         -> 1,
-          "officeNumber"       -> "1",
-          "payeRef"            -> "1",
-          "payments"           -> List(testRtiPayment),
-          "earlierYearUpdates" -> Json.arr()
+          "sequenceNo"   -> 1,
+          "officeNumber" -> "1",
+          "payeRef"      -> "1",
+          "payments"     -> List(testRtiPayment)
         )
       }
     }
@@ -72,167 +76,24 @@ class RtiEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with
       "convert itself to PayAndTax" in {
         val rtiData   = rtiEmploymentResponse.as[RtiData]
         val payAndTax = rtiData.employments.head.toPayAndTax
-        payAndTax.taxablePayTotal         should be(Some(rtiERTaxablePayTotal))
-        payAndTax.taxTotal                should be(Some(rtiERTaxTotal))
-        payAndTax.studentLoan             should be(Some(testEmploymentStudentLoansYTD))
-        payAndTax.earlierYearUpdates.size should be(1)
+        payAndTax.taxablePayTotal should be(Some(rtiERTaxablePayTotal))
+        payAndTax.taxTotal        should be(Some(rtiERTaxTotal))
+        payAndTax.studentLoan     should be(Some(testEmploymentStudentLoansYTD))
       }
 
       "convert itself to PayAndTax (using STUDENT_LOAN_YTD variation)" in {
         val rtiData   = rtiEmploymentResponseWithStudentLoanYTDVariation.as[RtiData]
         val payAndTax = rtiData.employments.head.toPayAndTax
-        payAndTax.taxablePayTotal         should be(Some(rtiERTaxablePayTotal))
-        payAndTax.taxTotal                should be(Some(rtiERTaxTotal))
-        payAndTax.studentLoan             should be(Some(testEmploymentStudentLoansYTD))
-        payAndTax.earlierYearUpdates.size should be(1)
+        payAndTax.taxablePayTotal should be(Some(rtiERTaxablePayTotal))
+        payAndTax.taxTotal        should be(Some(rtiERTaxTotal))
+        payAndTax.studentLoan     should be(Some(testEmploymentStudentLoansYTD))
       }
 
-      "calculate taxablePayTotalIncludingEYU" when {
-        "there are EYUs of type 'TaxablePayDelta', it sums them all together with the 'taxablePayTotal'" in {
-          val payAndTax = testEmployment
-            .copy(
-              earlierYearUpdates = List(
-                RtiEarlierYearUpdate(
-                  taxablePayDelta = BigDecimal(101),
-                  totalTaxDelta = BigDecimal(307),
-                  receivedDate = LocalDate.parse("2018-01-01")
-                ),
-                RtiEarlierYearUpdate(
-                  taxablePayDelta = BigDecimal(-103),
-                  totalTaxDelta = BigDecimal(-311),
-                  receivedDate = LocalDate.parse("2018-01-01")
-                )
-              )
-            )
-            .toPayAndTax
-          payAndTax.taxablePayTotalIncludingEYU shouldBe Some(testEmploymentTaxablePayYTD + 101 - 103)
-        }
-        "there are no EYUs of type 'TaxablePayDelta', it just has the same value as 'taxablePayTotal" in {
-          val payAndTax = testEmployment
-            .copy(
-              earlierYearUpdates = List(
-                RtiEarlierYearUpdate(
-                  taxablePayDelta = BigDecimal(0),
-                  totalTaxDelta = BigDecimal(307),
-                  receivedDate = LocalDate.parse("2018-01-01")
-                )
-              )
-            )
-            .toPayAndTax
-          payAndTax.taxablePayTotalIncludingEYU shouldBe Some(testEmploymentTaxablePayYTD)
-        }
-        "there are no EYUs, it just has the same value as 'taxablePayTotal'" in {
-          val payAndTax = testEmployment.copy(earlierYearUpdates = Nil).toPayAndTax
-          payAndTax.taxablePayTotalIncludingEYU shouldBe Some(testEmploymentTaxablePayYTD)
-        }
-        "there are no payments, it is an empty Option" in {
-          val payAndTax = testEmployment.copy(payments = Nil).toPayAndTax
-          payAndTax.taxablePayTotalIncludingEYU shouldBe None
-        }
-      }
-
-      "calculate taxTotalIncludingEYU" when {
-        "there are EYUs of type 'TotalTaxDelta', it sums them all together with the 'taxTotal'" in {
-          val payAndTax = testEmployment
-            .copy(
-              earlierYearUpdates = List(
-                RtiEarlierYearUpdate(
-                  taxablePayDelta = BigDecimal(101),
-                  totalTaxDelta = BigDecimal(307),
-                  receivedDate = LocalDate.parse("2018-01-01")
-                ),
-                RtiEarlierYearUpdate(
-                  taxablePayDelta = BigDecimal(-103),
-                  totalTaxDelta = BigDecimal(-311),
-                  receivedDate = LocalDate.parse("2018-01-01")
-                )
-              )
-            )
-            .toPayAndTax
-          payAndTax.taxTotalIncludingEYU shouldBe Some(testEmploymentTotalTaxYTD + 307 - 311)
-        }
-        "there are no EYUs of type 'TotalTaxDelta', it just has the same value as 'taxTotal" in {
-          val payAndTax = testEmployment
-            .copy(
-              earlierYearUpdates = List(
-                RtiEarlierYearUpdate(
-                  taxablePayDelta = BigDecimal(101),
-                  totalTaxDelta = BigDecimal(0),
-                  receivedDate = LocalDate.parse("2018-01-01")
-                )
-              )
-            )
-            .toPayAndTax
-          payAndTax.taxTotalIncludingEYU shouldBe Some(testEmploymentTotalTaxYTD)
-        }
-        "there are no EYUs, it just has the same value as 'taxTotal'" in {
-          val payAndTax = testEmployment.copy(earlierYearUpdates = Nil).toPayAndTax
-          payAndTax.taxTotalIncludingEYU shouldBe Some(testEmploymentTotalTaxYTD)
-        }
-        "there are no payments, it is an empty Option" in {
-          val payAndTax = testEmployment.copy(payments = Nil).toPayAndTax
-          payAndTax.taxTotalIncludingEYU shouldBe None
-        }
-      }
-
-      "calculate studentLoansIncludingEYU" when {
-        val rtiEYU = RtiEarlierYearUpdate(
-          studentLoanRecoveredDelta = Some(101),
-          taxablePayDelta = BigDecimal("0"),
-          totalTaxDelta = BigDecimal("0"),
-          receivedDate = LocalDate.parse("2018-01-01")
-        )
-
-        "there are EYUs of type 'StudentLoanRecoveredDelta', it sums them all together with the 'studentLoan'" in {
-          val payAndTax = testEmployment
-            .copy(
-              earlierYearUpdates = List(
-                rtiEYU.copy(studentLoanRecoveredDelta = Some(101)),
-                rtiEYU.copy(studentLoanRecoveredDelta = Some(-103))
-              )
-            )
-            .toPayAndTax
-          payAndTax.studentLoanIncludingEYU shouldBe Some(testEmploymentStudentLoansYTD + 101 - 103)
-        }
-        "there are EYUs of type 'StudentLoanRecoveredDelta', but there's no 'studentLoan', it just sums the EYUs without any 'studentLoan'" in {
-          val payAndTax = testEmployment
-            .copy(
-              earlierYearUpdates = List(
-                rtiEYU.copy(studentLoanRecoveredDelta = Some(101)),
-                rtiEYU.copy(studentLoanRecoveredDelta = Some(-103))
-              ),
-              payments = List(testRtiPayment.copy(studentLoansYTD = None))
-            )
-            .toPayAndTax
-
-          payAndTax.studentLoan             shouldBe None
-          payAndTax.studentLoanIncludingEYU shouldBe Some(101 - 103)
-        }
-        "there are no EYUs of type 'StudentLoanRecoveredDelta', it just has the same value as 'studentLoan" in {
-          val payAndTax = testEmployment
-            .copy(
-              earlierYearUpdates = List(
-                RtiEarlierYearUpdate(
-                  studentLoanRecoveredDelta = None,
-                  taxablePayDelta = BigDecimal("1"),
-                  totalTaxDelta = BigDecimal("2"),
-                  receivedDate = LocalDate.parse("2018-01-01")
-                )
-              )
-            )
-            .toPayAndTax
-          payAndTax.studentLoanIncludingEYU shouldBe payAndTax.studentLoan
-          payAndTax.studentLoanIncludingEYU shouldBe Some(testEmploymentStudentLoansYTD)
-        }
-        "there are no EYUs, it just has the same value as 'studentLoan'" in {
-          val payAndTax = testEmployment.copy(earlierYearUpdates = Nil).toPayAndTax
-          payAndTax.studentLoanIncludingEYU shouldBe payAndTax.studentLoan
-          payAndTax.studentLoanIncludingEYU shouldBe Some(testEmploymentStudentLoansYTD)
-        }
-        "there are no payments, it is an empty Option" in {
-          val payAndTax = testEmployment.copy(payments = Nil).toPayAndTax
-          payAndTax.studentLoanIncludingEYU shouldBe None
-        }
+      "return PayAndTax with base FPS values only when there are no payments" in {
+        val payAndTax = testEmployment.copy(payments = Nil).toPayAndTax
+        payAndTax.taxablePayTotal shouldBe None
+        payAndTax.taxTotal        shouldBe None
+        payAndTax.studentLoan     shouldBe None
       }
     }
   }

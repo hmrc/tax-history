@@ -112,12 +112,9 @@ class PayAndTaxServiceSpec
         PayAndTax(
           payAndTaxId = UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"),
           taxablePayTotal = Some(2222.22),
-          taxablePayTotalIncludingEYU = Some(2222.23),
           taxTotal = Some(111.11),
-          taxTotalIncludingEYU = Some(111.12),
           studentLoan = Some(333.33),
-          paymentDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_20)),
-          earlierYearUpdates = List()
+          paymentDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_20))
         )
       )
 
@@ -152,12 +149,9 @@ class PayAndTaxServiceSpec
           PayAndTax(
             payAndTaxId = UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"),
             taxablePayTotal = Some(2222.22),
-            taxablePayTotalIncludingEYU = Some(2222.23),
             taxTotal = Some(111.11),
-            taxTotalIncludingEYU = Some(111.12),
             studentLoan = Some(333.33),
-            paymentDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_20)),
-            earlierYearUpdates = List()
+            paymentDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_20))
           )
       )
 

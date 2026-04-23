@@ -108,12 +108,9 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
               "payAndTax"     -> PayAndTax(
                 payAndTaxId = UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"),
                 taxablePayTotal = Some(BigDecimal("2222.22")),
-                taxablePayTotalIncludingEYU = Some(BigDecimal("2222.23")),
                 taxTotal = Some(BigDecimal("111.11")),
-                taxTotalIncludingEYU = Some(BigDecimal("111.12")),
                 paymentDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_20)),
-                studentLoan = Some(BigDecimal("333.33")),
-                earlierYearUpdates = Nil
+                studentLoan = Some(BigDecimal("333.33"))
               ),
               "taxAccount"    -> None,
               "statePension"  -> None
@@ -179,12 +176,9 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
               "payAndTax"     -> PayAndTax(
                 payAndTaxId = UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"),
                 taxablePayTotal = Some(BigDecimal("2222.22")),
-                taxablePayTotalIncludingEYU = Some(BigDecimal("2222.23")),
                 taxTotal = Some(BigDecimal("111.11")),
-                taxTotalIncludingEYU = Some(BigDecimal("111.12")),
                 paymentDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_20)),
-                studentLoan = Some(BigDecimal("333.33")),
-                earlierYearUpdates = Nil
+                studentLoan = Some(BigDecimal("333.33"))
               ),
               "taxAccount"    -> None,
               "statePension"  -> None
@@ -427,12 +421,9 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
       val payAndTax1            = PayAndTax(
         payAndTaxId = UUID.fromString("2e2abe0a-8c4f-49fc-bdd2-cc13054e7172"),
         taxablePayTotal = Some(BigDecimal("2222.22")),
-        taxablePayTotalIncludingEYU = Some(BigDecimal("2222.23")),
         taxTotal = Some(BigDecimal("111.11")),
-        taxTotalIncludingEYU = Some(BigDecimal("111.12")),
         paymentDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_20)),
-        studentLoan = Some(BigDecimal("333.33")),
-        earlierYearUpdates = Nil
+        studentLoan = Some(BigDecimal("333.33"))
       )
       val payAndTaxDeserialised = Map(employment1Id -> payAndTax1)
       val payAndTaxSerialised   = Json.parse(s"""
@@ -440,12 +431,9 @@ class PayAsYouEarnSpec extends TestUtil with AnyWordSpecLike with Matchers with 
            |    "$employment1Id": {
            |      "payAndTaxId": "2e2abe0a-8c4f-49fc-bdd2-cc13054e7172",
            |      "taxablePayTotal": 2222.22,
-           |      "taxablePayTotalIncludingEYU": 2222.23,
            |      "taxTotal": 111.11,
-           |      "taxTotalIncludingEYU": 111.12,
            |      "paymentDate": "2016-02-20",
-           |      "studentLoan": 333.33,
-           |      "earlierYearUpdates": []
+           |      "studentLoan": 333.33
            |    }
            |  }
         """.stripMargin)
