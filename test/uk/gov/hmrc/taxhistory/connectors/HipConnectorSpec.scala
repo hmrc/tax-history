@@ -124,8 +124,16 @@ class HipConnectorSpec extends BaseConnectorSpec {
       await(result) mustBe Some(testHipTaxAccount)
     }
 
-    "return an empty list if the response from HIP is 404 (Not Found)" in {
+    "return None if the response from HIP is 404 (Not Found)" in {
       mockExecuteMethod(NOT_FOUND)
+
+      val result = hipNpsConnectorWithUUID.getTaxAccount(testNino, testYear)
+
+      await(result) mustBe None
+    }
+
+    "return None if the response from HIP is 200 with empty body {}" in {
+      mockExecuteMethod("{}", OK)
 
       val result = hipNpsConnectorWithUUID.getTaxAccount(testNino, testYear)
 
