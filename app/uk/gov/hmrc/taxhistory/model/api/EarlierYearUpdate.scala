@@ -21,16 +21,14 @@ import java.util.UUID
 import play.api.libs.json.{Json, OFormat}
 import java.time.LocalDate
 
-case class PayAndTax(
-  payAndTaxId: UUID = UUID.randomUUID(),
-  taxablePayTotal: Option[BigDecimal] = None,
-  taxTotal: Option[BigDecimal] = None,
-  studentLoan: Option[BigDecimal] = None,
-  studentLoanIncludingEYU: Option[BigDecimal] = None,
-  paymentDate: Option[LocalDate] = None,
-  earlierYearUpdates: List[EarlierYearUpdate] = Nil
+case class EarlierYearUpdate(
+  earlierYearUpdateId: UUID = UUID.randomUUID(),
+  taxablePayEYU: BigDecimal,
+  taxEYU: BigDecimal,
+  studentLoanEYU: Option[BigDecimal] = None,
+  receivedDate: LocalDate
 )
 
-object PayAndTax {
-  given formats: OFormat[PayAndTax] = Json.format[PayAndTax]
+object EarlierYearUpdate {
+  given formats: OFormat[EarlierYearUpdate] = Json.format[EarlierYearUpdate]
 }

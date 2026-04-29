@@ -20,6 +20,7 @@ import java.time.LocalDate
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import java.time.LocalDate
 import play.api.libs.json.Json
 import uk.gov.hmrc.taxhistory.fixtures.RtiEmployments
 import uk.gov.hmrc.taxhistory.utils.TestUtil
@@ -54,20 +55,22 @@ class RtiEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with
     "serialize to JSON" when {
       "all fields are valid" in {
         Json.toJson(testEmployment) shouldBe Json.obj(
-          "sequenceNo"   -> 1,
-          "officeNumber" -> "1",
-          "payeRef"      -> "1",
-          "currentPayId" -> Some("1"),
-          "payments"     -> List(testRtiPayment)
+          "sequenceNo"         -> 1,
+          "officeNumber"       -> "1",
+          "payeRef"            -> "1",
+          "currentPayId"       -> Some("1"),
+          "payments"           -> List(testRtiPayment),
+          "earlierYearUpdates" -> Json.arr()
         )
       }
 
       "an optional field is missing" in {
         Json.toJson(testEmployment.copy(currentPayId = None)) shouldBe Json.obj(
-          "sequenceNo"   -> 1,
-          "officeNumber" -> "1",
-          "payeRef"      -> "1",
-          "payments"     -> List(testRtiPayment)
+          "sequenceNo"         -> 1,
+          "officeNumber"       -> "1",
+          "payeRef"            -> "1",
+          "payments"           -> List(testRtiPayment),
+          "earlierYearUpdates" -> Json.arr()
         )
       }
     }
@@ -94,6 +97,62 @@ class RtiEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with
         payAndTax.taxablePayTotal shouldBe None
         payAndTax.taxTotal        shouldBe None
         payAndTax.studentLoan     shouldBe None
+      }
+
+      "calculate studentLoanIncludingEYU" when {
+        val rtiEYU = RtiEarlierYearUpdate(
+          studentLoanRecoveredDelta = Some(101),
+          taxablePayDelta = BigDecimal("0"),
+          totalTaxDelta = BigDecimal("0"),
+          receivedDate = LocalDate.parse("2018-01-01")
+        )
+
+        "there are EYUs with StudentLoanRecoveredDelta, it sums them with studentLoan" in {
+          val payAndTax = testEmployment
+            .copy(earlierYearUpdates =
+              List(
+                rtiEYU.copy(studentLoanRecoveredDelta = Some(101)),
+                rtiEYU.copy(studentLoanRecoveredDelta = Some(-103))
+              )
+            )
+            .toPayAndTax
+          payAndTax.studentLoanIncludingEYU shouldBe Some(testEmploymentStudentLoansYTD + 101 - 103)
+        }
+
+        "there are EYUs with StudentLoanRecoveredDelta but no studentLoan, it just sums the EYUs" in {
+          val payAndTax = testEmployment
+            .copy(
+              earlierYearUpdates = List(
+                rtiEYU.copy(studentLoanRecoveredDelta = Some(101)),
+                rtiEYU.copy(studentLoanRecoveredDelta = Some(-103))
+              ),
+              payments = List(testRtiPayment.copy(studentLoansYTD = None))
+            )
+            .toPayAndTax
+          payAndTax.studentLoan             shouldBe None
+          payAndTax.studentLoanIncludingEYU shouldBe Some(101 - 103)
+        }
+
+        "there are no EYUs with StudentLoanRecoveredDelta, it equals studentLoan" in {
+          val payAndTax = testEmployment
+            .copy(earlierYearUpdates =
+              List(
+                rtiEYU.copy(studentLoanRecoveredDelta = None)
+              )
+            )
+            .toPayAndTax
+          payAndTax.studentLoanIncludingEYU shouldBe Some(testEmploymentStudentLoansYTD)
+        }
+
+        "there are no EYUs at all, it equals studentLoan" in {
+          val payAndTax = testEmployment.copy(earlierYearUpdates = Nil).toPayAndTax
+          payAndTax.studentLoanIncludingEYU shouldBe Some(testEmploymentStudentLoansYTD)
+        }
+
+        "there are no payments, it is None" in {
+          val payAndTax = testEmployment.copy(payments = Nil).toPayAndTax
+          payAndTax.studentLoanIncludingEYU shouldBe None
+        }
       }
     }
   }
