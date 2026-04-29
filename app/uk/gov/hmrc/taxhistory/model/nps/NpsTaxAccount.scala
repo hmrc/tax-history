@@ -104,7 +104,7 @@ case class NpsIncomeSource(
 }
 
 object NpsIncomeSource {
-  implicit val reader: Reads[NpsIncomeSource] = (js: JsValue) => {
+  given reader: Reads[NpsIncomeSource] = (js: JsValue) => {
     val employerReference                                = (js \ "employerReference").validate[String].getOrElse("")
     val (employmentTaxDistrictNumber, employmentPayeRef) = employerReference.split("/") match {
       case Array(taxDistrict, payeRef) => (taxDistrict.toIntOption, Some(payeRef))
@@ -125,15 +125,15 @@ object NpsIncomeSource {
     for {
       employmentId                     <- (js \ "employmentSequenceNumber").validate[Int]
       actualPUPCodedInCYPlusOneTaxYear <- (js \ "actualPUPCodedInNextYear").validateOpt[BigDecimal]
-      deductions                       <- (js \ "deductionsDetails").validate[List[AllowanceOrDeduction]]
-      allowances                       <- (js \ "allowancesDetails").validate[List[AllowanceOrDeduction]]
+      deductionsOpt                    <- (js \ "deductionsDetails").validateOpt[List[AllowanceOrDeduction]]
+      allowancesOpt                    <- (js \ "allowancesDetails").validateOpt[List[AllowanceOrDeduction]]
       taxCode                          <- (js \ "taxCode").validateOpt[String]
     } yield NpsIncomeSource(
       employmentId = employmentId,
       employmentType = employmentType,
       actualPUPCodedInCYPlusOneTaxYear = actualPUPCodedInCYPlusOneTaxYear,
-      deductions = deductions,
-      allowances = allowances,
+      deductions = deductionsOpt.getOrElse(Nil),
+      allowances = allowancesOpt.getOrElse(Nil),
       taxCode = taxCode,
       basisOperation = basisOperation,
       employmentTaxDistrictNumber = employmentTaxDistrictNumber,
@@ -141,7 +141,7 @@ object NpsIncomeSource {
     )
   }
 
-  implicit val writer: OWrites[NpsIncomeSource] = Json.writes[NpsIncomeSource]
+  given writer: OWrites[NpsIncomeSource] = Json.writes[NpsIncomeSource]
 }
 
 case class NpsTaxAccount(employmentDetailsList: List[NpsIncomeSource]) {

@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxhistory.connectors
 
 import org.apache.pekko.actor.ActorSystem
 import play.api.http.Status.{NOT_FOUND, OK}
+import play.api.libs.json.{JsError, JsSuccess}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
@@ -95,7 +96,16 @@ class HipNpsConnector @Inject() (
                   s"[DesNpsConnector][getTaxAccount] NPS getTaxAccount returned a 404 response: ${response.body}"
                 )
                 None
-              case OK        => response.json.asOpt[NpsTaxAccount]
+              case OK if response.body.equalsIgnoreCase("{}") => None
+              case OK        =>
+                response.json.validate[NpsTaxAccount] match {
+                  case JsSuccess(value, _) => Some(value)
+                  case JsError(errors)     =>
+                    logger.error(
+                      s"[HipNpsConnector][getTaxAccount] Failed to parse NpsTaxAccount: $errors"
+                    )
+                    None
+                }
               case _         => throw UpstreamErrorResponse(response.body, response.status, response.status)
             }
           }
