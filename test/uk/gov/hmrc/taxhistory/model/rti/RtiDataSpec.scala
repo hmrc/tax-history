@@ -74,7 +74,7 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
          |          "studentLoansYTD":0
          |          }
          |        ],
-         |    "earlierYearUpdates":[{"taxablePayDelta":-600.99,"totalTaxDelta":-10.99,"receivedDate":"2016-06-01"},{"taxablePayDelta":0,"totalTaxDelta":0,"receivedDate":"2016-06-01"}]
+         |    "earlierYearUpdates":[{"receivedDate":"2016-06-01"},{"receivedDate":"2016-06-01"}]
          |    },
          |    {
          |      "sequenceNo":39,
@@ -179,10 +179,8 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
       val earlierYearUpdates = rtiDetails.employments.flatMap(emp =>
         emp.earlierYearUpdates.find(eyu => eyu.receivedDate == LocalDate.of(YEAR_2016, JUNE, DAY_1))
       )
-      earlierYearUpdates.size                 shouldBe 1
-      earlierYearUpdates.head.receivedDate    shouldBe LocalDate.of(YEAR_2016, JUNE, DAY_1)
-      earlierYearUpdates.head.taxablePayDelta shouldBe BigDecimal.valueOf(-600.99)
-      earlierYearUpdates.head.totalTaxDelta   shouldBe BigDecimal.valueOf(-10.99)
+      earlierYearUpdates.size              shouldBe 1
+      earlierYearUpdates.head.receivedDate shouldBe LocalDate.of(YEAR_2016, JUNE, DAY_1)
     }
 
     "transform Rti Response Json containing inYear payment but no eyu payment" in {
@@ -217,8 +215,6 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
       .as[JsObject]
 
     val eyuDeserialised = RtiEarlierYearUpdate(
-      taxablePayDelta = BigDecimal(-600.99),
-      totalTaxDelta = BigDecimal(-10.99),
       studentLoanRecoveredDelta = Some(333.33),
       receivedDate = LocalDate.parse("2016-06-01")
     )
@@ -226,17 +222,13 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
     "serialize to JSON" when {
       "all fields are valid" in {
         Json.toJson(eyuDeserialised) shouldBe Json.obj(
-          "taxablePayDelta"           -> BigDecimal(-600.99),
-          "totalTaxDelta"             -> BigDecimal(-10.99),
           "studentLoanRecoveredDelta" -> BigDecimal(333.33),
           "receivedDate"              -> "2016-06-01"
         )
       }
       "an optional field is missing" in {
         Json.toJson(eyuDeserialised.copy(studentLoanRecoveredDelta = None)) shouldBe Json.obj(
-          "taxablePayDelta" -> BigDecimal(-600.99),
-          "totalTaxDelta"   -> BigDecimal(-10.99),
-          "receivedDate"    -> "2016-06-01"
+          "receivedDate" -> "2016-06-01"
         )
       }
     }
@@ -249,29 +241,9 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
         "the EYU's 'optionalAdjustmentAmount' array is not present" in {
           val eyuWithoutAdjustmentAmount = eyuSerialised - "optionalAdjustmentAmount"
           fromJson[RtiEarlierYearUpdate](eyuWithoutAdjustmentAmount).get shouldBe RtiEarlierYearUpdate(
-            taxablePayDelta = BigDecimal("0"),
-            totalTaxDelta = BigDecimal("0"),
             studentLoanRecoveredDelta = None,
             receivedDate = eyuDeserialised.receivedDate
           )
-        }
-      }
-      "deserialise the taxablePayDelta field" when {
-        "the EYU's 'optionalAdjustmentAmount' contains an object with 'type' of 'TaxablePayDelta'" in {
-          fromJson[RtiEarlierYearUpdate](eyuSerialised).get.taxablePayDelta shouldBe BigDecimal("-600.99")
-        }
-        "the EYU's 'optionalAdjustmentAmount' does not contain an object with 'type' of 'TaxablePayDelta'" in {
-          val eyuWithoutTaxablePayDelta = eyuSerialised + ("optionalAdjustmentAmount" -> JsArray())
-          fromJson[RtiEarlierYearUpdate](eyuWithoutTaxablePayDelta).get.taxablePayDelta shouldBe BigDecimal("0")
-        }
-      }
-      "deserialise the totalTaxDelta field" when {
-        "the EYU's 'optionalAdjustmentAmount' contains an object with 'type' of 'TotalTaxDelta'" in {
-          fromJson[RtiEarlierYearUpdate](eyuSerialised).get.totalTaxDelta shouldBe BigDecimal("-10.99")
-        }
-        "the EYU's 'optionalAdjustmentAmount' does not contain an object with 'type' of 'TotalTaxDelta'" in {
-          val eyuWithoutTotalTaxDelta = eyuSerialised + ("optionalAdjustmentAmount" -> JsArray())
-          fromJson[RtiEarlierYearUpdate](eyuWithoutTotalTaxDelta).get.totalTaxDelta shouldBe BigDecimal("0")
         }
       }
       "deserialise the studentLoanRecoveredDelta field" when {
@@ -292,8 +264,6 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
         val testUuid      = java.util.UUID.randomUUID()
         val taxHistoryEyu = eyuDeserialised.toEarlierYearUpdate.copy(earlierYearUpdateId = testUuid)
         taxHistoryEyu shouldBe EarlierYearUpdate(
-          taxablePayEYU = eyuDeserialised.taxablePayDelta,
-          taxEYU = eyuDeserialised.totalTaxDelta,
           studentLoanEYU = eyuDeserialised.studentLoanRecoveredDelta,
           receivedDate = eyuDeserialised.receivedDate,
           earlierYearUpdateId = testUuid

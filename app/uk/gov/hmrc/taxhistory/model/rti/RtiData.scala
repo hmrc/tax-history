@@ -31,7 +31,7 @@ case class RtiEmployment(
   payeRef: String,
   currentPayId: Option[String] = None,
   payments: List[RtiPayment],
-  earlierYearUpdates: List[RtiEarlierYearUpdate] = Nil
+  earlierYearUpdates: List[RtiEarlierYearUpdate]
 ) {
 
   def toPayAndTax: PayAndTax = {
@@ -73,16 +73,12 @@ case class RtiPayment(
 }
 
 case class RtiEarlierYearUpdate(
-  taxablePayDelta: BigDecimal,
-  totalTaxDelta: BigDecimal,
   studentLoanRecoveredDelta: Option[BigDecimal] = None,
   receivedDate: LocalDate
 ) {
 
   def toEarlierYearUpdate: EarlierYearUpdate =
     EarlierYearUpdate(
-      taxablePayEYU = taxablePayDelta,
-      taxEYU = totalTaxDelta,
       studentLoanEYU = studentLoanRecoveredDelta,
       receivedDate = receivedDate
     )
@@ -95,16 +91,12 @@ object RtiEarlierYearUpdate {
     val optionalAdjustmentAmountMap: Option[Map[String, BigDecimal]] =
       (js \ "optionalAdjustmentAmount").asOpt[Map[String, BigDecimal]]
 
-    val taxablePayDelta: BigDecimal                   = optionalAdjustmentAmountMap.getOrElse(Map.empty).getOrElse("TaxablePayDelta", 0.0)
-    val totalTaxDelta: BigDecimal                     = optionalAdjustmentAmountMap.getOrElse(Map.empty).getOrElse("TotalTaxDelta", 0.0)
     val studentLoanRecoveredDelta: Option[BigDecimal] =
       optionalAdjustmentAmountMap.getOrElse(Map.empty).get("StudentLoanRecoveredDelta")
     val receivedDate                                  = (js \ "rcvdDate").as[LocalDate](using JsonUtils.rtiDateFormat)
 
     JsSuccess(
       RtiEarlierYearUpdate(
-        taxablePayDelta = taxablePayDelta,
-        totalTaxDelta = totalTaxDelta,
         studentLoanRecoveredDelta = studentLoanRecoveredDelta,
         receivedDate = receivedDate
       )

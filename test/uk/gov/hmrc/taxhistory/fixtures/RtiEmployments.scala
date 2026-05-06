@@ -36,12 +36,12 @@ trait RtiEmployments extends TestUtil {
     "/json/rti/response/dummyRtiNonMatchingEmployment.json"
   )
   val rtiEmployment1: RtiEmployment                        =
-    RtiEmployment(1, "offNo1", "ref1", currentPayId = Some("payId"), payments = Nil)
+    RtiEmployment(1, "offNo1", "ref1", currentPayId = Some("payId"), payments = Nil, earlierYearUpdates = Nil)
   val rtiEmployment2: RtiEmployment                        =
-    RtiEmployment(5, "offNo2", "ref2", currentPayId = None, payments = Nil)
+    RtiEmployment(5, "offNo2", "ref2", currentPayId = None, payments = Nil, earlierYearUpdates = Nil)
   val rtiEmployment3: RtiEmployment                        =
-    RtiEmployment(3, "offNo3", "ref3", currentPayId = None, payments = Nil)
+    RtiEmployment(3, "offNo3", "ref3", currentPayId = None, payments = Nil, earlierYearUpdates = Nil)
   val rtiEmployment4: RtiEmployment                        =
-    RtiEmployment(4, "offNo4", "ref4", currentPayId = None, payments = Nil)
+    RtiEmployment(4, "offNo4", "ref4", currentPayId = None, payments = Nil, earlierYearUpdates = Nil)
 
 }

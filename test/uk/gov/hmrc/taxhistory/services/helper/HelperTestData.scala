@@ -58,7 +58,8 @@ object HelperTestData {
         totalTaxYTD = BigDecimal("304.00"),
         studentLoansYTD = None
       )
-    )
+    ),
+    earlierYearUpdates = Nil
   )
 
   def nps(

@@ -40,14 +40,16 @@ class RtiEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with
     officeNumber = "1",
     payeRef = "1",
     currentPayId = Some("1"),
-    payments = List(testRtiPayment)
+    payments = List(testRtiPayment),
+    earlierYearUpdates = Nil
   )
 
   "RtiEmployment" when {
 
     "instantiated without optional currentPayId" should {
       "default currentPayId to None" in {
-        val emp = RtiEmployment(sequenceNo = 1, officeNumber = "1", payeRef = "1", payments = Nil)
+        val emp =
+          RtiEmployment(sequenceNo = 1, officeNumber = "1", payeRef = "1", payments = Nil, earlierYearUpdates = Nil)
         emp.currentPayId shouldBe None
       }
     }
@@ -102,8 +104,6 @@ class RtiEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with
       "calculate studentLoanIncludingEYU" when {
         val rtiEYU = RtiEarlierYearUpdate(
           studentLoanRecoveredDelta = Some(101),
-          taxablePayDelta = BigDecimal("0"),
-          totalTaxDelta = BigDecimal("0"),
           receivedDate = LocalDate.parse("2018-01-01")
         )
 
