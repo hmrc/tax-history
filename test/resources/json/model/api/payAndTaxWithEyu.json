@@ -3,5 +3,10 @@
   "taxablePayTotal":1234567.89,
   "taxTotal":2222.22,
   "paymentDate":"2016-02-20",
-  "earlierYearUpdates":[]
+  "earlierYearUpdates":[
+    {
+      "earlierYearUpdateId":"e6926848-818b-4d01-baa1-02111eb0f514",
+      "receivedDate":"2015-05-29"
+    }
+  ]
 }

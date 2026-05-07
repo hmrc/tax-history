@@ -81,17 +81,19 @@ class RtiEmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with
       "convert itself to PayAndTax" in {
         val rtiData   = rtiEmploymentResponse.as[RtiData]
         val payAndTax = rtiData.employments.head.toPayAndTax
-        payAndTax.taxablePayTotal should be(Some(rtiERTaxablePayTotal))
-        payAndTax.taxTotal        should be(Some(rtiERTaxTotal))
-        payAndTax.studentLoan     should be(Some(testEmploymentStudentLoansYTD))
+        payAndTax.taxablePayTotal         should be(Some(rtiERTaxablePayTotal))
+        payAndTax.taxTotal                should be(Some(rtiERTaxTotal))
+        payAndTax.studentLoan             should be(Some(testEmploymentStudentLoansYTD))
+        payAndTax.earlierYearUpdates.size should be(2)
       }
 
       "convert itself to PayAndTax (using STUDENT_LOAN_YTD variation)" in {
         val rtiData   = rtiEmploymentResponseWithStudentLoanYTDVariation.as[RtiData]
         val payAndTax = rtiData.employments.head.toPayAndTax
-        payAndTax.taxablePayTotal should be(Some(rtiERTaxablePayTotal))
-        payAndTax.taxTotal        should be(Some(rtiERTaxTotal))
-        payAndTax.studentLoan     should be(Some(testEmploymentStudentLoansYTD))
+        payAndTax.taxablePayTotal         should be(Some(rtiERTaxablePayTotal))
+        payAndTax.taxTotal                should be(Some(rtiERTaxTotal))
+        payAndTax.studentLoan             should be(Some(testEmploymentStudentLoansYTD))
+        payAndTax.earlierYearUpdates.size should be(2)
       }
 
       "return PayAndTax with base FPS values only when there are no payments" in {

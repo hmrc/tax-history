@@ -45,11 +45,19 @@ class PayAndTaxSpec extends TestUtil with AnyWordSpecLike with Matchers with Opt
     paymentDate = None
   )
 
+  lazy val eyuList: List[EarlierYearUpdate] = List(
+    EarlierYearUpdate(
+      earlierYearUpdateId = UUID.fromString("e6926848-818b-4d01-baa1-02111eb0f514"),
+      receivedDate = LocalDate.of(YEAR_2015, MAY, DAY_29)
+    )
+  )
+
   lazy val payAndTaxWithEyu: PayAndTax = PayAndTax(
     payAndTaxId = UUID.fromString("bb1c1ea4-04d0-4285-a2e6-4ade1e57f12a"),
     taxablePayTotal = Some(BigDecimal(1234567.89)),
     taxTotal = Some(BigDecimal(2222.22)),
-    paymentDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_20))
+    paymentDate = Some(LocalDate.of(YEAR_2016, FEBRUARY, DAY_20)),
+    earlierYearUpdates = eyuList
   )
 
   "PayAndTax" should {

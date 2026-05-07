@@ -209,8 +209,10 @@ class EmploymentHistoryServiceSpec
         employments.head.employmentPaymentType shouldBe Some(OccupationalPension)
 
         val payAndTax = paye.payAndTax.get(employments.head.employmentId.toString).value
-        payAndTax.taxablePayTotal shouldBe Some(BigDecimal.valueOf(20000.00))
-        payAndTax.taxTotal        shouldBe Some(BigDecimal.valueOf(1880.00))
+        payAndTax.taxablePayTotal                      shouldBe Some(BigDecimal.valueOf(20000.00))
+        payAndTax.taxTotal                             shouldBe Some(BigDecimal.valueOf(1880.00))
+        payAndTax.earlierYearUpdates.size              shouldBe 2
+        payAndTax.earlierYearUpdates.head.receivedDate shouldBe LocalDate.of(2016, 6, 1)
 
         val statePension = paye.statePension.value
         statePension.grossAmount     shouldBe BigDecimal(1253.23)
@@ -240,22 +242,25 @@ class EmploymentHistoryServiceSpec
         val payAndTax    = payAsYouEarn.payAndTax.get(employment.employmentId.toString).value
         val benefits     = payAsYouEarn.benefits.get(employment.employmentId.toString).value
         val statePension = payAsYouEarn.statePension.value
+        val eyu          = payAndTax.earlierYearUpdates.head
 
-        employment.employerName          shouldBe "Aldi"
-        employment.payeReference         shouldBe "531/J4816"
-        employment.startDate             shouldBe Some(startDate)
-        employment.endDate               shouldBe None
-        employment.isOccupationalPension shouldBe true
-        employment.employmentPaymentType shouldBe Some(OccupationalPension)
-        payAndTax.taxablePayTotal        shouldBe Some(BigDecimal.valueOf(20000.00))
-        payAndTax.taxTotal               shouldBe Some(BigDecimal.valueOf(1880.00))
-        benefits.size                    shouldBe 2
-        benefits.head.iabdType           shouldBe "CarFuelBenefit"
-        benefits.head.amount             shouldBe BigDecimal(amount)
-        benefits.last.iabdType           shouldBe "VanBenefit"
-        benefits.last.amount             shouldBe BigDecimal(amount)
-        statePension.grossAmount         shouldBe BigDecimal(1253.23)
-        statePension.typeDescription     shouldBe "State Pension"
+        employment.employerName           shouldBe "Aldi"
+        employment.payeReference          shouldBe "531/J4816"
+        employment.startDate              shouldBe Some(startDate)
+        employment.endDate                shouldBe None
+        employment.isOccupationalPension  shouldBe true
+        employment.employmentPaymentType  shouldBe Some(OccupationalPension)
+        payAndTax.taxablePayTotal         shouldBe Some(BigDecimal.valueOf(20000.00))
+        payAndTax.taxTotal                shouldBe Some(BigDecimal.valueOf(1880.00))
+        payAndTax.earlierYearUpdates.size shouldBe 2
+        eyu.receivedDate                  shouldBe LocalDate.of(YEAR_2016, JUNE, DAY_1)
+        benefits.size                     shouldBe 2
+        benefits.head.iabdType            shouldBe "CarFuelBenefit"
+        benefits.head.amount              shouldBe BigDecimal(amount)
+        benefits.last.iabdType            shouldBe "VanBenefit"
+        benefits.last.amount              shouldBe BigDecimal(amount)
+        statePension.grossAmount          shouldBe BigDecimal(1253.23)
+        statePension.typeDescription      shouldBe "State Pension"
       }
 
       "successfully exclude nps employment1 data" when {

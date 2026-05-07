@@ -141,17 +141,20 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
       val employment49 = rtiDetails.employments.find(emp => emp.sequenceNo == 49)
       employment49.isDefined shouldBe true
 
-      employment49.get.sequenceNo                  shouldBe 49
-      employment49.get.currentPayId                shouldBe Some("6044041000000")
-      employment49.get.officeNumber                shouldBe "531"
-      employment49.get.payments.size               shouldBe 5
-      employment49.get.toPayAndTax.studentLoan.get shouldBe BigDecimal.valueOf(333.33)
+      employment49.get.sequenceNo                           shouldBe 49
+      employment49.get.currentPayId                         shouldBe Some("6044041000000")
+      employment49.get.officeNumber                         shouldBe "531"
+      employment49.get.payments.size                        shouldBe 5
+      employment49.get.earlierYearUpdates.size              shouldBe 2
+      employment49.get.earlierYearUpdates.head.receivedDate shouldBe LocalDate.parse("2016-06-01")
+      employment49.get.toPayAndTax.studentLoan.get          shouldBe BigDecimal.valueOf(333.33)
 
       val employment39 = rtiDetails.employments.find(emp => emp.sequenceNo == 39)
       employment39.isDefined                   shouldBe true
       employment39.get.currentPayId            shouldBe Some("111111")
       employment39.get.officeNumber            shouldBe "267"
       employment39.get.payments.size           shouldBe 7
+      employment39.get.earlierYearUpdates.size shouldBe 0
       employment39.get.toPayAndTax.studentLoan shouldBe None
     }
 
@@ -268,6 +271,15 @@ class RtiDataSpec extends TestUtil with AnyWordSpecLike with Matchers with Optio
           receivedDate = eyuDeserialised.receivedDate,
           earlierYearUpdateId = testUuid
         )
+      }
+
+      "generate a random earlierYearUpdateId" in {
+        val eyu1 = eyuDeserialised.toEarlierYearUpdate
+        val eyu2 = eyuDeserialised.toEarlierYearUpdate
+        eyu1 should not be eyu2
+
+        val testUuid = java.util.UUID.randomUUID()
+        eyu1.copy(earlierYearUpdateId = testUuid) shouldBe eyu2.copy(earlierYearUpdateId = testUuid)
       }
     }
   }
