@@ -21,6 +21,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.{JsObject, JsValue, Json}
+import uk.gov.hmrc.taxhistory.model.api.EmploymentPaymentType.JobseekersAllowance
 import uk.gov.hmrc.taxhistory.model.nps.EmploymentStatus
 import uk.gov.hmrc.taxhistory.utils.{DateUtils, TestUtil}
 
@@ -93,6 +94,14 @@ class EmploymentSpec extends TestUtil with AnyWordSpecLike with Matchers with Op
       employmentNoStartDateJson.as[Employment] shouldBe employmentNoStartDate
       Json.toJson(employmentNoStartDate)       shouldBe employmentNoStartDateSerializedJson
     }
+    "isJobseekersAllowance returns true when payment type is JobseekersAllowance" in {
+      employment1.copy(employmentPaymentType = Some(JobseekersAllowance)).isJobseekersAllowance shouldBe true
+    }
+
+    "isJobseekersAllowance returns false when payment type is not JobseekersAllowance" in {
+      employment1.isJobseekersAllowance shouldBe false
+    }
+
     "enrich employment with URIs" in {
       val taxYear            = 2016
       val enrichedEmployment = employment1.enrichWithURIs(taxYear = taxYear)

@@ -77,6 +77,12 @@ class EmploymentPaymentTypeSpec extends TestUtil with AnyWordSpecLike with Match
     }
   }
 
+  "EmploymentPaymentType.unapply" should {
+    "return the name of the payment type" in {
+      EmploymentPaymentType.unapply(OccupationalPension) shouldBe Some("OccupationalPension")
+    }
+  }
+
   "calling paymentType" should {
     "return JobSeekersAllowance if 'receivingJobseekersAllowance' flag is true" in {
       paymentType("123/AB123", receivingOccupationalPension = false, receivingJobSeekersAllowance = true) shouldBe Some(

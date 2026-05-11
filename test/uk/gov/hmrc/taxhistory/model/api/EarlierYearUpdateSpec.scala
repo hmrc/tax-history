@@ -32,15 +32,11 @@ class EarlierYearUpdateSpec extends TestUtil with AnyWordSpecLike with Matchers 
 
   lazy val earlierYearUpdate1: EarlierYearUpdate = EarlierYearUpdate(
     earlierYearUpdateId = UUID.fromString("cf1886e7-ae56-4ec2-84a6-926d64ace287"),
-    taxablePayEYU = BigDecimal(6543.21),
-    taxEYU = BigDecimal(123.45),
     receivedDate = LocalDate.of(YEAR_2016, JUNE, DAY_26)
   )
 
   lazy val earlierYearUpdate2: EarlierYearUpdate          = EarlierYearUpdate(
     earlierYearUpdateId = UUID.fromString("effa7845-aa97-454f-88da-ffa099eba7f2"),
-    taxablePayEYU = BigDecimal(123.45),
-    taxEYU = BigDecimal(67.89),
     receivedDate = LocalDate.of(YEAR_2015, MAY, DAY_29)
   )
   lazy val earlierYearUpdateList: List[EarlierYearUpdate] = List(earlierYearUpdate1, earlierYearUpdate2)
@@ -55,8 +51,6 @@ class EarlierYearUpdateSpec extends TestUtil with AnyWordSpecLike with Matchers 
     }
     "generate employmentId when none is supplied" in {
       val eyu = EarlierYearUpdate(
-        taxablePayEYU = BigDecimal(1.11),
-        taxEYU = BigDecimal(22.22),
         receivedDate = LocalDate.of(YEAR_2015, MAY, DAY_29)
       )
 
@@ -75,8 +69,6 @@ class EarlierYearUpdateSpec extends TestUtil with AnyWordSpecLike with Matchers 
         Json
           .obj(
             "earlierYearUpdateId" -> UUID.fromString("effa7845-aa97-454f-88da-ffa099eba7f2"),
-            "taxablePayEYU"       -> BigDecimal(123.45),
-            "taxEYU"              -> BigDecimal(67.89),
             "receivedDate"        -> "date"
           )
           .validate[EarlierYearUpdate] shouldBe a[JsError]
@@ -85,9 +77,7 @@ class EarlierYearUpdateSpec extends TestUtil with AnyWordSpecLike with Matchers 
       "a required field is missing" in {
         Json
           .obj(
-            "earlierYearUpdateId" -> UUID.fromString("effa7845-aa97-454f-88da-ffa099eba7f2"),
-            "taxablePayEYU"       -> BigDecimal(123.45),
-            "taxEYU"              -> BigDecimal(67.89)
+            "earlierYearUpdateId" -> UUID.fromString("effa7845-aa97-454f-88da-ffa099eba7f2")
           )
           .validate[EarlierYearUpdate] shouldBe a[JsError]
       }

@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxhistory.model.nps
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.taxhistory.utils.TestUtil
 
 class NpsEmploymentsSpec extends TestUtil with AnyWordSpecLike with Matchers with OptionValues {
@@ -33,5 +33,13 @@ class NpsEmploymentsSpec extends TestUtil with AnyWordSpecLike with Matchers wit
       employments.individualsEmploymentDetails.length shouldBe 2
       employments.toListOfNpsEmployment               shouldBe a[List[NpsEmployment]]
     }
+
+    "serialise to JSON correctly" in {
+      val employments = employmentsResponse.as[NpsEmployments]
+      val json        = Json.toJson(employments)
+      (json \ "nationalInsuranceNumber").as[String]                    shouldBe "RN000001A"
+      (json \ "individualsEmploymentDetails").as[List[JsValue]].length shouldBe 2
+    }
+
   }
 }
