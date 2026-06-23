@@ -91,13 +91,13 @@ class HipNpsConnector @Inject() (
           .execute[HttpResponse]
           .map { response =>
             response.status match {
-              case NOT_FOUND =>
+              case NOT_FOUND                                  =>
                 logger.warn(
                   s"[DesNpsConnector][getTaxAccount] NPS getTaxAccount returned a 404 response: ${response.body}"
                 )
                 None
               case OK if response.body.equalsIgnoreCase("{}") => None
-              case OK        =>
+              case OK                                         =>
                 response.json.validate[NpsTaxAccount] match {
                   case JsSuccess(value, _) => Some(value)
                   case JsError(errors)     =>
@@ -106,7 +106,7 @@ class HipNpsConnector @Inject() (
                     )
                     None
                 }
-              case _         => throw UpstreamErrorResponse(response.body, response.status, response.status)
+              case _                                          => throw UpstreamErrorResponse(response.body, response.status, response.status)
             }
           }
       }
