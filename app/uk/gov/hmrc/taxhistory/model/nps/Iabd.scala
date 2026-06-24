@@ -132,23 +132,25 @@ case class Iabd(
 
 object Iabd extends Logging {
   given reader: Reads[Iabd]  = (js: JsValue) => {
-    val typeAndDescription               = (js \ "type").as[String]
-    val (typeDescription, typeCode)      = typeAndDescription.split("[(]") match {
+    val typeAndDescription                               = (js \ "type").as[String]
+    val (typeDescription, typeCode)                      = typeAndDescription.split("[(]") match {
       case Array(desc, code) => (Some(desc.trim), code.substring(0, code.indexOf(")")).toIntOption)
       case _                 => (None, None)
     }
-    def formatDate(date: Option[String]) = {
+    def formatDate(date: Option[String]): Option[String] = {
       val dateRegex: Regex = """\d{4}-\d{2}-\d{2}""".r
       date match {
         case Some(x) if dateRegex.matches(x) =>
           try Some(LocalDate.parse(x).format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
           catch {
             case _: Exception =>
-              logger.error(s"Failed to parse valid date format: $x")
+              logger.error(s"[Iabd][formatDate] Failed to parse valid date format: $x")
               None
           }
         case Some(invalidDate)               =>
-          logger.error(s"Received date '$invalidDate' which does not match required format yyyy-MM-dd")
+          logger.error(
+            s"[Iabd][formatDate] Received date '$invalidDate' which does not match required format yyyy-MM-dd"
+          )
           None
         case None                            =>
           None // No error - date is simply absent

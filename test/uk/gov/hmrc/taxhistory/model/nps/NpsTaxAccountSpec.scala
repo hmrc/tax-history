@@ -1033,20 +1033,20 @@ class NpsTaxAccountSpec extends TestUtil with AnyWordSpecLike with Matchers with
 
       "allowancesDetails is absent, defaulting to Nil" in {
         val account = loadFile("/json/nps/response/taxAccountNoAllowances.json").as[NpsTaxAccount]
-        account.employmentDetailsList                  should not be empty
+        account.employmentDetailsList                   should not be empty
         account.employmentDetailsList.head.allowances shouldBe Nil
-        account.employmentDetailsList.head.deductions  should not be empty
+        account.employmentDetailsList.head.deductions   should not be empty
       }
 
       "deductionsDetails is absent, defaulting to Nil" in {
         val account = loadFile("/json/nps/response/getTaxAccountWithNoDeductions.json").as[NpsTaxAccount]
-        account.employmentDetailsList                  should not be empty
+        account.employmentDetailsList                   should not be empty
         account.employmentDetailsList.head.deductions shouldBe Nil
-        account.employmentDetailsList.head.allowances  should not be empty
+        account.employmentDetailsList.head.allowances   should not be empty
       }
 
       "both allowancesDetails and deductionsDetails are absent, both defaulting to Nil" in {
-        val json = Json.obj(
+        val json    = Json.obj(
           "employmentDetailsList" -> Json.arr(
             testNpsIncomeSourceHipJson.as[JsObject] - "allowancesDetails" - "deductionsDetails"
           )
