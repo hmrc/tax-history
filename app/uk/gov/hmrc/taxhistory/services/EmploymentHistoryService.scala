@@ -85,11 +85,11 @@ class EmploymentHistoryService @Inject() (
     headerCarrier: HeaderCarrier
   ): Future[Employment] =
     getFromCache(nino, taxYear).flatMap { paye =>
-      logger.debug("[EmploymentHistoryService][getEmployment] Returning result of a getEmployment")
+      logger.debug("Returning result of a getEmployment")
       paye.employments.find(_.employmentId.toString == employmentId) match {
         case Some(employment) => Future.successful(employment.enrichWithURIs(taxYear.startYear))
         case None             =>
-          logger.info("[EmploymentHistoryService][getEmployment] Cache has expired from mongo")
+          logger.info("Cache has expired from mongo")
           Future.failed(
             new NotFoundException(s"Employment not found for NINO ${nino.value} and tax year ${taxYear.toString}")
           )
@@ -99,7 +99,7 @@ class EmploymentHistoryService @Inject() (
   def getFromCache(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[PayAsYouEarn] =
     cacheService.getOrElseInsert((nino, taxYear)) {
       retrieveAndBuildPaye(nino, taxYear).map { payAsYouEarn =>
-        logger.debug(s"[EmploymentHistoryService][getFromCache] Refreshing cached data for $nino $taxYear")
+        logger.debug(s"Refreshing cached data for $nino $taxYear")
         payAsYouEarn
       }
     }
@@ -109,7 +109,7 @@ class EmploymentHistoryService @Inject() (
       Future(List.empty[Allowance])
     } else {
       getFromCache(nino, taxYear).flatMap { paye =>
-        logger.debug("[EmploymentHistoryService][getAllowances] Returning result from getAllowances")
+        logger.debug("Returning result from getAllowances")
 
         if (paye.allowances.isEmpty) {
           Future.failed(
@@ -140,7 +140,7 @@ class EmploymentHistoryService @Inject() (
   def getTaxAccount(nino: Nino, taxYear: TaxYear)(implicit headerCarrier: HeaderCarrier): Future[Option[TaxAccount]] =
     if (taxYear == TaxYear.current.previous) {
       getFromCache(nino, taxYear).flatMap { paye =>
-        logger.debug("[EmploymentHistoryService][getTaxAccount] Returning result from getTaxAccount")
+        logger.debug("Returning result from getTaxAccount")
 
         paye.taxAccount match {
           case Some(taxAccount) => Future.successful(Some(taxAccount))
@@ -158,7 +158,7 @@ class EmploymentHistoryService @Inject() (
     headerCarrier: HeaderCarrier
   ): Future[Option[StatePension]] =
     getFromCache(nino, taxYear).flatMap { paye =>
-      logger.debug("[EmploymentHistoryService][getStatePension] Returning result from getStatePension")
+      logger.debug("Returning result from getStatePension")
 
       paye.statePension match {
         case Some(statePension) =>
@@ -260,7 +260,7 @@ class EmploymentHistoryService @Inject() (
 
       if (matchedIncomeSource.isEmpty && taxYear == TaxYear.current) {
         logger.warn(
-          "[EmploymentHistoryService][mergeEmployments] No matched income source found for employment in current tax year"
+          "No matched income source found for employment in current tax year"
         )
       }
 

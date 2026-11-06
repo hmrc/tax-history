@@ -115,7 +115,7 @@ case class Iabd(
         case `annualPaymentFrequency` =>
           None
         case Some(unknownValue)       =>
-          logger.warn(s"[Iabd][toStatePension] Unknown value for IABD's 'paymentFrequency': $unknownValue")
+          logger.warn(s"Unknown value for IABD's 'paymentFrequency': $unknownValue")
           None
         case _                        =>
           None
@@ -144,12 +144,12 @@ object Iabd extends Logging {
           try Some(LocalDate.parse(x).format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
           catch {
             case _: Exception =>
-              logger.error(s"[Iabd][formatDate] Failed to parse valid date format: $x")
+              logger.error(s"Failed to parse valid date format: $x")
               None
           }
         case Some(invalidDate)               =>
           logger.error(
-            s"[Iabd][formatDate] Received date '$invalidDate' which does not match required format yyyy-MM-dd"
+            s"Received date '$invalidDate' which does not match required format yyyy-MM-dd"
           )
           None
         case None                            =>
