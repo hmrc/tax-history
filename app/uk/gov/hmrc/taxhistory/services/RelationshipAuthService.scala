@@ -58,7 +58,7 @@ class RelationshipAuthService @Inject() (val authConnector: AuthConnector)(impli
             case _                        => Future.successful(None)
           }
         case _                     =>
-          logger.debug("[RelationshipAuthService][retrieveArnFor] Failed to retrieve affinity group or enrolments")
+          logger.debug("Failed to retrieve affinity group or enrolments")
           Future.failed(new UnauthorizedException("Failed to retrieve affinity group or enrolments"))
       }
 
@@ -72,18 +72,18 @@ class RelationshipAuthService @Inject() (val authConnector: AuthConnector)(impli
       .flatMap {
         case Some(arn) => action(arn)
         case None      =>
-          logger.info(s"[RelationshipAuthService][withAuthorisedRelationship] No ARN found for $nino")
+          logger.info(s"No ARN found for $nino")
           Future.successful(Unauthorized)
       }
       .recoverWith {
         case e: UnauthorizedException  =>
-          logger.info(s"[RelationshipAuthService][withAuthorisedRelationship] Unauthorized: ${e.getMessage}")
+          logger.info(s"Unauthorized: ${e.getMessage}")
           Future.successful(Unauthorized(e.getMessage))
         case e: InsufficientEnrolments =>
-          logger.info(s"[RelationshipAuthService][withAuthorisedRelationship] InsufficientEnrolments: ${e.getMessage}")
+          logger.info(s"InsufficientEnrolments: ${e.getMessage}")
           Future.successful(Unauthorized(e.getMessage))
         case e                         =>
-          logger.info(s"[RelationshipAuthService][withAuthorisedRelationship] Error thrown : ${e.getMessage}")
+          logger.info(s"Error thrown : ${e.getMessage}")
           Future.successful(InternalServerError(e.getMessage))
       }
 

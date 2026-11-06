@@ -30,7 +30,7 @@ class Retry @Inject() (val times: Int, val delay: FiniteDuration, val system: Ac
   private def apply[A](n: Int)(f: => Future[A])(implicit ec: ExecutionContext): Future[A] =
     f.recoverWith {
       case ShouldRetryAfter(e) if n > 0 =>
-        logger.warn(s"[Retry][apply] Retrying after failure ${e.getMessage}")
+        logger.warn(s"Retrying after failure ${e.getMessage}")
         after(delay, system.scheduler)(apply(n - 1)(f))
     }
 
