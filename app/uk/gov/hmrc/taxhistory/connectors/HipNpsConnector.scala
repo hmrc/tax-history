@@ -70,7 +70,7 @@ class HipNpsConnector @Inject() (
           .map { response =>
             response.status match {
               case NOT_FOUND =>
-                logger.warn(s"[DesNpsConnector][getIabds] NPS getIabds returned a 404 response: ${response.body}")
+                logger.warn(s"NPS getIabds returned a 404 response: ${response.body}")
                 List.empty
               case OK        => response.json.as[IabdList].getListOfIabd
               case _         => throw UpstreamErrorResponse(response.body, response.status, response.status)
@@ -93,7 +93,7 @@ class HipNpsConnector @Inject() (
             response.status match {
               case NOT_FOUND                                  =>
                 logger.warn(
-                  s"[DesNpsConnector][getTaxAccount] NPS getTaxAccount returned a 404 response: ${response.body}"
+                  s"NPS getTaxAccount returned a 404 response: ${response.body}"
                 )
                 None
               case OK if response.body.equalsIgnoreCase("{}") => None
@@ -102,7 +102,7 @@ class HipNpsConnector @Inject() (
                   case JsSuccess(value, _) => Some(value)
                   case JsError(errors)     =>
                     logger.error(
-                      s"[HipNpsConnector][getTaxAccount] Failed to parse NpsTaxAccount: $errors"
+                      s"Failed to parse NpsTaxAccount: $errors"
                     )
                     None
                 }

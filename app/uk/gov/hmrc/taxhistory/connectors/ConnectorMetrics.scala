@@ -42,14 +42,14 @@ protected trait ConnectorMetrics extends ConnectorCorrelationId with Logging {
           timerContext.stop()
           metrics.incrementSuccessCounter(metric)
           logger.warn(
-            s"[ConnectorMetrics][withMetrics] NotFound Exception ${getClass.getSimpleName} connector (${metric.toString}) : ${e.getMessage}"
+            s"NotFound Exception ${getClass.getSimpleName} connector (${metric.toString}) : ${e.getMessage}"
           )
           throw e
         case e                    =>
           metrics.incrementFailedCounter(metric)
           timerContext.stop()
           logger.error(
-            s"[ConnectorMetrics][withMetrics] Error returned from ${getClass.getSimpleName} connector (${metric.toString}) : ${e.getMessage}"
+            s"Error returned from ${getClass.getSimpleName} connector (${metric.toString}) : ${e.getMessage}"
           )
           throw e
       }

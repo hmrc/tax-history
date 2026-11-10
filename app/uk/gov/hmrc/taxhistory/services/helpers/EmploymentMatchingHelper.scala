@@ -35,7 +35,7 @@ object EmploymentMatchingHelper extends TaxHistoryHelper with Logging {
 
     if (!isPayrollIdPresent) {
       logger.warn(
-        "[EmploymentMatchingHelper][matchEmploymentsFromSameEmployerSamePayrollId] worksNumber/currentPayId is missing - will rely on sequenceNumber to match."
+        "worksNumber/currentPayId is missing - will rely on sequenceNumber to match."
       )
     }
 
