@@ -34,7 +34,6 @@ class AppConfig @Inject() (config: ServicesConfig) {
   lazy val rtiEnv: String        = config.getConfString("rti.des.env", "local")
   lazy val rtiAuth: String       = config.getConfString("rti.des.authorizationToken", "Local")
 
-  lazy val npsDesBaseUrl: String         = config.baseUrl("nps.des")
   lazy val rtiDesBaseUrl: String         = config.baseUrl("rti.des")
   lazy val citizenDetailsBaseUrl: String = config.baseUrl("citizen-details")
   lazy val hipBaseUrl: String            = config.baseUrl("nps.hip")
@@ -44,6 +43,7 @@ class AppConfig @Inject() (config: ServicesConfig) {
     Base64.getEncoder.encodeToString(s"$clientId:$secret".getBytes("UTF-8"))
   val serviceOriginatorIdKey: String     = "gov-uk-originator-id"
   val serviceOriginatorIDValue: String   = config.getString("microservice.services.nps.hip.originatoridvalue")
+  def api5990                            = config.getConfBool("featureFlags.hip.api-5990", false)
 
   def newRetryInstance(name: String, actorSystem: ActorSystem): Retry = {
     val times    = config.getInt(s"microservice.services.$name.retry.times")

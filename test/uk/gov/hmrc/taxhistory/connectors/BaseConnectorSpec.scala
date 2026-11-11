@@ -23,7 +23,7 @@ import org.mockito.Mockito.{mock, reset, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
+import play.api.{Application, Configuration}
 import play.api.http.Status.OK
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
@@ -37,8 +37,6 @@ import scala.concurrent.Future
 trait BaseConnectorSpec extends PlaySpec with TestUtil with BeforeAndAfterEach with GuiceOneAppPerSuite {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-
-  override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
 
   val system: ActorSystem = ActorSystem("test")
 

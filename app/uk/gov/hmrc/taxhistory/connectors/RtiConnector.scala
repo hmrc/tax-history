@@ -43,7 +43,8 @@ class RtiConnector @Inject() (
 
   def rtiEmploymentsUrl(nino: Nino, taxYear: TaxYear): String = {
     val formattedTaxYear = s"${taxYear.startYear % 100}-${taxYear.finishYear % 100}"
-    s"${config.rtiDesBaseUrl}/rti/individual/payments/nino/${nino.withoutSuffix}/tax-year/$formattedTaxYear"
+    val endpoint         = s"/rti/individual/payments/nino/${nino.withoutSuffix}/tax-year/$formattedTaxYear"
+    if (config.api5990) s"${config.hipBaseUrl}$endpoint" else s"${config.rtiDesBaseUrl}$endpoint"
   }
 
   def buildHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =

@@ -26,8 +26,6 @@ import uk.gov.hmrc.taxhistory.model.nps._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class HipConnectorSpec extends BaseConnectorSpec {
-  override lazy val app: Application = new GuiceApplicationBuilder().configure(config).build()
-
   lazy val testHipNpsEmploymentAsString: String      = loadFile("/json/nps/response/employments.json").toString()
   lazy val testNpsEmployment: List[NpsEmployment]    =
     loadFile("/json/nps/response/employments.json").as[NpsEmployments].toListOfNpsEmployment
