@@ -45,6 +45,7 @@ trait BaseConnectorSpec extends PlaySpec with TestUtil with BeforeAndAfterEach w
   val mockMetrics: TaxHistoryMetrics     = mock(classOf[TaxHistoryMetrics])
   val mockTimerContext: Timer.Context    = mock(classOf[Timer.Context])
   val mockAppConfig: AppConfig           = app.injector.instanceOf[AppConfig]
+  val mockHeadersUtil: HeaderHelper      = mock(classOf[HeaderHelper])
 
   override def beforeEach(): Unit = {
     super.beforeEach()

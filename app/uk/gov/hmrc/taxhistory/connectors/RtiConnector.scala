@@ -17,16 +17,22 @@
 package uk.gov.hmrc.taxhistory.connectors
 
 import org.apache.pekko.actor.ActorSystem
+import sttp.model.HeaderNames
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.metrics.{MetricsEnum, TaxHistoryMetrics}
 import uk.gov.hmrc.taxhistory.model.rti.RtiData
 import uk.gov.hmrc.taxhistory.utils.Retry
 import uk.gov.hmrc.time.TaxYear
 
+import java.nio.charset.StandardCharsets
+import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import java.util.Base64
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -35,11 +41,12 @@ class RtiConnector @Inject() (
   val http: HttpClientV2,
   val metrics: TaxHistoryMetrics,
   val config: AppConfig,
-  val system: ActorSystem
+  val system: ActorSystem,
+  val util: HeaderHelper
 )(implicit executionContext: ExecutionContext)
     extends ConnectorMetrics {
 
-  val withRetry: Retry = config.newRetryInstance("rti.des", system)
+  val withRetry: Retry = config.newRetryInstance("nps.hip", system)
 
   def rtiEmploymentsUrl(nino: Nino, taxYear: TaxYear): String = {
     val formattedTaxYear = s"${taxYear.startYear % 100}-${taxYear.finishYear % 100}"
@@ -47,21 +54,14 @@ class RtiConnector @Inject() (
     if (config.api5990) s"${config.hipBaseUrl}$endpoint" else s"${config.rtiDesBaseUrl}$endpoint"
   }
 
-  def buildHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
-    Seq(
-      "Environment"      -> config.rtiEnv,
-      "Authorization"    -> s"Bearer ${config.rtiAuth}",
-      CORRELATION_HEADER -> getCorrelationId(hc)
-    )
-
   def getRTIEmployments(nino: Nino, taxYear: TaxYear): Future[Option[RtiData]] = {
-    given hc: HeaderCarrier = HeaderCarrier()
+    implicit val hc: HeaderCarrier = HeaderCarrier()
     withMetrics(MetricsEnum.RTI_GET_EMPLOYMENTS) {
       withRetry {
         val fullURL = rtiEmploymentsUrl(nino, taxYear)
         http
           .get(url"$fullURL")
-          .setHeader(buildHeaders*)
+          .setHeader(util.createHeaders(hc): _*)
           .execute[HttpResponse]
           .map { response =>
             response.status match {
@@ -78,5 +78,4 @@ class RtiConnector @Inject() (
       }
     }
   }
-
 }
