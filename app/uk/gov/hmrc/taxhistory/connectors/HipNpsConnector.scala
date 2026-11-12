@@ -36,7 +36,8 @@ class HipNpsConnector @Inject() (
   val http: HttpClientV2,
   val metrics: TaxHistoryMetrics,
   val config: AppConfig,
-  val system: ActorSystem
+  val system: ActorSystem,
+  val util: HeaderHelper
 )(implicit executionContext: ExecutionContext)
     extends ConnectorMetrics {
 
@@ -51,13 +52,6 @@ class HipNpsConnector @Inject() (
   def iabdsUrl(nino: Nino, year: Int): String =
     s"${config.hipBaseUrl}/paye/iabd/taxpayer/$nino/tax-year/$year"
 
-  def buildHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
-    Seq(
-      config.serviceOriginatorIdKey -> config.serviceOriginatorIDValue,
-      HIP_CORRELATION_HEADER        -> getHIPCorrelationId(hc),
-      HIP_AUTHORIZATION_HEADER      -> s"Basic ${config.authorizationToken}"
-    )
-
   def getIabds(nino: Nino, year: Int): Future[List[Iabd]] = {
     implicit val hc: HeaderCarrier = HeaderCarrier()
     withMetrics(MetricsEnum.NPS_GET_IABDS) {
@@ -65,7 +59,7 @@ class HipNpsConnector @Inject() (
         val fullURL = iabdsUrl(nino, year)
         http
           .get(url"$fullURL")
-          .setHeader(buildHeaders: _*)
+          .setHeader(util.createHeaders(hc): _*)
           .execute[HttpResponse]
           .map { response =>
             response.status match {
@@ -87,7 +81,7 @@ class HipNpsConnector @Inject() (
         val fullURL = taxAccountUrl(nino, year)
         http
           .get(url"$fullURL")
-          .setHeader(buildHeaders: _*)
+          .setHeader(util.createHeaders(hc): _*)
           .execute[HttpResponse]
           .map { response =>
             response.status match {
@@ -120,13 +114,13 @@ class HipNpsConnector @Inject() (
         val fullURL = employmentsUrl(nino, year)
         http
           .get(url"$fullURL")
-          .setHeader(buildHeaders: _*)
+          .setHeader(util.createHeaders(hc): _*)
           .execute[HttpResponse]
           .map { response =>
             response.status match {
               case NOT_FOUND                                  =>
                 logger.warn(
-                  s"[DesNpsConnector][getEmployments] NPS getEmployments returned a 404 response: ${response.body}"
+                  s"[HipNpsConnector][getEmployments] NPS getEmployments returned a 404 response: ${response.body}"
                 )
                 List.empty
               case OK if response.body.equalsIgnoreCase("{}") => List.empty

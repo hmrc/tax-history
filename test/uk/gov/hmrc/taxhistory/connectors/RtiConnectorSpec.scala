@@ -22,6 +22,7 @@ import org.scalatest.matchers.should.Matchers.*
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.model.rti.RtiData
 import uk.gov.hmrc.time.TaxYear
 
@@ -33,12 +34,14 @@ class RtiConnectorSpec extends BaseConnectorSpec {
   private val taxYear        = 2016
   private val taxYearPlusOne = 2017
 
+
   val uuid                           = "123f4567-g89c-42c3-b456-557742330000"
   val testRtiConnector: RtiConnector = new RtiConnector(
     http = mockHttpClient,
     metrics = mockMetrics,
     config = mockAppConfig,
-    system = system
+    system = system,
+    util = mockHeadersUtil
   ) {
     override def generateNewUUID: String = uuid
   }
@@ -76,15 +79,6 @@ class RtiConnectorSpec extends BaseConnectorSpec {
       "given a valid nino" in {
         testNino.withoutSuffix mustBe s"$testNinoWithoutSuffix"
       }
-    }
-
-    "create the correct headers" in {
-      val headers = testRtiConnector.buildHeaders(using hc)
-      headers mustBe List(
-        ("Environment", "local"),
-        ("Authorization", "Bearer Local"),
-        ("CorrelationId", "123f4567-g89c-42c3-b456-557742330000")
-      )
     }
 
     "get RTI data " when {

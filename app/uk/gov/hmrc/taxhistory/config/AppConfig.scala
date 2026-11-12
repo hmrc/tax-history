@@ -37,8 +37,8 @@ class AppConfig @Inject() (config: ServicesConfig) {
   lazy val rtiDesBaseUrl: String         = config.baseUrl("rti.des")
   lazy val citizenDetailsBaseUrl: String = config.baseUrl("citizen-details")
   lazy val hipBaseUrl: String            = config.baseUrl("nps.hip")
-  private val clientId: String           = config.getString("microservice.services.nps.hip.clientId")
-  private val secret: String             = config.getString("microservice.services.nps.hip.secret")
+  lazy val clientId: String              = config.getString("microservice.services.nps.hip.clientId")
+  lazy val secret: String                = config.getString("microservice.services.nps.hip.secret")
   def authorizationToken: String         =
     Base64.getEncoder.encodeToString(s"$clientId:$secret".getBytes("UTF-8"))
   val serviceOriginatorIdKey: String     = "gov-uk-originator-id"

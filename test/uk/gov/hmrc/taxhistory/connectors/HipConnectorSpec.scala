@@ -21,6 +21,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, RequestId}
+import uk.gov.hmrc.taxhistory.config.AppConfig
 import uk.gov.hmrc.taxhistory.model.nps._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -34,17 +35,20 @@ class HipConnectorSpec extends BaseConnectorSpec {
   lazy val testIabdResponseAsString: String          = loadFile("/json/nps/response/iabds.json").toString()
   lazy val testIabd: List[Iabd]                      = loadFile("/json/nps/response/iabds.json").as[IabdList].getListOfIabd
   lazy val uuid: String                              = "123f4567-g89c-42c3-b456-557742330000"
+
   lazy val hipNpsConnector: HipNpsConnector          = new HipNpsConnector(
     http = mockHttpClient,
     metrics = mockMetrics,
     config = mockAppConfig,
-    system = system
+    system = system,
+    util = mockHeadersUtil
   )
   lazy val hipNpsConnectorWithUUID: HipNpsConnector  = new HipNpsConnector(
     http = mockHttpClient,
     metrics = mockMetrics,
     config = mockAppConfig,
-    system = system
+    system = system,
+    util = mockHeadersUtil
   ) {
     override def generateNewUUID: String = uuid
   }
@@ -72,15 +76,6 @@ class HipConnectorSpec extends BaseConnectorSpec {
         hipNpsConnectorWithUUID.getHIPCorrelationId(HeaderCarrier()) mustBe uuid
       }
     }
-  }
-
-  "create the correct hip headers" in {
-    val headers = hipNpsConnectorWithUUID.buildHeaders(using hc)
-    headers mustBe List(
-      ("gov-uk-originator-id", "MDTP-PAYE-TES-2"),
-      ("correlationId", "123f4567-g89c-42c3-b456-557742330000"),
-      ("Authorization", "Basic YXBpLWNsaWVudC1pZDphcGktY2xpZW50LXNlY3JldA==")
-    )
   }
 
   "create the correct Hip url" when {
